@@ -1164,7 +1164,29 @@ justify-content:flex-end;
       </div>
     </div>
   </div>
+<div class="modal" id="deleteModal">
+  <div class="sheet" style="max-width:420px;border-radius:16px;">
+    <div style="padding:20px">
 
+      <h3>Excluir reserva</h3>
+
+      <div id="deleteText" class="hint" style="margin-top:10px"></div>
+
+      <div class="toolbar" style="margin-top:18px;justify-content:flex-end">
+
+        <button id="cancelDelete" class="btn btn-ghost" style="width:auto">
+          Cancelar
+        </button>
+
+        <button id="confirmDelete" class="btn btn-danger" style="width:auto">
+          Excluir
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
   <div id="toast" class="toast"></div>
 
   <script>
@@ -1372,6 +1394,9 @@ const items = state.reservas.filter(r=>{
        Modal do dia
     ============================== */
     const dayModal = $('#dayModal');
+    const deleteModal = $('#deleteModal');
+const deleteText = $('#deleteText');
+let deleteId = null;
     function openDayModal(date, items){
       $('#modalTitle').textContent = `Reservas de ${date.toLocaleDateString('pt-BR')}`;
       const list = $('#modalList');
@@ -1588,20 +1613,22 @@ $('#pagamentoAntecipado').value = formatBRLInput(String(parseBRL(r.pagamentoAnte
       $('#dayModal').classList.remove('show');
     }
 
-    async function onClickExcluir(e){
-      const id = e.currentTarget.dataset.id;
-      const r = state.reservas.find(x=>String(x.id)===String(id));
-      if(!r) return;
-      const ok = confirm(`Excluir a reserva de ${r.nome||'—'} em ${new Date(r.datahora).toLocaleString('pt-BR')}? Esta ação não pode ser desfeita.`);
-      if(!ok) return;
-      const resp = await api.excluir(id);
-      if(resp.ok){
-        toast('🗑️ Reserva excluída');
-        await loadMonth(state.ano, state.mes);
-      }else{
-        toast('⚠️ ' + resp.message);
-      }
-    }
+function onClickExcluir(e){
+
+  const id = e.currentTarget.dataset.id;
+
+  const r = state.reservas.find(x=>String(x.id)===String(id));
+  if(!r) return;
+
+  deleteId = id;
+
+  deleteText.innerHTML =
+  `Tem certeza que deseja excluir a reserva de <b>${r.nome}</b><br>
+   em <b>${new Date(r.datahora).toLocaleString('pt-BR')}</b>?`;
+
+  deleteModal.classList.add('show');
+
+}
 
     // Concluir fluxo com modal
     const finishModal = $('#finishModal');
@@ -1632,6 +1659,50 @@ finalPagoInput.value = formatBRLInput('');
       }
     });
 
+
+
+$('#cancelDelete').addEventListener('click', ()=>{
+  deleteModal.classList.remove('show');
+  deleteId = null;
+});
+
+deleteModal.addEventListener('click', (e)=>{
+  if(e.target===deleteModal){
+    deleteModal.classList.remove('show');
+    deleteId = null;
+  }
+});
+
+$('#confirmDelete').addEventListener('click', async ()=>{
+
+  if(!deleteId) return;
+
+  const resp = await api.excluir(deleteId);
+
+  if(resp.ok){
+
+    toast('🗑️ Reserva excluída');
+
+    state.reservas = state.reservas.filter(r=>String(r.id)!==String(deleteId));
+
+    const el = document.querySelector(`.res-item[data-id="${deleteId}"]`);
+    if(el) el.remove();
+
+    buildCalendar();
+    updateSummary();
+
+  }else{
+    toast('⚠️ ' + resp.message);
+  }
+
+  deleteModal.classList.remove('show');
+  deleteId = null;
+
+});
+
+
+
+    
     // Cancelar edição
     cancelEditBtn.addEventListener('click', ()=>{
       state.editingId = null;
