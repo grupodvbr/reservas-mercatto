@@ -1235,7 +1235,38 @@ const parseBRL = v => {
 
     const nowLocalMin = ()=>{ const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
     const ymd = d=>{ const z=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`; };
-    const toBase64 = (file) => new Promise((resolve,reject)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
+    const toBase64 = (file) => new Promise((resolve,reject)=>{ 
+      function baixarArquivo(url,nome){
+
+fetch(url)
+.then(res=>res.blob())
+.then(blob=>{
+
+const link=document.createElement("a");
+
+const blobUrl=URL.createObjectURL(blob);
+
+link.href=blobUrl;
+
+link.download=nome || "arquivo";
+
+document.body.appendChild(link);
+
+link.click();
+
+setTimeout(()=>{
+
+URL.revokeObjectURL(blobUrl);
+document.body.removeChild(link);
+
+},100);
+
+});
+
+}
+      
+      
+      const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file); });
 
     /* ==============================
        Estado
@@ -1404,6 +1435,20 @@ let deleteId = null;
       else{
         list.innerHTML = items.map(r=> renderResItem(r)).join('');
         $$('#dayModal .btn-concluir').forEach(btn=> btn.addEventListener('click', onClickConcluir));
+$$('#dayModal .btn-download').forEach(btn=>{
+
+btn.addEventListener("click",e=>{
+
+const url=e.currentTarget.dataset.url;
+
+const nome=e.currentTarget.dataset.name;
+
+baixarArquivo(url,nome);
+
+});
+
+});
+        
         $$('#dayModal .btn-editar').forEach(btn=> btn.addEventListener('click', onClickEditar));
         $$('#dayModal .btn-excluir').forEach(btn=> btn.addEventListener('click', onClickExcluir));
       }
@@ -1416,8 +1461,9 @@ let deleteId = null;
       const status = r.status||'Pendente';
 
       const anexoKeys = Object.keys(r).filter(k => k.toLowerCase().includes("anexo") && r[k]);
-      const anexos = anexoKeys.map((k,i) => `<a href="${r[k]}" target="_blank">📎 Anexo ${i+1}</a>`).join("<br>");
-
+const anexos = anexoKeys.map((k,i) => 
+`<button class="btn btn-ghost btn-download" data-url="${r[k]}" data-name="anexo_${i+1}">📎 Baixar Anexo ${i+1}</button>`
+).join("<br>");
       const pagamentoKeys = Object.keys(r).filter(k=> /pagamento/i.test(k) && !['pagamentoAntecipado','valorFinalPago','valorEstimado'].includes(k));
       const pagamentos = pagamentoKeys.map((k,i)=> `💵 Pagamento ${i+1}: ${formatBRL(parseBRL(r[k]))}`).join('<br>');
 
