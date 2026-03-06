@@ -134,96 +134,355 @@ border-radius:10px;
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+
+/* ==============================
+SUPABASE
+============================== */
 
 const SUPABASE_URL = "COLE_SUA_URL";
 const SUPABASE_KEY = "COLE_SUA_ANON_KEY";
 
 const supabase = window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
+  SUPABASE_URL,
+  SUPABASE_KEY
 );
 
-let reservas = [];
 
-const calendario = document.getElementById("calendario");
+/* ==============================
+HELPERS
+============================== */
 
-async function carregarReservas(){
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>Array.from(el.querySelectorAll(s));
+
+const toast = (msg, ms=3500) => {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"), ms);
+};
+
+const formatBRL = (num) =>
+Number(num||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+const parseBRL = v=>{
+if(!v) return 0;
+return Number(v.toString().replace(/\./g,'').replace(',','.'))||0;
+};
+
+const toBase64 = (file) => new Promise((resolve,reject)=>{
+const r=new FileReader();
+r.onload=()=>resolve(r.result);
+r.onerror=reject;
+r.readAsDataURL(file);
+});
+
+
+/* ==============================
+ESTADO
+============================== */
+
+const state = {
+mes:(new Date()).getMonth(),
+ano:(new Date()).getFullYear(),
+reservas:[],
+editingId:null
+};
+
+
+/* ==============================
+API SUPABASE
+============================== */
+
+const api = {
+
+async listar(ano,mes){
+
+const inicio = new Date(ano,mes,1).toISOString();
+const fim = new Date(ano,mes+1,1).toISOString();
 
 const {data,error} = await supabase
 .from("reservas")
 .select("*")
+.gte("datahora",inicio)
+.lt("datahora",fim)
 .order("datahora");
 
 if(error){
-alert(error.message);
-return;
+console.error(error);
+throw error;
 }
 
-reservas = data;
+return data;
 
-renderCalendario();
+},
+
+async cadastrar(payload){
+
+const {error} = await supabase
+.from("reservas")
+.insert([payload]);
+
+if(error){
+return {ok:false,message:error.message};
+}
+
+return {ok:true};
+
+},
+
+async atualizar(id,payload){
+
+const {error} = await supabase
+.from("reservas")
+.update(payload)
+.eq("id",id);
+
+if(error){
+return {ok:false,message:error.message};
+}
+
+return {ok:true};
+
+},
+
+async concluir(id,valorFinalPago){
+
+const {error} = await supabase
+.from("reservas")
+.update({
+status:"Concluída",
+valorFinalPago
+})
+.eq("id",id);
+
+if(error){
+return {ok:false,message:error.message};
+}
+
+return {ok:true};
+
+},
+
+async excluir(id){
+
+const {error} = await supabase
+.from("reservas")
+.delete()
+.eq("id",id);
+
+if(error){
+return {ok:false,message:error.message};
+}
+
+return {ok:true};
 
 }
 
-function renderCalendario(){
+};
 
-calendario.innerHTML = "";
 
-const hoje = new Date();
+/* ==============================
+UPLOAD DE ARQUIVO
+============================== */
 
-const mes = hoje.getMonth();
-const ano = hoje.getFullYear();
+async function uploadArquivo(file){
 
-document.getElementById("mesTitulo").innerText =
-hoje.toLocaleString("pt-BR",{month:"long",year:"numeric"});
+const nome = crypto.randomUUID()+"_"+file.name;
 
-const primeiro = new Date(ano,mes,1);
-const inicio = primeiro.getDay();
+const {error} = await supabase
+.storage
+.from("comprovantes")
+.upload(nome,file);
 
-for(let i=0;i<inicio;i++){
+if(error) throw error;
 
-const div = document.createElement("div");
-calendario.appendChild(div);
+const {data} = supabase
+.storage
+.from("comprovantes")
+.getPublicUrl(nome);
+
+return data.publicUrl;
 
 }
 
-const diasMes = new Date(ano,mes+1,0).getDate();
 
-for(let d=1;d<=diasMes;d++){
+/* ==============================
+FORMULÁRIO
+============================== */
 
-const div = document.createElement("div");
-div.className="cal-day";
+const form = $('#reservaForm');
 
-const data = new Date(ano,mes,d);
+form.addEventListener('submit', async (e)=>{
 
-const lista = reservas.filter(r=>{
+e.preventDefault();
 
-const dt = new Date(r.datahora);
+const payload = collectPayload();
 
-return dt.getDate()==d &&
-dt.getMonth()==mes &&
-dt.getFullYear()==ano;
+const file = $('#arquivo').files[0];
+
+if(file){
+
+try{
+
+payload.arquivoURL = await uploadArquivo(file);
+
+}catch(e){
+toast("Erro upload arquivo");
+}
+
+}
+
+let resp;
+
+if(state.editingId){
+
+resp = await api.atualizar(state.editingId,payload);
+
+}else{
+
+resp = await api.cadastrar(payload);
+
+}
+
+if(resp.ok){
+
+toast("Reserva salva");
+
+await loadMonth(state.ano,state.mes);
+
+form.reset();
+
+state.editingId=null;
+
+}else{
+
+toast(resp.message);
+
+}
 
 });
 
-div.innerHTML = "<b>"+d+"</b><br>"+lista.length+" reservas";
 
-div.onclick = ()=>abrirDia(lista);
+function collectPayload(){
 
-calendario.appendChild(div);
+return {
+
+nome:$('#nome').value,
+email:$('#email').value,
+telefone:$('#telefone').value,
+pessoas:Number($('#pessoas').value),
+
+mesa:$('#mesa').value,
+cardapio:$('#cardapio').value,
+
+datahora:new Date($('#datahora').value).toISOString(),
+
+valorEstimado:parseBRL($('#valorEstimado').value),
+pagamentoAntecipado:parseBRL($('#pagamentoAntecipado').value),
+
+banco:$('#banco').value,
+
+observacoes:$('#observacoes').value,
+
+status:'Pendente'
+
+};
+
+}
+
+
+/* ==============================
+CARREGAR MÊS
+============================== */
+
+async function loadMonth(ano,mes){
+
+try{
+
+const data = await api.listar(ano,mes);
+
+state.reservas=data;
+
+}catch(e){
+
+state.reservas=[];
+toast("Erro carregando reservas");
+
+}
+
+buildCalendar();
+updateSummary();
+
+}
+
+
+/* ==============================
+CALENDÁRIO
+============================== */
+
+const calGrid = $("#calGrid");
+
+function buildCalendar(){
+
+calGrid.innerHTML="";
+
+const {mes,ano}=state;
+
+const first=new Date(ano,mes,1);
+
+const start=new Date(first);
+
+const startDay=first.getDay();
+
+start.setDate(1-startDay);
+
+for(let i=0;i<42;i++){
+
+const d=new Date(start);
+
+d.setDate(start.getDate()+i);
+
+const cell=document.createElement("div");
+
+cell.className="cal-day";
+
+const items=state.reservas.filter(r=>{
+return new Date(r.datahora).toDateString()===d.toDateString();
+});
+
+cell.innerHTML=`
+<div class="num">${d.getDate()}</div>
+<div class="tags">${items.length} reservas</div>
+`;
+
+cell.onclick=()=>openDayModal(d,items);
+
+calGrid.appendChild(cell);
 
 }
 
 }
 
-function abrirDia(lista){
 
-let html="";
+/* ==============================
+MODAL DIA
+============================== */
 
-lista.forEach(r=>{
+function openDayModal(date,items){
 
-html+=`
+const list=$("#modalList");
+
+if(!items.length){
+
+list.innerHTML="<div>Nenhuma reserva</div>";
+
+}else{
+
+list.innerHTML=items.map(r=>`
 <div class="res-item">
 
 <b>${r.nome}</b><br>
@@ -234,95 +493,26 @@ ${r.mesa}<br>
 
 ${r.pessoas} pessoas<br>
 
-Status: ${r.status}<br>
+Status: ${r.status}
+
+<br><br>
 
 <button onclick="concluir('${r.id}')">Concluir</button>
 <button onclick="excluir('${r.id}')">Excluir</button>
 
 </div>
-`;
-
-});
-
-const w = window.open();
-
-w.document.write(html);
+`).join("");
 
 }
 
-async function salvarReserva(){
-
-const nome = document.getElementById("nome").value;
-const email = document.getElementById("email").value;
-const telefone = document.getElementById("telefone").value;
-
-const pessoas = document.getElementById("pessoas").value;
-const mesa = document.getElementById("mesa").value;
-const cardapio = document.getElementById("cardapio").value;
-
-const datahora = document.getElementById("datahora").value;
-
-const valorEstimado = document.getElementById("valorEstimado").value;
-const pagamentoAntecipado = document.getElementById("pagamentoAntecipado").value;
-
-const banco = document.getElementById("banco").value;
-const observacoes = document.getElementById("observacoes").value;
-
-let arquivoURL=null;
-
-const file = document.getElementById("arquivo").files[0];
-
-if(file){
-
-const nomeFile = crypto.randomUUID()+"_"+file.name;
-
-const {error:upError} = await supabase
-.storage
-.from("comprovantes")
-.upload(nomeFile,file);
-
-if(!upError){
-
-const {data} = supabase
-.storage
-.from("comprovantes")
-.getPublicUrl(nomeFile);
-
-arquivoURL = data.publicUrl;
+$("#dayModal").classList.add("show");
 
 }
 
-}
 
-const {error} = await supabase
-.from("reservas")
-.insert([{
-
-nome,
-email,
-telefone,
-pessoas,
-mesa,
-cardapio,
-datahora,
-valorEstimado,
-pagamentoAntecipado,
-banco,
-observacoes,
-arquivoURL
-
-}]);
-
-if(error){
-alert(error.message);
-return;
-}
-
-alert("Reserva salva");
-
-carregarReservas();
-
-}
+/* ==============================
+AÇÕES
+============================== */
 
 async function concluir(id){
 
@@ -330,36 +520,104 @@ const valor = prompt("Valor final pago");
 
 if(!valor) return;
 
-const {error} = await supabase
-.from("reservas")
-.update({
-status:"Concluída",
-valorFinalPago:valor
-})
-.eq("id",id);
+const resp = await api.concluir(id,parseBRL(valor));
 
-if(error) alert(error.message);
+if(resp.ok){
 
-carregarReservas();
+toast("Reserva concluída");
+
+loadMonth(state.ano,state.mes);
 
 }
+
+}
+
 
 async function excluir(id){
 
 if(!confirm("Excluir reserva?")) return;
 
-const {error} = await supabase
-.from("reservas")
-.delete()
-.eq("id",id);
+const resp = await api.excluir(id);
 
-if(error) alert(error.message);
+if(resp.ok){
 
-carregarReservas();
+toast("Reserva excluída");
+
+loadMonth(state.ano,state.mes);
 
 }
 
-carregarReservas();
+}
+
+
+/* ==============================
+RESUMO FINANCEIRO
+============================== */
+
+function updateSummary(){
+
+const {mes,ano}=state;
+
+const lista = state.reservas.filter(r=>{
+
+const d=new Date(r.datahora);
+
+return d.getMonth()===mes && d.getFullYear()===ano;
+
+});
+
+let adiantado=0;
+let finalPago=0;
+
+lista.forEach(r=>{
+adiantado+=Number(r.pagamentoAntecipado||0);
+finalPago+=Number(r.valorFinalPago||0);
+});
+
+$("#kpiAntecipado").textContent=formatBRL(adiantado);
+$("#kpiFinalPago").textContent=formatBRL(finalPago);
+$("#kpiTotalMes").textContent=formatBRL(adiantado+finalPago);
+
+}
+
+
+/* ==============================
+NAVEGAÇÃO
+============================== */
+
+$("#prevMonth").onclick=()=>{
+const m=new Date(state.ano,state.mes,1);
+m.setMonth(m.getMonth()-1);
+state.mes=m.getMonth();
+state.ano=m.getFullYear();
+loadMonth(state.ano,state.mes);
+};
+
+$("#nextMonth").onclick=()=>{
+const m=new Date(state.ano,state.mes,1);
+m.setMonth(m.getMonth()+1);
+state.mes=m.getMonth();
+state.ano=m.getFullYear();
+loadMonth(state.ano,state.mes);
+};
+
+$("#todayBtn").onclick=()=>{
+const t=new Date();
+state.mes=t.getMonth();
+state.ano=t.getFullYear();
+loadMonth(state.ano,state.mes);
+};
+
+
+/* ==============================
+INIT
+============================== */
+
+window.addEventListener("DOMContentLoaded",()=>{
+
+loadMonth(state.ano,state.mes);
+
+});
 
 </script>
 
