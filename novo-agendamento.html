@@ -1371,7 +1371,7 @@ return {ok:true,message:"Excluída"}
 
 const items = state.reservas.filter(r=>{
   if(!r.datahora) return false;
-  const dt = new Date(r.datahora);
+  const dt = new Date(String(r.datahora).replace(" ","T"));
   return !isNaN(dt) && ymd(dt) === ymd(d);
 });
         // Agrupar por setor e colorir VIP vs OUTROS
@@ -1466,8 +1466,8 @@ baixarArquivo(url,nome);
     dayModal.addEventListener('click', (e)=>{ if(e.target===dayModal) dayModal.classList.remove('show'); });
 
     function renderResItem(r){
-      const hora = new Date(r.datahora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      const status = r.status||'Pendente';
+const hora = new Date(String(r.datahora).replace(" ","T"))
+.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});      const status = r.status||'Pendente';
 
       const anexoKeys = Object.keys(r).filter(k => k.toLowerCase().includes("anexo") && r[k]);
 const anexos = anexoKeys.map((k,i) => 
@@ -1601,14 +1601,13 @@ moneyInputs.forEach(inp => {
 
       spinner.classList.remove('show'); submitBtn.disabled = false;
     });
-
 function collectPayload(){
 
 const fd = new FormData(form)
 
 const obj = Object.fromEntries(fd.entries())
 
-// remover id vazio (evita erro de UUID)
+// remover id vazio
 if(!obj.id){
 delete obj.id
 }
@@ -1621,6 +1620,24 @@ obj.valorEstimado = parseBRL(obj.valorEstimado || 0)
 
 obj.pagamentoAntecipado = parseBRL(obj.pagamentoAntecipado || 0)
 
+// ==========================
+// PAGAMENTOS EXTRAS
+// ==========================
+
+const extras = document.querySelectorAll(".extraValor")
+
+extras.forEach((input,i)=>{
+
+const valor = parseBRL(input.value)
+
+if(valor > 0){
+
+obj["pagamentoExtra"+(i+1)] = valor
+
+}
+
+})
+
 return obj
 
 }
@@ -1628,6 +1645,8 @@ return obj
        Ações: Editar / Concluir / Excluir
     ============================== */
     function onClickEditar(e){
+    document.getElementById("extrasList").innerHTML = ""
+extrasCount = 0
       const id = e.currentTarget.dataset.id;
       const r = state.reservas.find(x=>String(x.id)===String(id));
       if(!r) return;
@@ -1690,7 +1709,7 @@ function onClickExcluir(e){
 
   deleteText.innerHTML =
   `Tem certeza que deseja excluir a reserva de <b>${r.nome}</b><br>
-   em <b>${new Date(r.datahora).toLocaleString('pt-BR')}</b>?`;
+   em <b>${new Date(String(r.datahora).replace(" ","T")).toLocaleString('pt-BR')}</b>?`;
 
   deleteModal.classList.add('show');
 
@@ -1769,17 +1788,20 @@ $('#confirmDelete').addEventListener('click', async ()=>{
 
 
     
-    // Cancelar edição
-    cancelEditBtn.addEventListener('click', ()=>{
-      state.editingId = null;
-      $('#reservaId').value = '';
-      $('#cancelEdit').style.display = 'none';
-      form.reset();
-      $('#statusChip').textContent = 'PENDENTE';
-      $('#fileBox').style.display='none';
-      $('#datahora').min = nowLocalMin();
-      toast('Edição cancelada.');
-    });
+cancelEditBtn.addEventListener('click', ()=>{
+  state.editingId = null;
+  $('#reservaId').value = '';
+  $('#cancelEdit').style.display = 'none';
+  form.reset();
+  $('#statusChip').textContent = 'PENDENTE';
+  $('#fileBox').style.display='none';
+  $('#datahora').min = nowLocalMin();
+
+  document.getElementById("extrasList").innerHTML = ""
+  extrasCount = 0
+
+  toast('Edição cancelada.');
+});
 
     /* ==============================
        Navegação e Carregamento
@@ -1821,13 +1843,75 @@ state.reservas = data.map((r,i)=> {
       buildCalendar(); updateSummary();
     }
 
-    function refreshAll(){ buildCalendar(); updateSummary(); loadMonth(state.ano, state.mes); }
+async function refreshAll(){
 
+await loadMonth(state.ano, state.mes)
+
+updateSummary()
+
+}
     // Inicialização
     window.addEventListener('DOMContentLoaded', ()=>{
       $('#datahora').min = nowLocalMin();
       refreshAll();
     });
+let extrasCount = 0
+
+document.getElementById("addExtraBtn").addEventListener("click",()=>{
+
+if(extrasCount >= 5){
+
+toast("Máximo de 5 pagamentos extras")
+
+return
+
+}
+
+extrasCount++
+
+const div = document.createElement("div")
+
+div.className = "item-row-3"
+
+div.innerHTML = `
+
+<input class="extraValor" placeholder="Valor (R$)" inputmode="decimal">
+
+<select class="extraBanco">
+
+<option value="">Banco</option>
+
+<option>SICREDI</option>
+<option>ITAÚ</option>
+<option>CRÉDITO POS</option>
+<option>DÉBITO POS</option>
+
+</select>
+
+<button type="button" class="btn btn-danger removerExtra">Remover</button>
+
+`
+
+document.getElementById("extrasList").appendChild(div)
+
+const input = div.querySelector(".extraValor")
+
+input.addEventListener("input",e=>{
+e.target.value = formatBRLInput(e.target.value)
+})
+
+div.querySelector(".removerExtra").onclick = ()=>{
+
+div.remove()
+
+extrasCount--
+
+}
+
+})
+
+
+    
   </script>
 </body>
 </html>
