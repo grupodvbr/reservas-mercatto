@@ -1555,25 +1555,14 @@ data-local="${r.mesa}"
 data-cardapio="${r.cardapio || ''}"
 style="width:auto">WhatsApp</button>
           
-<div class="status-row">
-
-<span class="status-mini pendente ${status==='Pendente'?'active':''}">
-Pendente
+<span class="chip ${
+status
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,'')
+}">
+${status}
 </span>
-
-<span class="status-mini confirmada ${status==='Confirmada'?'active':''}">
-Confirmada
-</span>
-
-<span class="status-mini concluida ${status==='Concluída'?'active':''}">
-Concluída
-</span>
-
-<span class="status-mini cancelada ${status==='Cancelada'?'active':''}">
-Cancelada
-</span>
-
-</div>
 
 
 ${r._semIdReal
@@ -2217,11 +2206,11 @@ if(reserva){
 reserva.status = novoStatus
 }
 
-/* atualizar chip visual no popup */
-const item = select.closest(".res-item")
-const chip = item.querySelector(".chip")
+/* atualizar status visual */
 
-chip.textContent = novoStatus
+const item = select.closest(".res-item")
+
+const chip = item.querySelector(".chip")
 
 const classe =
 novoStatus
@@ -2229,8 +2218,12 @@ novoStatus
 .normalize("NFD")
 .replace(/[\u0300-\u036f]/g,'')
 
+chip.textContent = novoStatus
 chip.className = "chip " + classe
 
+if(ativo){
+ativo.classList.add("active")
+}
 /* atualizar calendário e resumo */
 buildCalendar()
 updateSummary()
