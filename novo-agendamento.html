@@ -1408,8 +1408,9 @@ const items = state.reservas.filter(r=>{
        Resumo mensal
     ============================== */
     function sumExtrasFromRecord(r){
-      const keys = Object.keys(r||{}).filter(k=>k.toLowerCase().startsWith('pagamentoextra'));
-      return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
+const keys = Object.keys(r||{})
+.filter(k=>k.toLowerCase().startsWith('pagamentoextra') && r[k]);
+return keys.reduce((acc,k)=> acc + parseBRL(r[k]), 0);
     }
     function updateSummary(){
       const {mes, ano} = state;
@@ -1631,8 +1632,7 @@ const valor = parseBRL(input.value)
 
 if(valor > 0){
 
-obj["pagamentoExtra"+(i+1)] = valor
-
+obj["pagamentoextra"+(i+1)] = valor
 }
 
 })
@@ -1663,10 +1663,6 @@ document.getElementById("editId").value = r.id
 $('#reservaId').value = r.id;
 
 $('#cancelEdit').style.display = ''; // mostra "Cancelar edição"
-// ==========================
-// PREENCHE MODAL DE EDIÇÃO
-// ==========================
-
 document.getElementById("e_nome").value = r.nome || ""
 document.getElementById("e_email").value = r.email || ""
 document.getElementById("e_telefone").value = r.telefone || ""
@@ -2029,7 +2025,11 @@ function baixarArquivo(url,nome){
 
 const a = document.createElement("a")
 
+if(url.startsWith("data:")){
 a.href = url
+}else{
+a.href = "data:application/octet-stream;base64," + url
+}
 
 a.download = nome || "arquivo"
 
