@@ -1399,9 +1399,15 @@ const items = state.reservas.filter(r=>{
           return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
         }).join('');
 
-        const pend = items.filter(r=> (r.status||'Pendente')!=='Concluída').length;
-        const done = items.filter(r=> r.status==='Concluída').length;
+const pend = items.filter(r=>{
+const s = (r.status || "Pendente")
+return s === "Pendente"
+}).length
 
+const done = items.filter(r=>{
+const s = (r.status || "")
+return s === "Confirmada" || s === "Concluída"
+}).length
         cell.innerHTML = `
           <div class="num">${d.getDate()}</div>
           <div class="tags">
