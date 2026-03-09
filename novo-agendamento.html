@@ -1007,7 +1007,6 @@ justify-content:flex-end;
       <footer>
         <div class="spinner" id="spinner">⬤ Enviando...</div>
         <div class="toolbar" style="margin-left:auto">
-          <button type="button" id="cancelEdit" class="btn btn-ghost" style="display:none">Cancelar edição</button>
           <button type="reset" class="btn btn-ghost">Limpar</button>
           <button type="submit" id="submitBtn" class="btn btn-primary">Salvar Reserva</button>
         </div>
@@ -1960,7 +1959,25 @@ toast("⚠️ "+resp.message)
 
 
 
+/* ==============================
+   CANCELAR EDIÇÃO DO MODAL
+============================== */
 
+document.getElementById("cancelEditModal").addEventListener("click", ()=>{
+
+document.getElementById("editModal").classList.remove("show")
+
+state.editingId = null
+
+document.getElementById("editId").value = ""
+
+document.getElementById("extrasList").innerHTML = ""
+
+extrasCount = 0
+
+toast("Edição cancelada")
+
+})
 
 
 
