@@ -1749,7 +1749,14 @@ delete obj.id
 
 const dtLocal = new Date(obj.datahora)
 
-obj.datahora = dtLocal.toISOString()
+const offset = dtLocal.getTimezoneOffset() * 60000
+
+const localISO =
+new Date(dtLocal - offset)
+.toISOString()
+.slice(0,16)
+
+obj.datahora = localISO
 
 obj.valorEstimado = parseBRL(obj.valorEstimado || 0)
 
@@ -1816,26 +1823,35 @@ formatBRLInput(String(parseBRL(r.pagamentoAntecipado || 0) * 100))
 
 if(r.datahora){
 
-const dt = new Date(String(r.datahora).replace(" ","T"))
+const dt = new Date(r.datahora)
 
-const off = new Date(dt)
+const offset = dt.getTimezoneOffset() * 60000
 
-off.setMinutes(dt.getMinutes() - dt.getTimezoneOffset())
+const local = new Date(dt - offset)
 
-document.getElementById("e_datahora").value = off.toISOString().slice(0,16)
+document.getElementById("e_datahora").value =
+local.toISOString().slice(0,16)
 
 }
 
-      // Data/hora no formato local
-      if (r.datahora){
-const dt = new Date(String(r.datahora).replace(" ","T"));
-        const off = new Date(dt);
-        off.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-        $('#datahora').value = off.toISOString().slice(0,16);
-      } else {
-        $('#datahora').value = '';
-      }
+if(r.datahora){
 
+const dt = new Date(r.datahora)
+
+const offset = dt.getTimezoneOffset() * 60000
+
+const local = new Date(dt - offset)
+
+$('#datahora').value =
+local.toISOString().slice(0,16)
+
+}else{
+
+$('#datahora').value = ""
+
+}
+
+      
 $('#valorEstimado').value = formatBRLInput(String(parseBRL(r.valorEstimado || 0) * 100).replace(/\D/g,''));
 $('#pagamentoAntecipado').value = formatBRLInput(String(parseBRL(r.pagamentoAntecipado || 0) * 100).replace(/\D/g,''));
       $('#banco').value = r.banco || '';
@@ -2027,8 +2043,7 @@ pessoas: document.getElementById("e_pessoas").value,
 mesa: document.getElementById("e_mesa").value,
 cardapio: document.getElementById("e_cardapio").value,
 
-datahora: new Date(document.getElementById("e_datahora").value).toISOString(),
-
+datahora: document.getElementById("e_datahora").value,
 valorEstimado: parseBRL(document.getElementById("e_valorEstimado").value),
 
 pagamentoAntecipado: parseBRL(document.getElementById("e_pagamentoAntecipado").value),
