@@ -1,77 +1,182 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
 
 <meta charset="UTF-8">
-<title>Reservas Mercatto</title>
+<title>Painel Mercatto</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
 body{
-font-family:Arial;
+margin:0;
+font-family:Inter,system-ui;
 background:#0f172a;
 color:white;
-margin:0;
-padding:20px;
 }
 
-.card{
-background:#1e293b;
-padding:20px;
-border-radius:12px;
+.container{
+max-width:1100px;
+margin:auto;
+padding:30px 20px;
+}
+
+h1{
 margin-bottom:20px;
 }
 
-input,select,button{
-width:100%;
+.card{
+
+background:#1e293b;
+
+border-radius:14px;
+
+padding:20px;
+
+margin-bottom:20px;
+
+box-shadow:0 10px 30px rgba(0,0,0,.4);
+
+}
+
+.grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:12px;
+
+}
+
+input,select{
+
 padding:10px;
-margin-top:6px;
-margin-bottom:12px;
+
 border-radius:8px;
-border:none;
+
+border:1px solid #334155;
+
+background:#0f172a;
+
+color:white;
+
 }
 
 button{
+
+padding:10px;
+
+border:none;
+
+border-radius:8px;
+
 background:#3b82f6;
+
 color:white;
+
 cursor:pointer;
+
+font-weight:600;
+
+}
+
+button.danger{
+background:#ef4444;
 }
 
 .calendar{
+
 display:grid;
+
 grid-template-columns:repeat(7,1fr);
-gap:6px;
+
+gap:8px;
+
+margin-top:10px;
+
 }
 
 .day{
+
 background:#1e293b;
-padding:10px;
+
 border-radius:10px;
-min-height:80px;
+
+padding:10px;
+
+min-height:90px;
+
 cursor:pointer;
+
+position:relative;
+
+}
+
+.day:hover{
+background:#334155;
+}
+
+.day span{
+
+position:absolute;
+
+top:6px;
+
+right:8px;
+
+font-size:12px;
+
+opacity:.7;
+
+}
+
+.kpi{
+
+display:flex;
+
+justify-content:space-between;
+
+font-size:18px;
+
+margin-bottom:6px;
+
 }
 
 .modal{
+
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#000000aa;
+
+inset:0;
+
+background:#00000088;
+
 display:none;
+
 align-items:center;
+
 justify-content:center;
+
 }
 
-.modal-content{
+.modal-box{
+
 background:#1e293b;
+
 padding:20px;
-border-radius:10px;
+
+border-radius:12px;
+
 width:400px;
+
 max-height:80vh;
+
 overflow:auto;
+
 }
 
 </style>
@@ -80,7 +185,11 @@ overflow:auto;
 
 <body>
 
-<h2>Painel de Reservas</h2>
+<div class="container">
+
+<h1>Reservas Mercatto</h1>
+
+<!-- FORM -->
 
 <div class="card">
 
@@ -88,39 +197,39 @@ overflow:auto;
 
 <input type="hidden" id="id">
 
-<label>Nome</label>
-<input id="nome" required>
+<div class="grid">
 
-<label>Email</label>
-<input id="email">
+<input id="nome" placeholder="Nome" required>
 
-<label>Telefone</label>
-<input id="telefone">
+<input id="telefone" placeholder="Telefone">
 
-<label>Pessoas</label>
-<input id="pessoas" type="number">
+<input id="pessoas" type="number" placeholder="Pessoas">
 
-<label>Local</label>
 <select id="mesa">
+
 <option>Sala Paulo Augusto</option>
+
 <option>Villa Gourmet</option>
+
 <option>Villa Churrascada</option>
+
 </select>
 
-<label>Data e Hora</label>
 <input id="datahora" type="datetime-local">
 
-<label>Valor Estimado</label>
-<input id="estimado">
+<input id="estimado" placeholder="Valor estimado">
 
-<label>Pagamento Antecipado</label>
-<input id="antecipado">
+<input id="sinal" placeholder="Adiantamento">
+
+</div>
 
 <button type="submit">Salvar Reserva</button>
 
 </form>
 
 </div>
+
+<!-- CALENDARIO -->
 
 <div class="card">
 
@@ -130,19 +239,27 @@ overflow:auto;
 
 </div>
 
+<!-- RESUMO -->
+
 <div class="card">
 
 <h3>Resumo do mês</h3>
 
-<div>Antecipado: <span id="sinal">0</span></div>
-<div>Final Pago: <span id="final">0</span></div>
-<div>A Receber: <span id="receber">0</span></div>
+<div class="kpi">Antecipado <span id="k1"></span></div>
+
+<div class="kpi">Final Pago <span id="k2"></span></div>
+
+<div class="kpi">A Receber <span id="k3"></span></div>
 
 </div>
 
+</div>
+
+<!-- MODAL -->
+
 <div class="modal" id="modal">
 
-<div class="modal-content">
+<div class="modal-box">
 
 <h3>Reservas do dia</h3>
 
@@ -156,8 +273,8 @@ overflow:auto;
 
 <script>
 
-const supabase = window.supabase.createClient(
-"https://SEU-PROJETO.supabase.co",
+const supabase=window.supabase.createClient(
+"https://SEU_PROJETO.supabase.co",
 "SUA_ANON_KEY"
 )
 
@@ -168,14 +285,13 @@ let ano=new Date().getFullYear()
 
 const calendar=document.getElementById("calendar")
 
-function format(v){
+function moeda(v){
 return Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
 }
 
 async function carregar(){
 
 const inicio=`${ano}-${String(mes+1).padStart(2,'0')}-01`
-
 const fim=`${ano}-${String(mes+2).padStart(2,'0')}-01`
 
 const {data}=await supabase
@@ -187,6 +303,7 @@ const {data}=await supabase
 reservas=data||[]
 
 desenhar()
+
 resumo()
 
 }
@@ -195,22 +312,25 @@ function desenhar(){
 
 calendar.innerHTML=""
 
-document.getElementById("mes").innerText=
-`${mes+1}/${ano}`
+document.getElementById("mes").innerText=`${mes+1}/${ano}`
 
 const dias=new Date(ano,mes+1,0).getDate()
 
 for(let d=1;d<=dias;d++){
 
-const date=new Date(ano,mes,d)
-
 const div=document.createElement("div")
 
 div.className="day"
 
-div.innerHTML=`<b>${d}</b>`
+div.innerHTML=`${d}`
 
-div.onclick=()=>abrir(date)
+const dia=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+
+const qtd=reservas.filter(r=>r.datahora.slice(0,10)==dia).length
+
+if(qtd) div.innerHTML+=`<span>${qtd}</span>`
+
+div.onclick=()=>abrir(dia)
 
 calendar.appendChild(div)
 
@@ -218,11 +338,9 @@ calendar.appendChild(div)
 
 }
 
-function abrir(date){
+function abrir(dia){
 
 const lista=document.getElementById("lista")
-
-const dia=date.toISOString().slice(0,10)
 
 const items=reservas.filter(r=>r.datahora.slice(0,10)==dia)
 
@@ -230,28 +348,29 @@ lista.innerHTML=""
 
 items.forEach(r=>{
 
-const div=document.createElement("div")
+lista.innerHTML+=`
 
-div.innerHTML=`
+<div style="margin-bottom:10px">
 
 <b>${r.nome}</b><br>
 
 ${r.mesa} • ${r.pessoas} pessoas<br>
 
-${format(r.valor_estimado)}
+${moeda(r.valor_estimado)}
 
-<br><br>
+<br>
 
 <button onclick="editar('${r.id}')">Editar</button>
 
 <button onclick="concluir('${r.id}')">Concluir</button>
 
-<button onclick="excluir('${r.id}')">Excluir</button>
+<button onclick="excluir('${r.id}')" class="danger">Excluir</button>
+
+</div>
 
 <hr>
-`
 
-lista.appendChild(div)
+`
 
 })
 
@@ -260,19 +379,14 @@ document.getElementById("modal").style.display="flex"
 }
 
 function fechar(){
-
 document.getElementById("modal").style.display="none"
-
 }
 
 async function excluir(id){
 
 if(!confirm("Excluir reserva?")) return
 
-await supabase
-.from("reservas_mercatto")
-.delete()
-.eq("id",id)
+await supabase.from("reservas_mercatto").delete().eq("id",id)
 
 carregar()
 
@@ -301,11 +415,10 @@ function editar(id){
 const r=reservas.find(x=>x.id==id)
 
 document.getElementById("id").value=r.id
-document.getElementById("nome").value=r.nome
-document.getElementById("email").value=r.email
-document.getElementById("telefone").value=r.telefone
-document.getElementById("pessoas").value=r.pessoas
-document.getElementById("mesa").value=r.mesa
+nome.value=r.nome
+telefone.value=r.telefone
+pessoas.value=r.pessoas
+mesa.value=r.mesa
 
 }
 
@@ -318,7 +431,6 @@ const id=document.getElementById("id").value
 const obj={
 
 nome:nome.value,
-email:email.value,
 telefone:telefone.value,
 pessoas:pessoas.value,
 mesa:mesa.value,
@@ -326,7 +438,7 @@ mesa:mesa.value,
 datahora:datahora.value,
 
 valor_estimado:estimado.value,
-pagamento_antecipado:antecipado.value
+pagamento_antecipado:sinal.value
 
 }
 
@@ -353,27 +465,27 @@ carregar()
 
 function resumo(){
 
-let sinal=0
-let final=0
-let receber=0
+let s=0
+let f=0
+let r=0
 
-reservas.forEach(r=>{
+reservas.forEach(x=>{
 
-const estimado=Number(r.valor_estimado||0)
-const ant=Number(r.pagamento_antecipado||0)
-const fin=Number(r.valor_final_pago||0)
+const est=Number(x.valor_estimado||0)
+const ant=Number(x.pagamento_antecipado||0)
+const fin=Number(x.valor_final_pago||0)
 
-sinal+=ant
-final+=fin
+s+=ant
+f+=fin
 
-if(r.status!="Concluída")
-receber+=Math.max(estimado-ant,0)
+if(x.status!="Concluída")
+r+=Math.max(est-ant,0)
 
 })
 
-document.getElementById("sinal").innerText=format(sinal)
-document.getElementById("final").innerText=format(final)
-document.getElementById("receber").innerText=format(receber)
+k1.innerText=moeda(s)
+k2.innerText=moeda(f)
+k3.innerText=moeda(r)
 
 }
 
