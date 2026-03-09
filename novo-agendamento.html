@@ -1602,25 +1602,28 @@ moneyInputs.forEach(inp => {
       spinner.classList.remove('show'); submitBtn.disabled = false;
     });
 
-
 function collectPayload(){
 
 const fd = new FormData(form)
 
 const obj = Object.fromEntries(fd.entries())
 
+// remover id vazio (evita erro de UUID)
+if(!obj.id){
+delete obj.id
+}
+
 const dtLocal = new Date(obj.datahora)
 
 obj.datahora = dtLocal.toISOString()
 
-obj.valorEstimado = parseBRL(obj.valorEstimado||0)
+obj.valorEstimado = parseBRL(obj.valorEstimado || 0)
 
-obj.pagamentoAntecipado = parseBRL(obj.pagamentoAntecipado||0)
+obj.pagamentoAntecipado = parseBRL(obj.pagamentoAntecipado || 0)
 
 return obj
 
 }
-
     /* ==============================
        Ações: Editar / Concluir / Excluir
     ============================== */
