@@ -375,7 +375,45 @@ color:#86efac;
 background:#7f1d1d30;
 color:#fca5a5;
 }
+.status-row{
+display:flex;
+gap:6px;
+margin-top:6px;
+flex-wrap:wrap;
+}
 
+.status-mini{
+font-size:.72rem;
+padding:3px 7px;
+border-radius:999px;
+border:1px solid var(--line);
+opacity:.35;
+}
+
+.status-mini.active{
+opacity:1;
+font-weight:700;
+}
+
+.status-mini.pendente{
+background:#92400e30;
+color:#fcd34d;
+}
+
+.status-mini.confirmada{
+background:#1e3a8a30;
+color:#93c5fd;
+}
+
+.status-mini.concluida{
+background:#14532d30;
+color:#86efac;
+}
+
+.status-mini.cancelada{
+background:#7f1d1d30;
+color:#fca5a5;
+}
 .file-box{
 
 display:flex;
@@ -1517,7 +1555,27 @@ data-local="${r.mesa}"
 data-cardapio="${r.cardapio || ''}"
 style="width:auto">WhatsApp</button>
           
-<span class="chip ${status.toLowerCase()}">${status}</span>
+<div class="status-row">
+
+<span class="status-mini pendente ${status==='Pendente'?'active':''}">
+Pendente
+</span>
+
+<span class="status-mini confirmada ${status==='Confirmada'?'active':''}">
+Confirmada
+</span>
+
+<span class="status-mini concluida ${status==='Concluída'?'active':''}">
+Concluída
+</span>
+
+<span class="status-mini cancelada ${status==='Cancelada'?'active':''}">
+Cancelada
+</span>
+
+</div>
+
+
 ${r._semIdReal
               ? `<button class="btn btn-ghost" style="width:auto" disabled title="Sem ID da planilha">Editar</button>`
               : `<button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>`
