@@ -350,19 +350,30 @@ gap:10px;
 }
 
 .chip{
-
-border:1px solid var(--line);
-
 border-radius:999px;
-
 padding:6px 10px;
-
 font-size:.84rem;
+font-weight:700;
+}
 
-color:var(--muted);
+.chip.pendente{
+background:#92400e30;
+color:#fcd34d;
+}
 
-background:#0b1324;
+.chip.confirmada{
+background:#1e3a8a30;
+color:#93c5fd;
+}
 
+.chip.concluida{
+background:#14532d30;
+color:#86efac;
+}
+
+.chip.cancelada{
+background:#7f1d1d30;
+color:#fca5a5;
 }
 
 .file-box{
@@ -1458,8 +1469,15 @@ baixarArquivo(url,nome);
 
 });
         
-        $$('#dayModal .btn-editar').forEach(btn=> btn.addEventListener('click', onClickEditar));
-        $$('#dayModal .btn-excluir').forEach(btn=> btn.addEventListener('click', onClickExcluir));
+$$('#dayModal .btn-editar')
+.forEach(btn=>btn.addEventListener('click', onClickEditar))
+
+$$('#dayModal .btn-excluir')
+.forEach(btn=>btn.addEventListener('click', onClickExcluir))
+
+$$('#dayModal .btn-status')
+.forEach(btn=>btn.addEventListener('click', alterarStatus))
+      
         $$('#dayModal .btn-whatsapp').forEach(btn=> btn.addEventListener('click', enviarWhatsApp));
       }
       dayModal.classList.add('show');
@@ -1493,16 +1511,37 @@ data-local="${r.mesa}"
 data-cardapio="${r.cardapio || ''}"
 style="width:auto">WhatsApp</button>
           
-            <span class="chip">${status}</span>
-            ${r._semIdReal
+<span class="chip ${status.toLowerCase()}">${status}</span>
+${r._semIdReal
               ? `<button class="btn btn-ghost" style="width:auto" disabled title="Sem ID da planilha">Editar</button>`
               : `<button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>`
             }
             <button class="btn btn-danger btn-excluir" data-id="${r.id}" style="width:auto">Excluir</button>
-${status === 'Concluída'
-  ? `<span class="chip">Concluída</span>`
-  : `<button class="btn btn-primary btn-concluir" data-id="${r.id}" style="width:auto">Concluir</button>`
-}          </div>
+<div class="row">
+
+<button class="btn btn-ghost btn-status"
+data-id="${r.id}"
+data-status="Confirmada"
+style="width:auto">
+Confirmar
+</button>
+
+<button class="btn btn-primary btn-status"
+data-id="${r.id}"
+data-status="Concluída"
+style="width:auto">
+Concluir
+</button>
+
+<button class="btn btn-danger btn-status"
+data-id="${r.id}"
+data-status="Cancelada"
+style="width:auto">
+Cancelar
+</button>
+
+</div>
+</div>
         </div>
         <div class="meta"><b>Email:</b> ${r.email||'—'} • <b>Tel:</b> ${r.telefone||'—'}</div>
         <div class="meta"><b>Cardápio:</b> ${r.cardapio||'—'} • <b>Banco:</b> ${r.banco||'—'}</div>
@@ -2091,7 +2130,29 @@ const url =
 window.open(url,"_blank")
 
 }
+async function alterarStatus(e){
 
+const id = e.currentTarget.dataset.id
+const novoStatus = e.currentTarget.dataset.status
+
+const resp = await supabaseClient
+.from("reservas_mercatto")
+.update({status:novoStatus})
+.eq("id",id)
+
+if(resp.error){
+
+toast("Erro ao atualizar status")
+
+return
+
+}
+
+toast("Status atualizado para "+novoStatus)
+
+await loadMonth(state.ano,state.mes)
+
+}
   
   
 </script>
