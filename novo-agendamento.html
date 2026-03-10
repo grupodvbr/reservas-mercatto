@@ -1443,8 +1443,12 @@ const items = state.reservas.filter(r=>{
         const isVipKey = k => k === 'SALA VIP' || k === 'SALA VIP 2';
         const sectorTags = Array.from(groups.entries()).map(([key, info]) => {
           const vip = isVipKey(key);
-          const css = vip ? 't-vip' : 't-outros';
-          return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
+let css="t-outros"
+
+if(key.includes("PAULO")) css="t-vip"
+if(key.includes("SACADA")) css="t-pend"
+if(key.includes("SALAO")) css="t-done"
+  return `<span class="tag ${css}">${info.count} ${info.label}</span>`;
         }).join('');
 
 const pend = items.filter(r=>{
