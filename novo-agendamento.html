@@ -1149,13 +1149,16 @@ justify-content:flex-end;
           <div class="inline-grid">
             <div>
               <label>Local</label>
-              <select id="e_mesa">
-                <option value="">Selecione</option>
-                <option>SALA VIP</option>
-                <option>SALA VIP 2</option>
-                <option>SACADA</option>
-                <option>SALÃO CENTRAL</option>
-              </select>
+<select id="e_mesa">
+
+<option value="">Selecione</option>
+
+<option>Sala Paulo Augusto 1</option>
+<option>Sala Paulo Augusto 2</option>
+<option>Sacada</option>
+<option>Salão Central</option>
+
+</select>
             </div>
             <div>
               <label>Cardápio</label>
@@ -1790,15 +1793,22 @@ const obj = Object.fromEntries(fd.entries())
 if(!obj.id){
 delete obj.id
 }
-obj.datahora = obj.datahora
+
+/* =========================
+   CORREÇÃO DE TIMEZONE
+========================= */
+
+if(obj.datahora){
+obj.datahora = new Date(obj.datahora).toISOString()
+}
 
 obj.valorEstimado = parseBRL(obj.valorEstimado || 0)
 
 obj.pagamentoAntecipado = parseBRL(obj.pagamentoAntecipado || 0)
 
-// ==========================
-// PAGAMENTOS EXTRAS
-// ==========================
+/* =========================
+   PAGAMENTOS EXTRAS
+========================= */
 
 const extras = document.querySelectorAll(".extraValor")
 
@@ -1809,6 +1819,7 @@ const valor = parseBRL(input.value)
 if(valor > 0){
 
 obj["pagamentoextra"+(i+1)] = valor
+
 }
 
 })
@@ -1863,20 +1874,6 @@ document.getElementById("e_datahora").value =
 local.toISOString().slice(0,16)
 
 }
-
-if(r.datahora){
-
-const local = new Date(r.datahora)
-
-$('#datahora').value =
-local.toISOString().slice(0,16)
-
-}else{
-
-$('#datahora').value = ""
-
-}
-
       
 $('#valorEstimado').value = formatBRLInput(String(parseBRL(r.valorEstimado || 0) * 100).replace(/\D/g,''));
 $('#pagamentoAntecipado').value = formatBRLInput(String(parseBRL(r.pagamentoAntecipado || 0) * 100).replace(/\D/g,''));
@@ -2227,17 +2224,22 @@ function enviarWhatsApp(e){
 
 const btn = e.currentTarget
 
-let telefone = btn.dataset.telefone.replace(/\D/g,'')
+let telefone = (btn.dataset.telefone || "").replace(/\D/g,'')
+
+if(!telefone){
+toast("Telefone não informado")
+return
+}
 
 if(telefone.length === 11){
 telefone = "55"+telefone
 }
 
-const nome = btn.dataset.nome
-const pessoas = btn.dataset.pessoas
-const local = btn.dataset.local
-const cardapio = btn.dataset.cardapio
-const hora = btn.dataset.data
+const nome = btn.dataset.nome || ""
+const pessoas = btn.dataset.pessoas || ""
+const local = btn.dataset.local || ""
+const cardapio = btn.dataset.cardapio || ""
+const hora = btn.dataset.data || ""
 
 const mensagem =
 `Olá ${nome}!
