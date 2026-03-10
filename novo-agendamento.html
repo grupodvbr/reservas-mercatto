@@ -1554,55 +1554,66 @@ $$('#dayModal .status-select')
 
 function renderResItem(r){
 
-  let hora = "--:--"
+let hora = "--:--"
 
-  if(r.datahora){
-    const local = new Date(r.datahora)
+if(r.datahora){
+const local = new Date(r.datahora)
 
-    hora = local.toLocaleTimeString(
-      'pt-BR',
-      {hour:'2-digit',minute:'2-digit'}
-    )
-  }
+hora = local.toLocaleTimeString(
+'pt-BR',
+{hour:'2-digit',minute:'2-digit'}
+)
+}
 
-  const status = r.status || 'Pendente';
+const status = r.status || "Pendente"
 
-  const anexoKeys = Object.keys(r).filter(k => 
-    k.toLowerCase().includes("anexo") && r[k]
-  );
+/* anexos */
+const anexoKeys = Object.keys(r).filter(
+k => k.toLowerCase().includes("anexo") && r[k]
+)
 
-  const anexos = anexoKeys.map((k,i) => 
-  `<button class="btn btn-ghost btn-download" 
-  data-url="${r[k]}" 
-  data-name="anexo_${i+1}">
-  📎 Baixar Anexo ${i+1}
-  </button>`
-  ).join("<br>");
-  const status = r.status||'Pendente';
+const anexos = anexoKeys.map((k,i)=>
+`<button class="btn btn-ghost btn-download"
+data-url="${r[k]}"
+data-name="anexo_${i+1}">
+📎 Baixar Anexo ${i+1}
+</button>`
+).join("<br>")
 
-      const anexoKeys = Object.keys(r).filter(k => k.toLowerCase().includes("anexo") && r[k]);
-const anexos = anexoKeys.map((k,i) => 
-`<button class="btn btn-ghost btn-download" data-url="${r[k]}" data-name="anexo_${i+1}">📎 Baixar Anexo ${i+1}</button>`
-).join("<br>");
-      const pagamentoKeys = Object.keys(r).filter(k=> /pagamento/i.test(k) && !['pagamentoAntecipado','valorFinalPago','valorEstimado'].includes(k));
-      const pagamentos = pagamentoKeys.map((k,i)=> `💵 Pagamento ${i+1}: ${formatBRL(parseBRL(r[k]))}`).join('<br>');
+/* pagamentos extras */
+const pagamentoKeys = Object.keys(r).filter(
+k=> /pagamento/i.test(k) &&
+!['pagamentoAntecipado','valorFinalPago','valorEstimado'].includes(k)
+)
 
-      return `<div class="res-item" data-id="${r.id}">
-        <div class="top">
-          <div>
-            <div class="name">${r.nome||'—'}</div>
-            <div class="meta">${hora} • ${r.mesa||'—'} • ${r.pessoas||'0'} pessoa(s)</div>
-          </div>
-          <div class="row" style="margin-left:auto">
+const pagamentos = pagamentoKeys.map((k,i)=>
+`💵 Pagamento ${i+1}: ${formatBRL(parseBRL(r[k]))}`
+).join("<br>")
+
+return `
+<div class="res-item" data-id="${r.id}">
+<div class="top">
+
+<div>
+<div class="name">${r.nome||'—'}</div>
+<div class="meta">
+${hora} • ${r.mesa||'—'} • ${r.pessoas||'0'} pessoa(s)
+</div>
+</div>
+
+<div class="row" style="margin-left:auto">
+
 <button class="btn btn-primary btn-whatsapp"
 data-nome="${r.nome}"
 data-telefone="${r.telefone}"
 data-data="${hora}"
 data-pessoas="${r.pessoas}"
 data-local="${r.mesa}"
-data-cardapio="${r.cardapio || ''}"
-style="width:auto">WhatsApp</button>
-          
+data-cardapio="${r.cardapio||''}"
+style="width:auto">
+WhatsApp
+</button>
+
 <span class="chip ${
 status
 .toLowerCase()
@@ -1612,12 +1623,18 @@ status
 ${status}
 </span>
 
+<button class="btn btn-ghost btn-editar"
+data-id="${r.id}"
+style="width:auto">
+Editar
+</button>
 
-${r._semIdReal
-              ? `<button class="btn btn-ghost" style="width:auto" disabled title="Sem ID da planilha">Editar</button>`
-              : `<button class="btn btn-ghost btn-editar" data-id="${r.id}" style="width:auto">Editar</button>`
-            }
-            <button class="btn btn-danger btn-excluir" data-id="${r.id}" style="width:auto">Excluir</button>
+<button class="btn btn-danger btn-excluir"
+data-id="${r.id}"
+style="width:auto">
+Excluir
+</button>
+
 <select class="status-select"
 data-id="${r.id}"
 style="width:auto">
@@ -1639,21 +1656,36 @@ Cancelada
 </option>
 
 </select>
+
 </div>
-        </div>
-        <div class="meta"><b>Email:</b> ${r.email||'—'} • <b>Tel:</b> ${r.telefone||'—'}</div>
-        <div class="meta"><b>Cardápio:</b> ${r.cardapio||'—'} • <b>Banco:</b> ${r.banco||'—'}</div>
-        <div class="meta"><b>Obs:</b> ${r.observacoes||'—'}</div>
-        <div class="meta">
-Estimado: ${formatBRL(parseBRL(r.valorEstimado))} • 
-Adiantamento: ${formatBRL(parseBRL(r.pagamentoAntecipado))} • 
+</div>
+
+<div class="meta">
+<b>Email:</b> ${r.email||'—'} • <b>Tel:</b> ${r.telefone||'—'}
+</div>
+
+<div class="meta">
+<b>Cardápio:</b> ${r.cardapio||'—'} • <b>Banco:</b> ${r.banco||'—'}
+</div>
+
+<div class="meta">
+<b>Obs:</b> ${r.observacoes||'—'}
+</div>
+
+<div class="meta">
+Estimado: ${formatBRL(parseBRL(r.valorEstimado))}
+•
+Adiantamento: ${formatBRL(parseBRL(r.pagamentoAntecipado))}
+•
 Final pago: ${formatBRL(parseBRL(r.valorFinalPago))}
 </div>
 
-        ${pagamentos? `<div class="meta">${pagamentos}</div>`:""}
-        ${anexos? `<div class="meta">${anexos}</div>`:""}
-      </div>`;
-    }
+${pagamentos ? `<div class="meta">${pagamentos}</div>` : ""}
+${anexos ? `<div class="meta">${anexos}</div>` : ""}
+
+</div>
+`
+}
 
     /* ==============================
        Form & validações
