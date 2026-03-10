@@ -2087,18 +2087,8 @@ datahora = new Date(d - offset)
 
 }
 
-const payload = {
+const dh = document.getElementById("e_datahora").value
 
-nome: document.getElementById("e_nome").value,
-email: document.getElementById("e_email").value,
-telefone: document.getElementById("e_telefone").value,
-pessoas: document.getElementById("e_pessoas").value,
-
-mesa: document.getElementById("e_mesa").value,
-cardapio: document.getElementById("e_cardapio").value,
-
-datahora: datahora,
-  
 let datahora = dh
 
 if(dh){
@@ -2113,7 +2103,18 @@ datahora = new Date(d - offset)
 
 }
 
+const payload = {
+
+nome: document.getElementById("e_nome").value,
+email: document.getElementById("e_email").value,
+telefone: document.getElementById("e_telefone").value,
+pessoas: document.getElementById("e_pessoas").value,
+
+mesa: document.getElementById("e_mesa").value,
+cardapio: document.getElementById("e_cardapio").value,
+
 datahora: datahora,
+
 valorEstimado: parseBRL(document.getElementById("e_valorEstimado").value),
 
 pagamentoAntecipado: parseBRL(document.getElementById("e_pagamentoAntecipado").value),
@@ -2123,7 +2124,6 @@ banco: document.getElementById("e_banco").value,
 observacoes: document.getElementById("e_observacoes").value
 
 }
-
 /* ======================
    PAGAMENTOS EXTRAS
 ====================== */
