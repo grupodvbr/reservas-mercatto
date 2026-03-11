@@ -212,6 +212,7 @@ Responda normalmente ao cliente.
         try{
 
 const dataConvertida = formatarDataBR(reserva.data)
+console.log("CHAMANDO API RESERVA", reserva)
 
 const api = await fetch(
   process.env.RESERVA_API_URL,
