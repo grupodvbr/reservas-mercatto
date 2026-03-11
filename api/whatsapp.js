@@ -57,11 +57,8 @@ return res.status(200).end()
 /* IGNORAR STATUS */
 
 if(!change.messages){
-
 console.log("Evento sem mensagem")
-
 return res.status(200).end()
-
 }
 
 const mensagem = change.messages?.[0]?.text?.body
@@ -114,49 +111,34 @@ estado=r.data
 
 }
 
-/* =================================
-LOGICA DE RESERVA
-================================= */
-
-const texto = mensagem.toLowerCase()
-
 let resposta=""
 
-/* CLIENTE QUER RESERVAR */
+const texto = mensagem.toLowerCase().trim()
 
-if(
-texto.includes("reserva") ||
-texto==="2"
-){
+/* =================================
+FLUXO RESERVA
+================================= */
+
+if(texto.includes("reserva") || texto==="2"){
 
 if(!estado.nome){
-
-resposta="Perfeito! Para iniciar sua reserva me diga seu *nome*."
-
+resposta="Qual o seu *nome* para a reserva?"
 }
 
 else if(!estado.pessoas){
-
-resposta="Para quantas pessoas será a reserva?"
-
+resposta="Para quantas pessoas?"
 }
 
 else if(!estado.data){
-
 resposta="Qual a *data da reserva*?"
-
 }
 
 else if(!estado.hora){
-
-resposta="Qual o *horário desejado*?"
-
+resposta="Qual o *horário*?"
 }
 
 else if(!estado.area){
-
 resposta="Prefere *Área Externa* ou *Salão*?"
-
 }
 
 }
@@ -172,7 +154,7 @@ await supabase
 .update({nome:mensagem})
 .eq("telefone",cliente)
 
-resposta="Para quantas pessoas será a reserva?"
+resposta="Para quantas pessoas?"
 
 }
 
@@ -211,7 +193,7 @@ await supabase
 .update({hora:mensagem})
 .eq("telefone",cliente)
 
-resposta="Prefere Área Externa ou Salão?"
+resposta="Área externa ou salão?"
 
 }
 
@@ -223,39 +205,51 @@ await supabase
 .eq("telefone",cliente)
 
 /* =================================
-CRIAR RESERVA
+CRIAR RESERVA IGUAL AO FORM
 ================================= */
 
 const datahora = estado.data+"T"+estado.hora
+
+const mesa =
+mensagem.toLowerCase().includes("externa")
+? "Área Externa"
+: "Salão"
 
 await supabase
 .from("reservas_mercatto")
 .insert({
 
 nome:estado.nome,
-telefone:cliente,
-pessoas:estado.pessoas,
-mesa:estado.area,
-datahora:datahora,
 
 email:"",
+
+telefone:cliente,
+
+pessoas:estado.pessoas,
+
+mesa:mesa,
+
 cardapio:"",
+
 comandaIndividual:"Não",
 
-observacoes:"Reserva via WhatsApp",
+datahora:datahora,
+
+observacoes:"Reserva feita via WhatsApp",
 
 valorEstimado:0,
+
 pagamentoAntecipado:0,
+
 banco:"",
+
 status:"Pendente"
 
 })
 
-/* LIMPAR ESTADO */
-
 await supabase
 .from("estado_reserva")
-delete()
+.delete()
 .eq("telefone",cliente)
 
 resposta=
@@ -269,9 +263,12 @@ Data: ${estado.data}
 
 Hora: ${estado.hora}
 
-Local: ${estado.area}
+Local: ${mesa}
 
-Aguardamos você no Mercatto Delícia!`
+📍 Mercatto Delícia
+Avenida Rui Barbosa 1264
+
+Sua mesa estará reservada por 20 minutos após o horário.`
 
 }
 
@@ -313,7 +310,10 @@ Endereço:
 Avenida Rui Barbosa 1264
 
 Telefone:
-(77) 3613-5148`
+(77) 3613-5148
+
+Instagram:
+@mercattodelicia_`
 },
 
 ...mensagens
@@ -329,9 +329,7 @@ resposta = completion.choices[0].message.content
 resposta=
 `👋 Bem-vindo ao *Mercatto Delícia*
 
-Escolha uma opção:
-
-1️⃣ Ver cardápio  
+1️⃣ Cardápio  
 2️⃣ Fazer reserva  
 3️⃣ Endereço`
 
