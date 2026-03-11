@@ -25,15 +25,6 @@ hora,
 area
 } = body
 
-if(!nome || !telefone || !data || !hora){
-
-return res.json({
-success:false,
-error:"dados incompletos"
-})
-
-}
-
 const mesa =
 area?.toLowerCase().includes("externa")
 ? "Área Externa"
@@ -48,6 +39,7 @@ const {error} = await supabase
 nome:nome,
 email:"",
 telefone:telefone,
+
 pessoas:parseInt(pessoas),
 
 mesa:mesa,
