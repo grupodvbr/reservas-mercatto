@@ -139,7 +139,9 @@ Se o cliente responder "sim", "pode", "ok", continue a conversa.
 
 Seu objetivo principal também é fechar reservas.
 
-Para reservas colete:
+NUNCA gere a reserva sem pedir a confirmação do cliente.
+
+Para reservas colete TODOS esses dados:
 
 nome
 pessoas
