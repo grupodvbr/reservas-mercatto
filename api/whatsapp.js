@@ -2,72 +2,60 @@ const OpenAI = require("openai")
 const { createClient } = require("@supabase/supabase-js")
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+apiKey: process.env.OPENAI_API_KEY
 })
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE
+process.env.SUPABASE_URL,
+process.env.SUPABASE_SERVICE_ROLE
 )
 
 module.exports = async function handler(req,res){
 
-/* =================================
-VERIFICAR WEBHOOK
-================================= */
+/* ================================
+VERIFICAÇÃO WEBHOOK
+================================ */
 
 if(req.method==="GET"){
 
 const verify_token = process.env.VERIFY_TOKEN
-
 const mode = req.query["hub.mode"]
 const token = req.query["hub.verify_token"]
 const challenge = req.query["hub.challenge"]
 
 if(mode && token===verify_token){
-
-console.log("Webhook verificado")
-
 return res.status(200).send(challenge)
-
 }
 
 return res.status(403).end()
 
 }
 
-/* =================================
+/* ================================
 RECEBER MENSAGEM
-================================= */
+================================ */
 
 if(req.method==="POST"){
 
 const body=req.body
 
-console.log("Webhook recebido:",JSON.stringify(body,null,2))
-
 try{
 
 const change = body.entry?.[0]?.changes?.[0]?.value
 
-if(!change){
+if(!change || !change.messages){
 return res.status(200).end()
 }
 
-if(!change.messages){
-console.log("Evento sem mensagem")
-return res.status(200).end()
-}
-
-const mensagem = change.messages?.[0]?.text?.body || ""
-const cliente = change.messages?.[0]?.from
+const mensagem = change.messages[0].text?.body || ""
+const cliente = change.messages[0].from
 
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
-/* =================================
+/* ================================
 SALVAR CONVERSA
-================================= */
+================================ */
 
 await supabase
 .from("conversas_whatsapp")
@@ -77,167 +65,129 @@ mensagem:mensagem,
 role:"user"
 })
 
-/* =================================
-BUSCAR ESTADO DA RESERVA
-================================= */
+/* ================================
+BUSCAR HISTÓRICO
+================================ */
 
-let { data: estado } = await supabase
-.from("estado_reserva")
+const {data:historico} = await supabase
+.from("conversas_whatsapp")
 .select("*")
-.eq("telefone", cliente)
-.maybeSingle()
-
-if(!estado){
-
-const { data } = await supabase
-.from("estado_reserva")
-.insert({telefone:cliente})
-.select()
-.single()
-
-estado=data
-
-}
-
-/* segurança absoluta */
-
-estado = estado || {
-telefone:cliente,
-nome:null,
-pessoas:null,
-data:null,
-hora:null,
-area:null
-}
-
-let resposta=""
-
-const texto = mensagem.toLowerCase().trim()
-
-/* =================================
-INICIAR RESERVA
-================================= */
-
-if(texto.includes("reserva") || texto==="2"){
-
-if(!estado.nome){
-resposta="Qual o seu *nome* para a reserva?"
-}
-
-else if(!estado.pessoas){
-resposta="Para quantas pessoas?"
-}
-
-else if(!estado.data){
-resposta="Qual a *data da reserva*?"
-}
-
-else if(!estado.hora){
-resposta="Qual o *horário*?"
-}
-
-else if(!estado.area){
-resposta="Prefere *Área Externa* ou *Salão*?"
-}
-
-}
-
-/* =================================
-CAPTURAR DADOS
-================================= */
-
-if(!estado.nome && !texto.includes("reserva")){
-
-await supabase
-.from("estado_reserva")
-.update({nome:mensagem})
 .eq("telefone",cliente)
+.order("created_at",{ascending:true})
+.limit(15)
 
-estado.nome=mensagem
+const mensagens = historico.map(m=>({
 
-resposta="Para quantas pessoas será a reserva?"
+role:m.role,
+content:m.mensagem
+
+}))
+
+/* ================================
+IA
+================================ */
+
+const completion = await openai.chat.completions.create({
+
+model:"gpt-4.1-mini",
+
+messages:[
+
+{
+role:"system",
+content:`
+
+Você é o assistente do restaurante Mercatto Delícia.
+
+Seu trabalho é conversar naturalmente com clientes no WhatsApp.
+
+Você pode:
+
+• tirar dúvidas
+• explicar o cardápio
+• ajudar com reservas
+
+Quando o cliente quiser reservar, você precisa descobrir:
+
+nome
+quantidade de pessoas
+data
+horário
+área (externa ou salão)
+
+IMPORTANTE:
+
+Quando identificar dados de reserva, responda normalmente ao cliente
+E no final da resposta inclua um bloco JSON assim:
+
+RESERVA_JSON:
+{
+"nome":"",
+"pessoas":"",
+"data":"",
+"hora":"",
+"area":""
+}
+
+Se não tiver informação suficiente, deixe campos vazios.
+
+`
+},
+
+...mensagens
+
+]
+
+})
+
+let resposta = completion.choices[0].message.content
+
+/* ================================
+EXTRAIR JSON DA RESERVA
+================================ */
+
+let reserva=null
+
+try{
+
+const match = resposta.match(/RESERVA_JSON:\s*(\{[\s\S]*\})/)
+
+if(match){
+
+reserva = JSON.parse(match[1])
 
 }
 
-else if(estado.nome && !estado.pessoas){
+}catch(e){}
 
-const pessoas=parseInt(mensagem)
+/* ================================
+CRIAR RESERVA SE COMPLETA
+================================ */
 
-if(!isNaN(pessoas)){
-
-await supabase
-.from("estado_reserva")
-.update({pessoas:pessoas})
-.eq("telefone",cliente)
-
-estado.pessoas=pessoas
-
-resposta="Qual a data da reserva?"
-
-}
-
-}
-
-else if(estado.nome && estado.pessoas && !estado.data){
-
-await supabase
-.from("estado_reserva")
-.update({data:mensagem})
-.eq("telefone",cliente)
-
-estado.data=mensagem
-
-resposta="Qual horário?"
-
-}
-
-else if(estado.nome && estado.pessoas && estado.data && !estado.hora){
-
-await supabase
-.from("estado_reserva")
-.update({hora:mensagem})
-.eq("telefone",cliente)
-
-estado.hora=mensagem
-
-resposta="Prefere Área Externa ou Salão?"
-
-}
-
-else if(
-estado.nome &&
-estado.pessoas &&
-estado.data &&
-estado.hora &&
-!estado.area
+if(
+reserva &&
+reserva.nome &&
+reserva.pessoas &&
+reserva.data &&
+reserva.hora &&
+reserva.area
 ){
 
-await supabase
-.from("estado_reserva")
-.update({area:mensagem})
-.eq("telefone",cliente)
-
-estado.area=mensagem
-
-/* =================================
-CRIAR RESERVA
-================================= */
-
 const mesa =
-mensagem.toLowerCase().includes("externa")
+reserva.area.toLowerCase().includes("externa")
 ? "Área Externa"
 : "Salão"
 
-const datahora = estado.data+"T"+estado.hora
+const datahora = reserva.data+"T"+reserva.hora
 
 await supabase
 .from("reservas_mercatto")
 .insert({
 
-nome:estado.nome,
+nome:reserva.nome,
 email:"",
 telefone:cliente,
-pessoas:estado.pessoas,
+pessoas:Number(reserva.pessoas),
 mesa:mesa,
 cardapio:"",
 comandaIndividual:"Não",
@@ -250,99 +200,33 @@ status:"Pendente"
 
 })
 
-await supabase
-.from("estado_reserva")
-.delete()
-.eq("telefone",cliente)
-
 resposta =
-`✅ *Reserva registrada!*
+`✅ Reserva confirmada!
 
-Nome: ${estado.nome}
+Nome: ${reserva.nome}
 
-Pessoas: ${estado.pessoas}
+Pessoas: ${reserva.pessoas}
 
-Data: ${estado.data}
+Data: ${reserva.data}
 
-Hora: ${estado.hora}
+Hora: ${reserva.hora}
 
 Local: ${mesa}
 
 📍 Mercatto Delícia
 Avenida Rui Barbosa 1264
 
-A reserva será mantida por 20 minutos após o horário.`
+Sua mesa estará reservada por 20 minutos após o horário.`
 
 }
 
-/* =================================
-OPENAI
-================================= */
+/* remover JSON da mensagem */
 
-if(!resposta){
+resposta = resposta.replace(/RESERVA_JSON:[\s\S]*/,"").trim()
 
-try{
-
-const {data:historico}=await supabase
-.from("conversas_whatsapp")
-.select("*")
-.eq("telefone",cliente)
-.order("created_at",{ascending:true})
-.limit(10)
-
-const mensagens = historico.map(m=>({
-
-role:m.role,
-content:m.mensagem
-
-}))
-
-const completion = await openai.chat.completions.create({
-
-model:"gpt-4.1-mini",
-
-messages:[
-
-{
-role:"system",
-content:`Você é o assistente do restaurante Mercatto Delícia.
-
-Ajude clientes com reservas, cardápio e dúvidas.
-
-Endereço:
-Avenida Rui Barbosa 1264
-
-Telefone:
-(77) 3613-5148
-
-Instagram:
-@mercattodelicia_`
-},
-
-...mensagens
-
-]
-
-})
-
-resposta = completion.choices[0].message.content
-
-}catch(e){
-
-resposta=
-`👋 Bem-vindo ao *Mercatto Delícia*
-
-1️⃣ Cardápio  
-2️⃣ Fazer reserva  
-3️⃣ Endereço`
-
-}
-
-}
-
-/* =================================
+/* ================================
 SALVAR RESPOSTA
-================================= */
+================================ */
 
 await supabase
 .from("conversas_whatsapp")
@@ -354,9 +238,9 @@ role:"assistant"
 
 })
 
-/* =================================
+/* ================================
 ENVIAR WHATSAPP
-================================= */
+================================ */
 
 const phone_number_id = change.metadata.phone_number_id
 
@@ -384,11 +268,9 @@ text:{ body:resposta }
 
 console.log("Resposta enviada:",resposta)
 
-}
+}catch(error){
 
-catch(error){
-
-console.error("ERRO GERAL:",error)
+console.error("ERRO:",error)
 
 }
 
