@@ -1,8 +1,14 @@
 const OpenAI = require("openai")
+const { createClient } = require("@supabase/supabase-js")
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
+)
 
 module.exports = async function handler(req, res) {
 
@@ -49,7 +55,7 @@ module.exports = async function handler(req, res) {
       ========================= */
 
       if (!change.messages) {
-        console.log("Evento recebido sem mensagem (status ou delivery)")
+        console.log("Evento recebido sem mensagem (status)")
         return res.status(200).end()
       }
 
@@ -64,18 +70,52 @@ module.exports = async function handler(req, res) {
       console.log("Cliente:", cliente)
       console.log("Mensagem:", mensagem)
 
+      /* =========================
+         SALVAR MENSAGEM CLIENTE
+      ========================= */
+
+      await supabase
+      .from("conversas_whatsapp")
+      .insert({
+        telefone: cliente,
+        mensagem: mensagem,
+        role: "user"
+      })
+
+      /* =========================
+         BUSCAR HISTÓRICO
+      ========================= */
+
+      const { data: historico } = await supabase
+      .from("conversas_whatsapp")
+      .select("*")
+      .eq("telefone", cliente)
+      .order("created_at", { ascending: true })
+      .limit(10)
+
+      const mensagens = historico.map(m => ({
+        role: m.role,
+        content: m.mensagem
+      }))
+
       let resposta = ""
 
       /* =========================
-         OPENAI
+         OPENAI COM MEMÓRIA
       ========================= */
 
       try {
 
-        const completion = await openai.responses.create({
-          model: "gpt-4.1-mini",
-          input: `
-Você é o assistente do restaurante Mercatto Delícia.
+        const completion = await openai.chat.completions.create({
+
+          model: "gpt-5-nano",
+
+          messages: [
+
+            {
+              role: "system",
+              content: `
+Você é o assistente oficial do restaurante Mercatto Delícia.
 
 Ajude clientes com:
 
@@ -84,7 +124,7 @@ Ajude clientes com:
 • horários
 • aniversários
 
-Informações importantes:
+Informações:
 
 Rodízio italiano
 Rodízio oriental
@@ -98,14 +138,17 @@ Telefone:
 Instagram:
 @mercattodelicia_
 
-Responda de forma curta, educada e natural.
-
-Cliente disse:
-${mensagem}
+Responda curto, educado e natural.
 `
+            },
+
+            ...mensagens
+
+          ]
+
         })
 
-        resposta = completion.output_text
+        resposta = completion.choices[0].message.content
 
         console.log("Resposta OpenAI:", resposta)
 
@@ -123,7 +166,7 @@ ${mensagem}
           resposta =
 `📖 *CARDÁPIO MERCATTO*
 
-Acesse nosso cardápio completo:
+Acesse:
 
 https://mercattodelicia.com/cardapio`
 
@@ -134,7 +177,7 @@ https://mercattodelicia.com/cardapio`
           resposta =
 `📅 *RESERVAS MERCATTO*
 
-Faça sua reserva online:
+Reserve aqui:
 
 https://reservas-mercatto.vercel.app/novo-agendamento.html`
 
@@ -147,7 +190,7 @@ https://reservas-mercatto.vercel.app/novo-agendamento.html`
 
 Avenida Rui Barbosa 1264
 
-Reservas:
+Telefone:
 (77) 3613-5148
 
 Instagram:
@@ -171,6 +214,18 @@ Digite o número da opção.`
         }
 
       }
+
+      /* =========================
+         SALVAR RESPOSTA IA
+      ========================= */
+
+      await supabase
+      .from("conversas_whatsapp")
+      .insert({
+        telefone: cliente,
+        mensagem: resposta,
+        role: "assistant"
+      })
 
       console.log("Resposta enviada:", resposta)
 
