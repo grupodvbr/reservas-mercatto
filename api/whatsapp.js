@@ -9,7 +9,28 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE
 )
+/* =========================
+   CONVERTER DATA BR
+========================= */
 
+function formatarDataBR(data){
+
+  if(data.includes("/")){
+
+    const partes = data.split("/")
+
+    const dia = partes[0].padStart(2,"0")
+    const mes = partes[1].padStart(2,"0")
+
+    const ano = new Date().getFullYear()
+
+    return `${ano}-${mes}-${dia}`
+
+  }
+
+  return data
+
+}
 module.exports = async function handler(req, res) {
 
   
@@ -197,16 +218,25 @@ Responda normalmente ao cliente.
               headers:{
                 "Content-Type":"application/json"
               },
-              body:JSON.stringify({
-                nome:reserva.nome,
-                telefone:cliente,
-                pessoas:reserva.pessoas,
-                data:reserva.data,
-                hora:reserva.hora,
-                area:reserva.area
-              })
-            }
-          )
+const dataConvertida = formatarDataBR(reserva.data)
+
+const api = await fetch(
+  process.env.RESERVA_API_URL,
+  {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      nome:reserva.nome,
+      telefone:cliente,
+      pessoas:reserva.pessoas,
+      data:dataConvertida,
+      hora:reserva.hora,
+      area:reserva.area
+    })
+  }
+)
 
           const resultado = await api.json()
 
