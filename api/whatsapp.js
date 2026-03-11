@@ -54,19 +54,13 @@ if(!change){
 return res.status(200).end()
 }
 
-/* IGNORAR STATUS */
-
 if(!change.messages){
 console.log("Evento sem mensagem")
 return res.status(200).end()
 }
 
-const mensagem = change.messages?.[0]?.text?.body
+const mensagem = change.messages?.[0]?.text?.body || ""
 const cliente = change.messages?.[0]?.from
-
-if(!mensagem){
-return res.status(200).end()
-}
 
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
@@ -93,18 +87,27 @@ let { data: estado } = await supabase
 .eq("telefone", cliente)
 .maybeSingle()
 
-if (!estado) {
+if(!estado){
 
-const { data: novoEstado } = await supabase
+const { data } = await supabase
 .from("estado_reserva")
-.insert({
-telefone: cliente
-})
+.insert({telefone:cliente})
 .select()
 .single()
 
-estado = novoEstado
+estado=data
 
+}
+
+/* segurança absoluta */
+
+estado = estado || {
+telefone:cliente,
+nome:null,
+pessoas:null,
+data:null,
+hora:null,
+area:null
 }
 
 let resposta=""
@@ -112,7 +115,7 @@ let resposta=""
 const texto = mensagem.toLowerCase().trim()
 
 /* =================================
-FLUXO RESERVA
+INICIAR RESERVA
 ================================= */
 
 if(texto.includes("reserva") || texto==="2"){
@@ -143,18 +146,20 @@ resposta="Prefere *Área Externa* ou *Salão*?"
 CAPTURAR DADOS
 ================================= */
 
-if(!estado.nome){
+if(!estado.nome && !texto.includes("reserva")){
 
 await supabase
 .from("estado_reserva")
 .update({nome:mensagem})
 .eq("telefone",cliente)
 
-resposta="Para quantas pessoas?"
+estado.nome=mensagem
+
+resposta="Para quantas pessoas será a reserva?"
 
 }
 
-else if(!estado.pessoas){
+else if(estado.nome && !estado.pessoas){
 
 const pessoas=parseInt(mensagem)
 
@@ -165,80 +170,82 @@ await supabase
 .update({pessoas:pessoas})
 .eq("telefone",cliente)
 
+estado.pessoas=pessoas
+
 resposta="Qual a data da reserva?"
 
 }
 
 }
 
-else if(!estado.data){
+else if(estado.nome && estado.pessoas && !estado.data){
 
 await supabase
 .from("estado_reserva")
 .update({data:mensagem})
 .eq("telefone",cliente)
 
+estado.data=mensagem
+
 resposta="Qual horário?"
 
 }
 
-else if(!estado.hora){
+else if(estado.nome && estado.pessoas && estado.data && !estado.hora){
 
 await supabase
 .from("estado_reserva")
 .update({hora:mensagem})
 .eq("telefone",cliente)
 
-resposta="Área externa ou salão?"
+estado.hora=mensagem
+
+resposta="Prefere Área Externa ou Salão?"
 
 }
 
-else if(!estado.area){
+else if(
+estado.nome &&
+estado.pessoas &&
+estado.data &&
+estado.hora &&
+!estado.area
+){
 
 await supabase
 .from("estado_reserva")
 .update({area:mensagem})
 .eq("telefone",cliente)
 
-/* =================================
-CRIAR RESERVA IGUAL AO FORM
-================================= */
+estado.area=mensagem
 
-const datahora = estado.data+"T"+estado.hora
+/* =================================
+CRIAR RESERVA
+================================= */
 
 const mesa =
 mensagem.toLowerCase().includes("externa")
 ? "Área Externa"
 : "Salão"
 
+const datahora = estado.data+"T"+estado.hora
+
 await supabase
 .from("reservas_mercatto")
 .insert({
 
 nome:estado.nome,
-
 email:"",
-
 telefone:cliente,
-
 pessoas:estado.pessoas,
-
 mesa:mesa,
-
 cardapio:"",
-
 comandaIndividual:"Não",
-
 datahora:datahora,
-
-observacoes:"Reserva feita via WhatsApp",
-
+observacoes:"Reserva via WhatsApp",
 valorEstimado:0,
-
 pagamentoAntecipado:0,
-
 banco:"",
-
 status:"Pendente"
 
 })
@@ -248,7 +255,7 @@ await supabase
 .delete()
 .eq("telefone",cliente)
 
-resposta=
+resposta =
 `✅ *Reserva registrada!*
 
 Nome: ${estado.nome}
@@ -264,7 +271,7 @@ Local: ${mesa}
 📍 Mercatto Delícia
 Avenida Rui Barbosa 1264
 
-Sua mesa estará reservada por 20 minutos após o horário.`
+A reserva será mantida por 20 minutos após o horário.`
 
 }
 
@@ -367,14 +374,9 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 body:JSON.stringify({
 
 messaging_product:"whatsapp",
-
 to:cliente,
-
 type:"text",
-
-text:{
-body:resposta
-}
+text:{ body:resposta }
 
 })
 
