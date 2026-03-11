@@ -138,7 +138,7 @@ Nunca ignore uma correção do cliente.
 
 SISTEMA DE RESERVAS
 
-Uma reserva possui estes campos:
+Uma reserva possui estes campos, pode mandar a lista dos campos:
 
 nome
 pessoas
