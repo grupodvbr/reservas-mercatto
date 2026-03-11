@@ -23,7 +23,7 @@ area.toLowerCase().includes("externa")
 ? "Área Externa"
 : "Salão"
 
-const datahora = data + "T" + hora
+const datahora = data+"T"+hora
 
 const {error} = await supabase
 .from("reservas_mercatto")
@@ -46,22 +46,14 @@ status:"Pendente"
 })
 
 if(error){
-
-return res.json({
-success:false
-})
-
+return res.json({success:false})
 }
 
-return res.json({
-success:true
-})
+return res.json({success:true})
 
 }catch(e){
 
-return res.json({
-success:false
-})
+return res.json({success:false})
 
 }
 
