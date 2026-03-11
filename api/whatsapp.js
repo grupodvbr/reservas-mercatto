@@ -211,13 +211,6 @@ Responda normalmente ao cliente.
 
         try{
 
-          const api = await fetch(
-            process.env.RESERVA_API_URL,
-            {
-              method:"POST",
-              headers:{
-                "Content-Type":"application/json"
-              },
 const dataConvertida = formatarDataBR(reserva.data)
 
 const api = await fetch(
