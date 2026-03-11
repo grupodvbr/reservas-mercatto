@@ -28,11 +28,16 @@ module.exports = async function handler(req, res) {
 
     try {
 
-      const mensagem =
-        body.entry[0].changes[0].value.messages[0].text.body
+const change = body.entry?.[0]?.changes?.[0]?.value
 
-      const cliente =
-        body.entry[0].changes[0].value.messages[0].from
+// Se não tiver mensagem, ignorar
+if (!change.messages) {
+  console.log("Evento recebido sem mensagem (status ou delivery)")
+  return res.status(200).end()
+}
+
+const mensagem = change.messages[0].text.body
+const cliente = change.messages[0].from
 
       console.log("Cliente:", cliente)
       console.log("Mensagem:", mensagem)
