@@ -2,6 +2,9 @@ export default async function handler(req, res) {
 
   try {
 
+    // ====================================
+    // VERIFICAÇÃO DO WEBHOOK META
+    // ====================================
     if (req.method === "GET") {
 
       const mode = req.query["hub.mode"];
@@ -15,94 +18,122 @@ export default async function handler(req, res) {
       return res.status(200).send("Webhook Mercatto ativo");
     }
 
+    // ====================================
+    // RECEBER EVENTO WHATSAPP
+    // ====================================
     if (req.method === "POST") {
 
       const body = req.body;
 
-      const message =
-        body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      console.log("Webhook recebido:", JSON.stringify(body, null, 2));
 
+      const change = body?.entry?.[0]?.changes?.[0];
+      const value = change?.value;
+
+      if (!value) {
+        return res.status(200).json({ ok: true });
+      }
+
+      const phoneId = value?.metadata?.phone_number_id;
+
+      const message = value?.messages?.[0];
+
+      // ignora eventos sem mensagem (delivered, read etc)
       if (!message) {
         return res.status(200).json({ ok: true });
       }
 
       const from = message.from;
-      const text = message.text?.body;
+      const text = message?.text?.body || "";
 
       console.log("Cliente:", from);
       console.log("Mensagem:", text);
 
-      // =============================
+      // ====================================
       // OPENAI
-      // =============================
+      // ====================================
 
-      const ai = await fetch("https://api.openai.com/v1/chat/completions",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          Authorization:`Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body:JSON.stringify({
-          model:"gpt-4.1-mini",
-          messages:[
-            {
-              role:"system",
-              content:`Você é atendente do restaurante Mercatto Delícia.
+      const aiResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [
+              {
+                role: "system",
+                content: `
+Você é atendente do restaurante Mercatto Delícia.
 
 Ajude clientes com:
-reservas
-aniversários
-horários
-informações do restaurante.
+- reservas
+- aniversários
+- horários
+- cardápio
+- informações do restaurante
 
-Responda de forma curta e educada.`
-            },
-            {
-              role:"user",
-              content:text
-            }
-          ]
-        })
-      });
+Informações do Mercatto:
+Endereço: Avenida Rui Barbosa 1264
+Telefone: (77) 3613-5148
+Instagram: @mercattodelicia
 
-      const data = await ai.json();
-
-      const reply = data.choices[0].message.content;
-
-      const phoneId =
-        body.entry[0].changes[0].value.metadata.phone_number_id;
-
-      // =============================
-      // ENVIAR WHATSAPP
-      // =============================
-
-      await fetch(
-        `https://graph.facebook.com/v19.0/${phoneId}/messages`,
-        {
-          method:"POST",
-          headers:{
-            Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-            "Content-Type":"application/json"
-          },
-          body:JSON.stringify({
-            messaging_product:"whatsapp",
-            to:from,
-            type:"text",
-            text:{ body:reply }
+Responda sempre de forma curta, educada e clara.
+`
+              },
+              {
+                role: "user",
+                content: text
+              }
+            ]
           })
         }
       );
 
-      return res.status(200).json({ ok:true });
+      const aiData = await aiResponse.json();
+
+      const reply =
+        aiData?.choices?.[0]?.message?.content ||
+        "Desculpe, não consegui entender. Pode repetir?";
+
+      console.log("Resposta IA:", reply);
+
+      // ====================================
+      // ENVIAR RESPOSTA WHATSAPP
+      // ====================================
+
+      await fetch(
+        `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: from,
+            type: "text",
+            text: {
+              body: reply
+            }
+          })
+        }
+      );
+
+      return res.status(200).json({ ok: true });
 
     }
 
   } catch (error) {
 
-    console.error(error);
+    console.error("Erro webhook:", error);
 
     return res.status(500).json({
-      erro:error.message
+      erro: error.message
     });
 
   }
