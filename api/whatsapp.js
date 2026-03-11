@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).send(challenge)
     }
 
-    return res.sendStatus(403)
+    return res.status(403).end()
   }
 
   if (req.method === "POST") {
@@ -37,40 +37,98 @@ module.exports = async function handler(req, res) {
       console.log("Cliente:", cliente)
       console.log("Mensagem:", mensagem)
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
+      let resposta = ""
+
+      try{
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4.1-mini",
+          messages: [
+            {
+              role: "system",
+              content: `
 Você é o assistente de reservas do restaurante Mercatto Delícia.
 
-Responda clientes de forma educada e curta.
+Ajude clientes com:
 
-Informações do restaurante:
+• reservas
+• cardápio
+• horários
+• aniversários
 
-Rodízio italiano
-Rodízio oriental
-Reservas disponíveis
-
-Locais:
-Sala VIP 1
-Sala VIP 2
-Sacada
-Salão Central
+Responda de forma curta e educada.
 `
-          },
-          {
-            role: "user",
-            content: mensagem
-          }
-        ]
-      })
+            },
+            {
+              role: "user",
+              content: mensagem
+            }
+          ]
+        })
 
-      const resposta =
-        completion.choices[0].message.content
+        resposta = completion.choices[0].message.content
 
-      console.log("Resposta IA:", resposta)
+      }catch(e){
+
+        console.log("OpenAI falhou, ativando menu automático")
+
+        const texto = mensagem.toLowerCase()
+
+        if(texto === "1"){
+
+          resposta =
+`📖 CARDÁPIO MERCATTO
+
+Acesse nosso cardápio completo:
+
+https://mercattodelicia.com/cardapio`
+
+        }
+
+        else if(texto === "2"){
+
+          resposta =
+`📅 RESERVAS MERCATTO
+
+Faça sua reserva online:
+
+https://reservas-mercatto.vercel.app/novo-agendamento.html`
+
+        }
+
+        else if(texto === "3"){
+
+          resposta =
+`📍 ENDEREÇO
+
+Avenida Rui Barbosa 1264
+
+Reservas:
+(77) 3613-5148
+
+Instagram:
+@mercattodelicia_`
+
+        }
+
+        else{
+
+          resposta =
+`👋 Bem-vindo ao *Mercatto Delícia*
+
+Escolha uma opção:
+
+1️⃣ Ver cardápio  
+2️⃣ Fazer reserva  
+3️⃣ Endereço / contato  
+
+Digite o número da opção.`
+
+        }
+
+      }
+
+      console.log("Resposta enviada:", resposta)
 
       const phone_number_id =
         body.entry[0].changes[0].value.metadata.phone_number_id
@@ -99,10 +157,12 @@ Salão Central
       console.log("META RESPONSE:", data)
 
     } catch (error) {
+
       console.error("ERRO:", error)
+
     }
 
-    return res.sendStatus(200)
+    return res.status(200).end()
   }
 
 }
