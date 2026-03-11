@@ -50,10 +50,6 @@ module.exports = async function handler(req, res) {
         return res.status(200).end()
       }
 
-      /* =========================
-         IGNORAR STATUS
-      ========================= */
-
       if (!change.messages) {
         console.log("Evento recebido sem mensagem (status)")
         return res.status(200).end()
@@ -124,11 +120,6 @@ Ajude clientes com:
 • horários
 • aniversários
 
-Informações:
-
-Rodízio italiano
-Rodízio oriental
-
 Endereço:
 Avenida Rui Barbosa 1264
 
@@ -138,7 +129,27 @@ Telefone:
 Instagram:
 @mercattodelicia_
 
-Responda curto, educado e natural.
+Se o cliente quiser reservar mesa:
+
+Colete:
+nome
+pessoas
+data
+hora
+area (interna ou externa)
+
+Quando tiver todos os dados responda exatamente neste formato:
+
+RESERVA_JSON:
+{
+"nome":"",
+"pessoas":"",
+"data":"",
+"hora":"",
+"area":""
+}
+
+Depois explique a reserva normalmente.
 `
             },
 
@@ -212,6 +223,73 @@ Escolha uma opção:
 Digite o número da opção.`
 
         }
+
+      }
+
+      /* =========================
+         DETECTAR RESERVA
+      ========================= */
+
+      try{
+
+        const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
+
+        if(match){
+
+          const reserva = JSON.parse(match[1])
+
+          console.log("Reserva detectada:", reserva)
+
+          const mesa =
+            reserva.area?.toLowerCase().includes("externa")
+            ? "Área Externa"
+            : "Salão"
+
+          const datahora = reserva.data + "T" + reserva.hora
+
+          const { error } = await supabase
+          .from("reservas_mercatto")
+          .insert({
+
+            nome: reserva.nome,
+            email: "",
+            telefone: cliente,
+            pessoas: Number(reserva.pessoas),
+            mesa: mesa,
+            cardapio: "",
+            comandaIndividual: "Não",
+            datahora: datahora,
+            observacoes: "Reserva via WhatsApp",
+            valorEstimado: 0,
+            pagamentoAntecipado: 0,
+            banco: "",
+            status: "Pendente"
+
+          })
+
+          if(!error){
+
+            resposta =
+`✅ *Reserva registrada com sucesso!*
+
+Nome: ${reserva.nome}
+Pessoas: ${reserva.pessoas}
+Data: ${reserva.data}
+Hora: ${reserva.hora}
+Área: ${mesa}
+
+📍 Mercatto Delícia
+Avenida Rui Barbosa 1264
+
+Aguardamos você!`
+
+          }
+
+        }
+
+      }catch(e){
+
+        console.log("Erro ao processar reserva:", e)
 
       }
 
