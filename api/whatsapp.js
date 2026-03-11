@@ -105,8 +105,26 @@ Responda sempre de forma curta, educada e clara.
       // ENVIAR RESPOSTA WHATSAPP
       // ====================================
 
-      await fetch(
-        `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+const send = await fetch(
+  `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+  {
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:from,
+      type:"text",
+      text:{ body: reply }
+    })
+  }
+)
+
+const sendData = await send.json()
+
+console.log("META RESPONSE:", sendData)
         {
           method: "POST",
           headers: {
