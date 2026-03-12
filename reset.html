@@ -3,13 +3,12 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Auditoria de Reservas • Mercatto</title>
+<title>Auditoria de Reservas • Mercatto Delícia</title>
 
 <meta name="viewport"
 content="width=device-width,
 initial-scale=1,
-maximum-scale=1,
-user-scalable=no">
+maximum-scale=1">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
@@ -18,7 +17,7 @@ user-scalable=no">
 <style>
 
 :root{
---bg:#f6f7fb;
+--bg:#f3f4f6;
 --card:#ffffff;
 --border:#e5e7eb;
 --text:#111827;
@@ -42,12 +41,13 @@ color:var(--text);
 
 .header{
 background:white;
-padding:18px;
+padding:18px 24px;
+border-bottom:1px solid var(--border);
 display:flex;
 justify-content:space-between;
 align-items:center;
 flex-wrap:wrap;
-border-bottom:1px solid var(--border);
+gap:10px;
 }
 
 .title{
@@ -68,25 +68,30 @@ font-weight:600;
 }
 
 .container{
-padding:20px;
+padding:24px;
 display:grid;
 gap:14px;
 }
 
 .card{
 background:var(--card);
-border-radius:var(--radius);
 border:1px solid var(--border);
-padding:16px;
+border-radius:var(--radius);
+padding:18px;
 display:grid;
-gap:8px;
-box-shadow:0 6px 18px rgba(0,0,0,0.05);
+gap:10px;
+box-shadow:0 10px 24px rgba(0,0,0,0.05);
 }
 
 .top{
 display:flex;
 justify-content:space-between;
 align-items:center;
+}
+
+.nome{
+font-weight:800;
+font-size:16px;
 }
 
 .badge{
@@ -120,7 +125,7 @@ font-size:14px;
 .actions{
 display:flex;
 gap:10px;
-margin-top:6px;
+margin-top:8px;
 }
 
 .btn{
@@ -215,12 +220,12 @@ font-weight:600;
 <div class="header">
 
 <div class="title">
-Auditoria de Reservas
+Auditoria de Reservas • Mercatto
 </div>
 
 <div class="filters">
 
-<input id="busca" placeholder="Buscar nome ou mesa">
+<input id="busca" placeholder="Buscar cliente">
 
 <select id="tipoFiltro">
 <option value="">Todos</option>
@@ -240,14 +245,14 @@ Auditoria de Reservas
 <div class="modal">
 
 <div class="modal-header">
-<span>Detalhes da alteração</span>
+<span>Alteração da Reserva</span>
 <span class="close" onclick="fechar()">✕</span>
 </div>
 
 <div class="grid" id="dados"></div>
 
 <button class="btn btn-restore" onclick="restaurar()">
-Restaurar Registro
+Restaurar Reserva
 </button>
 
 </div>
@@ -282,6 +287,24 @@ render()
 
 }
 
+function interpretarDados(item){
+
+let dados={}
+
+try{
+dados=JSON.parse(item.dados || "{}")
+}catch{}
+
+if(item.acao==="UPDATE"){
+
+return dados.depois || dados
+
+}
+
+return dados
+
+}
+
 function render(){
 
 const busca=document.getElementById("busca").value.toLowerCase()
@@ -293,13 +316,9 @@ container.innerHTML=""
 
 const lista=historico.filter(i=>{
 
-let dados={}
+const dados=interpretarDados(i)
 
-try{
-dados=JSON.parse(i.dados || "{}")
-}catch{}
-
-const texto=(dados.nome || "") + " " + (dados.mesa || "")
+const texto=(dados.nome || "")
 
 const matchBusca=texto.toLowerCase().includes(busca)
 
@@ -318,11 +337,7 @@ return
 
 lista.forEach(item=>{
 
-let dados={}
-
-try{
-dados=JSON.parse(item.dados || "{}")
-}catch{}
+const dados=interpretarDados(item)
 
 const card=document.createElement("div")
 
@@ -332,7 +347,9 @@ card.innerHTML=`
 
 <div class="top">
 
-<b>${dados.nome || "Reserva"}</b>
+<div class="nome">
+${dados.nome || "Reserva"}
+</div>
 
 <span class="badge ${item.acao}">
 ${item.acao}
@@ -351,7 +368,17 @@ ${item.acao}
 </div>
 
 <div class="row">
-<span>Data</span>
+<span>Data da Reserva</span>
+<span>${dados.datahora ? new Date(dados.datahora).toLocaleString() : "-"}</span>
+</div>
+
+<div class="row">
+<span>Status</span>
+<span>${dados.status || "-"}</span>
+</div>
+
+<div class="row">
+<span>Alterado em</span>
 <span>${new Date(item.created_at).toLocaleString()}</span>
 </div>
 
@@ -390,29 +417,19 @@ try{
 dados=JSON.parse(item.dados || "{}")
 }catch{}
 
-const antes=dados.antes || dados
-const depois=dados.depois || {}
+const antes=dados.antes || {}
+const depois=dados.depois || dados
 
 document.getElementById("dados").innerHTML=`
 
 <div>
-
 <b>ANTES</b>
-
-<pre class="json">
-${JSON.stringify(antes,null,2)}
-</pre>
-
+<pre class="json">${JSON.stringify(antes,null,2)}</pre>
 </div>
 
 <div>
-
 <b>DEPOIS</b>
-
-<pre class="json">
-${JSON.stringify(depois,null,2)}
-</pre>
-
+<pre class="json">${JSON.stringify(depois,null,2)}</pre>
 </div>
 
 `
