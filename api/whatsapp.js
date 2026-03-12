@@ -195,7 +195,13 @@ text:{body:"Aqui está nosso cardápio completo 😊"}
 
 return res.status(200).end()
 
-}if(querReserva){
+const mensagemTemDadosReserva =
+texto.includes("nome") &&
+texto.includes("pessoas") &&
+texto.includes("data") &&
+texto.includes("hora")
+
+if(querReserva && !mensagemTemDadosReserva){
 
 const resposta = `Perfeito! Vou organizar sua reserva.
 
