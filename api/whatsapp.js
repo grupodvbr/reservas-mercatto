@@ -508,14 +508,24 @@ status:"Pendente"
 
 if(!error){
 
+const dataCliente = dataISO.split("-").reverse().join("/")
+
 resposta=
 `✅ *Reserva confirmada!*
 
 Nome: ${reserva.nome}
 Pessoas: ${reserva.pessoas}
-Data: ${dataISO}
+Data: ${dataCliente}
 Hora: ${reserva.hora}
 Área: ${mesa}
+
+📍 Mercatto Delícia
+Avenida Rui Barbosa 1264
+
+Sua mesa estará reservada.
+Aguardamos você!`
+
+}
 
 📍 Mercatto Delícia
 Avenida Rui Barbosa 1264
