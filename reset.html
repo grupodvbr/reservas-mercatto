@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
+
 <title>Histórico de Alterações</title>
 
 <meta name="viewport"
@@ -24,6 +26,7 @@ user-scalable=no">
 --muted:#64748b;
 --primary:#111827;
 --green:#16a34a;
+--blue:#0284c7;
 --red:#dc2626;
 --radius:14px;
 }
@@ -46,6 +49,7 @@ background:#fff;
 border-bottom:1px solid var(--border);
 position:sticky;
 top:0;
+z-index:10;
 }
 
 .container{
@@ -61,6 +65,7 @@ border-radius:var(--radius);
 padding:14px;
 display:grid;
 gap:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
 }
 
 .row{
@@ -101,6 +106,10 @@ font-weight:700;
 cursor:pointer;
 }
 
+.btn:hover{
+opacity:0.9;
+}
+
 .popup{
 position:fixed;
 top:0;
@@ -111,16 +120,32 @@ background:rgba(0,0,0,.6);
 display:none;
 align-items:center;
 justify-content:center;
+padding:20px;
 }
 
 .modal{
 background:white;
 padding:20px;
 border-radius:14px;
-max-width:600px;
-width:90%;
+max-width:700px;
+width:100%;
 max-height:80vh;
 overflow:auto;
+display:grid;
+gap:14px;
+}
+
+.modal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-weight:800;
+font-size:18px;
+}
+
+.close{
+cursor:pointer;
+font-size:20px;
 }
 
 .json{
@@ -132,7 +157,14 @@ font-size:12px;
 overflow:auto;
 }
 
+.empty{
+text-align:center;
+padding:40px;
+color:var(--muted);
+}
+
 </style>
+
 </head>
 
 <body>
@@ -144,17 +176,22 @@ Histórico de Alterações
 <div class="container" id="lista"></div>
 
 <div class="popup" id="popup">
+
 <div class="modal">
 
-<h3>Detalhes da alteração</h3>
+<div class="modal-header">
+<span>Detalhes da alteração</span>
+<span class="close" onclick="fechar()">✕</span>
+</div>
 
 <div id="dados"></div>
 
-<br>
-
-<button class="btn" onclick="restaurar()">Restaurar Registro</button>
+<button class="btn" onclick="restaurar()">
+Restaurar Registro
+</button>
 
 </div>
+
 </div>
 
 <script>
@@ -164,9 +201,6 @@ const supabase = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-
-
-  
 let registroAtual=null
 
 async function carregar(){
@@ -191,6 +225,15 @@ const container=document.getElementById("lista")
 
 container.innerHTML=""
 
+if(!lista || lista.length===0){
+
+container.innerHTML=`<div class="empty">
+Nenhum histórico encontrado
+</div>`
+
+return
+}
+
 lista.forEach(item=>{
 
 const card=document.createElement("div")
@@ -199,15 +242,15 @@ card.className="card"
 card.innerHTML=`
 
 <div class="row">
-<b>${item.tabela}</b>
+<b>${item.tabela || "-"}</b>
 <span class="badge ${item.tipo}">
-${item.tipo.toUpperCase()}
+${(item.tipo || "").toUpperCase()}
 </span>
 </div>
 
 <div class="row">
 <span>ID Registro</span>
-<span>${item.registro_id}</span>
+<span>${item.registro_id || "-"}</span>
 </div>
 
 <div class="row">
@@ -215,12 +258,11 @@ ${item.tipo.toUpperCase()}
 <span>${new Date(item.created_at).toLocaleString()}</span>
 </div>
 
-<button class="btn"
-onclick='abrir(${JSON.stringify(item)})'>
-Ver alteração
-</button>
+<button class="btn">Ver alteração</button>
 
 `
+
+card.querySelector("button").onclick=()=>abrir(item)
 
 container.appendChild(card)
 
@@ -234,21 +276,38 @@ registroAtual=item
 
 document.getElementById("popup").style.display="flex"
 
+const antes = item.antes || {}
+const depois = item.depois || {}
+
 document.getElementById("dados").innerHTML=`
+
+<div>
 
 <b>ANTES</b>
 
 <pre class="json">
-${JSON.stringify(item.antes,null,2)}
+${JSON.stringify(antes,null,2)}
 </pre>
+
+</div>
+
+<div>
 
 <b>DEPOIS</b>
 
 <pre class="json">
-${JSON.stringify(item.depois,null,2)}
+${JSON.stringify(depois,null,2)}
 </pre>
 
+</div>
+
 `
+
+}
+
+function fechar(){
+
+document.getElementById("popup").style.display="none"
 
 }
 
@@ -258,11 +317,16 @@ if(!registroAtual){
 return
 }
 
-const dados=registroAtual.antes
+const dados = registroAtual.antes
 
-const tabela=registroAtual.tabela
+if(!dados){
+alert("Não existe dados para restaurar")
+return
+}
 
-delete dados.id
+const tabela = registroAtual.tabela
+
+try{
 
 const {error} = await supabase
 .from(tabela)
@@ -275,9 +339,17 @@ return
 
 }
 
-alert("Registro restaurado!")
+alert("Registro restaurado com sucesso!")
 
-location.reload()
+fechar()
+
+carregar()
+
+}catch(e){
+
+alert("Erro ao restaurar")
+
+}
 
 }
 
