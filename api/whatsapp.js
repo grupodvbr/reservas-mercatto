@@ -611,7 +611,7 @@ messaging_product:"whatsapp",
 to:cliente,
 type:"image",
 image:{
-link:"https://SUA_FOTO.jpg",
+link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/images%20(1).jpg",
 caption:"Mercatto Delícia"
 }
 })
