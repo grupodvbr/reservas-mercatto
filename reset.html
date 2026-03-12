@@ -3,8 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-
-<title>Histórico de Alterações</title>
+<title>Auditoria do Sistema</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -12,7 +11,7 @@ initial-scale=1,
 maximum-scale=1,
 user-scalable=no">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -39,39 +38,58 @@ font-family:Inter;
 body{
 margin:0;
 background:var(--bg);
+color:var(--text);
 }
 
 .header{
-padding:18px;
-font-weight:800;
-font-size:20px;
+padding:20px;
 background:#fff;
 border-bottom:1px solid var(--border);
-position:sticky;
-top:0;
-z-index:10;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.title{
+font-size:20px;
+font-weight:800;
+}
+
+.filters{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+input,select{
+padding:10px 14px;
+border-radius:10px;
+border:1px solid var(--border);
+font-weight:600;
 }
 
 .container{
-padding:16px;
+padding:20px;
 display:grid;
-gap:12px;
+gap:14px;
 }
 
 .card{
 background:var(--card);
 border:1px solid var(--border);
 border-radius:var(--radius);
-padding:14px;
+padding:16px;
 display:grid;
-gap:8px;
-box-shadow:0 4px 10px rgba(0,0,0,0.05);
+gap:10px;
+box-shadow:0 6px 18px rgba(0,0,0,0.05);
 }
 
-.row{
+.top{
 display:flex;
 justify-content:space-between;
-font-size:14px;
+align-items:center;
 }
 
 .badge{
@@ -96,18 +114,35 @@ background:#fee2e2;
 color:#991b1b;
 }
 
+.row{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+}
+
+.actions{
+display:flex;
+gap:10px;
+margin-top:6px;
+}
+
 .btn{
+flex:1;
 padding:10px;
 border:none;
 border-radius:10px;
-background:var(--primary);
-color:white;
 font-weight:700;
 cursor:pointer;
 }
 
-.btn:hover{
-opacity:0.9;
+.btn-view{
+background:var(--blue);
+color:white;
+}
+
+.btn-restore{
+background:var(--green);
+color:white;
 }
 
 .popup{
@@ -121,24 +156,24 @@ display:none;
 align-items:center;
 justify-content:center;
 padding:20px;
+z-index:20;
 }
 
 .modal{
 background:white;
-padding:20px;
 border-radius:14px;
-max-width:700px;
+padding:24px;
+max-width:800px;
 width:100%;
-max-height:80vh;
+max-height:85vh;
 overflow:auto;
 display:grid;
-gap:14px;
+gap:16px;
 }
 
 .modal-header{
 display:flex;
 justify-content:space-between;
-align-items:center;
 font-weight:800;
 font-size:18px;
 }
@@ -151,26 +186,56 @@ font-size:20px;
 .json{
 background:#0f172a;
 color:#e2e8f0;
-padding:12px;
+padding:14px;
 border-radius:10px;
 font-size:12px;
 overflow:auto;
 }
 
+.grid{
+display:grid;
+gap:16px;
+}
+
+@media(min-width:900px){
+
+.grid{
+grid-template-columns:1fr 1fr;
+}
+
+}
+
 .empty{
 text-align:center;
-padding:40px;
+padding:50px;
 color:var(--muted);
+font-weight:600;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-Histórico de Alterações
+
+<div class="title">
+Auditoria do Sistema
+</div>
+
+<div class="filters">
+
+<input id="busca" placeholder="Buscar tabela ou ID">
+
+<select id="tipoFiltro">
+<option value="">Todos</option>
+<option value="insert">INSERT</option>
+<option value="update">UPDATE</option>
+<option value="delete">DELETE</option>
+</select>
+
+</div>
+
 </div>
 
 <div class="container" id="lista"></div>
@@ -184,9 +249,9 @@ Histórico de Alterações
 <span class="close" onclick="fechar()">✕</span>
 </div>
 
-<div id="dados"></div>
+<div class="grid" id="dados"></div>
 
-<button class="btn" onclick="restaurar()">
+<button class="btn btn-restore" onclick="restaurar()">
 Restaurar Registro
 </button>
 
@@ -201,11 +266,12 @@ const supabase = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
+let historico=[]
 let registroAtual=null
 
 async function carregar(){
 
-const {data,error} = await supabase
+const {data,error}=await supabase
 .from("historico_alteracoes")
 .select("*")
 .order("created_at",{ascending:false})
@@ -215,23 +281,39 @@ alert(error.message)
 return
 }
 
-render(data)
+historico=data
+
+render()
 
 }
 
-function render(lista){
+function render(){
+
+const busca=document.getElementById("busca").value.toLowerCase()
+const tipo=document.getElementById("tipoFiltro").value
 
 const container=document.getElementById("lista")
 
 container.innerHTML=""
 
-if(!lista || lista.length===0){
+const lista=historico.filter(i=>{
 
-container.innerHTML=`<div class="empty">
-Nenhum histórico encontrado
-</div>`
+const texto=(i.tabela+" "+i.registro_id).toLowerCase()
+
+const matchBusca=texto.includes(busca)
+
+const matchTipo=!tipo || i.tipo===tipo
+
+return matchBusca && matchTipo
+
+})
+
+if(lista.length===0){
+
+container.innerHTML='<div class="empty">Nenhum histórico encontrado</div>'
 
 return
+
 }
 
 lista.forEach(item=>{
@@ -241,16 +323,19 @@ card.className="card"
 
 card.innerHTML=`
 
-<div class="row">
-<b>${item.tabela || "-"}</b>
+<div class="top">
+
+<b>${item.tabela}</b>
+
 <span class="badge ${item.tipo}">
-${(item.tipo || "").toUpperCase()}
+${item.tipo.toUpperCase()}
 </span>
+
 </div>
 
 <div class="row">
-<span>ID Registro</span>
-<span>${item.registro_id || "-"}</span>
+<span>ID</span>
+<span>${item.registro_id}</span>
 </div>
 
 <div class="row">
@@ -258,11 +343,18 @@ ${(item.tipo || "").toUpperCase()}
 <span>${new Date(item.created_at).toLocaleString()}</span>
 </div>
 
-<button class="btn">Ver alteração</button>
+<div class="actions">
+
+<button class="btn btn-view">Ver alteração</button>
+
+<button class="btn btn-restore">Restaurar</button>
+
+</div>
 
 `
 
-card.querySelector("button").onclick=()=>abrir(item)
+card.querySelector(".btn-view").onclick=()=>abrir(item)
+card.querySelector(".btn-restore").onclick=()=>restaurarDireto(item)
 
 container.appendChild(card)
 
@@ -276,29 +368,19 @@ registroAtual=item
 
 document.getElementById("popup").style.display="flex"
 
-const antes = item.antes || {}
-const depois = item.depois || {}
+const antes=item.antes || {}
+const depois=item.depois || {}
 
 document.getElementById("dados").innerHTML=`
 
 <div>
-
 <b>ANTES</b>
-
-<pre class="json">
-${JSON.stringify(antes,null,2)}
-</pre>
-
+<pre class="json">${JSON.stringify(antes,null,2)}</pre>
 </div>
 
 <div>
-
 <b>DEPOIS</b>
-
-<pre class="json">
-${JSON.stringify(depois,null,2)}
-</pre>
-
+<pre class="json">${JSON.stringify(depois,null,2)}</pre>
 </div>
 
 `
@@ -313,22 +395,26 @@ document.getElementById("popup").style.display="none"
 
 async function restaurar(){
 
-if(!registroAtual){
-return
+if(!registroAtual)return
+
+restaurarDireto(registroAtual)
+
 }
 
-const dados = registroAtual.antes
+async function restaurarDireto(item){
+
+const dados=item.antes
 
 if(!dados){
-alert("Não existe dados para restaurar")
+
+alert("Não existe dado para restaurar")
 return
+
 }
 
-const tabela = registroAtual.tabela
+const tabela=item.tabela
 
-try{
-
-const {error} = await supabase
+const {error}=await supabase
 .from(tabela)
 .insert(dados)
 
@@ -345,13 +431,10 @@ fechar()
 
 carregar()
 
-}catch(e){
-
-alert("Erro ao restaurar")
-
 }
 
-}
+document.getElementById("busca").oninput=render
+document.getElementById("tipoFiltro").onchange=render
 
 carregar()
 
