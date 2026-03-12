@@ -68,7 +68,40 @@ return res.status(200).end()
 
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
+const msgLower = mensagem.toLowerCase()
 
+/* DETECTAR RESERVA */
+
+if(
+msgLower.includes("reserv") ||
+msgLower.includes("mesa") ||
+msgLower.includes("16h") ||
+msgLower.includes("17h") ||
+msgLower.includes("18h") ||
+msgLower.includes("19h")
+){
+
+const respostaReserva = `Perfeito! Vamos fazer sua reserva.
+
+Para quantas pessoas será?`
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body: respostaReserva }
+})
+})
+
+return res.status(200).end()
+
+}
 /* ================= BLOQUEAR DUPLICIDADE ================= */
 
 const { data: jaProcessada } = await supabase
