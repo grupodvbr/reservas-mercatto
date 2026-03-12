@@ -59,7 +59,8 @@ const msg = change.messages[0]
 const mensagem = msg.text?.body
 const cliente = msg.from
 const message_id = msg.id
-
+const phone_number_id = change.metadata.phone_number_id
+const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 if(!mensagem){
 console.log("Mensagem vazia")
 return res.status(200).end()
@@ -771,9 +772,6 @@ role:"assistant"
 
 /* ================= ENVIAR WHATSAPP ================= */
 
-const phone_number_id = change.metadata.phone_number_id
-
-const url=`https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 
 await fetch(url,{
 
