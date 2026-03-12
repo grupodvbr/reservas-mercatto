@@ -71,6 +71,7 @@ console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
 /* ================= MODO ADMIN ================= */
+
 if(cliente === ADMIN_PHONE && texto.includes("acesso administrativo 84")){
 
 const respostaAdmin = `🔐 *Modo administrativo ativado*
@@ -98,8 +99,6 @@ text:{body:respostaAdmin}
 })
 
 return res.status(200).end()
-
-}
 
 }
 /* CONSULTAS ADMIN */
