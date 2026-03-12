@@ -75,7 +75,11 @@ console.log("Mensagem:",mensagem)
 const texto = mensagem.toLowerCase()
 /* ================= MODO ADMIN ================= */
 
-if(cliente === ADMIN_PHONE && texto.includes("acesso administrativo 84")){
+/* ================= MODO ADMIN ================= */
+
+if(cliente === ADMIN_PHONE){
+
+if(texto === "acesso administrativo 84"){
 
 const respostaAdmin =
 `🔐 *Modo administrativo ativado*
@@ -104,9 +108,9 @@ text:{body:respostaAdmin}
 
 return res.status(200).end()
 
-}/* ================= CONSULTA ADMIN ================= */
+}
 
-if(cliente === ADMIN_PHONE){
+/* CONSULTAS ADMIN */
 
 if(
 texto.includes("quantas reservas") ||
@@ -124,8 +128,6 @@ const {data:reservas} = await supabase
 
 if(!reservas || reservas.length === 0){
 
-const resposta = "Hoje não há reservas registradas."
-
 await fetch(url,{
 method:"POST",
 headers:{
@@ -136,7 +138,7 @@ body:JSON.stringify({
 messaging_product:"whatsapp",
 to:cliente,
 type:"text",
-text:{body:resposta}
+text:{body:"Hoje não há reservas registradas."}
 })
 })
 
@@ -145,7 +147,6 @@ return res.status(200).end()
 }
 
 let totalPessoas = 0
-
 let lista = ""
 
 reservas.forEach(r=>{
