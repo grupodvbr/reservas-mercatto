@@ -1,12 +1,12 @@
 const { createClient } = require("@supabase/supabase-js")
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE
+process.env.SUPABASE_URL,
+process.env.SUPABASE_SERVICE_ROLE
 )
 
 const ADMIN_PHONE = "557798253249"
-const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_ID
+const PHONE_NUMBER_ID = "1032824119907659"
 
 module.exports = async function handler(req,res){
 
@@ -22,14 +22,14 @@ const {data:reservas,error} = await supabase
 .eq("email","linkbio@gmail.com")
 .eq("notificado",false)
 
+console.log("Reservas encontradas:",reservas)
+
 if(error){
 console.log(error)
 return res.status(200).json({ok:false})
 }
 
 if(!reservas || reservas.length === 0){
-
-console.log("Nenhuma nova reserva LinkBio")
 
 return res.status(200).json({
 ok:true,
@@ -38,18 +38,18 @@ reservas:0
 
 }
 
-/* ================= ENVIAR ALERTAS ================= */
+/* ================= ENVIAR WHATSAPP ================= */
 
 for(const r of reservas){
 
-const dataCliente = new Date(r.datahora)
-.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+const data = new Date(r.datahora)
 
-const horaCliente = new Date(r.datahora)
-.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+const dataCliente = data.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
 
-const mensagem = 
-`🚨 *Nova reserva via LinkBio*
+const horaCliente = data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
+
+const mensagem =
+`🚨 Nova reserva LinkBio
 
 Nome: ${r.nome}
 Pessoas: ${r.pessoas}
@@ -80,9 +80,7 @@ to:ADMIN_PHONE,
 
 type:"text",
 
-text:{
-body:mensagem
-}
+text:{body:mensagem}
 
 })
 
@@ -96,8 +94,6 @@ await supabase
 .eq("id",r.id)
 
 }
-
-console.log("Reservas notificadas:",reservas.length)
 
 return res.status(200).json({
 ok:true,
