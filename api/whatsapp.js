@@ -451,16 +451,22 @@ const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(match){
 
-const reserva = JSON.parse(match[1])
+let reserva
 
+try{
+  reserva = JSON.parse(match[1])
+}
+catch(err){
+  console.log("Erro ao interpretar JSON da reserva:", match[1])
+  resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
+}
 console.log("Reserva detectada:",reserva)
 
 /* NORMALIZAR DATA */
 
 let dataISO = reserva.data
 
-if(reserva.data.includes("/")){
-
+if(reserva.data && reserva.data.includes("/")){
 const [dia,mes] = reserva.data.split("/")
 const ano = new Date().toISOString().slice(0,4)
 dataISO = `${ano}-${mes}-${dia}`
@@ -493,7 +499,7 @@ const {error} = await supabase
 nome:reserva.nome,
 email:"",
 telefone:cliente,
-pessoas:Number(reserva.pessoas),
+pessoas: parseInt(reserva.pessoas) || 1,
 mesa:mesa,
 cardapio:"",
 comandaIndividual:"Não",
@@ -508,7 +514,11 @@ status:"Pendente"
 
 if(!error){
 
-const dataCliente = new Date(dataISO).toLocaleDateString("pt-BR")
+if(!error){
+
+const dataCliente = new Date(dataISO)
+  .toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+
 resposta=
 `✅ *Reserva confirmada!*
 
@@ -525,9 +535,6 @@ Sua mesa estará reservada.
 Aguardamos você!`
 
 }
-
-
-
 }
 
 }catch(e){
