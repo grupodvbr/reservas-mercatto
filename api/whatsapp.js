@@ -69,9 +69,6 @@ return res.status(200).end()
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
-console.log("Cliente:",cliente)
-console.log("Mensagem:",mensagem)
-
 const texto = mensagem.toLowerCase()
 /* ================= MODO ADMIN ================= */
 
@@ -113,13 +110,16 @@ Agora você pode perguntar:
 
 }
 /* CONSULTAS ADMIN */
-
 if(
+cliente.endsWith(ADMIN_PHONE) &&
+(
 texto.includes("quantas reservas") ||
 texto.includes("listar reservas") ||
 texto.includes("reservas hoje") ||
 texto.includes("quantas pessoas")
-){
+)
+)
+{
 
 const hoje = new Date().toISOString().split("T")[0]
 
@@ -968,14 +968,33 @@ if(match){
 
 let reserva
 
-try{
+try {
   reserva = JSON.parse(match[1])
+  console.log("Reserva detectada:", reserva)
 }
-catch(err){
+
+catch (err) {
+
   console.log("Erro ao interpretar JSON da reserva:", match[1])
-  resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{
+        body:"Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
+      }
+    })
+  })
+
+  return res.status(200).end()
 }
-console.log("Reserva detectada:",reserva)
 
 /* NORMALIZAR DATA */
 
