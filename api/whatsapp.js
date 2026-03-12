@@ -71,10 +71,7 @@ console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
 /* ================= MODO ADMIN ================= */
-
-if(cliente === ADMIN_PHONE){
-
-if(texto.includes("acesso administrativo 84")){
+if(cliente === ADMIN_PHONE && texto.includes("acesso administrativo 84")){
 
 const respostaAdmin = `🔐 *Modo administrativo ativado*
 
