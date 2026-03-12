@@ -269,7 +269,68 @@ Sempre inclua o endereço junto.
 
 ---------------------------------------
 
+---------------------------------------
 
+ENVIO DE MÍDIA
+
+Você pode enviar arquivos de mídia quando for útil para ajudar o cliente.
+
+Use os seguintes comandos especiais.
+
+ENVIAR CARDÁPIO:
+
+Se o cliente pedir:
+
+cardápio
+menu
+ver cardápio
+o que tem para comer
+
+Responda com o texto normal e adicione no final:
+
+ENVIAR_CARDAPIO
+
+---------------------------------------
+
+ENVIAR FOTOS DO RESTAURANTE
+
+Se o cliente pedir:
+
+fotos
+imagens
+como é o restaurante
+quero ver o restaurante
+
+Responda normalmente e adicione:
+
+ENVIAR_FOTOS
+
+---------------------------------------
+
+ENVIAR VÍDEO DO RESTAURANTE
+
+Se o cliente pedir:
+
+vídeo
+video
+quero ver um vídeo
+mostra o restaurante
+
+Responda normalmente e adicione:
+
+ENVIAR_VIDEO
+
+---------------------------------------
+
+IMPORTANTE
+
+Os comandos devem aparecer **sozinhos no final da mensagem**.
+
+Exemplo:
+
+"Claro! Vou te mostrar um pouco do nosso restaurante."
+
+ENVIAR_FOTOS
 
 
 
@@ -512,7 +573,76 @@ REGRAS IMPORTANTES
 })
 
 resposta = completion.choices[0].message.content
+/* ================= DETECTAR MIDIA ================= */
 
+if(resposta.includes("ENVIAR_CARDAPIO")){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"document",
+document:{
+link:"https://SEU_CARDAPIO.pdf",
+filename:"Cardapio_Mercatto.pdf"
+}
+})
+})
+
+resposta = resposta.replace("ENVIAR_CARDAPIO","")
+
+}
+
+if(resposta.includes("ENVIAR_FOTOS")){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:"https://SUA_FOTO.jpg",
+caption:"Mercatto Delícia"
+}
+})
+})
+
+resposta = resposta.replace("ENVIAR_FOTOS","")
+
+}
+
+if(resposta.includes("ENVIAR_VIDEO")){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"video",
+video:{
+link:"https://SEU_VIDEO.mp4",
+caption:"Conheça o Mercatto Delícia"
+}
+})
+})
+
+resposta = resposta.replace("ENVIAR_VIDEO","")
+
+}
 console.log("Resposta IA:",resposta)
 
 }catch(e){
