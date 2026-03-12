@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Auditoria do Sistema</title>
+<title>Auditoria de Reservas • Mercatto</title>
 
 <meta name="viewport"
 content="width=device-width,
@@ -18,12 +18,11 @@ user-scalable=no">
 <style>
 
 :root{
---bg:#f4f6fb;
+--bg:#f6f7fb;
 --card:#ffffff;
 --border:#e5e7eb;
---text:#0f172a;
---muted:#64748b;
---primary:#111827;
+--text:#111827;
+--muted:#6b7280;
 --green:#16a34a;
 --blue:#0284c7;
 --red:#dc2626;
@@ -42,25 +41,23 @@ color:var(--text);
 }
 
 .header{
-padding:20px;
-background:#fff;
-border-bottom:1px solid var(--border);
+background:white;
+padding:18px;
 display:flex;
 justify-content:space-between;
 align-items:center;
 flex-wrap:wrap;
-gap:10px;
+border-bottom:1px solid var(--border);
 }
 
 .title{
-font-size:20px;
 font-weight:800;
+font-size:20px;
 }
 
 .filters{
 display:flex;
 gap:10px;
-flex-wrap:wrap;
 }
 
 input,select{
@@ -78,11 +75,11 @@ gap:14px;
 
 .card{
 background:var(--card);
-border:1px solid var(--border);
 border-radius:var(--radius);
+border:1px solid var(--border);
 padding:16px;
 display:grid;
-gap:10px;
+gap:8px;
 box-shadow:0 6px 18px rgba(0,0,0,0.05);
 }
 
@@ -109,7 +106,7 @@ background:#e0f2fe;
 color:#075985;
 }
 
-.delete{
+.excluir{
 background:#fee2e2;
 color:#991b1b;
 }
@@ -156,19 +153,18 @@ display:none;
 align-items:center;
 justify-content:center;
 padding:20px;
-z-index:20;
 }
 
 .modal{
 background:white;
 border-radius:14px;
 padding:24px;
-max-width:800px;
+max-width:900px;
 width:100%;
 max-height:85vh;
 overflow:auto;
 display:grid;
-gap:16px;
+gap:18px;
 }
 
 .modal-header{
@@ -180,16 +176,7 @@ font-size:18px;
 
 .close{
 cursor:pointer;
-font-size:20px;
-}
-
-.json{
-background:#0f172a;
-color:#e2e8f0;
-padding:14px;
-border-radius:10px;
-font-size:12px;
-overflow:auto;
+font-size:22px;
 }
 
 .grid{
@@ -198,11 +185,18 @@ gap:16px;
 }
 
 @media(min-width:900px){
-
 .grid{
 grid-template-columns:1fr 1fr;
 }
+}
 
+.json{
+background:#111827;
+color:#e5e7eb;
+padding:14px;
+border-radius:10px;
+font-size:12px;
+overflow:auto;
 }
 
 .empty{
@@ -213,6 +207,7 @@ font-weight:600;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -220,18 +215,18 @@ font-weight:600;
 <div class="header">
 
 <div class="title">
-Auditoria do Sistema
+Auditoria de Reservas
 </div>
 
 <div class="filters">
 
-<input id="busca" placeholder="Buscar tabela ou ID">
+<input id="busca" placeholder="Buscar nome ou mesa">
 
 <select id="tipoFiltro">
 <option value="">Todos</option>
-<option value="insert">INSERT</option>
-<option value="update">UPDATE</option>
-<option value="delete">DELETE</option>
+<option value="INSERT">INSERT</option>
+<option value="UPDATE">UPDATE</option>
+<option value="excluir">EXCLUIR</option>
 </select>
 
 </div>
@@ -261,7 +256,7 @@ Restaurar Registro
 
 <script>
 
-const supabase = supabase.createClient(
+const client = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
@@ -271,8 +266,8 @@ let registroAtual=null
 
 async function carregar(){
 
-const {data,error}=await supabase
-.from("historico_alteracoes")
+const {data,error}=await client
+.from("hist_reservas_mercatto")
 .select("*")
 .order("created_at",{ascending:false})
 
@@ -298,11 +293,17 @@ container.innerHTML=""
 
 const lista=historico.filter(i=>{
 
-const texto=(i.tabela+" "+i.registro_id).toLowerCase()
+let dados={}
 
-const matchBusca=texto.includes(busca)
+try{
+dados=JSON.parse(i.dados || "{}")
+}catch{}
 
-const matchTipo=!tipo || i.tipo===tipo
+const texto=(dados.nome || "") + " " + (dados.mesa || "")
+
+const matchBusca=texto.toLowerCase().includes(busca)
+
+const matchTipo=!tipo || i.acao===tipo
 
 return matchBusca && matchTipo
 
@@ -311,31 +312,42 @@ return matchBusca && matchTipo
 if(lista.length===0){
 
 container.innerHTML='<div class="empty">Nenhum histórico encontrado</div>'
-
 return
 
 }
 
 lista.forEach(item=>{
 
+let dados={}
+
+try{
+dados=JSON.parse(item.dados || "{}")
+}catch{}
+
 const card=document.createElement("div")
+
 card.className="card"
 
 card.innerHTML=`
 
 <div class="top">
 
-<b>${item.tabela}</b>
+<b>${dados.nome || "Reserva"}</b>
 
-<span class="badge ${item.tipo}">
-${item.tipo.toUpperCase()}
+<span class="badge ${item.acao}">
+${item.acao}
 </span>
 
 </div>
 
 <div class="row">
-<span>ID</span>
-<span>${item.registro_id}</span>
+<span>Mesa</span>
+<span>${dados.mesa || "-"}</span>
+</div>
+
+<div class="row">
+<span>Pessoas</span>
+<span>${dados.pessoas || "-"}</span>
 </div>
 
 <div class="row">
@@ -345,9 +357,13 @@ ${item.tipo.toUpperCase()}
 
 <div class="actions">
 
-<button class="btn btn-view">Ver alteração</button>
+<button class="btn btn-view">
+Ver alteração
+</button>
 
-<button class="btn btn-restore">Restaurar</button>
+<button class="btn btn-restore">
+Restaurar
+</button>
 
 </div>
 
@@ -368,19 +384,35 @@ registroAtual=item
 
 document.getElementById("popup").style.display="flex"
 
-const antes=item.antes || {}
-const depois=item.depois || {}
+let dados={}
+
+try{
+dados=JSON.parse(item.dados || "{}")
+}catch{}
+
+const antes=dados.antes || dados
+const depois=dados.depois || {}
 
 document.getElementById("dados").innerHTML=`
 
 <div>
+
 <b>ANTES</b>
-<pre class="json">${JSON.stringify(antes,null,2)}</pre>
+
+<pre class="json">
+${JSON.stringify(antes,null,2)}
+</pre>
+
 </div>
 
 <div>
+
 <b>DEPOIS</b>
-<pre class="json">${JSON.stringify(depois,null,2)}</pre>
+
+<pre class="json">
+${JSON.stringify(depois,null,2)}
+</pre>
+
 </div>
 
 `
@@ -388,9 +420,7 @@ document.getElementById("dados").innerHTML=`
 }
 
 function fechar(){
-
 document.getElementById("popup").style.display="none"
-
 }
 
 async function restaurar(){
@@ -403,20 +433,24 @@ restaurarDireto(registroAtual)
 
 async function restaurarDireto(item){
 
-const dados=item.antes
+let dados={}
 
-if(!dados){
+try{
+dados=JSON.parse(item.dados || "{}")
+}catch{}
+
+const registro=dados.antes || dados
+
+if(!registro){
 
 alert("Não existe dado para restaurar")
 return
 
 }
 
-const tabela=item.tabela
-
-const {error}=await supabase
-.from(tabela)
-.insert(dados)
+const {error}=await client
+.from("reservas_mercatto")
+.upsert(registro)
 
 if(error){
 
@@ -425,7 +459,7 @@ return
 
 }
 
-alert("Registro restaurado com sucesso!")
+alert("Reserva restaurada com sucesso!")
 
 fechar()
 
