@@ -102,7 +102,7 @@ const {data:historico} = await supabase
 .select("*")
 .eq("telefone",cliente)
 .order("created_at",{ascending:true})
-.limit(15)
+.limit(25)
 
 const mensagens = historico.map(m=>({
 role:m.role,
@@ -508,8 +508,7 @@ status:"Pendente"
 
 if(!error){
 
-const dataCliente = dataISO.split("-").reverse().join("/")
-
+const dataCliente = new Date(dataISO).toLocaleDateString("pt-BR")
 resposta=
 `✅ *Reserva confirmada!*
 
@@ -527,13 +526,7 @@ Aguardamos você!`
 
 }
 
-📍 Mercatto Delícia
-Avenida Rui Barbosa 1264
 
-Sua mesa estará reservada.
-Aguardamos você!`
-
-}
 
 }
 
