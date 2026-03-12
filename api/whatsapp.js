@@ -235,17 +235,30 @@ Nunca gere RESERVA_JSON antes da confirmação.
 Sempre permita editar os dados antes de confirmar.
 
 ---------------------------------------
-
 FORMATO DE DATA
 
-Converta datas para:
+Quando falar com o cliente, use sempre o formato brasileiro:
+
+DD/MM/AAAA
+
+Exemplo:
+16/03/2026
+
+---------------------------------------
+
+FORMATO INTERNO DO SISTEMA
+
+Quando gerar o JSON RESERVA_JSON use o formato:
 
 YYYY-MM-DD
 
 Exemplo:
 
-16/03 → 2026-03-16
+Cliente vê:
+16/03/2026
 
+JSON:
+2026-03-16
 ---------------------------------------
 
 ÁREA
