@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Histórico de Alterações</title>
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+--bg:#f4f6fb;
+--card:#ffffff;
+--border:#e5e7eb;
+--text:#0f172a;
+--muted:#64748b;
+--primary:#111827;
+--green:#16a34a;
+--red:#dc2626;
+--radius:14px;
+}
+
+*{
+box-sizing:border-box;
+font-family:Inter;
+}
+
+body{
+margin:0;
+background:var(--bg);
+}
+
+.header{
+padding:18px;
+font-weight:800;
+font-size:20px;
+background:#fff;
+border-bottom:1px solid var(--border);
+position:sticky;
+top:0;
+}
+
+.container{
+padding:16px;
+display:grid;
+gap:12px;
+}
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:var(--radius);
+padding:14px;
+display:grid;
+gap:8px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+}
+
+.badge{
+padding:4px 10px;
+border-radius:999px;
+font-size:12px;
+font-weight:700;
+}
+
+.insert{
+background:#dcfce7;
+color:#166534;
+}
+
+.update{
+background:#e0f2fe;
+color:#075985;
+}
+
+.delete{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.btn{
+padding:10px;
+border:none;
+border-radius:10px;
+background:var(--primary);
+color:white;
+font-weight:700;
+cursor:pointer;
+}
+
+.popup{
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:rgba(0,0,0,.6);
+display:none;
+align-items:center;
+justify-content:center;
+}
+
+.modal{
+background:white;
+padding:20px;
+border-radius:14px;
+max-width:600px;
+width:90%;
+max-height:80vh;
+overflow:auto;
+}
+
+.json{
+background:#0f172a;
+color:#e2e8f0;
+padding:12px;
+border-radius:10px;
+font-size:12px;
+overflow:auto;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+Histórico de Alterações
+</div>
+
+<div class="container" id="lista"></div>
+
+<div class="popup" id="popup">
+<div class="modal">
+
+<h3>Detalhes da alteração</h3>
+
+<div id="dados"></div>
+
+<br>
+
+<button class="btn" onclick="restaurar()">Restaurar Registro</button>
+
+</div>
+</div>
+
+<script>
+
+const supabase = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+
+
+  
+let registroAtual=null
+
+async function carregar(){
+
+const {data,error} = await supabase
+.from("historico_alteracoes")
+.select("*")
+.order("created_at",{ascending:false})
+
+if(error){
+alert(error.message)
+return
+}
+
+render(data)
+
+}
+
+function render(lista){
+
+const container=document.getElementById("lista")
+
+container.innerHTML=""
+
+lista.forEach(item=>{
+
+const card=document.createElement("div")
+card.className="card"
+
+card.innerHTML=`
+
+<div class="row">
+<b>${item.tabela}</b>
+<span class="badge ${item.tipo}">
+${item.tipo.toUpperCase()}
+</span>
+</div>
+
+<div class="row">
+<span>ID Registro</span>
+<span>${item.registro_id}</span>
+</div>
+
+<div class="row">
+<span>Data</span>
+<span>${new Date(item.created_at).toLocaleString()}</span>
+</div>
+
+<button class="btn"
+onclick='abrir(${JSON.stringify(item)})'>
+Ver alteração
+</button>
+
+`
+
+container.appendChild(card)
+
+})
+
+}
+
+function abrir(item){
+
+registroAtual=item
+
+document.getElementById("popup").style.display="flex"
+
+document.getElementById("dados").innerHTML=`
+
+<b>ANTES</b>
+
+<pre class="json">
+${JSON.stringify(item.antes,null,2)}
+</pre>
+
+<b>DEPOIS</b>
+
+<pre class="json">
+${JSON.stringify(item.depois,null,2)}
+</pre>
+
+`
+
+}
+
+async function restaurar(){
+
+if(!registroAtual){
+return
+}
+
+const dados=registroAtual.antes
+
+const tabela=registroAtual.tabela
+
+delete dados.id
+
+const {error} = await supabase
+.from(tabela)
+.insert(dados)
+
+if(error){
+
+alert(error.message)
+return
+
+}
+
+alert("Registro restaurado!")
+
+location.reload()
+
+}
+
+carregar()
+
+</script>
+
+</body>
+</html>
