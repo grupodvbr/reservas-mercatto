@@ -115,6 +115,12 @@ let resposta=""
 
 try{
 
+const agora = new Date()
+
+const dataAtual = agora.toLocaleDateString("pt-BR")
+const horaAtual = agora.toLocaleTimeString("pt-BR")
+const dataISO = agora.toISOString().split("T")[0]
+
 const completion = await openai.chat.completions.create({
 
 model:"gpt-4.1-mini",
@@ -122,8 +128,18 @@ model:"gpt-4.1-mini",
 messages:[
 
 {
+{
 role:"system",
 content:`
+
+DATA ATUAL DO SISTEMA
+
+Hoje é: ${dataAtual}
+Hora atual: ${horaAtual}
+Data ISO: ${dataISO}
+Fuso horário: Brasil (UTC-3)
+
+---------------------------------------
 
 Você é o assistente oficial do restaurante Mercatto Delícia.
 
@@ -287,8 +303,7 @@ let dataISO = reserva.data
 if(reserva.data.includes("/")){
 
 const [dia,mes] = reserva.data.split("/")
-const ano = new Date().getFullYear()
-
+const ano = new Date().toISOString().slice(0,4)
 dataISO = `${ano}-${mes}-${dia}`
 
 }
