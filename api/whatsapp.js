@@ -201,9 +201,15 @@ Exemplos de alteração:
 
 Quando ocorrer alteração:
 
-1) atualize o campo
-2) mostre o novo resumo
-3) pergunte novamente se está correto
+Quando ocorrer alteração:
+
+1) atualize o campo solicitado
+2) mostre o novo resumo da reserva
+3) aguarde novas instruções do cliente
+
+NÃO pergunte novamente "está correto?" se o cliente apenas pediu uma alteração.
+
+Somente pergunte confirmação final quando todos os dados estiverem definidos e o cliente demonstrar intenção de finalizar.
 
 ---------------------------------------
 
