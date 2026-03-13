@@ -385,7 +385,39 @@ Nunca envie apenas o link.
 Sempre inclua o endereço junto.
 
 ---------------------------------------
+---------------------------------------
 
+SALAS VIP DO RESTAURANTE
+
+O Mercatto Delícia possui salas VIP privadas para eventos especiais.
+
+As salas VIP são ideais para:
+
+• aniversários
+• reuniões
+• comemorações
+• encontros privados
+
+INFORMAÇÕES IMPORTANTES:
+
+• A sala VIP é um espaço reservado e exclusivo.
+• Para utilizar a sala VIP é necessário fazer um pré-cadastro.
+• Após o pré-cadastro um atendente entra em contato para confirmar.
+
+Também é possível registrar um pedido de reserva da sala.
+
+REGRA IMPORTANTE:
+
+Só pode existir **uma reserva por dia para a sala VIP**.
+
+Se o cliente pedir informações sobre sala VIP:
+
+1️⃣ explique brevemente sobre a sala  
+2️⃣ ofereça enviar fotos  
+3️⃣ pergunte a data desejada  
+4️⃣ pergunte o número de pessoas  
+
+---------------------------------------
 ---------------------------------------
 
 ENVIO DE MÍDIA
@@ -424,6 +456,20 @@ ENVIAR_FOTOS
 
 ---------------------------------------
 
+ENVIAR FOTOS DA SALA VIP
+
+Se o cliente pedir:
+
+sala vip
+fotos da sala vip
+como é a sala vip
+quero ver a sala vip
+
+Responda normalmente e adicione no final:
+
+ENVIAR_FOTOS_SALA_VIP
+
+---------------------------------------
 ENVIAR VÍDEO DO RESTAURANTE
 
 Se o cliente pedir:
@@ -674,6 +720,19 @@ RESERVA_JSON:
 
 ---------------------------------------
 
+RESERVA DA SALA VIP
+
+Quando o cliente confirmar reserva da sala VIP gere:
+
+RESERVA_SALA_VIP_JSON:
+{
+"nome":"",
+"pessoas":"",
+"data":"",
+"hora":""
+}
+
+---------------------------------------
 FORMATO DE DATA PARA O CLIENTE
 
 Sempre mostre datas ao cliente no formato:
@@ -772,7 +831,45 @@ caption:"Mercatto Delícia"
 
 resposta = resposta.replace(/ENVIAR_FOTOS/g,"").trim()
 }
+if(resposta.includes("ENVIAR_FOTOS_SALA_VIP")){
 
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/salas_vip/sala1.jpg",
+caption:"Sala VIP Mercatto Delícia"
+}
+})
+})
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/salas_vip/sala2.jpg",
+caption:"Ambiente da Sala VIP"
+}
+})
+})
+
+resposta = resposta.replace(/ENVIAR_FOTOS_SALA_VIP/g,"").trim()
+
+}
 if(resposta.includes("ENVIAR_VIDEO")){
 
 await fetch(url,{
@@ -812,7 +909,37 @@ Digite:
 }
 
 /* ================= DETECTAR JSON ================= */
+/* ================= RESERVA SALA VIP ================= */
 
+const vipMatch = resposta.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
+
+if(vipMatch){
+
+let reservaVip
+
+try{
+reservaVip = JSON.parse(vipMatch[1])
+}catch(err){
+console.log("Erro JSON VIP")
+}
+
+if(reservaVip){
+
+await supabase
+.from("reservas_sala_vip")
+.insert({
+
+nome:reservaVip.nome,
+telefone:cliente,
+pessoas: parseInt(reservaVip.pessoas) || 1,
+data:reservaVip.data,
+hora:reservaVip.hora,
+status:"Pré-reserva"
+
+})
+
+}
+}
 try{
 
 const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
