@@ -1044,23 +1044,45 @@ console.log("Reserva VIP detectada:", reservaVip)
 
 /* SALVAR NO SUPABASE */
 
+const datahora = reservaVip.data + "T" + reservaVip.hora
+
 const { error } = await supabase
-.from("reservas_sala_vip")
+.from("reservas_mercatto")
 .insert({
 
+acao: "cadastrar",
+status: "Pendente",
+
 nome: reservaVip.nome,
+email: "",
 telefone: cliente,
+
 pessoas: parseInt(reservaVip.pessoas) || 1,
-data: reservaVip.data,
-hora: reservaVip.hora,
-sala: salaBanco,
+
+mesa: salaBanco,
+cardapio: "",
+
+observacoes: "Reserva sala VIP via WhatsApp",
+
+datahora: datahora,
+
+valorEstimado: 0,
+pagamentoAntecipado: 0,
+valorFinalPago: 0,
+
+banco: "",
+
+comandaindividual: false,
 comandaIndividual: reservaVip.comandaIndividual || "Não",
-status: "Pré-reserva"
+
+origem: "whatsapp"
 
 })
 
 if(error){
 console.log("ERRO AO SALVAR VIP:", error)
+}else{
+console.log("Reserva VIP salva com sucesso")
 }
 
 /* DATA FORMATADA */
