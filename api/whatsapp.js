@@ -1041,8 +1041,27 @@ if(reservaVip.sala?.toLowerCase().includes("2")){
   salaBanco = "Sala VIP 2"
 }
 
-const dataCliente = new Date(reservaVip.data)
-.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+const vipMatch = resposta.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
+
+if(vipMatch){
+
+let reservaVip
+
+try{
+reservaVip = JSON.parse(vipMatch[1])
+}catch(err){
+console.log("Erro JSON VIP")
+}
+
+if(reservaVip){
+
+let salaBanco = "Sala VIP 1"
+
+if(reservaVip.sala?.toLowerCase().includes("2")){
+salaBanco = "Sala VIP 2"
+}
+
+/* SALVAR RESERVA */
 
 await supabase
 .from("reservas_sala_vip")
@@ -1059,23 +1078,12 @@ status:"Pré-reserva"
 
 })
 
-await supabase
-.from("reservas_sala_vip")
-.insert({
-
-nome:reservaVip.nome,
-telefone:cliente,
-pessoas: parseInt(reservaVip.pessoas) || 1,
-data:reservaVip.data,
-hora:reservaVip.hora,
-sala: salaBanco,
-comandaIndividual: reservaVip.comandaIndividual || "Não",
-status:"Pré-reserva"
-
-})
+/* FORMATAR DATA PARA CLIENTE */
 
 const dataCliente = new Date(reservaVip.data)
 .toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+
+/* RESPOSTA */
 
 resposta = `✅ *Pré-reserva da sala confirmada!*
 
@@ -1089,7 +1097,9 @@ Hora: ${reservaVip.hora}
 Avenida Rui Barbosa 1264
 
 Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
+
 }
+
 }
 try{
 
