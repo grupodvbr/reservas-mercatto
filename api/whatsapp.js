@@ -1043,7 +1043,22 @@ if(isNaN(dataTest)){
 console.log("DATA INVALIDA:", reservaVip.data)
 
 resposta = "⚠️ A data informada não é válida. Pode confirmar a data novamente?"
-return
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body:resposta }
+})
+})
+
+return res.status(200).end()
 }
 
 /* BLOQUEAR DATA PASSADA */
@@ -1054,7 +1069,48 @@ if(dataTest < agora){
 console.log("DATA PASSADA")
 
 resposta = "⚠️ Não é possível reservar para uma data passada. Pode escolher outra data?"
-return
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body:resposta }
+})
+})
+
+return res.status(200).end()
+}
+
+/* BLOQUEAR HORÁRIO APÓS 19:00 */
+
+const horaReserva = parseInt(reservaVip.hora.split(":")[0])
+
+if(horaReserva > 19){
+console.log("HORARIO INVALIDO")
+
+resposta = "⚠️ As reservas podem ser feitas apenas até às 19:00. Pode escolher outro horário?"
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body:resposta }
+})
+})
+
+return res.status(200).end()
 }
 
 /* BLOQUEAR HORÁRIO APÓS 19:00 */
