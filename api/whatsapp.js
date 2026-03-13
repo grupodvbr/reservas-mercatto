@@ -1018,28 +1018,6 @@ Digite:
 
 }
 
-/* ================= DETECTAR JSON ================= */
-/* ================= RESERVA SALA VIP ================= */
-
-const vipMatch = resposta.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
-
-if(vipMatch){
-
-let reservaVip
-
-try{
-reservaVip = JSON.parse(vipMatch[1])
-}catch(err){
-console.log("Erro JSON VIP")
-}
-
-if(reservaVip){
-
-let salaBanco = "Sala VIP 1"
-
-if(reservaVip.sala?.toLowerCase().includes("2")){
-  salaBanco = "Sala VIP 2"
-}
 
 const vipMatch = resposta.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
 
