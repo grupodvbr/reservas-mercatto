@@ -1035,7 +1035,38 @@ console.log("Erro JSON VIP", err)
 if(reservaVip){
 
 let salaBanco = "Sala VIP 1"
+/* ================= VALIDAR DATA ================= */
 
+const dataTest = new Date(reservaVip.data + "T" + reservaVip.hora)
+
+if(isNaN(dataTest)){
+console.log("DATA INVALIDA:", reservaVip.data)
+
+resposta = "⚠️ A data informada não é válida. Pode confirmar a data novamente?"
+return
+}
+
+/* BLOQUEAR DATA PASSADA */
+
+const agora = new Date()
+
+if(dataTest < agora){
+console.log("DATA PASSADA")
+
+resposta = "⚠️ Não é possível reservar para uma data passada. Pode escolher outra data?"
+return
+}
+
+/* BLOQUEAR HORÁRIO APÓS 19:00 */
+
+const horaReserva = parseInt(reservaVip.hora.split(":")[0])
+
+if(horaReserva > 19){
+console.log("HORARIO INVALIDO")
+
+resposta = "⚠️ As reservas podem ser feitas apenas até às 19:00. Pode escolher outro horário?"
+return
+}
 if(reservaVip.sala?.toLowerCase().includes("2")){
 salaBanco = "Sala VIP 2"
 }
