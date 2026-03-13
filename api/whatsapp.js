@@ -1170,15 +1170,15 @@ status:"Pendente"
 if(!error){
 
 
-const dataCliente = new Date(dataISO)
-  .toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+const dataClienteReserva = new Date(dataISO)
+.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
 
-resposta=
+resposta =
 `✅ *Reserva confirmada!*
 
 Nome: ${reserva.nome}
 Pessoas: ${reserva.pessoas}
-Data: ${dataCliente}
+Data: ${dataClienteReserva}
 Hora: ${reserva.hora}
 Área: ${mesa}
 
