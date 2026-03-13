@@ -307,7 +307,8 @@ nome
 pessoas  
 data  
 hora  
-area (interna ou externa)
+area (interna ou externa)  
+comandaIndividual (Sim ou Não)
 
 ---------------------------------------
 
@@ -389,37 +390,45 @@ Sempre inclua o endereço junto.
 
 SALAS VIP DO RESTAURANTE
 
-O Mercatto Delícia possui salas VIP privadas para eventos especiais.
+O Mercatto Delícia possui duas salas VIP privadas:
 
-As salas VIP são ideais para:
+• Sala Paulo Augusto 1  
+• Sala Paulo Augusto 2  
+
+Essas são salas reservadas ideais para:
 
 • aniversários
 • reuniões
 • comemorações
 • encontros privados
 
-INFORMAÇÕES IMPORTANTES:
+IMPORTANTE:
 
-• A sala VIP é um espaço reservado e exclusivo.
-• Para utilizar a sala VIP é necessário fazer um pré-cadastro.
-• Após o pré-cadastro um atendente entra em contato para confirmar.
+Para os clientes sempre utilize os nomes:
 
-Também é possível registrar um pedido de reserva da sala.
+Sala Paulo Augusto 1  
+Sala Paulo Augusto 2  
 
-REGRA IMPORTANTE:
-
-Só pode existir **uma reserva por dia para a sala VIP**.
-
-Se o cliente pedir informações sobre sala VIP:
-
-1️⃣ explique brevemente sobre a sala  
-2️⃣ ofereça enviar fotos  
-3️⃣ pergunte a data desejada  
-4️⃣ pergunte o número de pessoas  
+Nunca use os nomes internos do sistema.
 
 ---------------------------------------
+
+REGRA DE REGISTRO INTERNO
+
+Quando gerar o JSON de reserva da sala VIP:
+
+Sala Paulo Augusto 1 → salvar como "Sala VIP 1"  
+Sala Paulo Augusto 2 → salvar como "Sala VIP 2"
+
 ---------------------------------------
 
+Quando o cliente pedir reserva de sala VIP:
+
+1️⃣ pergunte qual sala prefere  
+2️⃣ confirme data e horário  
+3️⃣ confirme quantidade de pessoas  
+
+---------------------------------------
 ENVIO DE MÍDIA
 
 Você pode enviar arquivos de mídia quando for útil para ajudar o cliente.
@@ -544,17 +553,21 @@ Se a intenção for reserva, comece imediatamente o processo de reserva.
 
 COLETA DE INFORMAÇÕES
 
-Quando o cliente quiser fazer uma reserva, descubra naturalmente:
+Quando o cliente quiser reservar peça os dados de forma direta.
 
-• nome  
-• quantidade de pessoas  
-• data  
-• horário  
-• área (interna ou externa)
+Pergunta padrão:
 
-Se faltar alguma informação, pergunte apenas o que falta.
+Para fazer sua reserva preciso de:
 
-Nunca peça todas as informações de uma vez.
+• Nome
+• Quantidade de pessoas
+• Data
+• Horário
+• Local (Salão, Sacada ou Sala VIP)
+• Comanda individual (Sim ou Não)
+
+Peça apenas o que estiver faltando.
+Se o cliente já informar algum dado, não pergunte novamente.
 
 ---------------------------------------
 
@@ -715,7 +728,8 @@ RESERVA_JSON:
 "pessoas":"",
 "data":"",
 "hora":"",
-"area":""
+"area":"",
+"comandaIndividual":""
 }
 
 ---------------------------------------
@@ -729,9 +743,10 @@ RESERVA_SALA_VIP_JSON:
 "nome":"",
 "pessoas":"",
 "data":"",
-"hora":""
+"hora":"",
+"sala":"",
+"comandaIndividual":""
 }
-
 ---------------------------------------
 FORMATO DE DATA PARA O CLIENTE
 
@@ -925,6 +940,15 @@ console.log("Erro JSON VIP")
 
 if(reservaVip){
 
+let salaBanco = "Sala VIP 1"
+
+if(reservaVip.sala?.toLowerCase().includes("2")){
+  salaBanco = "Sala VIP 2"
+}
+
+const dataCliente = new Date(reservaVip.data)
+.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+
 await supabase
 .from("reservas_sala_vip")
 .insert({
@@ -934,10 +958,27 @@ telefone:cliente,
 pessoas: parseInt(reservaVip.pessoas) || 1,
 data:reservaVip.data,
 hora:reservaVip.hora,
+sala: salaBanco,
+comandaIndividual: reservaVip.comandaIndividual || "Não",
 status:"Pré-reserva"
 
 })
 
+const dataCliente = new Date(reservaVip.data)
+.toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"})
+
+resposta = `✅ *Pré-reserva da sala confirmada!*
+
+Nome: ${reservaVip.nome}
+Sala: ${salaBanco}
+Pessoas: ${reservaVip.pessoas}
+Data: ${dataCliente}
+Hora: ${reservaVip.hora}
+
+📍 Mercatto Delícia
+Avenida Rui Barbosa 1264
+
+Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 }
 try{
@@ -973,11 +1014,27 @@ dataISO = `${ano}-${mes}-${dia}`
 let mesa="Salão"
 
 const areaTexto=(reserva.area || "").toLowerCase()
+
 if(
 areaTexto.includes("extern") ||
-areaTexto.includes("fora")
+areaTexto.includes("fora") ||
+areaTexto.includes("sacada")
 ){
 mesa="Área Externa"
+}
+
+if(
+areaTexto.includes("vip") ||
+areaTexto.includes("paulo augusto 1")
+){
+mesa="Sala VIP 1"
+}
+
+if(
+areaTexto.includes("vip 2") ||
+areaTexto.includes("paulo augusto 2")
+){
+mesa="Sala VIP 2"
 }
 
 /* DATAHORA */
@@ -996,8 +1053,8 @@ telefone:cliente,
 pessoas: parseInt(reserva.pessoas) || 1,
 mesa:mesa,
 cardapio:"",
-comandaIndividual:"Não",
-datahora:datahora,
+comandaIndividual: reserva.comandaIndividual || "Não",
+  datahora:datahora,
 observacoes:"Reserva via WhatsApp",
 valorEstimado:0,
 pagamentoAntecipado:0,
