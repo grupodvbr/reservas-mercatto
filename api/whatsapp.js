@@ -1038,7 +1038,7 @@ let salaBanco = "Sala VIP 1"
 /* ================= VALIDAR DATA ================= */
 
 const dataTest = new Date(reservaVip.data + "T" + reservaVip.hora)
-
+console.log("VALIDANDO DATA VIP:", reservaVip.data, reservaVip.hora)
 if(isNaN(dataTest)){
 console.log("DATA INVALIDA:", reservaVip.data)
 
