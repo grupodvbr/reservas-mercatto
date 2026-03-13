@@ -1121,8 +1121,7 @@ dataISO = `${ano}-${mes}-${dia}`
 
 /* NORMALIZAR AREA */
 
-let mesa="Salão"
-
+let mesa="Salão Central"
 const areaTexto=(reserva.area || "").toLowerCase()
 
 if(
