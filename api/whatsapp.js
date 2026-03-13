@@ -1254,12 +1254,66 @@ mesa="Sala VIP 2"
 /* DATAHORA */
 
 const datahora = dataISO+"T"+reserva.hora
+/* ================= BUSCAR ULTIMA RESERVA DO CLIENTE ================= */
 
+const { data: ultimaReserva } = await supabase
+.from("reservas_mercatto")
+.select("*")
+.eq("telefone", cliente)
+.eq("status","Pendente")
+.order("created_at",{ ascending:false })
+.limit(1)
+.single()
 /* SALVAR RESERVA */
 
-const {error} = await supabase
+let error
+
+if(ultimaReserva){
+
+console.log("Atualizando reserva existente")
+
+const { error: updateError } = await supabase
+.from("reservas_mercatto")
+.update({
+
+nome:reserva.nome,
+pessoas: parseInt(reserva.pessoas) || 1,
+mesa:mesa,
+datahora:datahora,
+comandaIndividual: reserva.comandaIndividual || "Não"
+
+})
+.eq("id", ultimaReserva.id)
+
+error = updateError
+
+}else{
+
+console.log("Criando nova reserva")
+
+const { error: insertError } = await supabase
 .from("reservas_mercatto")
 .insert({
+
+nome:reserva.nome,
+email:"",
+telefone:cliente,
+pessoas: parseInt(reserva.pessoas) || 1,
+mesa:mesa,
+cardapio:"",
+comandaIndividual: reserva.comandaIndividual || "Não",
+datahora:datahora,
+observacoes:"Reserva via WhatsApp",
+valorEstimado:0,
+pagamentoAntecipado:0,
+banco:"",
+status:"Pendente"
+
+})
+
+error = insertError
+
+}
 
 nome:reserva.nome,
 email:"",
