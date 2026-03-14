@@ -15,6 +15,8 @@ const supabase = createClient(
 
 async function enviarRelatorioAutomatico(){
 
+const ADMIN_NUMERO = "557798253249"
+
 const hoje = new Date().toISOString().split("T")[0]
 
 const {data:reservas} = await supabase
@@ -36,18 +38,13 @@ let totalPessoas = 0
 
 reservas.forEach((r,i)=>{
 
-const hora = r.datahora?.split("T")[1]?.substring(0,5) || "-"
+const hora = r.datahora.split("T")[1].substring(0,5)
 
 resposta += `${i+1}️⃣\n`
 resposta += `Nome: ${r.nome}\n`
-resposta += `Telefone: ${r.telefone}\n`
 resposta += `Pessoas: ${r.pessoas}\n`
 resposta += `Hora: ${hora}\n`
-resposta += `Mesa: ${r.mesa}\n`
-resposta += `Comanda individual: ${r.comandaIndividual}\n`
-resposta += `Status: ${r.status}\n`
-resposta += `Origem: ${r.origem}\n`
-resposta += `Observações: ${r.observacoes || "-"}\n\n`
+resposta += `Mesa: ${r.mesa}\n\n`
 
 totalPessoas += Number(r.pessoas || 0)
 
@@ -137,14 +134,6 @@ const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 
 const resposta = await enviarRelatorioAutomatico()
 
-const GERENTES = [
-"557798253249",
-"557799880000",
-"557799900000"
-]
-
-for(const gerente of GERENTES){
-
 await fetch(url,{
 method:"POST",
 headers:{
@@ -153,13 +142,12 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 },
 body:JSON.stringify({
 messaging_product:"whatsapp",
-to:gerente,
+to:"557798253249",
 type:"text",
 text:{body:resposta}
 })
 })
 
-}
 return res.status(200).send("Relatório enviado")
 
 }
@@ -209,14 +197,7 @@ const msg = change.messages[0]
 
 const mensagem = msg.text?.body
 const cliente = msg.from
-
-const GERENTES = [
-"557798253249",
-"557799880000",
-"557799900000"
-]
-
-const ehGerencia = GERENTES.includes(cliente)
+const ADMIN_NUMERO = "557798253249"
 const message_id = msg.id
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
@@ -230,120 +211,6 @@ console.log("Mensagem:",mensagem)
 
 
 const texto = mensagem.toLowerCase()
-/* ================= CONSULTAS GERENCIA ================= */
-
-if(ehGerencia){
-
-if(
-texto.includes("reservas hoje") ||
-texto.includes("quantas reservas") ||
-texto.includes("reservas do dia")
-){
-
-const hoje = new Date().toISOString().split("T")[0]
-
-const {data:reservas} = await supabase
-.from("reservas_mercatto")
-.select("*")
-.gte("datahora", hoje+"T00:00")
-.lte("datahora", hoje+"T23:59")
-.order("datahora",{ascending:true})
-
-let resposta = "📊 *Reservas de hoje*\n\n"
-
-if(!reservas || !reservas.length){
-
-resposta += "Nenhuma reserva registrada."
-
-}else{
-
-let totalPessoas = 0
-
-reservas.forEach((r,i)=>{
-
-const hora = r.datahora?.split("T")[1]?.substring(0,5) || "-"
-
-resposta += `${i+1}️⃣\n`
-resposta += `Nome: ${r.nome}\n`
-resposta += `Telefone: ${r.telefone}\n`
-resposta += `Pessoas: ${r.pessoas}\n`
-resposta += `Hora: ${hora}\n`
-resposta += `Mesa: ${r.mesa}\n`
-resposta += `Comanda individual: ${r.comandaIndividual}\n`
-resposta += `Status: ${r.status}\n`
-resposta += `Origem: ${r.origem}\n`
-resposta += `Observações: ${r.observacoes || "-"}\n\n`
-
-totalPessoas += Number(r.pessoas || 0)
-
-})
-
-resposta += `👥 Total de pessoas: ${totalPessoas}\n`
-resposta += `📅 Total de reservas: ${reservas.length}`
-
-}
-
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:resposta}
-})
-})
-
-return res.status(200).end()
-
-}
-
-/* RESERVAS ÁREA EXTERNA */
-
-if(texto.includes("externa")){
-
-const hoje = new Date().toISOString().split("T")[0]
-
-const {data:reservas} = await supabase
-.from("reservas_mercatto")
-.select("*")
-.ilike("mesa","%externa%")
-.gte("datahora", hoje+"T00:00")
-.lte("datahora", hoje+"T23:59")
-
-let resposta = "🌅 *Reservas área externa hoje*\n\n"
-
-reservas.forEach(r=>{
-
-const hora = r.datahora?.split("T")[1]?.substring(0,5) || "-"
-resposta += `${r.nome} - ${r.pessoas} pessoas - ${hora}\n`
-
-})
-
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:resposta}
-})
-})
-
-return res.status(200).end()
-
-}
-
-}
-
-  
 if(
 texto === "sim" ||
 texto === "ok" ||
@@ -355,7 +222,61 @@ return res.status(200).end()
 }
 /* ================= RELATORIO ADMIN ================= */
 
+if(cliente === ADMIN_NUMERO && texto.includes("relatorio_reservas_dia")){
 
+const hoje = new Date().toISOString().split("T")[0]
+
+const {data:reservas} = await supabase
+.from("reservas_mercatto")
+.select("*")
+.gte("datahora", hoje+"T00:00")
+.lte("datahora", hoje+"T23:59")
+.order("datahora",{ascending:true})
+
+let resposta = "📊 *Reservas do dia*\n\n"
+
+if(!reservas || !reservas.length){
+resposta += "Nenhuma reserva encontrada."
+}else{
+
+reservas.forEach((r,i)=>{
+
+const hora = r.datahora?.split("T")[1]?.substring(0,5) || "—"
+const data = r.datahora?.split("T")[0] || "—"
+
+resposta += `${i+1}️⃣\n`
+resposta += `Nome: ${r.nome || "-"}\n`
+resposta += `Telefone: ${r.telefone || "-"}\n`
+resposta += `Pessoas: ${r.pessoas || "-"}\n`
+resposta += `Data: ${data}\n`
+resposta += `Hora: ${hora}\n`
+resposta += `Mesa: ${r.mesa || "-"}\n`
+resposta += `Status: ${r.status || "-"}\n`
+resposta += `Comanda individual: ${r.comandaIndividual || "-"}\n`
+resposta += `Origem: ${r.origem || "-"}\n`
+resposta += `Observações: ${r.observacoes || "-"}\n\n`
+
+})
+
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+
+}
 let assuntoMusica = false
 
 if(
@@ -2188,23 +2109,13 @@ return res.status(200).end()
 
 console.log("Alteração detectada:", reserva)
 
-const updateData = {}
-
-if(reserva.nome){
-updateData.nome = reserva.nome
-}
-
-if(reserva.pessoas){
-updateData.pessoas = parseInt(reserva.pessoas)
-}
-
-if(reserva.comandaIndividual){
-updateData.comandaIndividual = reserva.comandaIndividual
-}
-
 await supabase
 .from("reservas_mercatto")
-.update(updateData)
+.update({
+nome: reserva.nome,
+pessoas: parseInt(reserva.pessoas) || 1,
+comandaIndividual: reserva.comandaIndividual || "Não"
+})
 .eq("telefone", cliente)
 .eq("status","Pendente")
 .order("datahora",{ascending:false})
