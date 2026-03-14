@@ -186,7 +186,7 @@ texto.includes("qual o couvert") ||
 texto.includes("couver") ||
 texto.includes("cover") ||
 texto.includes("couvert")
-  
+console.log("DETECTOU MUSICA:", querMusica)
 /* ================= BLOQUEAR DUPLICIDADE ================= */
 
 const { data: jaProcessada } = await supabase
