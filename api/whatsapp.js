@@ -254,11 +254,11 @@ if(querMusica){
 
 let resposta=""
 
-if(agendaHoje.length){
+if(agendaDia.length){
 
 resposta = "🎶 Música ao vivo hoje no Mercatto:\n\n"
 
-agendaHoje.forEach(m=>{
+agendaDia.forEach(m=>{
 
 resposta += `🎤 ${m.cantor}\n`
 resposta += `🕒 ${m.hora}\n`
