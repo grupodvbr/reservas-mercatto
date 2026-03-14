@@ -123,7 +123,15 @@ dataConsulta.setDate(dataConsulta.getDate()+1)
 if(texto.includes("ontem")){
 dataConsulta.setDate(dataConsulta.getDate()-1)
 }
+let textoDia = "hoje"
 
+if(texto.includes("ontem")){
+textoDia = "ontem"
+}
+
+if(texto.includes("amanhã")){
+textoDia = "amanhã"
+}
 const dataISO = dataConsulta.toISOString().split("T")[0]
 
 const agendaDia = await buscarAgendaDoDia(dataISO)
@@ -258,8 +266,15 @@ let resposta=""
 
 if(agendaDia.length){
 
-resposta = "🎶 Música ao vivo hoje no Mercatto:\n\n"
-
+if(textoDia==="ontem"){
+resposta = `🎶 Ontem tivemos música ao vivo no Mercatto:\n\n`
+}
+else if(textoDia==="amanhã"){
+resposta = `🎶 Música ao vivo amanhã no Mercatto:\n\n`
+}
+else{
+resposta = `🎶 Música ao vivo hoje no Mercatto:\n\n`
+}
 agendaDia.forEach(m=>{
 
 resposta += `🎤 ${m.cantor}\n`
@@ -292,7 +307,7 @@ to:cliente,
 type:"image",
 image:{
 link:posterHoje,
-caption:"🎶 Música ao vivo hoje no Mercatto"
+caption:`🎶 Música ao vivo ${textoDia} no Mercatto`
 }
 })
 })
