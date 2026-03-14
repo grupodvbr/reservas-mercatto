@@ -9,7 +9,47 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE
 )
+/* ================= AGENDA MUSICOS ================= */
 
+async function buscarAgendaDoDia(dataISO){
+
+const { data, error } = await supabase
+.from("agenda_musicos")
+.select("*")
+.eq("data", dataISO)
+.order("hora",{ascending:true})
+
+if(error){
+console.log("Erro agenda:",error)
+return []
+}
+
+return data || []
+
+}
+
+function calcularCouvert(musicos){
+
+if(!musicos.length) return 0
+
+let maior = 0
+
+musicos.forEach(m=>{
+const valor = Number(m.valor) || 0
+if(valor > maior) maior = valor
+})
+
+return maior
+
+}
+
+function pegarPoster(musicos){
+
+const comFoto = musicos.find(m=>m.foto)
+
+return comFoto ? comFoto.foto : null
+
+}
 module.exports = async function handler(req,res){
 
 /* ================= WEBHOOK VERIFY ================= */
@@ -74,6 +114,13 @@ console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
 
+const hojeISO = new Date().toISOString().split("T")[0]
+
+const agendaHoje = await buscarAgendaDoDia(hojeISO)
+
+const couvertHoje = calcularCouvert(agendaHoje)
+
+const posterHoje = pegarPoster(agendaHoje)
 /* ================= INTENÇÕES ================= */
 
 const querReserva =
@@ -96,6 +143,15 @@ const querEndereco =
 texto.includes("onde fica") ||
 texto.includes("endereço") ||
 texto.includes("localização")
+
+const querMusica =
+texto.includes("musica") ||
+texto.includes("música") ||
+texto.includes("cantor") ||
+texto.includes("show") ||
+texto.includes("ao vivo") ||
+texto.includes("quem canta")
+  
 /* ================= BLOQUEAR DUPLICIDADE ================= */
 
 const { data: jaProcessada } = await supabase
@@ -139,7 +195,82 @@ text:{body:resposta}
 
 return res.status(200).end()
 
-}if(querVideo){
+}
+  
+return res.status(200).end()
+
+}
+
+/* ================= MUSICA AO VIVO ================= */
+
+if(querMusica){
+
+let resposta=""
+
+if(agendaHoje.length){
+
+resposta = "🎶 Música ao vivo hoje no Mercatto:\n\n"
+
+agendaHoje.forEach(m=>{
+
+resposta += `🎤 ${m.cantor}\n`
+resposta += `🕒 ${m.hora}\n`
+resposta += `🎵 ${m.estilo}\n\n`
+
+})
+
+resposta += `💰 Couvert artístico: R$ ${couvertHoje}`
+
+}else{
+
+resposta = "Hoje não temos música ao vivo programada."
+
+}
+
+/* ENVIA POSTER */
+
+if(posterHoje){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:posterHoje,
+caption:"🎶 Música ao vivo hoje no Mercatto"
+}
+})
+})
+
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+
+}
+
+if(querVideo){
+  
+  if(querVideo){
 
 await fetch(url,{
 method:"POST",
@@ -325,7 +456,33 @@ Sexta, sábado e domingo:
 11:00 até o fechamento.
 
 ---------------------------------------
+---------------------------------------
 
+MÚSICA AO VIVO
+
+O Mercatto Delícia possui música ao vivo em alguns dias.
+
+Quando o cliente perguntar sobre:
+
+• música
+• música ao vivo
+• cantor
+• show
+• quem canta hoje
+• programação
+
+Informe:
+
+• cantor
+• horário
+• estilo musical
+• valor do couvert artístico
+
+O valor do couvert é o maior valor entre os músicos do dia.
+
+Se houver mais de um músico no dia, liste todos.
+
+Sempre mencione que o valor é de couvert artístico.
 REGRAS DE RESERVA
 
 • As reservas só podem ser feitas até às 19:00.
