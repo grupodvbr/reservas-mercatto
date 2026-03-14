@@ -513,7 +513,7 @@ const {data:historico} = await supabase
 .select("*")
 .eq("telefone",cliente)
 .order("created_at",{ascending:true})
-.limit(50)
+.limit(20)
 
 const mensagens = (historico || []).map(m=>({
 role:m.role,
