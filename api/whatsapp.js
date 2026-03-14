@@ -1409,15 +1409,21 @@ ultima_interacao:new Date().toISOString()
   
 /* NORMALIZAR DATA */
 
+/* NORMALIZAR DATA */
+
 let dataISO = reserva.data
 
 if(reserva.data && reserva.data.includes("/")){
+
 const [dia,mes] = reserva.data.split("/")
+
 const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
-const ano = agoraBahia.getFullYear()dataISO = `${ano}-${mes}-${dia}`
+const ano = agoraBahia.getFullYear()
+
+dataISO = `${ano}-${mes}-${dia}`
 
 }
 
