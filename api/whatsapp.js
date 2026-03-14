@@ -124,9 +124,12 @@ if(texto.includes("ontem")){
 dataConsulta.setDate(dataConsulta.getDate()-1)
 }
 
+const dataISO = dataConsulta.toISOString().split("T")[0]
+
 const agendaDia = await buscarAgendaDoDia(dataISO)
 
 const couvertHoje = calcularCouvert(agendaDia)
+
 const posterHoje = pegarPoster(agendaDia)
 /* ================= INTENÇÕES ================= */
 
