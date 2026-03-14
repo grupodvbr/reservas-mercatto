@@ -508,7 +508,12 @@ const mensagens = historico.map(m=>({
 role:m.role,
 content:m.mensagem
 }))
-
+if(assuntoMusica){
+mensagens.unshift({
+role:"system",
+content:"ATENÇÃO: A mensagem atual do cliente é sobre música ao vivo. Ignore reservas e responda usando a agenda fornecida."
+})
+}
 let resposta=""
 
 /* ================= OPENAI ================= */
@@ -551,7 +556,11 @@ Você é o assistente oficial do restaurante Mercatto Delícia.
 
 Seu papel é atender clientes pelo WhatsApp como um atendente real do restaurante.
 
-Seu objetivo principal é ajudar clientes a realizar reservas de mesa.
+Seu objetivo principal é ajudar clientes.
+
+Se a pergunta for sobre música ao vivo, responda sobre música.
+
+Se a pergunta for sobre reservas, ajude a criar a reserva.
 
 Converse de forma educada, natural e acolhedora.
 
