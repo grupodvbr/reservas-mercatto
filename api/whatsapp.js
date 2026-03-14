@@ -124,6 +124,27 @@ return data || []
 
 
 module.exports = async function handler(req,res){
+
+/* ================= CARDAPIO ================= */
+
+async function buscarCardapio(){
+
+const { data, error } = await supabase
+.from("buffet")
+.select("id,nome,tipo,descricao,preco_venda,foto_url")
+.eq("cardapio", true)
+.eq("ativo", true)
+.order("tipo",{ascending:true})
+.order("nome",{ascending:true})
+
+if(error){
+console.log("Erro cardapio:",error)
+return []
+}
+
+return data || []
+
+}
 /* ================= CRON RELATORIO ================= */
 
 if(req.query.cron === "relatorio"){
@@ -774,7 +795,24 @@ content:"ATENÇÃO: A mensagem atual do cliente é sobre música ao vivo. Ignore
 })
 }
 let resposta=""
+/* ================= BUSCAR CARDAPIO ================= */
 
+const cardapio = await buscarCardapio()
+
+let cardapioTexto = ""
+
+cardapio.forEach(p => {
+
+cardapioTexto += `
+PRATO: ${p.nome}
+TIPO: ${p.tipo}
+PRECO: ${p.preco_venda}
+DESCRICAO: ${p.descricao || "sem descrição"}
+FOTO: ${p.foto_url || "sem"}
+-------------------------
+`
+
+})
 /* ================= OPENAI ================= */
 
 try{
@@ -854,7 +892,23 @@ Use essas informações para interpretar datas relativas como:
 hoje, amanhã, ontem, final de semana, etc.
 `
 },
+{
+role:"system",
+content:`
+CARDÁPIO DO MERCATTO DELÍCIA
 
+Abaixo está a lista de pratos disponíveis.
+
+${cardapioTexto}
+
+Regras importantes:
+
+- Utilize apenas pratos desta lista.
+- Nunca invente pratos.
+- Se o cliente perguntar preço use PRECO.
+- Se pedir foto de um prato responda com ENVIAR_FOTO_PRATO.
+`
+},
 ...mensagens
 
 ]
@@ -1004,6 +1058,37 @@ caption:"Conheça o Mercatto Delícia"
 })
 
 resposta = resposta.replace(/ENVIAR_VIDEO/g,"").trim()
+}
+
+if(resposta.includes("ENVIAR_FOTO_PRATO")){
+
+const prato = cardapio.find(p =>
+resposta.toLowerCase().includes(p.nome.toLowerCase())
+)
+
+if(prato?.foto_url){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:prato.foto_url,
+caption:prato.nome
+}
+})
+})
+
+}
+
+resposta = resposta.replace(/ENVIAR_FOTO_PRATO/g,"").trim()
+
 }
 console.log("Resposta IA:",resposta)
 
