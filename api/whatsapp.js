@@ -621,8 +621,18 @@ O cliente está perguntando sobre música ao vivo?
 
 ${assuntoMusica}
 
-Se for sobre música, responda usando a agenda fornecida abaixo.
-Nunca responda sobre reservas quando a pergunta for sobre música.
+REGRA ABSOLUTA:
+
+Se a variável acima for **true**, a pergunta é sobre música ao vivo.
+
+NESTE CASO:
+
+• Ignore completamente reservas
+• Ignore salas VIP
+• Ignore qualquer outro assunto
+• Responda APENAS sobre música usando a agenda fornecida
+
+Nunca peça dados de reserva quando o assunto for música.
 ---------------------------------------
 
 AGENDA REAL DE MÚSICA AO VIVO
