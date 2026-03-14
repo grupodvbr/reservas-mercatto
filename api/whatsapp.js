@@ -267,8 +267,6 @@ return res.status(200).end()
 
 if(querVideo){
   
-  if(querVideo){
-
 await fetch(url,{
 method:"POST",
 headers:{
