@@ -296,6 +296,7 @@ texto.includes("couvert")
 
   
 console.log("DETECTOU MUSICA:", querMusica)
+assuntoMusica = querMusica
 
 if(querMusica){
 console.log("FORÇANDO ASSUNTO MUSICA")
@@ -519,10 +520,6 @@ role:m.role,
 content:m.mensagem
 }))
 
-mensagens.push({
-role:"user",
-content: mensagem
-})
   
 if(assuntoMusica){
 mensagens.unshift({
@@ -543,11 +540,10 @@ const horaAtualSistema =
 agora.getHours().toString().padStart(2,"0") +
 ":" +
 agora.getMinutes().toString().padStart(2,"0")
-  const dataISO = agora.toISOString().split("T")[0]
-
+const dataAtualISO = agora.toISOString().split("T")[0]
 const completion = await openai.chat.completions.create({
 
-model:"gpt-4.1",
+model:"gpt-4.1-mini",
 
 messages:[
 {
