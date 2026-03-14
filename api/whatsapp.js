@@ -132,8 +132,6 @@ return res.status(200).end()
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
-console.log("Cliente:",cliente)
-console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
 
@@ -317,6 +315,17 @@ return res.status(200).end()
 await supabase
 .from("mensagens_processadas")
 .insert({ message_id })
+
+/* ================= SALVAR MENSAGEM CLIENTE ================= */
+
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:mensagem,
+role:"user"
+})
+
 if(querEndereco){
 
 const resposta = `📍 Estamos localizados em:
@@ -341,7 +350,13 @@ type:"text",
 text:{body:resposta}
 })
 })
-
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:resposta,
+role:"assistant"
+})
 return res.status(200).end()
 
 }
@@ -424,6 +439,13 @@ text:{body:resposta}
 })
 })
 await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:resposta,
+role:"assistant"
+})
+await supabase
 .from("estado_conversa")
 .upsert({
 telefone:cliente,
@@ -451,7 +473,13 @@ caption:"Conheça o Mercatto Delícia"
 }
 })
 })
-
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:"[VIDEO DO RESTAURANTE ENVIADO]",
+role:"assistant"
+})
 return res.status(200).end()
 
 }
@@ -491,20 +519,17 @@ type:"text",
 text:{body:"Aqui está nosso cardápio completo 😊"}
 })
 })
-
-return res.status(200).end()
-
-} 
-
-/* ================= SALVAR MENSAGEM ================= */
-
 await supabase
 .from("conversas_whatsapp")
 .insert({
 telefone:cliente,
-mensagem:mensagem,
-role:"user"
+mensagem:"[CARDAPIO ENVIADO]",
+role:"assistant"
 })
+return res.status(200).end()
+
+} 
+
 
 /* ================= HISTÓRICO ================= */
 
@@ -512,18 +537,15 @@ const {data:historico} = await supabase
 .from("conversas_whatsapp")
 .select("*")
 .eq("telefone",cliente)
-.order("created_at",{ascending:true})
+.order("created_at",{ascending:false})
 .limit(20)
 
-const mensagens = (historico || []).map(m=>({
+const mensagens = (historico || [])
+.reverse()
+.map(m=>({
 role:m.role,
 content:m.mensagem
 }))
-
-  mensagens.push({
-role:"user",
-content:mensagem
-})
   
 if(assuntoMusica){
 mensagens.unshift({
@@ -1495,7 +1517,16 @@ caption:"Mercatto Delícia"
 })
 })
 
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:"[FOTOS DO RESTAURANTE ENVIADAS]",
+role:"assistant"
+})
+
 resposta = resposta.replace(/ENVIAR_FOTOS/g,"").trim()
+
 }
 if(resposta.includes("ENVIAR_FOTOS_SALA_VIP")){
 
