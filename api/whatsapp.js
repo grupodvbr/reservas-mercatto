@@ -1800,6 +1800,7 @@ pessoas: parseInt(reserva.pessoas) || 1,
 comandaIndividual: reserva.comandaIndividual || "Não"
 })
 .eq("telefone", cliente)
+.eq("status","Pendente")
 .order("datahora",{ascending:false})
 .limit(1)
 
