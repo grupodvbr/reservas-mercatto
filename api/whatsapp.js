@@ -136,6 +136,22 @@ console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
+
+let assuntoMusica = false
+
+if(
+texto.includes("tocando") ||
+texto.includes("quem toca") ||
+texto.includes("quem canta") ||
+texto.includes("banda") ||
+texto.includes("show") ||
+texto.includes("dj") ||
+texto.includes("música")
+){
+assuntoMusica = true
+}
+
+  
 /* ================= CONTROLE MUSICA ================= */
 
 const { data: estadoMusica } = await supabase
@@ -596,7 +612,14 @@ Sexta, sábado e domingo:
 MÚSICA AO VIVO
 
 O Mercatto Delícia possui música ao vivo em alguns dias.
+ASSUNTO DA MENSAGEM
 
+O cliente está perguntando sobre música ao vivo?
+
+${assuntoMusica}
+
+Se for sobre música, responda usando a agenda fornecida abaixo.
+Nunca responda sobre reservas quando a pergunta for sobre música.
 ---------------------------------------
 
 AGENDA REAL DE MÚSICA AO VIVO
