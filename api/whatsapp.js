@@ -191,19 +191,32 @@ const agendaSemana = await buscarAgendaPeriodo(hojeISO,seteDiasISO)
 
 let agendaTexto = ""
 
-agendaSemana.forEach(m=>{
+agendaSemana.forEach(m => {
 
 agendaTexto += `
-Data: ${m.data}
-Cantor: ${m.cantor}
-Hora: ${m.hora}
-Estilo: ${m.estilo}
-Couvert: ${m.valor}
+DATA: ${m.data}
+ARTISTA: ${m.cantor}
+HORARIO: ${m.hora}
+ESTILO: ${m.estilo}
+COUVERT: ${m.valor}
+POSTER: ${m.foto || "sem"}
+----------------------------------
 `
 
 })
 
-  
+let agendaHojeTexto = ""
+
+agendaDia.forEach(m => {
+
+agendaHojeTexto += `
+ARTISTA: ${m.cantor}
+HORARIO: ${m.hora}
+ESTILO: ${m.estilo}
+COUVERT: ${m.valor}
+`
+
+})
 /* ================= INTENÇÕES ================= */
 
 const querReserva =
@@ -483,8 +496,11 @@ try{
 const agora = new Date()
 
 const dataAtual = agora.toLocaleDateString("pt-BR")
-const horaAtualSistema = agora.toLocaleTimeString("pt-BR")
-const dataISO = agora.toISOString().split("T")[0]
+const horaAtualSistema =
+agora.getHours().toString().padStart(2,"0") +
+":" +
+agora.getMinutes().toString().padStart(2,"0")
+  const dataISO = agora.toISOString().split("T")[0]
 
 const completion = await openai.chat.completions.create({
 
@@ -591,7 +607,11 @@ Use a agenda abaixo para responder perguntas sobre:
 • próximo show
 • quem está tocando agora
 
-Agenda:
+AGENDA DE HOJE
+
+${agendaHojeTexto}
+
+AGENDA DOS PRÓXIMOS DIAS
 
 ${agendaTexto}
 
