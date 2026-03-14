@@ -253,6 +253,9 @@ texto.includes("quem canta") ||
 texto.includes("quem vai cantar") ||
 texto.includes("quem vai tocar") ||
 texto.includes("quem toca") ||
+texto.includes("tocando") ||
+texto.includes("quem está tocando") ||
+texto.includes("quem ta tocando") ||
 texto.includes("tem musica") ||
 texto.includes("tem música") ||
 texto.includes("tem banda") ||
