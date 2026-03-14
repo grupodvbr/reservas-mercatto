@@ -159,9 +159,10 @@ const { data: estadoMusica } = await supabase
 .select("*")
 .eq("telefone",cliente)
 .eq("tipo","musica")
-.single()
+.maybeSingle()
 
 const jaFalouMusica = !!estadoMusica
+console.log("JA ENVIOU PROGRAMAÇÃO:", jaFalouMusica)
 let dataConsulta = new Date()
 
 if(texto.includes("amanhã")){
@@ -338,6 +339,8 @@ return res.status(200).end()
 /* ================= MUSICA AO VIVO ================= */
 
 if(querMusica && !jaFalouMusica){
+
+console.log("RESPONDENDO AUTOMATICO MUSICA")
 
 let resposta=""
 
