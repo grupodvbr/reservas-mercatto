@@ -520,6 +520,10 @@ role:m.role,
 content:m.mensagem
 }))
 
+  mensagens.push({
+role:"user",
+content:mensagem
+})
   
 if(assuntoMusica){
 mensagens.unshift({
