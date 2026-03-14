@@ -218,8 +218,46 @@ return res.status(200).end()
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
-
 const texto = mensagem.toLowerCase()
+
+/* ================= DETECTAR NOME AUTOMATICO ================= */
+
+let nomeDetectado = null
+
+const regexNome = mensagem.match(
+/(?:meu nome completo é|meu nome é|me chamo|sou|aqui é|pode chamar de)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+)?)/i
+)
+
+const regexAqui = mensagem.match(
+/^([A-Za-zÀ-ÿ]+)\s+aqu[ií]/i
+)
+
+if(regexNome){
+nomeDetectado = regexNome[1]
+}
+
+if(regexAqui){
+nomeDetectado = regexAqui[1]
+}
+
+if(nomeDetectado){
+
+nomeDetectado = nomeDetectado
+.split(" ")
+.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+.join(" ")
+
+console.log("Nome detectado:", nomeDetectado)
+
+await supabase
+.from("memoria_clientes")
+.upsert({
+telefone:cliente,
+nome:nomeDetectado,
+ultima_interacao:new Date().toISOString()
+})
+
+}
 if(
 texto === "sim" ||
 texto === "ok" ||
