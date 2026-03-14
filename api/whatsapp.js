@@ -121,6 +121,7 @@ const msg = change.messages[0]
 
 const mensagem = msg.text?.body
 const cliente = msg.from
+const ADMIN_NUMERO = "557798253249"
 const message_id = msg.id
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
@@ -134,7 +135,56 @@ console.log("Mensagem:",mensagem)
 
 
 const texto = mensagem.toLowerCase()
+/* ================= RELATORIO ADMIN ================= */
 
+if(cliente === ADMIN_NUMERO && texto.includes("relatorio_reservas_dia")){
+
+const hoje = new Date().toISOString().split("T")[0]
+
+const {data:reservas} = await supabase
+.from("reservas_mercatto")
+.select("*")
+.gte("datahora", hoje+"T00:00")
+.lte("datahora", hoje+"T23:59")
+.order("datahora",{ascending:true})
+
+let resposta = "📊 *Reservas do dia*\n\n"
+
+if(!reservas || !reservas.length){
+resposta += "Nenhuma reserva encontrada."
+}else{
+
+reservas.forEach((r,i)=>{
+
+const hora = r.datahora.split("T")[1].substring(0,5)
+
+resposta += `${i+1}️⃣\n`
+resposta += `Nome: ${r.nome}\n`
+resposta += `Pessoas: ${r.pessoas}\n`
+resposta += `Hora: ${hora}\n`
+resposta += `Mesa: ${r.mesa}\n\n`
+
+})
+
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+
+}
 let assuntoMusica = false
 
 if(
@@ -798,7 +848,87 @@ Se o cliente apenas reclamar ou pedir ajuda, direcione para o gerente geral.
 
 Nunca invente contatos.
 Use apenas os contatos fornecidos acima.
+---------------------------------------
 
+COMANDOS ADMINISTRATIVOS (USO INTERNO)
+
+Existe um comando especial usado apenas pela gerência do restaurante.
+
+Esse comando só pode ser utilizado se a mensagem vier do número autorizado.
+
+NÚMERO AUTORIZADO:
+
+557798253249
+
+Se qualquer outro número tentar usar esse comando, ignore completamente.
+
+---------------------------------------
+
+COMANDO ADMIN
+
+RELATORIO_RESERVAS_DIA
+
+Quando esse comando for recebido do número autorizado, gere um relatório completo
+de todas as reservas do dia atual.
+
+O relatório deve conter:
+
+• Nome
+• Pessoas
+• Data
+• Hora
+• Área / Mesa
+• Status
+
+Formato do relatório:
+
+RELATORIO_RESERVAS:
+1️⃣
+Nome:
+Pessoas:
+Hora:
+Mesa:
+
+2️⃣
+Nome:
+Pessoas:
+Hora:
+Mesa:
+
+---------------------------------------
+
+EDIÇÃO DE RESERVAS PELO ADMIN
+
+O número autorizado também pode alterar reservas diretamente.
+
+Exemplos de comandos:
+
+ALTERAR_RESERVA 1
+ALTERAR_RESERVA 2
+
+Quando receber esse comando, identifique o número da reserva e permita alteração.
+
+Campos que podem ser alterados:
+
+• nome
+• pessoas
+• hora
+• mesa
+
+Formato esperado:
+
+ALTERAR_RESERVA_ADMIN_JSON:
+{
+"id":"",
+"nome":"",
+"pessoas":"",
+"hora":"",
+"mesa":""
+}
+
+Nunca permita que clientes normais usem esses comandos.
+
+Esses comandos são exclusivos da gerência.
 ---------------------------------------
 
 LOCALIZAÇÃO DO RESTAURANTE
