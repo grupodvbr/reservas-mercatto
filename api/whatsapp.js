@@ -422,20 +422,30 @@ textoDia = "amanhã"
 const dataISO = dataConsulta.toISOString().split("T")[0]
 
 const agendaDia = await buscarAgendaDoDia(dataISO)
+  
 const agora = new Date()
 
+const agoraBahia = new Date(
+agora.toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
+
 const horaAtual =
-agora.getHours().toString().padStart(2,"0") +
+agoraBahia.getHours().toString().padStart(2,"0") +
 ":" +
-agora.getMinutes().toString().padStart(2,"0")
+agoraBahia.getMinutes().toString().padStart(2,"0")
+
+  
 const couvertHoje = calcularCouvert(agendaDia)
 
 const posterHoje = pegarPoster(agendaDia)
 
 /* ================= AGENDA PARA IA ================= */
 
-const hoje = new Date()
-const hojeISO = hoje.toISOString().split("T")[0]
+const hojeBahia = new Date(
+new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
+
+const hojeISO = hojeBahia.toISOString().split("T")[0]
 
 const seteDias = new Date()
 seteDias.setDate(hoje.getDate()+7)
@@ -819,15 +829,21 @@ try{
 
 const agora = new Date()
 
-const dataAtual = agora.toLocaleDateString("pt-BR")
+const agoraBahia = new Date(
+agora.toLocaleString("en-US", { timeZone: "America/Bahia" })
+)
+
+const dataAtual = agoraBahia.toLocaleDateString("pt-BR")
+
 const horaAtualSistema =
-agora.getHours().toString().padStart(2,"0") +
+agoraBahia.getHours().toString().padStart(2,"0") +
 ":" +
-agora.getMinutes().toString().padStart(2,"0")
+agoraBahia.getMinutes().toString().padStart(2,"0")
 
-const dataAtualISO = agora.toISOString().split("T")[0]
+const dataAtualISO =
+agoraBahia.toISOString().split("T")[0]
 
-
+  
 /* ================= BUSCAR PROMPT ================= */
 
 const { data: prompts } = await supabase
