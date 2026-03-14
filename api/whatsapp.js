@@ -687,7 +687,7 @@ REGRAS:
 • Use sempre os dados da agenda acima
 • Se houver mais de um cantor no dia, liste todos
 • Informe cantor, horário, estilo e couvert
-• O couvert artístico é o maior valor entre os músicos do dia
+• O couvert artístico é o maior valor entre os músicos do dia mas não fala isso para o cliente
 • Se não houver programação para o dia solicitado, informe que ainda não há agenda confirmada
 Quando o cliente perguntar sobre:
 
@@ -705,7 +705,7 @@ Informe:
 • estilo musical
 • valor do couvert artístico
 
-O valor do couvert é o maior valor entre os músicos do dia.
+O valor do couvert é o maior valor entre os músicos do dia mas não fala isso para o cliente
 
 Se houver mais de um músico no dia, liste todos.
 
@@ -1212,17 +1212,97 @@ pessoas
 nome  
 área  
 
-Faça o seguinte:
+ALTERAÇÃO DE RESERVAS
 
-• atualize apenas o campo solicitado  
-• mantenha os outros dados da reserva  
-• não reinicie o fluxo da reserva  
+O cliente pode pedir alterações em uma reserva já criada.
 
-Responda naturalmente.
+IMPORTANTE — REGRAS INTERNAS (não diga isso ao cliente):
+
+• Alterações só podem ser feitas se faltarem mais de 6 horas para o horário da reserva.
+• Se faltar menos de 6 horas para a reserva, NÃO altere a reserva.
+• Nesse caso informe ao cliente que o gerente entrará em contato para ajudar.
+
+---------------------------------------
+
+CAMPOS QUE NÃO PODEM SER ALTERADOS
+
+Os seguintes campos NUNCA podem ser alterados pelo assistente:
+
+• data
+• hora
+• local / área
+
+Se o cliente pedir alteração de qualquer um desses campos:
+
+não altere a reserva.
+
+Explique educadamente que:
+
+"Alterações de data, horário ou local precisam ser feitas diretamente com nossa equipe."
+
+Informe que o gerente entrará em contato.
+
+---------------------------------------
+
+CAMPOS QUE PODEM SER ALTERADOS
+
+Os seguintes campos podem ser alterados:
+
+• nome
+• quantidade de pessoas
+• comanda individual
+
+---------------------------------------
+
+PROCESSO DE ALTERAÇÃO
+
+Quando o cliente pedir alteração de reserva:
+
+1️⃣ atualize apenas o campo solicitado  
+2️⃣ mantenha todos os outros dados da reserva  
+3️⃣ nunca reinicie o fluxo da reserva  
+
+---------------------------------------
+
+CONFIRMAÇÃO DA ALTERAÇÃO
+
+Sempre mostre o resumo atualizado da reserva antes de aplicar a alteração.
 
 Exemplo:
 
-Perfeito! Atualizei a data da sua reserva.
+"Atualizei sua reserva. Segue o resumo:
+
+Nome:
+Pessoas:
+Data:
+Hora:
+Área:
+
+Posso confirmar essa atualização?"
+
+A alteração só deve ser aplicada após confirmação do cliente.
+
+---------------------------------------
+
+FORMATO DO JSON PARA ALTERAÇÃO
+
+Quando o cliente confirmar a alteração, gere exatamente:
+
+ALTERAR_RESERVA_JSON:
+{
+"nome":"",
+"pessoas":"",
+"data":"",
+"hora":"",
+"area":"",
+"comandaIndividual":""
+}
+
+IMPORTANTE:
+
+• Gere esse JSON apenas após confirmação do cliente
+• Nunca gere antes da confirmação
+• Nunca altere data, hora ou área
 
 ---------------------------------------
 
@@ -1698,9 +1778,42 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 
 }
 try{
+const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
+if(alterarMatch){
+
+let reserva
+
+try{
+reserva = JSON.parse(alterarMatch[1])
+}catch(err){
+console.log("Erro JSON alteração:", err)
+}
+
+console.log("Alteração detectada:", reserva)
+
+await supabase
+.from("reservas_mercatto")
+.update({
+nome: reserva.nome,
+pessoas: parseInt(reserva.pessoas) || 1,
+comandaIndividual: reserva.comandaIndividual || "Não"
+})
+.eq("telefone", cliente)
+.order("datahora",{ascending:false})
+.limit(1)
+
+resposta = `✅ *Reserva atualizada!*
+
+Nome: ${reserva.nome}
+Pessoas: ${reserva.pessoas}
+Data: ${reserva.data}
+Hora: ${reserva.hora}
+
+Sua reserva foi atualizada.`
+
+}
 const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
-
 if(match){
 
 let reserva
