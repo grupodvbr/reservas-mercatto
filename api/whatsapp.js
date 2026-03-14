@@ -514,10 +514,16 @@ const {data:historico} = await supabase
 .order("created_at",{ascending:true})
 .limit(50)
 
+const mensagens = historico.map(m=>({
+role:m.role,
+content:m.mensagem
+}))
+
 mensagens.push({
 role:"user",
 content: mensagem
 })
+  
 if(assuntoMusica){
 mensagens.unshift({
 role:"system",
