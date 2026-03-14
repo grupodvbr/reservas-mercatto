@@ -50,6 +50,29 @@ const comFoto = musicos.find(m=>m.foto)
 return comFoto ? comFoto.foto : null
 
 }
+
+/* ================= AGENDA PERIODO ================= */
+
+async function buscarAgendaPeriodo(dataInicio,dataFim){
+
+const { data, error } = await supabase
+.from("agenda_musicos")
+.select("*")
+.gte("data",dataInicio)
+.lte("data",dataFim)
+.order("data",{ascending:true})
+.order("hora",{ascending:true})
+
+if(error){
+console.log("Erro agenda período:",error)
+return []
+}
+
+return data || []
+
+}
+
+
 module.exports = async function handler(req,res){
 
 /* ================= WEBHOOK VERIFY ================= */
@@ -144,6 +167,34 @@ agora.getMinutes().toString().padStart(2,"0")
 const couvertHoje = calcularCouvert(agendaDia)
 
 const posterHoje = pegarPoster(agendaDia)
+
+/* ================= AGENDA PARA IA ================= */
+
+const hoje = new Date()
+const hojeISO = hoje.toISOString().split("T")[0]
+
+const seteDias = new Date()
+seteDias.setDate(hoje.getDate()+7)
+
+const seteDiasISO = seteDias.toISOString().split("T")[0]
+
+const agendaSemana = await buscarAgendaPeriodo(hojeISO,seteDiasISO)
+
+let agendaTexto = ""
+
+agendaSemana.forEach(m=>{
+
+agendaTexto += `
+Data: ${m.data}
+Cantor: ${m.cantor}
+Hora: ${m.hora}
+Estilo: ${m.estilo}
+Couvert: ${m.valor}
+`
+
+})
+
+  
 /* ================= INTENÇÕES ================= */
 
 const querReserva =
@@ -528,12 +579,35 @@ Sexta, sábado e domingo:
 11:00 até o fechamento.
 
 ---------------------------------------
----------------------------------------
 
 MÚSICA AO VIVO
 
 O Mercatto Delícia possui música ao vivo em alguns dias.
 
+---------------------------------------
+
+AGENDA REAL DE MÚSICA AO VIVO
+
+Use a agenda abaixo para responder perguntas sobre:
+
+• quem canta sexta
+• quem canta sábado
+• agenda do final de semana
+• programação musical
+• próximo show
+• quem está tocando agora
+
+Agenda:
+
+${agendaTexto}
+
+REGRAS:
+
+• Use sempre os dados da agenda acima
+• Se houver mais de um cantor no dia, liste todos
+• Informe cantor, horário, estilo e couvert
+• O couvert artístico é o maior valor entre os músicos do dia
+• Se não houver programação para o dia solicitado, informe que ainda não há agenda confirmada
 Quando o cliente perguntar sobre:
 
 • música
@@ -915,6 +989,20 @@ Nunca invente datas.
 
 ---------------------------------------
 
+PERGUNTAS SOBRE MÚSICA
+
+Se o cliente perguntar coisas como:
+
+quem canta sexta
+quem canta sábado
+agenda do final de semana
+programação musical
+próximo show
+quem está tocando agora
+vai ter música hoje
+quem toca hoje
+
+Use sempre os dados da agenda fornecida.
 INTERPRETAÇÃO DE DIA ISOLADO
 
 Se o cliente enviar apenas um número como:
