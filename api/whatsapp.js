@@ -189,7 +189,7 @@ texto.includes("qual a música hoje") ||
 texto.includes("qual o couvert") ||
 texto.includes("couver") ||
 texto.includes("cover") ||
-texto.includes("couvert")
+texto.includes("couvert") ||
 texto.includes("tocou") ||
 texto.includes("quem tocou") ||
 texto.includes("tocando") ||
