@@ -321,11 +321,10 @@ ultima_interacao:new Date().toISOString()
 if(
 texto === "sim" ||
 texto === "ok" ||
-texto === "confirmar" ||
-texto === "pode confirmar"
+texto === "confirmar"
 ){
-console.log("CONFIRMAÇÃO SIMPLES IGNORADA")
-return res.status(200).end()
+console.log("CONFIRMAÇÃO SIMPLES DETECTADA")
+// não interrompe fluxo
 }
 /* ================= RELATORIO ADMIN ================= */
 
