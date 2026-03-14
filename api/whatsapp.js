@@ -120,6 +120,10 @@ if(texto.includes("amanhã")){
 dataConsulta.setDate(dataConsulta.getDate()+1)
 }
 
+if(texto.includes("ontem")){
+dataConsulta.setDate(dataConsulta.getDate()-1)
+}
+
 const dataISO = dataConsulta.toISOString().split("T")[0]
 const agendaHoje = await buscarAgendaDoDia(dataISO)
 const couvertHoje = calcularCouvert(agendaHoje)
@@ -186,6 +190,17 @@ texto.includes("qual o couvert") ||
 texto.includes("couver") ||
 texto.includes("cover") ||
 texto.includes("couvert")
+texto.includes("tocou") ||
+texto.includes("quem tocou") ||
+texto.includes("tocando") ||
+texto.includes("teve musica") ||
+texto.includes("teve música") ||
+texto.includes("teve show") ||
+texto.includes("teve banda")
+
+
+
+  
 console.log("DETECTOU MUSICA:", querMusica)
 /* ================= BLOQUEAR DUPLICIDADE ================= */
 
