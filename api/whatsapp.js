@@ -514,7 +514,7 @@ const {data:historico} = await supabase
 .order("created_at",{ascending:true})
 .limit(50)
 
-const mensagens = historico.map(m=>({
+const mensagens = (historico || []).map(m=>({
 role:m.role,
 content:m.mensagem
 }))
