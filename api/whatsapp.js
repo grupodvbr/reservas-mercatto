@@ -1362,8 +1362,6 @@ forma_pagamento: pedido.pagamento || "",
 observacao: pedido.observacao || ""
 })
 
-return res.status(200).end()
-
 /* MARCAR ESTADO DE CONFIRMAÇÃO */
 
 await supabase
