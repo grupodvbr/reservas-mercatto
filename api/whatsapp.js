@@ -398,13 +398,13 @@ if(estado?.tipo === "confirmacao_pedido"){
 console.log("CONFIRMAÇÃO DE PEDIDO")
 
 const { data: pedidoPendente } = await supabase
-.from("delivery_mercatto")
+.from("pedidos_pendentes")
 .select("*")
 .eq("telefone",cliente)
-.eq("status","pendente")
 .order("created_at",{ascending:false})
 .limit(1)
 .single()
+
 if(pedidoPendente){
 
 const pedido = pedidoPendente.pedido
@@ -419,20 +419,35 @@ return s + (preco * qtd)
 },0)
 
 await supabase
-.from("delivery_mercatto")
-.update({
-status: "confirmado",
-valor_total: valorTotal
+.from("pedidos_pendente")
+.insert({
+
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+tipo: pedido.tipo || "entrega",
+
+itens: pedido.itens || [],
+
+valor_total: valorTotal,
+
+forma_pagamento: pedido.pagamento || "",
+
+observacao: pedido.observacao || "",
+
+status: "novo"
+
 })
-.eq("id", pedidoPendente.id)
 
-resposta = `✅ Pedido confirmado!
+/* limpar pedido pendente */
 
-Seu pedido foi enviado para a cozinha.
-
-Obrigado por escolher o Mercatto Delícia 🍽️`
-
-}
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("telefone",cliente)
 
 }
 
@@ -1251,11 +1266,12 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})/)
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
 if(pedidoMatch){
 
 let pedido
+
 let jsonTexto = pedidoMatch[1]
 
 jsonTexto = jsonTexto
@@ -1282,11 +1298,10 @@ console.log("Pedido detectado:",pedido)
 /* SALVAR PEDIDO PENDENTE */
 
 await supabase
-.from("delivery_mercatto")
+.from("pedidos_pendentes")
 .insert({
 telefone: cliente,
-pedido: pedido,
-status: "pendente"
+pedido: pedido
 })
 
 /* SALVAR ESTADO DA CONVERSA */
@@ -1298,6 +1313,19 @@ telefone: cliente,
 tipo: "confirmacao_pedido"
 })
 
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+
+
 resposta = `🧾 *Seu pedido ficou assim:*
 
 ${pedido.itens.map(i => `• ${i.nome} x${i.quantidade}`).join("\n")}
@@ -1306,9 +1334,13 @@ Deseja confirmar o pedido?
 
 Responda *SIM* para confirmar ou *ALTERAR* se quiser mudar algo.`
 
-}
+} // fecha if(pedido)
 
-}
+} // fecha if(pedidoMatch)// fecha if(pedidoMatch)
+
+}catch(e){
+
+console.log("ERRO OPENAI",e)
 
 resposta=
 `👋 Bem-vindo ao Mercatto Delícia
@@ -1512,27 +1544,12 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-let reserva = null
-
 try{
-
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
+
+let reserva
 
 try{
 reserva = JSON.parse(alterarMatch[1])
@@ -1540,16 +1557,65 @@ reserva = JSON.parse(alterarMatch[1])
 console.log("Erro JSON alteração:", err)
 }
 
+/* BLOQUEAR ALTERAÇÃO VAZIA */
+
+if(
+!reserva.nome &&
+!reserva.pessoas &&
+!reserva.data &&
+!reserva.hora &&
+!reserva.area &&
+!reserva.comandaIndividual
+){
+console.log("ALTERAÇÃO IGNORADA - JSON VAZIO")
+return res.status(200).end()
 }
 
-}catch(e){
-console.log("Erro ao processar alteração de reserva:",e)
+console.log("Alteração detectada:", reserva)
+
+await supabase
+.from("reservas_mercatto")
+.update({
+nome: reserva.nome,
+pessoas: parseInt(reserva.pessoas) || 1,
+comandaIndividual: reserva.comandaIndividual || "Não"
+})
+.eq("telefone", cliente)
+.eq("status","Pendente")
+.order("datahora",{ascending:false})
+.limit(1)
+
+resposta = `✅ *Reserva atualizada!*
+
+Nome: ${reserva.nome}
+Pessoas: ${reserva.pessoas}
+Data: ${reserva.data}
+Hora: ${reserva.hora}
+
+Sua reserva foi atualizada.`
+
 }
+const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
+if(match){
+
+let reserva
+
+try{
+  reserva = JSON.parse(match[1])
+}
+catch(err){
+  console.log("Erro ao interpretar JSON da reserva:", match[1])
+  resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
+}
+console.log("Reserva detectada:",reserva)
 
 
+
+
+  
 /* ================= ATUALIZAR MEMORIA CLIENTE ================= */
 
-if(reserva && reserva.nome){
+if(reserva?.nome){
 
 await supabase
 .from("memoria_clientes")
@@ -1560,11 +1626,8 @@ ultima_interacao:new Date().toISOString()
 })
 
 }
+  
 
-
-if(reserva){
-
-try{
 
 /* NORMALIZAR DATA */
 
@@ -1628,7 +1691,7 @@ pessoas: parseInt(reserva.pessoas) || 1,
 mesa:mesa,
 cardapio:"",
 comandaIndividual: reserva.comandaIndividual || "Não",
-datahora:datahora,
+  datahora:datahora,
 observacoes:"Reserva via WhatsApp",
 valorEstimado:0,
 pagamentoAntecipado:0,
@@ -1638,6 +1701,7 @@ status:"Pendente"
 })
 
 if(!error){
+
 
 const [anoR, mesR, diaR] = dataISO.split("-")
 
@@ -1659,6 +1723,7 @@ Sua mesa estará reservada.
 Aguardamos você!`
 
 }
+}
 
 }catch(e){
 
@@ -1666,7 +1731,6 @@ console.log("Erro ao processar reserva:",e)
 
 }
 
-}
 /* ================= SALVAR RESPOSTA ================= */
 
 await supabase
