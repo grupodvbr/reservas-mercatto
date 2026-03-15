@@ -1778,9 +1778,3 @@ console.log("ERRO GERAL:",error)
 return res.status(200).end()
 
 }
-
-return res.status(200).end()
-
-}
-
-}
