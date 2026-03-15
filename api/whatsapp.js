@@ -1268,7 +1268,7 @@ const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
 if(pedidoMatch){
 
-let pedido
+let pedido = null
 
 let jsonTexto = pedidoMatch[1]
 
@@ -1278,8 +1278,6 @@ jsonTexto = jsonTexto
 .replace(/\n/g,"")
 .replace(/\t/g,"")
 .trim()
-
-let pedido = null
 
 try{
 
