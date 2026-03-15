@@ -1522,9 +1522,7 @@ console.log("Erro ao salvar pedido:",error)
 let itensTexto = ""
 
 (pedido.itens || []).forEach(i=>{
-
 itensTexto += `• ${i.nome} x${i.quantidade}\n`
-
 })
 
 resposta =
@@ -1538,9 +1536,7 @@ Seu pedido foi enviado para nossa cozinha.
 Em breve confirmaremos 😊`
 
 }
-
 }
-
 
 
   
