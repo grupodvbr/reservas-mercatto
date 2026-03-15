@@ -137,7 +137,8 @@ return data || []
 
 
 module.exports = async function handler(req,res){
-let resposta = "Desculpe, tive um problema ao processar sua mensagem."
+let resposta = ""
+
 /* ================= CARDAPIO ================= */
 
 async function buscarCardapio(){
@@ -402,10 +403,8 @@ const { data: pedidoPendente } = await supabase
 .eq("telefone",cliente)
 .order("created_at",{ascending:false})
 .limit(1)
-.maybeSingle()
+.single()
 
-
-  
 if(pedidoPendente){
 
 const pedido = pedidoPendente.pedido
@@ -420,7 +419,7 @@ return s + (preco * qtd)
 },0)
 
 await supabase
-.from("pedidos")
+.from("pedidos_pendente")
 .insert({
 
 cliente_nome: pedido.nome,
@@ -428,7 +427,7 @@ cliente_telefone: cliente,
 
 cliente_endereco: pedido.endereco || "",
 cliente_bairro: pedido.bairro || "",
-  
+
 tipo: pedido.tipo || "entrega",
 
 itens: pedido.itens || [],
@@ -443,12 +442,14 @@ status: "novo"
 
 })
 
-/* limpar apenas o pedido confirmado */
+/* limpar pedido pendente */
 
 await supabase
 .from("pedidos_pendentes")
 .delete()
-.eq("id", pedidoPendente.id)
+.eq("telefone",cliente)
+
+}
 
 /* limpar estado conversa */
 
@@ -457,7 +458,6 @@ await supabase
 .delete()
 .eq("telefone",cliente)
 
-}
 }
 }
 /* ================= RELATORIO ADMIN ================= */
@@ -701,7 +701,7 @@ const { data: jaProcessada } = await supabase
 .from("mensagens_processadas")
 .select("*")
 .eq("message_id", message_id)
-.maybeSingle()
+.single()
 
 if(jaProcessada){
 console.log("Mensagem duplicada ignorada")
@@ -711,6 +711,7 @@ return res.status(200).end()
 await supabase
 .from("mensagens_processadas")
 .insert({ message_id })
+
 /* ================= SALVAR MENSAGEM CLIENTE ================= */
 
 await supabase
@@ -1269,6 +1270,8 @@ const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
 if(pedidoMatch){
 
+let pedido
+
 let jsonTexto = pedidoMatch[1]
 
 jsonTexto = jsonTexto
@@ -1278,8 +1281,6 @@ jsonTexto = jsonTexto
 .replace(/\t/g,"")
 .trim()
 
-let pedido = null
-
 try{
 
 pedido = JSON.parse(jsonTexto)
@@ -1288,11 +1289,9 @@ pedido = JSON.parse(jsonTexto)
 
 console.log("Erro JSON pedido:", jsonTexto)
 
-pedido = null
-
 }
 
-if(pedido && pedido.itens){
+if(pedido){
 
 console.log("Pedido detectado:",pedido)
 
@@ -1314,11 +1313,18 @@ telefone: cliente,
 tipo: "confirmacao_pedido"
 })
 
+/* CALCULAR TOTAL */
+
 const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
 const preco = Number(i.preco || 0)
 const qtd = Number(i.quantidade || 1)
+
 return s + (preco * qtd)
+
 },0)
+
+
 
 resposta = `🧾 *Seu pedido ficou assim:*
 
@@ -1328,15 +1334,15 @@ Deseja confirmar o pedido?
 
 Responda *SIM* para confirmar ou *ALTERAR* se quiser mudar algo.`
 
-} // fecha if(pedido && pedido.itens)
+} // fecha if(pedido)
 
-} // fecha if(pedidoMatch)
+} // fecha if(pedidoMatch)// fecha if(pedidoMatch)
 
-} catch(e){
+}catch(e){
 
 console.log("ERRO OPENAI",e)
 
-resposta =
+resposta=
 `👋 Bem-vindo ao Mercatto Delícia
 
 Digite:
@@ -1346,6 +1352,7 @@ Digite:
 3️⃣ Endereço`
 
 }
+
 /* ================= RESERVA SALA VIP ================= */
 
 const vipMatch = resposta?.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
@@ -1537,10 +1544,7 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 
 }
-/* ================= ALTERAR RESERVA ================= */
-
 try{
-
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
@@ -1552,6 +1556,8 @@ reserva = JSON.parse(alterarMatch[1])
 }catch(err){
 console.log("Erro JSON alteração:", err)
 }
+
+/* BLOQUEAR ALTERAÇÃO VAZIA */
 
 if(
 !reserva.nome &&
@@ -1589,32 +1595,22 @@ Hora: ${reserva.hora}
 Sua reserva foi atualizada.`
 
 }
-
-}catch(e){
-
-console.log("Erro ao alterar reserva:",e)
-
-}
-
-/* ================= NOVA RESERVA ================= */
-
-try{
-
 const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
-
 if(match){
 
 let reserva
 
 try{
-reserva = JSON.parse(match[1])
+  reserva = JSON.parse(match[1])
 }
 catch(err){
-console.log("Erro ao interpretar JSON da reserva:", match[1])
-resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
+  console.log("Erro ao interpretar JSON da reserva:", match[1])
+  resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
 }
-
 console.log("Reserva detectada:",reserva)
+
+
+
 
   
 /* ================= ATUALIZAR MEMORIA CLIENTE ================= */
@@ -1747,26 +1743,39 @@ role:"assistant"
 
 /* ================= ENVIAR WHATSAPP ================= */
 
+
 await fetch(url,{
+
 method:"POST",
+
 headers:{
 Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
+
 messaging_product:"whatsapp",
+
 to:cliente,
+
 type:"text",
-text:{ body:resposta }
+
+text:{
+body:resposta
+}
+
 })
+
 })
+
+}catch(error){
+
+console.log("ERRO GERAL:",error)
+
 return res.status(200).end()
 
 }
-
-catch(error){
-
-console.log("ERRO GERAL:",error)
 
 return res.status(200).end()
 
