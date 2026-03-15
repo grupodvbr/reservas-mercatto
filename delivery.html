@@ -1,279 +1,237 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
 <meta charset="UTF-8">
-<title>Delivery • Mercatto</title>
+<title>Pedidos Mercatto Delícia • Painel Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
 :root{
---bg:#0f172a;
---card:#1e293b;
---border:#334155;
---text:#f1f5f9;
---muted:#94a3b8;
---green:#22c55e;
---blue:#3b82f6;
+  --bg:#020617;
+  --card:#0f172a;
+  --border:#1e293b;
+  --text:#f1f5f9;
+  --muted:#94a3b8;
+  --green:#22c55e;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --yellow:#facc15;
+  --radius:14px;
+  --shadow:0 4px 12px rgba(0,0,0,.5);
 }
 
-body{
-margin:0;
-font-family:Inter;
-background:var(--bg);
-color:var(--text);
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
+body{background:var(--bg);color:var(--text);padding:12px;}
+h1{font-weight:800;margin-bottom:12px;}
+button{cursor:pointer;padding:6px 12px;border:none;border-radius:6px;font-weight:600;}
+button.aprovar{background:var(--green);color:#fff;margin-right:6px;}
+button.rejeitar{background:var(--red);color:#fff;margin-right:6px;}
+button.imprimir{background:var(--blue);color:#fff;}
+table{width:100%;border-collapse:collapse;margin-top:12px;}
+th,td{padding:8px;text-align:left;border-bottom:1px solid var(--border);}
+th{background:var(--card);}
+tr:hover{background:rgba(255,255,255,0.05);}
+.status-pendente{color:var(--yellow);}
+.status-aprovado{color:var(--green);}
+.status-rejeitado{color:var(--red);}
+.modal-bg{
+  display:none;
+  position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.7);
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
 }
-
-/* NAVBAR */
-
-.nav{
-height:64px;
-background:#020617;
-display:flex;
-align-items:center;
-padding:0 20px;
-border-bottom:1px solid var(--border);
-gap:20px;
+.modal{
+  background:var(--card);
+  padding:20px;
+  border-radius:var(--radius);
+  width:90%;
+  max-width:480px;
+  max-height:80%;
+  overflow-y:auto;
+  box-shadow:var(--shadow);
 }
-
-.nav a{
-color:white;
-text-decoration:none;
-font-weight:600;
-opacity:.7;
+.close-btn{
+  background:red;color:#fff;float:right;font-weight:800;padding:2px 6px;border-radius:50%;
 }
-
-.nav a:hover{
-opacity:1;
-}
-
-/* PEDIDOS */
-
-.container{
-padding:24px;
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
-gap:20px;
-}
-
-/* CARD */
-
-.card{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:14px;
-padding:18px;
-display:flex;
-flex-direction:column;
-gap:14px;
-}
-
-.header{
-display:flex;
-justify-content:space-between;
-}
-
-.nome{
-font-weight:700;
-}
-
-.telefone{
-font-size:13px;
-color:var(--muted);
-}
-
-.item{
-display:flex;
-gap:10px;
-align-items:center;
-}
-
-.item img{
-width:48px;
-height:48px;
-object-fit:cover;
-border-radius:8px;
-}
-
-.info{
-flex:1;
-}
-
-.qtd{
-font-weight:600;
-}
-
-.footer{
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-.btn{
-border:none;
-padding:8px 12px;
-border-radius:8px;
-cursor:pointer;
-font-weight:600;
-}
-
-.aceitar{
-background:var(--green);
-color:white;
-}
-
-.preparo{
-background:var(--blue);
-color:white;
-}
-
+pre{background:#111827;padding:12px;border-radius:8px;overflow-x:auto;}
 </style>
 </head>
-
 <body>
 
-<div class="nav">
+<h1>📝 Gerenciar Pedidos - Mercatto Delícia</h1>
 
-<a href="delivery.html">Pedidos</a>
-<a href="financeiro.html">Financeiro</a>
-<a href="config.html">Configurações</a>
+<table id="pedidos-table">
+<thead>
+<tr>
+<th>#</th>
+<th>Cliente</th>
+<th>Telefone</th>
+<th>Tipo</th>
+<th>Endereço</th>
+<th>Bairro</th>
+<th>Itens</th>
+<th>Total</th>
+<th>Status</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody>
+<tr><td colspan="10" style="text-align:center;color:var(--muted)">Carregando pedidos...</td></tr>
+</tbody>
+</table>
 
+<!-- Modal para detalhes -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <button class="close-btn" onclick="fecharModal()">X</button>
+    <h2>Detalhes do Pedido</h2>
+    <div id="modal-conteudo"></div>
+    <button class="imprimir" onclick="imprimirPedido()">🖨️ Imprimir</button>
+  </div>
 </div>
-
-<div class="container" id="pedidos"></div>
 
 <script>
-
+// ================= SUPABASE =================
 const supabase = supabase.createClient(
-"https://dxkszikemntfusfyrzos.supabase.co",
-"PUBLIC_KEY"
-)
+  "YOUR_SUPABASE_URL",
+  "YOUR_SUPABASE_SERVICE_ROLE"
+);
 
+let pedidos = [];
+let pedidoSelecionado = null;
+
+// ================= CARREGAR PEDIDOS =================
 async function carregarPedidos(){
+  const { data, error } = await supabase
+    .from("pedidos_pendentes")
+    .select("*")
+    .order("created_at",{ascending:true});
 
-const {data} = await supabase
-.from("delivery_mercatto")
-.select("*")
-.order("created_at",{ascending:false})
+  if(error){
+    console.log("Erro ao buscar pedidos:",error);
+    return;
+  }
 
-const container=document.getElementById("pedidos")
-
-container.innerHTML=""
-
-data.forEach(p=>{
-
-const itens = p.itens || []
-
-let itensHTML=""
-
-itens.forEach(i=>{
-
-itensHTML+=`
-
-<div class="item">
-
-<img src="${i.foto}">
-
-<div class="info">
-${i.nome}
-</div>
-
-<div class="qtd">
-x${i.quantidade}
-</div>
-
-</div>
-`
-
-})
-
-const card=document.createElement("div")
-
-card.className="card"
-
-card.innerHTML=`
-
-<div class="header">
-
-<div>
-
-<div class="nome">${p.cliente_nome}</div>
-
-<div class="telefone">${p.cliente_telefone}</div>
-
-</div>
-
-<div>${p.tipo}</div>
-
-</div>
-
-${itensHTML}
-
-<div>
-
-📍 ${p.cliente_endereco}
-
-</div>
-
-<div>
-
-💰 ${p.valor_total}
-
-</div>
-
-<div>
-
-💳 ${p.forma_pagamento}
-
-</div>
-
-<div>
-
-📝 ${p.observacao || ""}
-
-</div>
-
-<div class="footer">
-
-<button class="btn aceitar"
-onclick="atualizarStatus('${p.id}','aceito')">
-Aceitar
-</button>
-
-<button class="btn preparo"
-onclick="atualizarStatus('${p.id}','preparando')">
-Preparar
-</button>
-
-</div>
-
-`
-
-container.appendChild(card)
-
-})
-
+  pedidos = data || [];
+  renderizarTabela();
 }
 
-async function atualizarStatus(id,status){
+// ================= RENDER TABELA =================
+function renderizarTabela(){
+  const tbody = document.querySelector("#pedidos-table tbody");
+  tbody.innerHTML = "";
 
-await supabase
-.from("delivery_mercatto")
-.update({status})
-.eq("id",id)
+  if(!pedidos.length){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted)">Nenhum pedido pendente</td></tr>`;
+    return;
+  }
 
-carregarPedidos()
+  pedidos.forEach((p,i)=>{
+    const total = (p.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
+    const statusClass = p.status==="aprovado"?"status-aprovado":p.status==="rejeitado"?"status-rejeitado":"status-pendente";
 
+    const tr = document.createElement("tr");
+    tr.innerHTML=`
+      <td>${i+1}</td>
+      <td>${p.cliente_nome}</td>
+      <td>${p.cliente_telefone}</td>
+      <td>${p.tipo}</td>
+      <td>${p.cliente_endereco || "-"}</td>
+      <td>${p.cliente_bairro || "-"}</td>
+      <td>${(p.itens||[]).map(it=>`${it.quantidade}x ${it.nome}`).join(", ")}</td>
+      <td>R$ ${total}</td>
+      <td class="${statusClass}">${p.status || "pendente"}</td>
+      <td>
+        <button class="aprovar" onclick="aprovarPedido(${i})">Aprovar</button>
+        <button class="rejeitar" onclick="rejeitarPedido(${i})">Rejeitar</button>
+        <button class="imprimir" onclick="abrirModal(${i})">Ver/Imprimir</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-carregarPedidos()
+// ================= AÇÕES =================
+async function aprovarPedido(idx){
+  const p = pedidos[idx];
+  await supabase
+    .from("pedidos_pendentes")
+    .update({ status:"aprovado" })
+    .eq("id", p.id);
+  carregarPedidos();
+}
 
+async function rejeitarPedido(idx){
+  const p = pedidos[idx];
+  await supabase
+    .from("pedidos_pendentes")
+    .update({ status:"rejeitado" })
+    .eq("id", p.id);
+  carregarPedidos();
+}
+
+// ================= MODAL =================
+function abrirModal(idx){
+  pedidoSelecionado = pedidos[idx];
+  const modal = document.getElementById("modal-bg");
+  const conteudo = document.getElementById("modal-conteudo");
+  const total = (pedidoSelecionado.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
+
+  conteudo.innerHTML = `
+    <p><strong>Cliente:</strong> ${pedidoSelecionado.cliente_nome}</p>
+    <p><strong>Telefone:</strong> ${pedidoSelecionado.cliente_telefone}</p>
+    <p><strong>Tipo:</strong> ${pedidoSelecionado.tipo}</p>
+    <p><strong>Endereço:</strong> ${pedidoSelecionado.cliente_endereco || "-"}</p>
+    <p><strong>Bairro:</strong> ${pedidoSelecionado.cliente_bairro || "-"}</p>
+    <p><strong>Itens:</strong></p>
+    <ul>${(pedidoSelecionado.itens||[]).map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`).join("")}</ul>
+    <p><strong>Total:</strong> R$ ${total}</p>
+    <p><strong>Status:</strong> ${pedidoSelecionado.status || "pendente"}</p>
+  `;
+  modal.style.display="flex";
+}
+
+function fecharModal(){
+  document.getElementById("modal-bg").style.display="none";
+  pedidoSelecionado = null;
+}
+
+// ================= IMPRESSÃO TÉRMICA =================
+function imprimirPedido(){
+  if(!pedidoSelecionado) return;
+  let conteudo = `\n===== PEDIDO MERCATTO DELÍCIA =====\n\n`;
+  conteudo += `Cliente: ${pedidoSelecionado.cliente_nome}\n`;
+  conteudo += `Telefone: ${pedidoSelecionado.cliente_telefone}\n`;
+  conteudo += `Tipo: ${pedidoSelecionado.tipo}\n`;
+  if(pedidoSelecionado.tipo==="entrega"){
+    conteudo += `Endereço: ${pedidoSelecionado.cliente_endereco || "-"}\n`;
+    conteudo += `Bairro: ${pedidoSelecionado.cliente_bairro || "-"}\n`;
+  }
+  conteudo += `\nItens:\n`;
+  (pedidoSelecionado.itens || []).forEach(it=>{
+    conteudo += `${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`;
+  });
+  const total = (pedidoSelecionado.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
+  conteudo += `\nTOTAL: R$ ${total}\n`;
+  conteudo += `\n===============================\n\n`;
+
+  // envia para a impressora térmica usando window.print ou API local de impressora
+  const win = window.open("","PRINT","width=400,height=600");
+  win.document.write(`<pre>${conteudo}</pre>`);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
+}
+
+// ================= INICIAL =================
+carregarPedidos();
 </script>
 
 </body>
