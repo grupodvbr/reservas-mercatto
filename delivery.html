@@ -3,12 +3,9 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Mercatto • Painel Delivery</title>
+<title>Mercatto Delícia • Painel Delivery</title>
 
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
@@ -17,33 +14,30 @@ viewport-fit=cover">
 <style>
 
 :root{
---bg:#020617;
---panel:#0f172a;
---card:#020617;
---line:#1e293b;
---text:#e2e8f0;
---muted:#94a3b8;
 
---novo:#f97316;
---aceito:#3b82f6;
---preparo:#f59e0b;
---pronto:#22c55e;
---entregue:#16a34a;
---cancelado:#ef4444;
+--madeira:#5c3a21;
+--vermelho:#c1121f;
+--branco:#ffffff;
+--preto:#0b0b0b;
 
---radius:12px;
+--bg:#111;
+--card:#1a1a1a;
+--line:#2b2b2b;
+
+--radius:14px;
+
 }
 
 *{
 box-sizing:border-box;
-font-family:Inter;
 margin:0;
 padding:0;
+font-family:Inter;
 }
 
 body{
-background:var(--bg);
-color:var(--text);
+background:linear-gradient(180deg,#0b0b0b,#151515);
+color:white;
 padding:20px;
 }
 
@@ -51,90 +45,165 @@ header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:18px;
+margin-bottom:20px;
 }
 
 h1{
-font-size:22px;
+font-size:24px;
 font-weight:800;
+color:#fff;
 }
 
 .board{
+
 display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:14px;
+grid-template-columns:1.2fr 1fr 1fr;
+gap:16px;
+
 }
 
 .col{
-background:var(--panel);
-border:1px solid var(--line);
-border-radius:12px;
-padding:10px;
+
+border-radius:16px;
+padding:12px;
 min-height:70vh;
+
 }
 
-.col h3{
-font-size:14px;
+.col h2{
+
+font-size:16px;
 font-weight:800;
-margin-bottom:10px;
+margin-bottom:12px;
+
 display:flex;
 justify-content:space-between;
+
 }
 
-.count{
-background:#020617;
-padding:2px 6px;
-border-radius:6px;
-font-size:11px;
+.pendentes{
+background:linear-gradient(180deg,#3d0006,#1a0003);
+border:1px solid #7f000f;
+}
+
+.aprovados{
+background:linear-gradient(180deg,#4a3a00,#1a1400);
+border:1px solid #c7a600;
+}
+
+.prontos{
+background:linear-gradient(180deg,#003312,#001a08);
+border:1px solid #0fa958;
 }
 
 .card{
-background:var(--card);
-border:1px solid var(--line);
-border-radius:12px;
-padding:12px;
-margin-bottom:10px;
+
+background:#0f0f0f;
+border:1px solid #2a2a2a;
+border-radius:14px;
+padding:14px;
+margin-bottom:12px;
 cursor:pointer;
+
 transition:.2s;
+
 }
 
 .card:hover{
-border-color:#3b82f6;
 transform:scale(1.02);
+border-color:#c1121f;
 }
 
 .nome{
-font-weight:700;
+font-size:16px;
+font-weight:800;
 }
 
-.info{
+.telefone{
+font-size:13px;
+color:#aaa;
+margin-top:2px;
+}
+
+.tipo{
+
+font-size:11px;
+background:#222;
+display:inline-block;
+padding:3px 6px;
+border-radius:6px;
+margin-top:6px;
+
+}
+
+.endereco{
+
 font-size:12px;
-color:var(--muted);
-margin-top:3px;
+color:#ccc;
+margin-top:4px;
+
+}
+
+.itens{
+
+font-size:12px;
+margin-top:8px;
+line-height:1.4;
+
 }
 
 .total{
+
 font-weight:800;
-margin-top:6px;
+margin-top:8px;
+color:#fff;
+
 }
 
 .timer{
+
 font-size:12px;
+color:#ffcc00;
 font-weight:700;
-color:#ef4444;
-margin-top:4px;
+
 }
 
-.badge{
-font-size:11px;
-padding:2px 6px;
-border-radius:6px;
-display:inline-block;
-margin-top:4px;
-background:#1e293b;
+.actions{
+
+margin-top:10px;
+display:flex;
+gap:6px;
+flex-wrap:wrap;
+
+}
+
+button{
+
+border:none;
+border-radius:8px;
+padding:6px 10px;
+font-weight:700;
+cursor:pointer;
+
+}
+
+.aprovar{
+background:#0fa958;
+color:white;
+}
+
+.preparo{
+background:#c7a600;
+color:black;
+}
+
+.pronto{
+background:#0fa958;
+color:white;
 }
 
 .modal{
+
 position:fixed;
 top:0;
 left:0;
@@ -144,61 +213,46 @@ background:rgba(0,0,0,.7);
 display:none;
 align-items:center;
 justify-content:center;
+
 }
 
 .modalBox{
-background:var(--panel);
-width:600px;
+
+width:520px;
 max-height:80vh;
 overflow:auto;
-border-radius:12px;
+
+background:#111;
+border-radius:14px;
 padding:20px;
-border:1px solid var(--line);
+
 }
 
 .item{
+
 display:flex;
 gap:10px;
-padding:10px;
-border:1px solid var(--line);
+border:1px solid #333;
 border-radius:10px;
+padding:10px;
 margin-top:10px;
-background:#020617;
+
 }
 
 .item img{
-width:80px;
-height:80px;
+
+width:70px;
+height:70px;
 object-fit:cover;
 border-radius:8px;
-}
 
-.actions{
-margin-top:16px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
 }
-
-button{
-border:none;
-padding:8px 12px;
-border-radius:8px;
-font-weight:700;
-cursor:pointer;
-}
-
-.aceito{background:var(--aceito);color:white}
-.preparo{background:var(--preparo);color:white}
-.pronto{background:var(--pronto);color:white}
-.entregue{background:var(--entregue);color:white}
-.cancelado{background:var(--cancelado);color:white}
 
 .close{
 float:right;
 cursor:pointer;
+color:red;
 font-weight:800;
-color:#ef4444;
 }
 
 @media print{
@@ -215,13 +269,14 @@ display:none;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <header>
 
-<h1>🍔 Mercatto Delivery</h1>
+<h1>🔥 Painel Delivery Mercatto</h1>
 
 <div id="hora"></div>
 
@@ -229,24 +284,22 @@ display:none;
 
 <div class="board">
 
-<div class="col" data-status="novo">
-<h3>🆕 Novos <span class="count" id="c-novo">0</span></h3>
+<div class="col pendentes" data-status="novo">
+
+<h2>🔴 Pendentes</h2>
+
 </div>
 
-<div class="col" data-status="aprovado">
-<h3>✔ Aceitos <span class="count" id="c-aprovado">0</span></h3>
+<div class="col aprovados" data-status="aprovado">
+
+<h2>🟡 Em preparo</h2>
+
 </div>
 
-<div class="col" data-status="preparo">
-<h3>👨‍🍳 Preparo <span class="count" id="c-preparo">0</span></h3>
-</div>
+<div class="col prontos" data-status="pronto">
 
-<div class="col" data-status="pronto">
-<h3>📦 Pronto <span class="count" id="c-pronto">0</span></h3>
-</div>
+<h2>🟢 Prontos</h2>
 
-<div class="col" data-status="entregue">
-<h3>🚚 Entregue <span class="count" id="c-entregue">0</span></h3>
 </div>
 
 </div>
@@ -259,19 +312,9 @@ display:none;
 
 <h2 id="titulo"></h2>
 
-<div id="itens"></div>
+<div id="detalhes"></div>
 
-<div class="actions noPrint">
-
-<button class="aceito" onclick="setStatus('aprovado')">Aceitar</button>
-<button class="preparo" onclick="setStatus('preparo')">Preparo</button>
-<button class="pronto" onclick="setStatus('pronto')">Pronto</button>
-<button class="entregue" onclick="setStatus('entregue')">Entregue</button>
-<button class="cancelado" onclick="setStatus('rejeitado')">Cancelar</button>
-
-<button onclick="imprimir()">🖨 Imprimir</button>
-
-</div>
+<button onclick="imprimir()" class="noPrint" style="margin-top:10px">🖨 Imprimir</button>
 
 </div>
 
@@ -302,16 +345,11 @@ render()
 
 function render(){
 
-let cont={
-novo:0,
-aprovado:0,
-preparo:0,
-pronto:0,
-entregue:0
-}
-
 document.querySelectorAll(".col").forEach(c=>{
-c.innerHTML="<h3>"+c.querySelector("h3").innerText+"</h3>"
+
+const titulo=c.querySelector("h2").outerHTML
+c.innerHTML=titulo
+
 })
 
 pedidos.forEach(p=>{
@@ -319,23 +357,48 @@ pedidos.forEach(p=>{
 const col=document.querySelector(`[data-status="${p.status}"]`)
 if(!col)return
 
-cont[p.status]++
-
 const card=document.createElement("div")
 card.className="card"
 
 const created=new Date(p.created_at)
+
 const minutos=Math.floor((Date.now()-created)/60000)
 
 let total=0
-;(p.itens||[]).forEach(i=>total+=i.preco*i.quantidade)
+
+let itensResumo=""
+
+p.itens.forEach(i=>{
+total+=i.preco*i.quantidade
+itensResumo+=`${i.quantidade}x ${i.nome}<br>`
+})
 
 card.innerHTML=`
+
 <div class="nome">${p.cliente_nome}</div>
-<div class="info">${p.cliente_telefone}</div>
-<div class="badge">${p.tipo}</div>
-<div class="timer">${minutos} min</div>
+
+<div class="telefone">${p.cliente_telefone}</div>
+
+<div class="tipo">${p.tipo}</div>
+
+<div class="endereco">${p.cliente_endereco||""}</div>
+
+<div class="itens">${itensResumo}</div>
+
 <div class="total">R$ ${total}</div>
+
+<div class="timer">${minutos} min</div>
+
+<div class="actions">
+
+${p.status==="novo"?`<button class="aprovar" onclick="aprovar('${p.id}')">Aprovar</button>`:''}
+
+${p.status==="aprovado"?`<button class="preparo" onclick="preparo('${p.id}')">Preparo</button>`:''}
+
+${p.status==="preparo"?`<button class="pronto" onclick="pronto('${p.id}')">Pronto</button>`:''}
+
+</div>
+
 `
 
 card.onclick=()=>abrir(p)
@@ -344,10 +407,38 @@ col.appendChild(card)
 
 })
 
-Object.keys(cont).forEach(s=>{
-const el=document.getElementById("c-"+s)
-if(el)el.innerText=cont[s]
-})
+}
+
+async function aprovar(id){
+
+await db
+.from("pedidos")
+.update({status:"aprovado"})
+.eq("id",id)
+
+carregar()
+
+}
+
+async function preparo(id){
+
+await db
+.from("pedidos")
+.update({status:"preparo"})
+.eq("id",id)
+
+carregar()
+
+}
+
+async function pronto(id){
+
+await db
+.from("pedidos")
+.update({status:"pronto"})
+.eq("id",id)
+
+carregar()
 
 }
 
@@ -357,7 +448,7 @@ atual=p
 
 document.getElementById("titulo").innerText=p.cliente_nome
 
-const area=document.getElementById("itens")
+const area=document.getElementById("detalhes")
 
 area.innerHTML=""
 
@@ -371,19 +462,24 @@ const {data}=await db
 .ilike("nome",it.nome)
 .limit(1)
 
-if(data && data.length) foto=data[0].foto_url
+if(data.length) foto=data[0].foto_url
 
 area.innerHTML+=`
+
 <div class="item">
 
 ${foto?`<img src="${foto}">`:''}
 
 <div>
+
 <b>${it.nome}</b><br>
+
 ${it.quantidade}x R$ ${it.preco}
+
 </div>
 
 </div>
+
 `
 
 }
@@ -396,21 +492,9 @@ function fechar(){
 document.getElementById("modal").style.display="none"
 }
 
-async function setStatus(s){
-
-await db
-.from("pedidos")
-.update({status:s})
-.eq("id",atual.id)
-
-fechar()
-carregar()
-
-}
-
 function imprimir(){
 
-let texto="PEDIDO MERCATTO\n\n"
+let texto="MERCATTO DELICIA\n\n"
 
 texto+="Cliente: "+atual.cliente_nome+"\n"
 texto+="Telefone: "+atual.cliente_telefone+"\n"
@@ -440,6 +524,7 @@ document.getElementById("hora").innerText=new Date().toLocaleTimeString()
 }
 
 setInterval(atualizarHora,1000)
+
 setInterval(carregar,5000)
 
 carregar()
