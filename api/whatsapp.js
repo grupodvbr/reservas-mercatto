@@ -1191,6 +1191,70 @@ resposta = resposta.replace(/ENVIAR_FOTO_PRATO/g,"").trim()
 }
 console.log("Resposta IA:",resposta)
 
+/* ================= PEDIDO DELIVERY ================= */
+
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+if(pedidoMatch){
+
+let pedido
+
+try{
+pedido = JSON.parse(pedidoMatch[1])
+}catch(err){
+console.log("Erro JSON pedido",err)
+}
+
+if(pedido){
+
+console.log("Pedido detectado:",pedido)
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+const {error} = await supabase
+.from("delivery_mercatto")
+.insert({
+
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+tipo: pedido.tipo || "entrega",
+
+itens: pedido.itens || [],
+
+valor_total: valorTotal,
+
+forma_pagamento: pedido.pagamento || "",
+
+observacao: pedido.observacao || "",
+
+status: "novo"
+
+})
+
+if(error){
+console.log("Erro ao salvar pedido:",error)
+}else{
+console.log("Pedido salvo no Supabase")
+}
+
+}
+}
+
+
+
+
+  
 }catch(e){
 
 console.log("ERRO OPENAI",e)
