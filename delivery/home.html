@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<title>Mercatto • Home Operacional</title>
+<title>Painel de Pedidos</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -14,22 +16,14 @@
 :root{
 
 --bg:#0b0b0b;
---panel:#141414;
---card:#1a1a1a;
+--card:#1b1b1b;
 
---gold:#d4af37;
---wood:#3b2a1c;
+--red:#ef4444;
+--yellow:#f59e0b;
+--green:#22c55e;
+--blue:#3b82f6;
 
---line:#262626;
-
---text:#ffffff;
---muted:#9ca3af;
-
---red:#c1121f;
---yellow:#c7a600;
---green:#16a34a;
-
---radius:14px;
+--border:#2a2a2a;
 
 }
 
@@ -42,49 +36,10 @@ font-family:Inter;
 
 body{
 
-background:
-linear-gradient(180deg,#0b0b0b,#151515);
-
-color:var(--text);
+background:var(--bg);
+color:white;
 
 padding:20px;
-
-}
-
-/* KPI */
-
-.kpis{
-
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:16px;
-margin-bottom:20px;
-
-}
-
-.kpi{
-
-background:var(--panel);
-border:1px solid var(--line);
-border-radius:14px;
-
-padding:16px;
-
-}
-
-.kpi span{
-
-font-size:13px;
-color:var(--muted);
-
-}
-
-.kpi h2{
-
-margin-top:6px;
-font-size:26px;
-
-color:var(--gold);
 
 }
 
@@ -93,9 +48,12 @@ color:var(--gold);
 .board{
 
 display:grid;
-grid-template-columns:1fr 1fr 1fr;
+
+grid-template-columns:repeat(4,1fr);
 
 gap:16px;
+
+height:90vh;
 
 }
 
@@ -103,17 +61,20 @@ gap:16px;
 
 .col{
 
-background:var(--panel);
-border-radius:14px;
-padding:12px;
+background:#121212;
 
-border:1px solid var(--line);
+border-radius:14px;
+
+padding:10px;
+
+overflow:auto;
 
 }
 
-.col h3{
+.col h2{
 
-font-size:15px;
+font-size:18px;
+
 margin-bottom:10px;
 
 display:flex;
@@ -126,106 +87,97 @@ justify-content:space-between;
 .card{
 
 background:var(--card);
-border:1px solid #333;
 
-border-radius:14px;
+border-radius:12px;
 
 padding:14px;
 
 margin-bottom:12px;
 
+border:1px solid var(--border);
+
 cursor:pointer;
 
-transition:.2s;
+transition:.15s;
 
 }
 
 .card:hover{
 
-border-color:var(--gold);
-
-transform:scale(1.01);
+transform:scale(1.02);
 
 }
+
+/* CLIENTE */
 
 .nome{
 
-font-weight:700;
-font-size:16px;
+font-size:18px;
+font-weight:800;
 
 }
 
-.telefone{
+/* TEMPO */
 
-font-size:12px;
-color:var(--muted);
+.timer{
 
-margin-top:3px;
+font-size:24px;
 
-}
+font-weight:800;
 
-.tipo{
-
-font-size:11px;
-background:#222;
-padding:3px 6px;
-border-radius:6px;
-
-display:inline-block;
 margin-top:6px;
 
 }
 
-.endereco{
+.red{color:var(--red)}
+.yellow{color:var(--yellow)}
+.green{color:var(--green)}
 
-font-size:12px;
-color:#ccc;
-
-margin-top:4px;
-
-}
+/* ITENS */
 
 .itens{
 
-margin-top:8px;
-font-size:12px;
+margin-top:10px;
+
+font-size:14px;
+
 line-height:1.4;
 
 }
 
+/* TOTAL */
+
 .total{
 
-margin-top:8px;
-font-weight:700;
+margin-top:10px;
 
-color:var(--gold);
+font-weight:800;
 
-}
-
-.timer{
-
-font-size:12px;
-color:#facc15;
-font-weight:700;
-
-margin-top:6px;
+font-size:16px;
 
 }
+
+/* ACTIONS */
 
 .actions{
 
 margin-top:10px;
+
 display:flex;
+
 gap:6px;
+
+flex-wrap:wrap;
 
 }
 
 button{
 
 border:none;
-border-radius:8px;
 
 padding:6px 10px;
+
+border-radius:8px;
 
 font-weight:700;
 
@@ -233,26 +185,10 @@ cursor:pointer;
 
 }
 
-.aprovar{
-
-background:var(--green);
-color:white;
-
-}
-
-.preparo{
-
-background:var(--yellow);
-color:black;
-
-}
-
-.pronto{
-
-background:var(--green);
-color:white;
-
-}
+.aprovar{background:var(--blue);color:white}
+.preparo{background:var(--yellow)}
+.pronto{background:var(--green);color:white}
+.entregue{background:#555;color:white}
 
 /* MODAL */
 
@@ -261,6 +197,7 @@ color:white;
 position:fixed;
 top:0;
 left:0;
+
 width:100%;
 height:100%;
 
@@ -279,18 +216,32 @@ background:#111;
 
 width:520px;
 
-max-height:80vh;
-overflow:auto;
+padding:20px;
 
 border-radius:14px;
 
-padding:20px;
+max-height:80vh;
+
+overflow:auto;
+
+}
+
+.close{
+
+float:right;
+
+cursor:pointer;
+
+color:red;
+
+font-weight:800;
 
 }
 
 .item{
 
 display:flex;
+
 gap:10px;
 
 border:1px solid #333;
@@ -314,72 +265,33 @@ border-radius:8px;
 
 }
 
-.close{
-
-float:right;
-
-cursor:pointer;
-
-color:red;
-
-font-weight:800;
-
-}
-
-@media print{
-
-body{
-width:80mm;
-font-size:12px;
-}
-
-.noPrint{
-display:none;
-}
-
-}
-
 </style>
+
 </head>
 
 <body>
 
-<div class="kpis">
-
-<div class="kpi">
-<span>Pedidos hoje</span>
-<h2 id="kPedidos">0</h2>
-</div>
-
-<div class="kpi">
-<span>Faturamento</span>
-<h2 id="kFaturamento">R$0</h2>
-</div>
-
-<div class="kpi">
-<span>Ticket médio</span>
-<h2 id="kTicket">R$0</h2>
-</div>
-
-</div>
-
 <div class="board">
 
 <div class="col" data-status="novo">
-<h3>🔴 Pendentes</h3>
+<h2>🟥 Pendentes</h2>
 </div>
 
 <div class="col" data-status="aprovado">
-<h3>🟡 Em preparo</h3>
+<h2>🟨 Preparo</h2>
 </div>
 
 <div class="col" data-status="pronto">
-<h3>🟢 Prontos</h3>
+<h2>🟩 Prontos</h2>
+</div>
+
+<div class="col" data-status="entregue">
+<h2>⬛ Entregues</h2>
 </div>
 
 </div>
 
-<div class="modal" id="modal">
+<div id="modal" class="modal">
 
 <div class="modalBox">
 
@@ -389,7 +301,7 @@ display:none;
 
 <div id="detalhes"></div>
 
-<button onclick="imprimir()" class="noPrint" style="margin-top:10px">🖨 Imprimir</button>
+<button onclick="imprimir()" style="margin-top:10px">🖨 Imprimir</button>
 
 </div>
 
@@ -410,31 +322,11 @@ async function carregar(){
 const {data}=await db
 .from("pedidos")
 .select("*")
-.order("created_at",{ascending:false})
+.order("created_at",{ascending:true})
 
 pedidos=data||[]
 
 render()
-kpis()
-
-}
-
-function kpis(){
-
-let total=0
-
-pedidos.forEach(p=>{
-p.itens.forEach(i=>{
-total+=i.preco*i.quantidade
-})
-})
-
-document.getElementById("kPedidos").innerText=pedidos.length
-document.getElementById("kFaturamento").innerText="R$ "+total
-
-const ticket=(total/(pedidos.length||1)).toFixed(2)
-
-document.getElementById("kTicket").innerText="R$ "+ticket
 
 }
 
@@ -442,7 +334,7 @@ function render(){
 
 document.querySelectorAll(".col").forEach(c=>{
 
-const titulo=c.querySelector("h3").outerHTML
+const titulo=c.querySelector("h2").outerHTML
 c.innerHTML=titulo
 
 })
@@ -453,42 +345,51 @@ const col=document.querySelector(`[data-status="${p.status}"]`)
 if(!col)return
 
 let total=0
-let itensResumo=""
+let itens=""
 
 p.itens.forEach(i=>{
 total+=i.preco*i.quantidade
-itensResumo+=`${i.quantidade}x ${i.nome}<br>`
+itens+=`${i.quantidade}x ${i.nome}<br>`
 })
 
 const created=new Date(p.created_at)
+
 const minutos=Math.floor((Date.now()-created)/60000)
 
+let cor="green"
+
+if(minutos>15) cor="red"
+else if(minutos>8) cor="yellow"
+
 const card=document.createElement("div")
+
 card.className="card"
 
 card.innerHTML=`
 
 <div class="nome">${p.cliente_nome}</div>
 
-<div class="telefone">${p.cliente_telefone}</div>
+<div class="timer ${cor}">
+${minutos} min
+</div>
 
-<div class="tipo">${p.tipo}</div>
+<div class="itens">
+${itens}
+</div>
 
-<div class="endereco">${p.cliente_endereco||""}</div>
-
-<div class="itens">${itensResumo}</div>
-
-<div class="total">R$ ${total}</div>
-
-<div class="timer">${minutos} min</div>
+<div class="total">
+R$ ${total}
+</div>
 
 <div class="actions">
 
-${p.status==="novo"?`<button class="aprovar" onclick="aprovar('${p.id}')">Aprovar</button>`:''}
+${p.status==="novo"?`<button class="aprovar" onclick="status('${p.id}','aprovado')">Aceitar</button>`:''}
 
-${p.status==="aprovado"?`<button class="preparo" onclick="preparo('${p.id}')">Preparo</button>`:''}
+${p.status==="aprovado"?`<button class="preparo" onclick="status('${p.id}','preparo')">Preparando</button>`:''}
 
-${p.status==="preparo"?`<button class="pronto" onclick="pronto('${p.id}')">Pronto</button>`:''}
+${p.status==="preparo"?`<button class="pronto" onclick="status('${p.id}','pronto')">Pronto</button>`:''}
+
+${p.status==="pronto"?`<button class="entregue" onclick="status('${p.id}','entregue')">Entregue</button>`:''}
 
 </div>
 
@@ -502,23 +403,13 @@ col.appendChild(card)
 
 }
 
-async function aprovar(id){
+async function status(id,s){
 
-await db.from("pedidos").update({status:"aprovado"}).eq("id",id)
-carregar()
+await db
+.from("pedidos")
+.update({status:s})
+.eq("id",id)
 
-}
-
-async function preparo(id){
-
-await db.from("pedidos").update({status:"preparo"}).eq("id",id)
-carregar()
-
-}
-
-async function pronto(id){
-
-await db.from("pedidos").update({status:"pronto"}).eq("id",id)
 carregar()
 
 }
@@ -554,6 +445,7 @@ ${foto?`<img src="${foto}">`:''}
 <div>
 
 <b>${it.nome}</b><br>
+
 ${it.quantidade}x R$ ${it.preco}
 
 </div>
@@ -569,29 +461,28 @@ document.getElementById("modal").style.display="flex"
 }
 
 function fechar(){
+
 document.getElementById("modal").style.display="none"
+
 }
 
 function imprimir(){
 
-let texto="MERCATTO DELICIA\n\n"
+let texto="PEDIDO MERCATTO\n\n"
 
 texto+="Cliente: "+atual.cliente_nome+"\n"
-texto+="Telefone: "+atual.cliente_telefone+"\n"
-texto+="Tipo: "+atual.tipo+"\n\n"
-
-texto+="ITENS\n"
 
 let total=0
 
 atual.itens.forEach(i=>{
+
 texto+=`${i.quantidade}x ${i.nome}\n`
+
 total+=i.preco*i.quantidade
+
 })
 
-texto+="\nTOTAL: R$ "+total
-
-texto+="\n\n\n\n\n"
+texto+="\nTOTAL: "+total
 
 const w=window.open("","","width=300,height=600")
 
