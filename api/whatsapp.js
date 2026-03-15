@@ -1290,7 +1290,8 @@ await supabase
 .from("delivery_mercatto")
 .insert({
 telefone: cliente,
-pedido: pedido
+pedido: pedido,
+status: "pendente"
 })
 
 /* SALVAR ESTADO DA CONVERSA */
