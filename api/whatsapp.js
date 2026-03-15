@@ -1529,6 +1529,20 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 let reserva = null
 
 try{
@@ -1564,6 +1578,10 @@ ultima_interacao:new Date().toISOString()
 
 }
 
+
+if(reserva){
+
+try{
 
 /* NORMALIZAR DATA */
 
@@ -1627,7 +1645,7 @@ pessoas: parseInt(reserva.pessoas) || 1,
 mesa:mesa,
 cardapio:"",
 comandaIndividual: reserva.comandaIndividual || "Não",
-  datahora:datahora,
+datahora:datahora,
 observacoes:"Reserva via WhatsApp",
 valorEstimado:0,
 pagamentoAntecipado:0,
@@ -1637,7 +1655,6 @@ status:"Pendente"
 })
 
 if(!error){
-
 
 const [anoR, mesR, diaR] = dataISO.split("-")
 
@@ -1659,11 +1676,12 @@ Sua mesa estará reservada.
 Aguardamos você!`
 
 }
-}
 
 }catch(e){
 
 console.log("Erro ao processar reserva:",e)
+
+}
 
 }
 /* ================= SALVAR RESPOSTA ================= */
