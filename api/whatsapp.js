@@ -1324,53 +1324,15 @@ return s + (preco * qtd)
 
 },0)
 
-/* SALVAR DELIVERY */
 
-const { error } = await supabase
-.from("delivery_mercatto")
-.insert({
 
-cliente_nome: pedido.nome,
-cliente_telefone: cliente,
+resposta = `🧾 *Seu pedido ficou assim:*
 
-cliente_endereco: pedido.endereco || "",
-cliente_bairro: pedido.bairro || "",
+${pedido.itens.map(i => `• ${i.nome} x${i.quantidade}`).join("\n")}
 
-tipo: pedido.tipo || "entrega",
+Deseja confirmar o pedido?
 
-itens: pedido.itens || [],
-
-valor_total: valorTotal,
-
-forma_pagamento: pedido.pagamento || "",
-
-observacao: pedido.observacao || "",
-
-status: "novo"
-
-})
-
-if(error){
-
-console.log("Erro Supabase delivery:", JSON.stringify(error,null,2))
-
-resposta = `⚠️ Tivemos um problema ao registrar seu pedido.
-
-Por favor tente novamente ou aguarde que um atendente irá ajudar.`
-
-}else{
-
-console.log("Pedido salvo no Supabase")
-
-resposta = `🧾 *Pedido recebido com sucesso!*
-
-Seu pedido foi registrado em nosso sistema.
-
-📦 Em breve nossa equipe irá confirmar o preparo e envio.
-
-Obrigado por escolher o *Mercatto Delícia*!`
-
-}
+Responda *SIM* para confirmar ou *ALTERAR* se quiser mudar algo.`
 
 } // fecha if(pedido)
 
