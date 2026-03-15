@@ -1026,6 +1026,17 @@ agoraBahia.getMinutes().toString().padStart(2,"0")
 const dataAtualISO =
 agoraBahia.toISOString().split("T")[0]
 
+const diasSemana = [
+"domingo",
+"segunda-feira",
+"terça-feira",
+"quarta-feira",
+"quinta-feira",
+"sexta-feira",
+"sábado"
+]
+
+const diaSemanaAtual = diasSemana[agoraBahia.getDay()]
   
 /* ================= BUSCAR PROMPT ================= */
 
@@ -1079,13 +1090,17 @@ content: promptSistema
 },
 
 {
+{
 role:"system",
 content:`
 CONTEXTO DO SISTEMA
 
 DATA ATUAL: ${dataAtual}
+DIA DA SEMANA: ${diaSemanaAtual}
 HORA ATUAL: ${horaAtualSistema}
 DATA ISO: ${dataAtualISO}
+
+Hoje é ${diaSemanaAtual}.
 
 Use essas informações para interpretar datas relativas como:
 hoje, amanhã, ontem, final de semana, etc.
