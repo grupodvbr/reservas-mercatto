@@ -1336,13 +1336,13 @@ Responda *SIM* para confirmar ou *ALTERAR* se quiser mudar algo.`
 
 } // fecha if(pedido)
 
-} // fecha if(pedidoMatch)// fecha if(pedidoMatch)
+} // fecha if(pedidoMatch)
 
-}catch(e){
+} catch(e){
 
 console.log("ERRO OPENAI",e)
 
-resposta=
+resposta =
 `👋 Bem-vindo ao Mercatto Delícia
 
 Digite:
