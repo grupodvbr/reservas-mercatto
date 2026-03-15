@@ -1759,10 +1759,11 @@ type:"text",
 text:{ body:resposta }
 })
 })
-
 return res.status(200).end()
 
-}catch(error){
+}
+
+catch(error){
 
 console.log("ERRO GERAL:",error)
 
