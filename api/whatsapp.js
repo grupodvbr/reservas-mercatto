@@ -421,8 +421,7 @@ status: "novo"
 await supabase
 .from("pedidos_pendentes")
 .delete()
-.eq("telefone",cliente)
-
+.eq("cliente_telefone",cliente)
 }
 
 /* limpar estado conversa */
