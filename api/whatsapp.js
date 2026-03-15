@@ -1348,6 +1348,7 @@ ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 Deseja confirmar o pedido?`
 
 }
+}
 
 }
 }
