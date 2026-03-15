@@ -37,7 +37,36 @@ return maior
 
 }
 
+function pegarPoster(musicos){
+
+const comFoto = musicos.find(m=>m.foto)
+
+return comFoto ? comFoto.foto : null
+
+}
+
+async function buscarAgendaPeriodo(dataInicio,dataFim){
+
+const { data, error } = await supabase
+.from("agenda_musicos")
+.select("*")
+.gte("data",dataInicio)
+.lte("data",dataFim)
+.order("data",{ascending:true})
+.order("hora",{ascending:true})
+
+if(error){
+console.log("Erro agenda período:",error)
+return []
+}
+
+return data || []
+
+}
+
 module.exports = {
 buscarAgendaDoDia,
-calcularCouvert
+calcularCouvert,
+pegarPoster,
+buscarAgendaPeriodo
 }
