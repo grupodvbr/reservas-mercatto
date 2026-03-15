@@ -138,6 +138,7 @@ return data || []
 
 
 module.exports = async function handler(req,res){
+let resposta = ""
 
 /* ================= CARDAPIO ================= */
 
@@ -494,7 +495,7 @@ textoDia = "amanhã"
 const dataISO = dataConsulta.toISOString().split("T")[0]
 
 const agendaDia = await buscarAgendaDoDia(dataISO)
-  
+const couvertHoje = calcularCouvert(agendaDia)
 const agora = new Date()
 
 const agoraBahia = new Date(
@@ -686,11 +687,11 @@ return res.status(200).end()
 
 /* ================= MUSICA AO VIVO ================= */
 
-if(querMusica && !jaFalouMusica){
+if(querMusica){
 
 console.log("RESPONDENDO AUTOMATICO MUSICA")
 
-let resposta=""
+resposta=""
 
 if(agendaDia.length){
 
