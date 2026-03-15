@@ -459,6 +459,7 @@ await supabase
 
 }
 }
+}
 /* ================= RELATORIO ADMIN ================= */
 
 if(cliente === ADMIN_NUMERO && texto.includes("relatorio_reservas_dia")){
