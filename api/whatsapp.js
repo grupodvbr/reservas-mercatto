@@ -1242,13 +1242,9 @@ status: "novo"
 })
 
 if(error){
-if(error){
 console.log("Erro Supabase delivery:", JSON.stringify(error,null,2))
-
 }else{
 console.log("Pedido salvo no Supabase")
-}
-
 }
 }
 
