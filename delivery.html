@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
@@ -23,8 +22,8 @@
   --shadow:0 4px 12px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
-body{background:var(--bg);color:var(--text);padding:12px;}
-h1{font-weight:800;margin-bottom:12px;}
+body{background:var(--bg);color:var(--text);padding:14px;}
+h1{font-weight:800;margin-bottom:16px;}
 button{cursor:pointer;padding:6px 12px;border:none;border-radius:6px;font-weight:600;}
 button.aprovar{background:var(--green);color:#fff;margin-right:6px;}
 button.rejeitar{background:var(--red);color:#fff;margin-right:6px;}
@@ -95,40 +94,44 @@ pre{background:#111827;padding:12px;border-radius:8px;overflow-x:auto;}
 </div>
 
 <script>
-const supabase = supabase.createClient(
-  "YOUR_SUPABASE_URL",
-  "YOUR_SUPABASE_SERVICE_ROLE"
-);
 
-let pedidos = [];
-let pedidoSelecionado = null;
+let pedidos = []
+let pedidoSelecionado = null
 
 async function carregarPedidos(){
-  const { data, error } = await supabase
-    .from("pedidos_pendentes")
-    .select("*")
-    .order("created_at",{ascending:true});
 
-  if(error){console.log("Erro ao buscar pedidos:",error);return;}
+  const res = await fetch("/api/pedidos")
+  const data = await res.json()
 
-  pedidos = data || [];
-  renderizarTabela();
+  pedidos = data || []
+
+  renderizarTabela()
+
 }
 
 function renderizarTabela(){
-  const tbody = document.querySelector("#pedidos-table tbody");
-  tbody.innerHTML = "";
+
+  const tbody = document.querySelector("#pedidos-table tbody")
+  tbody.innerHTML=""
 
   if(!pedidos.length){
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted)">Nenhum pedido pendente</td></tr>`;
-    return;
+
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--muted)">Nenhum pedido pendente</td></tr>`
+    return
+
   }
 
   pedidos.forEach((p,i)=>{
-    const total = (p.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
-    const statusClass = p.status==="aprovado"?"status-aprovado":p.status==="rejeitado"?"status-rejeitado":"status-pendente";
 
-    const tr = document.createElement("tr");
+    const total=(p.itens||[]).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
+
+    const statusClass =
+      p.status==="aprovado"?"status-aprovado":
+      p.status==="rejeitado"?"status-rejeitado":
+      "status-pendente"
+
+    const tr=document.createElement("tr")
+
     tr.innerHTML=`
       <td>${i+1}</td>
       <td>${p.cliente_nome}</td>
@@ -140,95 +143,105 @@ function renderizarTabela(){
       <td>R$ ${total}</td>
       <td class="${statusClass}">${p.status || "pendente"}</td>
       <td>
-        <button class="aprovar" onclick="aprovarPedido(${i})">Aprovar</button>
-        <button class="rejeitar" onclick="rejeitarPedido(${i})">Rejeitar</button>
-        <button class="imprimir" onclick="abrirModal(${i})">Ver/Imprimir</button>
+        <button class="aprovar" onclick="aprovarPedido(${p.id})">Aprovar</button>
+        <button class="rejeitar" onclick="rejeitarPedido(${p.id})">Rejeitar</button>
+        <button class="imprimir" onclick="abrirModal(${i})">Ver</button>
       </td>
-    `;
-    tbody.appendChild(tr);
-  });
+    `
+
+    tbody.appendChild(tr)
+
+  })
+
 }
 
-async function aprovarPedido(idx){
-  const p = pedidos[idx];
-  if(!p) return;
-  
-  // Salvar na tabela final de pedidos
-  const valorTotal = (p.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
-  await supabase.from("pedidos").insert([{
-    cliente_nome: p.cliente_nome,
-    cliente_telefone: p.cliente_telefone,
-    cliente_endereco: p.cliente_endereco || "",
-    cliente_bairro: p.cliente_bairro || "",
-    tipo: p.tipo || "entrega",
-    itens: p.itens || [],
-    valor_total: valorTotal,
-    forma_pagamento: p.forma_pagamento || "",
-    observacao: p.observacao || "",
-    status: "novo"
-  }]);
+async function aprovarPedido(id){
 
-  await supabase.from("pedidos_pendentes").delete().eq("id", p.id);
-  carregarPedidos();
+  await fetch("/api/pedidos",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({acao:"aprovar",id})
+  })
+
+  carregarPedidos()
+
 }
 
-async function rejeitarPedido(idx){
-  const p = pedidos[idx];
-  if(!p) return;
-  await supabase.from("pedidos_pendentes").update({ status:"rejeitado" }).eq("id", p.id);
-  carregarPedidos();
+async function rejeitarPedido(id){
+
+  await fetch("/api/pedidos",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({acao:"rejeitar",id})
+  })
+
+  carregarPedidos()
+
 }
 
 function abrirModal(idx){
-  pedidoSelecionado = pedidos[idx];
-  if(!pedidoSelecionado) return;
-  const modal = document.getElementById("modal-bg");
-  const conteudo = document.getElementById("modal-conteudo");
-  const total = (pedidoSelecionado.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
 
-  conteudo.innerHTML = `
-    <p><strong>Cliente:</strong> ${pedidoSelecionado.cliente_nome}</p>
-    <p><strong>Telefone:</strong> ${pedidoSelecionado.cliente_telefone}</p>
-    <p><strong>Tipo:</strong> ${pedidoSelecionado.tipo}</p>
-    <p><strong>Endereço:</strong> ${pedidoSelecionado.cliente_endereco || "-"}</p>
-    <p><strong>Bairro:</strong> ${pedidoSelecionado.cliente_bairro || "-"}</p>
-    <p><strong>Itens:</strong></p>
-    <ul>${(pedidoSelecionado.itens||[]).map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`).join("")}</ul>
-    <p><strong>Total:</strong> R$ ${total}</p>
-    <p><strong>Status:</strong> ${pedidoSelecionado.status || "pendente"}</p>
-  `;
-  modal.style.display="flex";
+  pedidoSelecionado = pedidos[idx]
+
+  const modal=document.getElementById("modal-bg")
+  const conteudo=document.getElementById("modal-conteudo")
+
+  const total=(pedidoSelecionado.itens||[])
+  .reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
+
+  conteudo.innerHTML=`
+  <p><strong>Cliente:</strong> ${pedidoSelecionado.cliente_nome}</p>
+  <p><strong>Telefone:</strong> ${pedidoSelecionado.cliente_telefone}</p>
+  <p><strong>Tipo:</strong> ${pedidoSelecionado.tipo}</p>
+  <p><strong>Endereço:</strong> ${pedidoSelecionado.cliente_endereco||"-"}</p>
+  <p><strong>Bairro:</strong> ${pedidoSelecionado.cliente_bairro||"-"}</p>
+  <p><strong>Itens:</strong></p>
+  <ul>
+  ${(pedidoSelecionado.itens||[])
+  .map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`).join("")}
+  </ul>
+  <p><strong>Total:</strong> R$ ${total}</p>
+  `
+
+  modal.style.display="flex"
+
 }
 
-function fecharModal(){ document.getElementById("modal-bg").style.display="none"; pedidoSelecionado=null; }
+function fecharModal(){
+document.getElementById("modal-bg").style.display="none"
+pedidoSelecionado=null
+}
 
 function imprimirPedido(){
-  if(!pedidoSelecionado) return;
-  let conteudo = `\n===== PEDIDO MERCATTO DELÍCIA =====\n\n`;
-  conteudo += `Cliente: ${pedidoSelecionado.cliente_nome}\n`;
-  conteudo += `Telefone: ${pedidoSelecionado.cliente_telefone}\n`;
-  conteudo += `Tipo: ${pedidoSelecionado.tipo}\n`;
-  if(pedidoSelecionado.tipo==="entrega"){
-    conteudo += `Endereço: ${pedidoSelecionado.cliente_endereco || "-"}\n`;
-    conteudo += `Bairro: ${pedidoSelecionado.cliente_bairro || "-"}\n`;
-  }
-  conteudo += `\nItens:\n`;
-  (pedidoSelecionado.itens || []).forEach(it=>{ conteudo += `${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`; });
-  const total = (pedidoSelecionado.itens || []).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2);
-  conteudo += `\nTOTAL: R$ ${total}\n`;
-  conteudo += `\n===============================\n\n`;
 
-  const win = window.open("","PRINT","width=400,height=600");
-  win.document.write(`<pre>${conteudo}</pre>`);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
+  if(!pedidoSelecionado)return
+
+  let conteudo=`===== PEDIDO MERCATTO DELÍCIA =====\n\n`
+  conteudo+=`Cliente: ${pedidoSelecionado.cliente_nome}\n`
+  conteudo+=`Telefone: ${pedidoSelecionado.cliente_telefone}\n`
+  conteudo+=`Tipo: ${pedidoSelecionado.tipo}\n\n`
+
+  conteudo+=`Itens:\n`
+
+  pedidoSelecionado.itens.forEach(it=>{
+  conteudo+=`${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`
+  })
+
+  const total=(pedidoSelecionado.itens||[])
+  .reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
+
+  conteudo+=`\nTOTAL: R$ ${total}\n`
+
+  const win=window.open("","PRINT","width=400,height=600")
+
+  win.document.write(`<pre>${conteudo}</pre>`)
+
+  win.print()
+
 }
 
-// Inicializar
-carregarPedidos();
-</script>
+carregarPedidos()
 
+</script>
 </body>
 </html>
