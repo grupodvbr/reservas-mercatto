@@ -1246,12 +1246,11 @@ console.log("Erro Supabase delivery:", JSON.stringify(error,null,2))
 }else{
 console.log("Pedido salvo no Supabase")
 }
-}
 
+} // fecha if(pedido)
 
+} // fecha if(pedidoMatch)
 
-
-  
 }catch(e){
 
 console.log("ERRO OPENAI",e)
