@@ -1313,6 +1313,8 @@ telefone: cliente,
 tipo: "confirmacao_pedido"
 })
 
+/* CALCULAR TOTAL */
+
 const valorTotal = (pedido.itens || []).reduce((s,i)=>{
 
 const preco = Number(i.preco || 0)
@@ -1322,7 +1324,9 @@ return s + (preco * qtd)
 
 },0)
 
-await supabase
+/* SALVAR DELIVERY */
+
+const { error } = await supabase
 .from("delivery_mercatto")
 .insert({
 
@@ -1345,10 +1349,6 @@ observacao: pedido.observacao || "",
 status: "novo"
 
 })
-
-}
-
-}
 
 if(error){
 
@@ -1374,7 +1374,7 @@ Obrigado por escolher o *Mercatto Delícia*!`
 
 } // fecha if(pedido)
 
-} // fecha if(pedidoMatch)
+} // fecha if(pedidoMatch)// fecha if(pedidoMatch)
 
 }catch(e){
 
