@@ -907,30 +907,6 @@ return res.status(200).end()
   
 
 
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:"Aqui está nosso cardápio completo 😊"}
-})
-})
-await supabase
-.from("conversas_whatsapp")
-.insert({
-telefone:cliente,
-mensagem:"[CARDAPIO ENVIADO]",
-role:"assistant"
-})
-return res.status(200).end()
-
-} 
-
 
 /* ================= HISTÓRICO ================= */
 
