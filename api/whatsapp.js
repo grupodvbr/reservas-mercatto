@@ -1535,6 +1535,7 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 
 }
 try{
+
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
@@ -1585,21 +1586,10 @@ Hora: ${reserva.hora}
 Sua reserva foi atualizada.`
 
 }
-const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
-if(match){
 
-let reserva
-
-try{
-  reserva = JSON.parse(match[1])
+}catch(e){
+console.log("Erro ao processar alteração de reserva:",e)
 }
-catch(err){
-  console.log("Erro ao interpretar JSON da reserva:", match[1])
-  resposta = "Desculpe, tive um problema ao processar sua reserva. Pode confirmar novamente?"
-}
-console.log("Reserva detectada:",reserva)
-
-
 
 
   
