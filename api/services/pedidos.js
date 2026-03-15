@@ -2,7 +2,7 @@ const supabase = require("../utils/supabase")
 
 async function salvarPedidoPendente(telefone,pedido){
 
-return await supabase
+await supabase
 .from("pedidos_pendentes")
 .insert({
 telefone,
@@ -11,7 +11,7 @@ pedido
 
 }
 
-async function confirmarPedido(pedido,telefone){
+async function confirmarPedido(telefone,pedido){
 
 const valorTotal = (pedido.itens || []).reduce((s,i)=>{
 
@@ -22,16 +22,16 @@ return s + (preco*qtd)
 
 },0)
 
-return await supabase
+await supabase
 .from("pedidos")
 .insert({
 
-cliente_nome: pedido.nome,
-cliente_telefone: telefone,
+cliente_nome:pedido.nome,
+cliente_telefone:telefone,
 
-itens: pedido.itens,
+itens:pedido.itens,
 
-valor_total: valorTotal,
+valor_total:valorTotal,
 
 status:"novo"
 
