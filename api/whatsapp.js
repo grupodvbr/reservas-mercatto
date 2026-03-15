@@ -1199,7 +1199,19 @@ const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*?\})/)
 let pedido
 
 try{
-pedido = JSON.parse(pedidoMatch[1])
+let jsonTexto = pedidoMatch[1]
+
+jsonTexto = jsonTexto
+.replace(/,\s*}/g,"}")
+.replace(/,\s*]/g,"]")
+
+try{
+pedido = JSON.parse(jsonTexto)
+}catch(err){
+console.log("Erro JSON pedido", jsonTexto)
+}
+
+
 }catch(err){
 console.log("Erro JSON pedido",err)
 }
