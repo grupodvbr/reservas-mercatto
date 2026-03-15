@@ -2,246 +2,376 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Pedidos Mercatto Delícia • Painel Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Pedidos Mercatto Delícia • Admin</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no,
+viewport-fit=cover">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+
 :root{
-  --bg:#020617;
-  --card:#0f172a;
-  --border:#1e293b;
-  --text:#f1f5f9;
-  --muted:#94a3b8;
-  --green:#22c55e;
-  --red:#ef4444;
-  --blue:#3b82f6;
-  --yellow:#facc15;
-  --radius:14px;
-  --shadow:0 4px 12px rgba(0,0,0,.5);
+--bg:#020617;
+--card:#0f172a;
+--border:#1e293b;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--green:#22c55e;
+--red:#ef4444;
+--blue:#3b82f6;
+--yellow:#facc15;
 }
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
-body{background:var(--bg);color:var(--text);padding:14px;}
-h1{font-weight:800;margin-bottom:16px;}
-button{cursor:pointer;padding:6px 12px;border:none;border-radius:6px;font-weight:600;}
-button.aprovar{background:var(--green);color:#fff;margin-right:6px;}
-button.rejeitar{background:var(--red);color:#fff;margin-right:6px;}
-button.imprimir{background:var(--blue);color:#fff;}
-table{width:100%;border-collapse:collapse;margin-top:12px;}
-th,td{padding:8px;text-align:left;border-bottom:1px solid var(--border);}
-th{background:var(--card);}
-tr:hover{background:rgba(255,255,255,0.05);}
-.status-pendente{color:var(--yellow);}
-.status-aprovado{color:var(--green);}
-.status-rejeitado{color:var(--red);}
-.modal-bg{
-  display:none;
-  position:fixed;
-  top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.7);
-  justify-content:center;
-  align-items:center;
-  z-index:1000;
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Inter;
 }
+
+body{
+background:var(--bg);
+color:var(--text);
+padding:20px;
+}
+
+h1{
+font-size:22px;
+margin-bottom:15px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid var(--border);
+font-size:13px;
+}
+
+th{
+background:var(--card);
+text-align:left;
+}
+
+tr:hover{
+background:rgba(255,255,255,.05);
+}
+
+button{
+border:none;
+padding:6px 10px;
+border-radius:6px;
+font-weight:600;
+cursor:pointer;
+}
+
+.aprovar{
+background:var(--green);
+color:#fff;
+}
+
+.rejeitar{
+background:var(--red);
+color:#fff;
+}
+
+.ver{
+background:var(--blue);
+color:#fff;
+}
+
+.status-novo{color:var(--yellow)}
+.status-aprovado{color:var(--green)}
+.status-rejeitado{color:var(--red)}
+
 .modal{
-  background:var(--card);
-  padding:20px;
-  border-radius:var(--radius);
-  width:90%;
-  max-width:480px;
-  max-height:80%;
-  overflow-y:auto;
-  box-shadow:var(--shadow);
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
 }
-.close-btn{
-  background:red;color:#fff;float:right;font-weight:800;padding:2px 6px;border-radius:50%;
+
+.modalBox{
+background:var(--card);
+padding:20px;
+border-radius:10px;
+width:420px;
+max-height:80vh;
+overflow:auto;
 }
-pre{background:#111827;padding:12px;border-radius:8px;overflow-x:auto;}
+
+.close{
+float:right;
+cursor:pointer;
+color:red;
+font-weight:800;
+}
+
 </style>
 </head>
+
 <body>
 
-<h1>📝 Gerenciar Pedidos - Mercatto Delícia</h1>
+<h1>🧾 Pedidos • Mercatto Delícia</h1>
 
-<table id="pedidos-table">
+<table>
+
 <thead>
+
 <tr>
 <th>#</th>
 <th>Cliente</th>
 <th>Telefone</th>
 <th>Tipo</th>
-<th>Endereço</th>
-<th>Bairro</th>
-<th>Itens</th>
 <th>Total</th>
 <th>Status</th>
 <th>Ações</th>
 </tr>
+
 </thead>
-<tbody>
-<tr><td colspan="10" style="text-align:center;color:var(--muted)">Carregando pedidos...</td></tr>
+
+<tbody id="listaPedidos">
+<tr>
+<td colspan="7" style="text-align:center;color:var(--muted)">
+Carregando...
+</td>
+</tr>
 </tbody>
+
 </table>
 
-<div class="modal-bg" id="modal-bg">
-  <div class="modal">
-    <button class="close-btn" onclick="fecharModal()">X</button>
-    <h2>Detalhes do Pedido</h2>
-    <div id="modal-conteudo"></div>
-    <button class="imprimir" onclick="imprimirPedido()">🖨️ Imprimir</button>
-  </div>
+
+<div id="modal" class="modal">
+
+<div class="modalBox">
+
+<span class="close" onclick="fechar()">X</span>
+
+<h3>Detalhes do Pedido</h3>
+
+<div id="detalhes"></div>
+
+<button onclick="imprimir()">🖨️ Imprimir</button>
+
 </div>
+
+</div>
+
 
 <script>
 
-let pedidos = []
-let pedidoSelecionado = null
+const db = supabase.createClient(
 
-async function carregarPedidos(){
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 
-  const res = await fetch("/api/pedidos")
-  const data = await res.json()
+)
 
-  pedidos = data || []
+let pedidos=[]
+let selecionado=null
 
-  renderizarTabela()
 
-}
+async function carregar(){
 
-function renderizarTabela(){
+const {data}=await db
+.from("pedidos")
+.select("*")
+.order("created_at",{ascending:false})
 
-  const tbody = document.querySelector("#pedidos-table tbody")
-  tbody.innerHTML=""
+pedidos=data||[]
 
-  if(!pedidos.length){
-
-    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--muted)">Nenhum pedido pendente</td></tr>`
-    return
-
-  }
-
-  pedidos.forEach((p,i)=>{
-
-    const total=(p.itens||[]).reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
-
-    const statusClass =
-      p.status==="aprovado"?"status-aprovado":
-      p.status==="rejeitado"?"status-rejeitado":
-      "status-pendente"
-
-    const tr=document.createElement("tr")
-
-    tr.innerHTML=`
-      <td>${i+1}</td>
-      <td>${p.cliente_nome}</td>
-      <td>${p.cliente_telefone}</td>
-      <td>${p.tipo}</td>
-      <td>${p.cliente_endereco || "-"}</td>
-      <td>${p.cliente_bairro || "-"}</td>
-      <td>${(p.itens||[]).map(it=>`${it.quantidade}x ${it.nome}`).join(", ")}</td>
-      <td>R$ ${total}</td>
-      <td class="${statusClass}">${p.status || "pendente"}</td>
-      <td>
-        <button class="aprovar" onclick="aprovarPedido(${p.id})">Aprovar</button>
-        <button class="rejeitar" onclick="rejeitarPedido(${p.id})">Rejeitar</button>
-        <button class="imprimir" onclick="abrirModal(${i})">Ver</button>
-      </td>
-    `
-
-    tbody.appendChild(tr)
-
-  })
+render()
 
 }
 
-async function aprovarPedido(id){
+function render(){
 
-  await fetch("/api/pedidos",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({acao:"aprovar",id})
-  })
+const tbody=document.getElementById("listaPedidos")
 
-  carregarPedidos()
+tbody.innerHTML=""
 
-}
+if(!pedidos.length){
 
-async function rejeitarPedido(id){
+tbody.innerHTML=`<tr>
+<td colspan="7">Sem pedidos</td>
+</tr>`
 
-  await fetch("/api/pedidos",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({acao:"rejeitar",id})
-  })
-
-  carregarPedidos()
+return
 
 }
 
-function abrirModal(idx){
+pedidos.forEach((p,i)=>{
 
-  pedidoSelecionado = pedidos[idx]
+const total=(p.itens||[])
+.reduce((s,it)=>s+(it.preco*it.quantidade),0)
 
-  const modal=document.getElementById("modal-bg")
-  const conteudo=document.getElementById("modal-conteudo")
+const tr=document.createElement("tr")
 
-  const total=(pedidoSelecionado.itens||[])
-  .reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
+tr.innerHTML=`
 
-  conteudo.innerHTML=`
-  <p><strong>Cliente:</strong> ${pedidoSelecionado.cliente_nome}</p>
-  <p><strong>Telefone:</strong> ${pedidoSelecionado.cliente_telefone}</p>
-  <p><strong>Tipo:</strong> ${pedidoSelecionado.tipo}</p>
-  <p><strong>Endereço:</strong> ${pedidoSelecionado.cliente_endereco||"-"}</p>
-  <p><strong>Bairro:</strong> ${pedidoSelecionado.cliente_bairro||"-"}</p>
-  <p><strong>Itens:</strong></p>
-  <ul>
-  ${(pedidoSelecionado.itens||[])
-  .map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`).join("")}
-  </ul>
-  <p><strong>Total:</strong> R$ ${total}</p>
-  `
+<td>${i+1}</td>
 
-  modal.style.display="flex"
+<td>${p.cliente_nome||"-"}</td>
 
-}
+<td>${p.cliente_telefone||"-"}</td>
 
-function fecharModal(){
-document.getElementById("modal-bg").style.display="none"
-pedidoSelecionado=null
-}
+<td>${p.tipo||"-"}</td>
 
-function imprimirPedido(){
+<td>R$ ${total}</td>
 
-  if(!pedidoSelecionado)return
+<td class="status-${p.status}">
+${p.status}
+</td>
 
-  let conteudo=`===== PEDIDO MERCATTO DELÍCIA =====\n\n`
-  conteudo+=`Cliente: ${pedidoSelecionado.cliente_nome}\n`
-  conteudo+=`Telefone: ${pedidoSelecionado.cliente_telefone}\n`
-  conteudo+=`Tipo: ${pedidoSelecionado.tipo}\n\n`
+<td>
 
-  conteudo+=`Itens:\n`
+<button class="aprovar"
+onclick="aprovar('${p.id}')">
+Aprovar
+</button>
 
-  pedidoSelecionado.itens.forEach(it=>{
-  conteudo+=`${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`
-  })
+<button class="rejeitar"
+onclick="rejeitar('${p.id}')">
+Rejeitar
+</button>
 
-  const total=(pedidoSelecionado.itens||[])
-  .reduce((s,it)=>s+(it.preco*it.quantidade),0).toFixed(2)
+<button class="ver"
+onclick="abrir(${i})">
+Ver
+</button>
 
-  conteudo+=`\nTOTAL: R$ ${total}\n`
+</td>
 
-  const win=window.open("","PRINT","width=400,height=600")
+`
 
-  win.document.write(`<pre>${conteudo}</pre>`)
+tbody.appendChild(tr)
 
-  win.print()
+})
 
 }
 
-carregarPedidos()
+
+
+async function aprovar(id){
+
+await db
+.from("pedidos")
+.update({status:"aprovado"})
+.eq("id",id)
+
+carregar()
+
+}
+
+async function rejeitar(id){
+
+await db
+.from("pedidos")
+.update({status:"rejeitado"})
+.eq("id",id)
+
+carregar()
+
+}
+
+
+
+function abrir(i){
+
+selecionado=pedidos[i]
+
+const d=document.getElementById("detalhes")
+
+const itens=(selecionado.itens||[])
+.map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`)
+.join("")
+
+const total=(selecionado.itens||[])
+.reduce((s,it)=>s+(it.preco*it.quantidade),0)
+
+d.innerHTML=`
+
+<p><b>Cliente:</b> ${selecionado.cliente_nome}</p>
+
+<p><b>Telefone:</b> ${selecionado.cliente_telefone}</p>
+
+<p><b>Tipo:</b> ${selecionado.tipo}</p>
+
+<p><b>Endereço:</b> ${selecionado.cliente_endereco||"-"}</p>
+
+<p><b>Bairro:</b> ${selecionado.cliente_bairro||"-"}</p>
+
+<p><b>Itens:</b></p>
+
+<ul>${itens}</ul>
+
+<p><b>Total:</b> R$ ${total}</p>
+
+`
+
+document.getElementById("modal").style.display="flex"
+
+}
+
+
+
+function fechar(){
+
+document.getElementById("modal").style.display="none"
+
+}
+
+
+
+function imprimir(){
+
+let texto="PEDIDO MERCATTO DELÍCIA\n\n"
+
+texto+="Cliente: "+selecionado.cliente_nome+"\n"
+texto+="Telefone: "+selecionado.cliente_telefone+"\n"
+texto+="Tipo: "+selecionado.tipo+"\n\n"
+
+texto+="Itens:\n"
+
+selecionado.itens.forEach(it=>{
+
+texto+=`${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`
+
+})
+
+const total=selecionado.itens
+.reduce((s,it)=>s+(it.preco*it.quantidade),0)
+
+texto+="\nTOTAL: R$ "+total
+
+const win=window.open("","","width=400,height=600")
+
+win.document.write("<pre>"+texto+"</pre>")
+
+win.print()
+
+}
+
+
+
+carregar()
 
 </script>
+
 </body>
 </html>
