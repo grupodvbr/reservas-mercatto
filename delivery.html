@@ -2,39 +2,29 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Pedidos Mercatto Delícia • Admin</title>
+<title>Mercatto Delícia • Pedidos Admin</title>
 
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-user-scalable=no,
-viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
 :root{
 --bg:#020617;
---card:#0f172a;
---border:#1e293b;
---text:#f1f5f9;
+--panel:#0f172a;
+--line:#1e293b;
+--text:#e2e8f0;
 --muted:#94a3b8;
+--accent:#3b82f6;
 --green:#22c55e;
+--yellow:#f59e0b;
 --red:#ef4444;
---blue:#3b82f6;
---yellow:#facc15;
+--radius:12px;
 }
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:Inter;
-}
+*{box-sizing:border-box;font-family:Inter;margin:0;padding:0}
 
 body{
 background:var(--bg);
@@ -44,54 +34,52 @@ padding:20px;
 
 h1{
 font-size:22px;
-margin-bottom:15px;
+margin-bottom:20px;
+font-weight:800;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:var(--radius);
+overflow:hidden;
 }
 
 th,td{
-padding:10px;
-border-bottom:1px solid var(--border);
+padding:12px;
+border-bottom:1px solid var(--line);
 font-size:13px;
 }
 
 th{
-background:var(--card);
+background:#020617;
+font-weight:700;
 text-align:left;
 }
 
 tr:hover{
-background:rgba(255,255,255,.05);
+background:rgba(255,255,255,.03)
 }
 
 button{
 border:none;
 padding:6px 10px;
-border-radius:6px;
-font-weight:600;
+border-radius:8px;
 cursor:pointer;
+font-weight:600;
 }
 
-.aprovar{
-background:var(--green);
-color:#fff;
-}
-
-.rejeitar{
-background:var(--red);
-color:#fff;
-}
-
-.ver{
-background:var(--blue);
-color:#fff;
-}
+.aprovar{background:var(--green);color:white}
+.rejeitar{background:var(--red);color:white}
+.ver{background:var(--accent);color:white}
+.status{font-weight:700}
 
 .status-novo{color:var(--yellow)}
 .status-aprovado{color:var(--green)}
+.status-preparo{color:#60a5fa}
+.status-entregue{color:#22c55e}
 .status-rejeitado{color:var(--red)}
 
 .modal{
@@ -104,22 +92,55 @@ background:rgba(0,0,0,.7);
 display:none;
 align-items:center;
 justify-content:center;
+z-index:999;
 }
 
 .modalBox{
-background:var(--card);
-padding:20px;
-border-radius:10px;
-width:420px;
+width:600px;
 max-height:80vh;
 overflow:auto;
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:14px;
+padding:20px;
 }
 
 .close{
 float:right;
 cursor:pointer;
-color:red;
 font-weight:800;
+color:var(--red);
+}
+
+.item{
+display:flex;
+gap:10px;
+margin-top:12px;
+padding:10px;
+background:#020617;
+border:1px solid var(--line);
+border-radius:10px;
+}
+
+.item img{
+width:70px;
+height:70px;
+object-fit:cover;
+border-radius:8px;
+}
+
+.total{
+margin-top:15px;
+font-size:16px;
+font-weight:800;
+}
+
+select{
+background:#020617;
+border:1px solid var(--line);
+color:white;
+padding:6px;
+border-radius:6px;
 }
 
 </style>
@@ -127,7 +148,7 @@ font-weight:800;
 
 <body>
 
-<h1>🧾 Pedidos • Mercatto Delícia</h1>
+<h1>📦 Pedidos • Mercatto Delícia</h1>
 
 <table>
 
@@ -145,16 +166,17 @@ font-weight:800;
 
 </thead>
 
-<tbody id="listaPedidos">
+<tbody id="lista">
+
 <tr>
 <td colspan="7" style="text-align:center;color:var(--muted)">
-Carregando...
+Carregando pedidos...
 </td>
 </tr>
+
 </tbody>
 
 </table>
-
 
 <div id="modal" class="modal">
 
@@ -162,29 +184,33 @@ Carregando...
 
 <span class="close" onclick="fechar()">X</span>
 
-<h3>Detalhes do Pedido</h3>
+<h2 id="tituloPedido"></h2>
 
-<div id="detalhes"></div>
+<div id="itensPedido"></div>
 
-<button onclick="imprimir()">🖨️ Imprimir</button>
+<div class="total" id="totalPedido"></div>
+
+<br>
+
+<label>Status:</label>
+<select id="statusSelect"></select>
+
+<button class="aprovar" onclick="salvarStatus()">Salvar</button>
+<button class="ver" onclick="imprimir()">Imprimir</button>
 
 </div>
 
 </div>
-
 
 <script>
 
 const db = supabase.createClient(
-
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-
 )
 
 let pedidos=[]
-let selecionado=null
-
+let atual=null
 
 async function carregar(){
 
@@ -201,19 +227,8 @@ render()
 
 function render(){
 
-const tbody=document.getElementById("listaPedidos")
-
+const tbody=document.getElementById("lista")
 tbody.innerHTML=""
-
-if(!pedidos.length){
-
-tbody.innerHTML=`<tr>
-<td colspan="7">Sem pedidos</td>
-</tr>`
-
-return
-
-}
 
 pedidos.forEach((p,i)=>{
 
@@ -223,40 +238,15 @@ const total=(p.itens||[])
 const tr=document.createElement("tr")
 
 tr.innerHTML=`
-
 <td>${i+1}</td>
-
-<td>${p.cliente_nome||"-"}</td>
-
-<td>${p.cliente_telefone||"-"}</td>
-
-<td>${p.tipo||"-"}</td>
-
+<td>${p.cliente_nome}</td>
+<td>${p.cliente_telefone}</td>
+<td>${p.tipo}</td>
 <td>R$ ${total}</td>
-
-<td class="status-${p.status}">
-${p.status}
-</td>
-
+<td class="status status-${p.status}">${p.status}</td>
 <td>
-
-<button class="aprovar"
-onclick="aprovar('${p.id}')">
-Aprovar
-</button>
-
-<button class="rejeitar"
-onclick="rejeitar('${p.id}')">
-Rejeitar
-</button>
-
-<button class="ver"
-onclick="abrir(${i})">
-Ver
-</button>
-
+<button class="ver" onclick="abrir(${i})">Ver</button>
 </td>
-
 `
 
 tbody.appendChild(tr)
@@ -265,70 +255,73 @@ tbody.appendChild(tr)
 
 }
 
+async function abrir(i){
 
+atual=pedidos[i]
 
-async function aprovar(id){
+document.getElementById("tituloPedido").innerText=
+"Pedido de "+atual.cliente_nome
 
-await db
-.from("pedidos")
-.update({status:"aprovado"})
-.eq("id",id)
+const area=document.getElementById("itensPedido")
 
-carregar()
+area.innerHTML=""
 
-}
+let total=0
 
-async function rejeitar(id){
+for(const it of atual.itens){
 
-await db
-.from("pedidos")
-.update({status:"rejeitado"})
-.eq("id",id)
+let foto=""
 
-carregar()
+const {data}=await db
+.from("buffet")
+.select("foto_url")
+.ilike("nome",it.nome)
+.limit(1)
 
-}
+if(data && data.length) foto=data[0].foto_url
 
+total+=it.preco*it.quantidade
 
-
-function abrir(i){
-
-selecionado=pedidos[i]
-
-const d=document.getElementById("detalhes")
-
-const itens=(selecionado.itens||[])
-.map(it=>`<li>${it.quantidade}x ${it.nome} - R$ ${it.preco}</li>`)
-.join("")
-
-const total=(selecionado.itens||[])
-.reduce((s,it)=>s+(it.preco*it.quantidade),0)
-
-d.innerHTML=`
-
-<p><b>Cliente:</b> ${selecionado.cliente_nome}</p>
-
-<p><b>Telefone:</b> ${selecionado.cliente_telefone}</p>
-
-<p><b>Tipo:</b> ${selecionado.tipo}</p>
-
-<p><b>Endereço:</b> ${selecionado.cliente_endereco||"-"}</p>
-
-<p><b>Bairro:</b> ${selecionado.cliente_bairro||"-"}</p>
-
-<p><b>Itens:</b></p>
-
-<ul>${itens}</ul>
-
-<p><b>Total:</b> R$ ${total}</p>
-
+area.innerHTML+=`
+<div class="item">
+${foto?`<img src="${foto}">`:''}
+<div>
+<b>${it.nome}</b><br>
+${it.quantidade}x R$ ${it.preco}
+</div>
+</div>
 `
+
+}
+
+document.getElementById("totalPedido")
+.innerText="Total: R$ "+total
+
+const select=document.getElementById("statusSelect")
+
+select.innerHTML=""
+
+const status=[
+"novo",
+"aprovado",
+"preparo",
+"entregue",
+"rejeitado"
+]
+
+status.forEach(s=>{
+
+select.innerHTML+=`
+<option value="${s}" ${s==atual.status?"selected":""}>
+${s}
+</option>
+`
+
+})
 
 document.getElementById("modal").style.display="flex"
 
 }
-
-
 
 function fechar(){
 
@@ -336,38 +329,49 @@ document.getElementById("modal").style.display="none"
 
 }
 
+async function salvarStatus(){
 
+const novo=document.getElementById("statusSelect").value
+
+await db
+.from("pedidos")
+.update({status:novo})
+.eq("id",atual.id)
+
+carregar()
+
+fechar()
+
+}
 
 function imprimir(){
 
 let texto="PEDIDO MERCATTO DELÍCIA\n\n"
 
-texto+="Cliente: "+selecionado.cliente_nome+"\n"
-texto+="Telefone: "+selecionado.cliente_telefone+"\n"
-texto+="Tipo: "+selecionado.tipo+"\n\n"
+texto+="Cliente: "+atual.cliente_nome+"\n"
+texto+="Telefone: "+atual.cliente_telefone+"\n"
+texto+="Tipo: "+atual.tipo+"\n\n"
 
 texto+="Itens:\n"
 
-selecionado.itens.forEach(it=>{
+let total=0
+
+atual.itens.forEach(it=>{
 
 texto+=`${it.quantidade}x ${it.nome} - R$ ${it.preco}\n`
+total+=it.preco*it.quantidade
 
 })
 
-const total=selecionado.itens
-.reduce((s,it)=>s+(it.preco*it.quantidade),0)
-
 texto+="\nTOTAL: R$ "+total
 
-const win=window.open("","","width=400,height=600")
+const w=window.open("","","width=400,height=600")
 
-win.document.write("<pre>"+texto+"</pre>")
+w.document.write("<pre>"+texto+"</pre>")
 
-win.print()
+w.print()
 
 }
-
-
 
 carregar()
 
