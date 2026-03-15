@@ -134,7 +134,26 @@ return []
 return data || []
 
 }
+/* ================= BUSCAR CARDAPIO ================= */
 
+async function buscarCardapio(){
+
+const { data, error } = await supabase
+.from("buffet")
+.select("id,nome,tipo,descricao,preco_venda,foto_url")
+.eq("ativo",true)
+.eq("cardapio",true)
+.order("tipo",{ascending:true})
+.order("nome",{ascending:true})
+
+if(error){
+console.log("Erro cardápio:",error)
+return []
+}
+
+return data || []
+
+}
 
 module.exports = async function handler(req,res){
 let resposta = ""
