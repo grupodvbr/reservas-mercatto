@@ -905,25 +905,7 @@ return res.status(200).end()
   
 
   
-  
-if(querCardapio){
 
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"document",
-document:{
-link:"https://SEU_CARDAPIO.pdf",
-filename:"Cardapio_Mercatto.pdf"
-}
-})
-})
 
 await fetch(url,{
 method:"POST",
