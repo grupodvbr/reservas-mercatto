@@ -1710,7 +1710,9 @@ Aguardamos você!`
 console.log("Erro ao processar reserva:",e)
 
 }
-
+}catch(e){
+console.log("Erro ao processar alteração de reserva:", e)
+}
 /* ================= SALVAR RESPOSTA ================= */
 
 await supabase
