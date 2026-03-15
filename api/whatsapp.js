@@ -396,7 +396,7 @@ return s + (preco * qtd)
 },0)
 
 await supabase
-.from("pedidos_pendente")
+.from("pedidos_pendentes")
 .insert({
 
 cliente_nome: pedido.nome,
@@ -1296,10 +1296,15 @@ console.log("Erro JSON pedido:", jsonTexto)
 if(pedido){
 
 console.log("Pedido detectado:",pedido)
-
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
 /* ================= ENVIAR PARA API ================= */
 
-const api = await fetch("https://SEU_DOMINIO/api/pedidos",{
+const api = await fetch("https://reservas-mercatto.vercel.app/api/pedidos",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
