@@ -11,12 +11,14 @@ const supabase = createClient(
 )
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 function agoraBahia(){
-
-return new Date(
-new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
-)
-
+  return new Date(
+    new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+  )
 }
+
+// Quando precisar da data, use assim:
+const agora = agoraBahia();
+
 /* ================= RELATORIO AUTOMATICO ================= */
 
 async function enviarRelatorioAutomatico(){
@@ -436,33 +438,27 @@ text:{body:resposta}
 return res.status(200).end()
 
 
-  
-
 await supabase
 .from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
 
+await supabase
+.from("pedidos")
+.insert({
 cliente_nome: pedido.nome,
 cliente_telefone: cliente,
-
 cliente_endereco: pedido.endereco || "",
 cliente_bairro: pedido.bairro || "",
-
 tipo: pedido.tipo || "entrega",
-
 itens: pedido.itens || [],
-
 valor_total: valorTotal,
-
 forma_pagamento: pedido.pagamento || "",
-
 observacao: pedido.observacao || "",
-
 status: "novo"
-
 })
 
+return res.status(200).end()
 /* limpar pedido pendente */
 
 await supabase
