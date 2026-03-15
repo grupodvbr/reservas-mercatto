@@ -405,7 +405,6 @@ const { data: pedidoPendente } = await supabase
 .order("created_at",{ascending:false})
 .limit(1)
 .single()
-
 if(pedidoPendente){
 
 const pedido = pedidoPendente.pedido
@@ -427,17 +426,13 @@ valor_total: valorTotal
 })
 .eq("id", pedidoPendente.id)
 
-}resposta = `✅ Pedido confirmado!
+resposta = `✅ Pedido confirmado!
 
 Seu pedido foi enviado para a cozinha.
 
 Obrigado por escolher o Mercatto Delícia 🍽️`
-/* limpar pedido pendente */
 
-await supabase
-.from("delivery_mercatto")
-.delete()
-.eq("telefone",cliente)
+}
 
 }
 
@@ -1534,56 +1529,19 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 
 }
+let reserva = null
+
 try{
 
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
 
-let reserva
-
 try{
 reserva = JSON.parse(alterarMatch[1])
 }catch(err){
 console.log("Erro JSON alteração:", err)
 }
-
-/* BLOQUEAR ALTERAÇÃO VAZIA */
-
-if(
-!reserva.nome &&
-!reserva.pessoas &&
-!reserva.data &&
-!reserva.hora &&
-!reserva.area &&
-!reserva.comandaIndividual
-){
-console.log("ALTERAÇÃO IGNORADA - JSON VAZIO")
-return res.status(200).end()
-}
-
-console.log("Alteração detectada:", reserva)
-
-await supabase
-.from("reservas_mercatto")
-.update({
-nome: reserva.nome,
-pessoas: parseInt(reserva.pessoas) || 1,
-comandaIndividual: reserva.comandaIndividual || "Não"
-})
-.eq("telefone", cliente)
-.eq("status","Pendente")
-.order("datahora",{ascending:false})
-.limit(1)
-
-resposta = `✅ *Reserva atualizada!*
-
-Nome: ${reserva.nome}
-Pessoas: ${reserva.pessoas}
-Data: ${reserva.data}
-Hora: ${reserva.hora}
-
-Sua reserva foi atualizada.`
 
 }
 
@@ -1592,10 +1550,9 @@ console.log("Erro ao processar alteração de reserva:",e)
 }
 
 
-  
 /* ================= ATUALIZAR MEMORIA CLIENTE ================= */
 
-if(reserva?.nome){
+if(reserva && reserva.nome){
 
 await supabase
 .from("memoria_clientes")
@@ -1606,7 +1563,6 @@ ultima_interacao:new Date().toISOString()
 })
 
 }
-  
 
 
 /* NORMALIZAR DATA */
@@ -1709,9 +1665,6 @@ Aguardamos você!`
 
 console.log("Erro ao processar reserva:",e)
 
-}
-}catch(e){
-console.log("Erro ao processar alteração de reserva:", e)
 }
 /* ================= SALVAR RESPOSTA ================= */
 
