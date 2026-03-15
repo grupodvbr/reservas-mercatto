@@ -439,12 +439,6 @@ await supabase
 .delete()
 .eq("cliente_telefone",cliente)
 
-  
-await supabase
-.from("pedidos_pendentes")
-.delete()
-.eq("cliente_telefone",cliente)
-
 await supabase
 .from("pedidos")
 .insert([{
