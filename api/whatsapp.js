@@ -361,15 +361,12 @@ texto === "ok" ||
 texto === "confirmar"
 
 if(confirmou){
-const { data: pedidoPendente } = await supabase
-.from("pedidos_pendentes")
-.select("*")
-.eq("cliente_telefone",cliente)
-.order("created_at",{ascending:false})
-.limit(1)
-.single()
 
-/* ================= CONFIRMAR PEDIDO ================= */
+const { data: estado } = await supabase
+.from("estado_conversa")
+.select("*")
+.eq("telefone",cliente)
+.maybeSingle()
 
 if(estado?.tipo === "confirmacao_pedido"){
 
@@ -378,11 +375,10 @@ console.log("CONFIRMAÇÃO DE PEDIDO")
 const { data: pedidoPendente } = await supabase
 .from("pedidos_pendentes")
 .select("*")
-.eq("telefone",cliente)
+.eq("cliente_telefone",cliente)
 .order("created_at",{ascending:false})
 .limit(1)
 .single()
-
 if(pedidoPendente){
 
 const pedido = pedidoPendente.pedido
@@ -1297,44 +1293,60 @@ console.log("Erro JSON pedido:", jsonTexto)
 if(pedido){
 
 console.log("Pedido detectado:",pedido)
+
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+/* SALVAR PEDIDO PENDENTE */
+
+await supabase
+.from("pedidos_pendentes")
+.insert({
+
+cliente_nome: pedido.nome || "",
+cliente_telefone: cliente,
+
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+tipo: pedido.tipo || "entrega",
+
+itens: pedido.itens || [],
+
+valor_total: valorTotal,
+
+forma_pagamento: pedido.pagamento || "",
+
+observacao: pedido.observacao || "",
+
+status: "pendente"
+
+})
+
+/* MARCAR ESTADO DE CONFIRMAÇÃO */
+
 await supabase
 .from("estado_conversa")
 .upsert({
 telefone:cliente,
 tipo:"confirmacao_pedido"
 })
-/* ================= ENVIAR PARA API ================= */
 
-const api = await fetch("https://reservas-mercatto.vercel.app/api/pedidos",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-pedido:{
-...pedido,
-telefone:cliente
-}
-})
-})
+resposta = `🧾 *Resumo do seu pedido*
 
-const retorno = await api.json()
+${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
-if(retorno.sucesso){
+💰 Total: R$ ${valorTotal.toFixed(2)}
 
-resposta = `✅ *Pedido enviado com sucesso!*
-
-🧾 Número do pedido: ${retorno.pedido_id}
-
-Nossa cozinha já recebeu seu pedido.
-
-Em breve enviaremos a confirmação do preparo.`
-
-}else{
-
-resposta = `⚠️ Não consegui registrar seu pedido agora.
-
-Pode tentar novamente?`
+Deseja confirmar o pedido?`
 
 }
 
