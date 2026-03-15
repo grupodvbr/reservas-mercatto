@@ -1304,6 +1304,8 @@ telefone: cliente,
 pedido: pedido
 })
 
+/* SALVAR ESTADO DA CONVERSA */
+
 await supabase
 .from("estado_conversa")
 .upsert({
