@@ -394,42 +394,31 @@ itens: pedidoPendente.itens,
 pagamento: pedidoPendente.forma_pagamento
 }
 
-/* CALCULAR TOTAL */
+  
+console.log("ENVIANDO PEDIDO PARA API")
 
-const valorTotal = (pedido.itens || []).reduce((s,i)=>{
-const preco = Number(i.preco || 0)
-const qtd = Number(i.quantidade || 1)
-return s + (preco * qtd)
-},0)
+const api = await fetch(`${process.env.API_URL}/api/pedidos`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+pedido:{
+...pedido,
+telefone:cliente
+}
+})
+})
 
-/* SALVAR PEDIDO DEFINITIVO */
+const retorno = await api.json()
 
-const { data: pedidoSalvo } = await supabase
-.from("pedidos")
-.insert([{
-cliente_nome: pedido.nome,
-cliente_telefone: cliente,
-cliente_endereco: pedido.endereco || "",
-cliente_bairro: pedido.bairro || "",
-tipo: pedido.tipo || "entrega",
-itens: pedido.itens || [],
-valor_total: valorTotal,
-forma_pagamento: pedido.pagamento || "",
-observacao: pedido.observacao || "",
-status: "novo"
-}])
-.select()
-.single()
+console.log("RETORNO API:",retorno)
 
-console.log("PEDIDO SALVO:",pedidoSalvo)
+resposta = `✅ *Pedido enviado com sucesso!*
 
-/* ENVIAR CONFIRMAÇÃO */
+🧾 Número do pedido: ${retorno.pedido_id}
 
-resposta = `✅ *Pedido confirmado!*
-
-🧾 Número do pedido: ${pedidoSalvo.id}
-
-Nosso time já recebeu seu pedido e iniciará o preparo.`
+Nossa cozinha já recebeu seu pedido.`
 
 await fetch(url,{
 method:"POST",
@@ -445,24 +434,43 @@ text:{body:resposta}
 })
 })
 
-/* LIMPAR PEDIDO PENDENTE */
-
 await supabase
 .from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
 
-/* LIMPAR ESTADO DA CONVERSA */
+await supabase
+.from("pedidos")
+.insert([{
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+tipo: pedido.tipo || "entrega",
+itens: pedido.itens || [],
+valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || "",
+status: "novo"
+}])
+
+return res.status(200).end()
+/* limpar pedido pendente */
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+}
+
+/* limpar estado conversa */
 
 await supabase
 .from("estado_conversa")
 .delete()
 .eq("telefone",cliente)
 
-/* FINALIZAR WEBHOOK */
-
-return res.status(200).end()
-
+}
 }
 /* ================= RELATORIO ADMIN ================= */
 
