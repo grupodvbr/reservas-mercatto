@@ -141,33 +141,9 @@ let resposta = ""
 
 /* ================= CARDAPIO ================= */
 
-async function buscarCardapio(){
+if(querCardapio){
 
-const { data, error } = await supabase
-.from("buffet")
-.select("id,nome,tipo,descricao,preco_venda,foto_url")
-.eq("cardapio", true)
-.eq("ativo", true)
-.order("tipo",{ascending:true})
-.order("nome",{ascending:true})
-
-if(error){
-console.log("Erro cardapio:",error)
-return []
-}
-
-return data || []
-
-}
-/* ================= CRON RELATORIO ================= */
-
-if(req.query.cron === "relatorio"){
-
-const phone_number_id = process.env.WHATSAPP_PHONE_ID
-
-const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
-
-const resposta = await enviarRelatorioAutomatico()
+console.log("ENVIANDO CARDAPIO AUTOMATICO")
 
 await fetch(url,{
 method:"POST",
@@ -177,13 +153,43 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 },
 body:JSON.stringify({
 messaging_product:"whatsapp",
-to:"557798253249",
-type:"text",
-text:{body:resposta}
+to:cliente,
+type:"document",
+document:{
+link:"https://SEU_CARDAPIO.pdf",
+filename:"Cardapio_Mercatto.pdf"
+}
 })
 })
 
-return res.status(200).send("Relatório enviado")
+const respostaCardapio =
+`📖 *Aqui está nosso cardápio completo.*
+
+Se quiser ver fotos ou saber mais sobre algum prato é só me falar 😊`
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:respostaCardapio}
+})
+})
+
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:"[CARDAPIO ENVIADO]",
+role:"assistant"
+})
+
+return res.status(200).end()
 
 }
 /* ================= WEBHOOK VERIFY ================= */
