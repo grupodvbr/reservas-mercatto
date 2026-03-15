@@ -1252,10 +1252,10 @@ console.log("Resposta IA:",resposta)
 /* ================= PEDIDO DELIVERY ================= */
 
 const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})/)
+
 if(pedidoMatch){
 
 let pedido
-
 let jsonTexto = pedidoMatch[1]
 
 jsonTexto = jsonTexto
@@ -1298,19 +1298,6 @@ telefone: cliente,
 tipo: "confirmacao_pedido"
 })
 
-/* CALCULAR TOTAL */
-
-const valorTotal = (pedido.itens || []).reduce((s,i)=>{
-
-const preco = Number(i.preco || 0)
-const qtd = Number(i.quantidade || 1)
-
-return s + (preco * qtd)
-
-},0)
-
-
-
 resposta = `🧾 *Seu pedido ficou assim:*
 
 ${pedido.itens.map(i => `• ${i.nome} x${i.quantidade}`).join("\n")}
@@ -1319,13 +1306,9 @@ Deseja confirmar o pedido?
 
 Responda *SIM* para confirmar ou *ALTERAR* se quiser mudar algo.`
 
-} // fecha if(pedido)
+}
 
-} // fecha if(pedidoMatch)// fecha if(pedidoMatch)
-
-}catch(e){
-
-console.log("ERRO OPENAI",e)
+}
 
 resposta=
 `👋 Bem-vindo ao Mercatto Delícia
