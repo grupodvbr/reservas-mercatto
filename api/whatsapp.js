@@ -445,18 +445,18 @@ await supabase
 
 await supabase
 .from("pedidos")
-.insert({
-cliente_nome: pedido.nome,
-cliente_telefone: cliente,
-cliente_endereco: pedido.endereco || "",
-cliente_bairro: pedido.bairro || "",
-tipo: pedido.tipo || "entrega",
-itens: pedido.itens || [],
-valor_total: valorTotal,
-forma_pagamento: pedido.pagamento || "",
-observacao: pedido.observacao || "",
-status: "novo"
-})
+.insert([{
+  cliente_nome: pedido.nome || "",
+  cliente_telefone: cliente,
+  cliente_endereco: pedido.endereco || "",
+  cliente_bairro: pedido.bairro || "",
+  tipo: pedido.tipo || "entrega",
+  itens: pedido.itens || [],
+  valor_total: valorTotal || 0,
+  forma_pagamento: pedido.pagamento || "",
+  observacao: pedido.observacao || "",
+  status: "novo"
+}])
 
 return res.status(200).end()
 /* limpar pedido pendente */
