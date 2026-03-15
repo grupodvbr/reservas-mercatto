@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<title>Delivery • Mercatto</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--border:#334155;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--green:#22c55e;
+--blue:#3b82f6;
+}
+
+body{
+margin:0;
+font-family:Inter;
+background:var(--bg);
+color:var(--text);
+}
+
+/* NAVBAR */
+
+.nav{
+height:64px;
+background:#020617;
+display:flex;
+align-items:center;
+padding:0 20px;
+border-bottom:1px solid var(--border);
+gap:20px;
+}
+
+.nav a{
+color:white;
+text-decoration:none;
+font-weight:600;
+opacity:.7;
+}
+
+.nav a:hover{
+opacity:1;
+}
+
+/* PEDIDOS */
+
+.container{
+padding:24px;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+gap:20px;
+}
+
+/* CARD */
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:14px;
+padding:18px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+}
+
+.nome{
+font-weight:700;
+}
+
+.telefone{
+font-size:13px;
+color:var(--muted);
+}
+
+.item{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+.item img{
+width:48px;
+height:48px;
+object-fit:cover;
+border-radius:8px;
+}
+
+.info{
+flex:1;
+}
+
+.qtd{
+font-weight:600;
+}
+
+.footer{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.btn{
+border:none;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+font-weight:600;
+}
+
+.aceitar{
+background:var(--green);
+color:white;
+}
+
+.preparo{
+background:var(--blue);
+color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="nav">
+
+<a href="delivery.html">Pedidos</a>
+<a href="financeiro.html">Financeiro</a>
+<a href="config.html">Configurações</a>
+
+</div>
+
+<div class="container" id="pedidos"></div>
+
+<script>
+
+const supabase = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"PUBLIC_KEY"
+)
+
+async function carregarPedidos(){
+
+const {data} = await supabase
+.from("delivery_mercatto")
+.select("*")
+.order("created_at",{ascending:false})
+
+const container=document.getElementById("pedidos")
+
+container.innerHTML=""
+
+data.forEach(p=>{
+
+const itens = p.itens || []
+
+let itensHTML=""
+
+itens.forEach(i=>{
+
+itensHTML+=`
+
+<div class="item">
+
+<img src="${i.foto}">
+
+<div class="info">
+${i.nome}
+</div>
+
+<div class="qtd">
+x${i.quantidade}
+</div>
+
+</div>
+`
+
+})
+
+const card=document.createElement("div")
+
+card.className="card"
+
+card.innerHTML=`
+
+<div class="header">
+
+<div>
+
+<div class="nome">${p.cliente_nome}</div>
+
+<div class="telefone">${p.cliente_telefone}</div>
+
+</div>
+
+<div>${p.tipo}</div>
+
+</div>
+
+${itensHTML}
+
+<div>
+
+📍 ${p.cliente_endereco}
+
+</div>
+
+<div>
+
+💰 ${p.valor_total}
+
+</div>
+
+<div>
+
+💳 ${p.forma_pagamento}
+
+</div>
+
+<div>
+
+📝 ${p.observacao || ""}
+
+</div>
+
+<div class="footer">
+
+<button class="btn aceitar"
+onclick="atualizarStatus('${p.id}','aceito')">
+Aceitar
+</button>
+
+<button class="btn preparo"
+onclick="atualizarStatus('${p.id}','preparando')">
+Preparar
+</button>
+
+</div>
+
+`
+
+container.appendChild(card)
+
+})
+
+}
+
+async function atualizarStatus(id,status){
+
+await supabase
+.from("delivery_mercatto")
+.update({status})
+.eq("id",id)
+
+carregarPedidos()
+
+}
+
+carregarPedidos()
+
+</script>
+
+</body>
+</html>
