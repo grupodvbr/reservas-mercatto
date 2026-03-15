@@ -1242,7 +1242,9 @@ status: "novo"
 })
 
 if(error){
-console.log("Erro ao salvar pedido:",error)
+if(error){
+console.log("Erro Supabase delivery:", JSON.stringify(error,null,2))
+
 }else{
 console.log("Pedido salvo no Supabase")
 }
@@ -1595,7 +1597,8 @@ status: "novo"
 })
 
 if(error){
-console.log("Erro ao salvar pedido:",error)
+console.log("Erro Supabase delivery:", JSON.stringify(error,null,2))
+
 }
 
 let itensTexto = ""
