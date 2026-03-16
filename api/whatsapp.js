@@ -366,8 +366,16 @@ texto.includes("ok") ||
 texto.includes("confirm") ||
 texto.includes("pode") ||
 texto.includes("manda") ||
+texto.includes("confirmar") ||
+texto.includes("pode sim") ||
+texto.includes("certo") ||
+texto.includes("isso mesmo") ||  
 texto.includes("enviar")
 
+
+
+
+  
 if(confirmou){
 
 const { data: estado } = await supabase
@@ -1135,6 +1143,8 @@ Regras importantes:
 })
 
 resposta = completion.choices[0].message.content
+
+console.log("RESPOSTA IA COMPLETA:", resposta)  
 /* ================= DETECTAR MIDIA ================= */
 
 if(resposta.includes("ENVIAR_CARDAPIO")){
@@ -1331,6 +1341,9 @@ let pedido
 
 let jsonTexto = pedidoMatch[1]
 
+console.log("JSON EXTRAIDO:", jsonTexto)
+
+  
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
 .replace(/,\s*]/g,"]")
@@ -1342,9 +1355,13 @@ try{
 
 pedido = JSON.parse(jsonTexto)
 
+console.log("JSON DO PEDIDO OK:", pedido)
+
 }catch(err){
 
-console.log("Erro JSON pedido:", jsonTexto)
+console.log("ERRO AO PARSEAR JSON DO PEDIDO")
+console.log("JSON RECEBIDO:", jsonTexto)
+console.log("ERRO:", err)
 
 }
 
@@ -1364,7 +1381,7 @@ return s + (preco * qtd)
 },0)
 
 /* SALVAR PEDIDO PENDENTE */
-
+console.log("SALVANDO EM pedidos_pendentes")
 await supabase
 .from("pedidos_pendentes")
 .delete()
