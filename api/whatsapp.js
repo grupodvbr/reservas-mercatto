@@ -322,6 +322,90 @@ console.log("Mensagem:",mensagem)
 
 const texto = mensagem.toLowerCase()
 
+/* ================= PEDIDO DIRETO DO CLIENTE ================= */
+
+const pedidoClienteMatch = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+if(pedidoClienteMatch){
+
+console.log("PEDIDO RECEBIDO DIRETAMENTE DO CLIENTE")
+
+let pedido
+
+let jsonTexto = pedidoClienteMatch[1]
+
+try{
+
+pedido = JSON.parse(jsonTexto)
+
+console.log("JSON DO CLIENTE OK:", pedido)
+
+}catch(err){
+
+console.log("ERRO JSON CLIENTE:", err)
+console.log("JSON RECEBIDO:", jsonTexto)
+
+return res.status(200).end()
+
+}
+
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+console.log("SALVANDO PEDIDO CLIENTE")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+itens: pedido.itens || [],
+valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+
+if(error){
+console.log("ERRO AO SALVAR:",error)
+}else{
+console.log("PEDIDO SALVO")
+}
+
+/* ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
+
+${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
+
+💰 Total: R$ ${valorTotal.toFixed(2)}
+
+Deseja confirmar o pedido?`
+
+}
+
+  
 /* ================= DETECTAR NOME AUTOMATICO ================= */
 
 let nomeDetectado = null
