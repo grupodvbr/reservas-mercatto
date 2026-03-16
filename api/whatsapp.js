@@ -1144,7 +1144,8 @@ Regras importantes:
 
 resposta = completion.choices[0].message.content
 
-console.log("RESPOSTA IA COMPLETA:", resposta)  
+console.log("RESPOSTA IA COMPLETA:", resposta)
+
 /* ================= DETECTAR MIDIA ================= */
 
 if(resposta.includes("ENVIAR_CARDAPIO")){
@@ -1334,21 +1335,25 @@ console.log("Resposta IA:",resposta)
 /* ================= PEDIDO DELIVERY ================= */
 
 const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*})/)
+
 if(pedidoMatch){
 
-let pedido
+let pedido = null
 
 let jsonTexto = pedidoMatch[1]
 
 console.log("JSON EXTRAIDO:", jsonTexto)
 
-  
+/* LIMPAR JSON */
+
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
 .replace(/,\s*]/g,"]")
 .replace(/\n/g,"")
 .replace(/\t/g,"")
 .trim()
+
+/* PARSE SEGURO */
 
 try{
 
@@ -1380,7 +1385,9 @@ return s + (preco * qtd)
 },0)
 
 /* SALVAR PEDIDO PENDENTE */
+
 console.log("SALVANDO EM pedidos_pendentes")
+
 await supabase
 .from("pedidos_pendentes")
 .delete()
@@ -1416,10 +1423,9 @@ ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
 Deseja confirmar o pedido?`
 
-
-}
 }
 
+}
 
 }catch(e){
 
