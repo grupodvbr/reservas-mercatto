@@ -10,6 +10,33 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE
 )
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN
+
+
+
+
+
+
+
+
+
+const TEMPLATES_PERMITIDOS = [
+"confirmacao_reserva",
+"lembrete_reserva",
+"confirmacao_pedido",
+"video_mercatto"
+]
+
+
+
+
+
+
+
+
+
+
+
+
 function agoraBahia(){
   return new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
@@ -1177,7 +1204,13 @@ if(templateMatch){
 
 const templateNome = templateMatch[1]
 
-console.log("ENVIANDO TEMPLATE:",templateNome)
+console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
+
+/* VALIDAR TEMPLATE */
+
+if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
+console.log("Template não permitido:",templateNome)
+}else{
 
 await fetch(url,{
 method:"POST",
@@ -1198,9 +1231,19 @@ code:"pt_BR"
 })
 })
 
+}
+
 resposta = resposta.replace(templateMatch[0],"").trim()
 
 }
+
+
+
+
+
+
+
+  
 if(resposta.includes("ENVIAR_FOTOS")){
 
 await fetch(url,{
