@@ -263,7 +263,10 @@ return res.status(200).end()
 }
 
 const msg = change.messages[0]
-
+if(msg.from === change.metadata.phone_number_id){
+console.log("Mensagem do próprio bot ignorada")
+return res.status(200).end()
+}
 const mensagem = msg.text?.body
 const cliente = msg.from
 
