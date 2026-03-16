@@ -1352,7 +1352,7 @@ resposta = resposta.replace(/ENVIAR_POSTER/g,"").trim()
 }
 
   
-if(resposta.includes("ENVIAR_VIDEO")){
+if(resposta.includes("ENVIAR_TEMPLATE_VIDEO")){
 
 await fetch(url,{
 method:"POST",
@@ -1363,15 +1363,18 @@ Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
 body: JSON.stringify({
 messaging_product:"whatsapp",
 to:cliente,
-type:"video",
-video:{
-link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Video%202026-03-10%20at%2021.08.40.mp4",
-caption:"Conheça o Mercatto Delícia"
+type:"template",
+template:{
+name:"video_mercatto",
+language:{
+code:"pt_BR"
+}
 }
 })
 })
 
-resposta = resposta.replace(/ENVIAR_VIDEO/g,"").trim()
+resposta = resposta.replace(/ENVIAR_TEMPLATE_VIDEO/g,"").trim()
+
 }
 
 if(resposta.includes("ENVIAR_FOTO_PRATO")){
