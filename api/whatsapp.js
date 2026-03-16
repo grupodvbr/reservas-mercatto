@@ -361,9 +361,12 @@ ultima_interacao:new Date().toISOString()
 
 }
 const confirmou =
-texto === "sim" ||
-texto === "ok" ||
-texto === "confirmar"
+texto.includes("sim") ||
+texto.includes("ok") ||
+texto.includes("confirm") ||
+texto.includes("pode") ||
+texto.includes("manda") ||
+texto.includes("enviar")
 
 if(confirmou){
 
