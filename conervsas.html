@@ -6,142 +6,73 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- 🚫 anti cache -->
+<meta http-equiv="Cache-Control" content="no-store" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter;background:#0b0f14;color:#fff}
 
-body{
-  margin:0;
-  font-family:Inter;
-  background:#0b0f14;
-  color:#fff;
-  overflow:hidden;
-}
-
-/* ===== LAYOUT ===== */
-
-.container{
-  display:flex;
-  height:100vh;
-}
-
-/* ===== SIDEBAR ===== */
+.container{display:flex;height:100vh}
 
 .sidebar{
-  width:300px;
-  background:#111827;
-  border-right:1px solid #1f2937;
-  display:flex;
-  flex-direction:column;
+  width:300px;background:#111827;border-right:1px solid #1f2937;
+  display:flex;flex-direction:column;
 }
 
 .sidebar h2{
-  padding:20px;
-  margin:0;
-  font-size:18px;
-  border-bottom:1px solid #1f2937;
+  padding:20px;margin:0;border-bottom:1px solid #1f2937;
 }
 
-.lista{
-  flex:1;
-  overflow:auto;
-}
+.lista{flex:1;overflow:auto}
 
 .item{
-  padding:12px 16px;
-  border-bottom:1px solid #1f2937;
-  cursor:pointer;
-  transition:0.2s;
+  padding:12px 16px;border-bottom:1px solid #1f2937;
+  cursor:pointer
 }
+.item:hover{background:#1f2937}
+.item.active{background:#2563eb}
 
-.item:hover{
-  background:#1f2937;
-}
-
-.item.active{
-  background:#2563eb;
-}
-
-/* ===== CHAT ===== */
-
-.chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
+.chat{flex:1;display:flex;flex-direction:column}
 
 .header{
-  padding:15px;
-  border-bottom:1px solid #1f2937;
-  font-weight:600;
+  padding:15px;border-bottom:1px solid #1f2937
 }
 
 .messages{
-  flex:1;
-  overflow:auto;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  flex:1;overflow:auto;padding:20px;
+  display:flex;flex-direction:column;gap:10px
 }
 
 .msg{
-  max-width:70%;
-  padding:10px 14px;
-  border-radius:14px;
-  font-size:14px;
-  line-height:1.4;
+  max-width:70%;padding:10px 14px;border-radius:14px
 }
-
-.user{
-  background:#1f2937;
-  align-self:flex-start;
-}
-
-.bot{
-  background:#16a34a;
-  align-self:flex-end;
-}
-
-/* ===== INPUT ===== */
+.user{background:#1f2937;align-self:flex-start}
+.bot{background:#16a34a;align-self:flex-end}
 
 .input{
-  display:flex;
-  padding:10px;
-  border-top:1px solid #1f2937;
+  display:flex;padding:10px;border-top:1px solid #1f2937
 }
 
 .input input{
-  flex:1;
-  padding:12px;
-  border:none;
-  outline:none;
-  background:#1f2937;
-  color:#fff;
-  border-radius:10px;
+  flex:1;padding:12px;border:none;outline:none;
+  background:#1f2937;color:#fff;border-radius:10px
 }
 
 .input button{
-  margin-left:10px;
-  padding:12px 20px;
-  border:none;
-  background:#16a34a;
-  color:#fff;
-  border-radius:10px;
-  cursor:pointer;
+  margin-left:10px;padding:12px 20px;
+  border:none;background:#16a34a;color:#fff;
+  border-radius:10px;cursor:pointer
 }
 
-/* ===== EMPTY ===== */
-
-.empty{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100%;
-  color:#6b7280;
+.status{
+  font-size:12px;
+  padding:5px 10px;
+  color:#9ca3af;
 }
 </style>
 </head>
@@ -150,22 +81,20 @@ body{
 
 <div class="container">
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <h2>Conversas</h2>
     <div class="lista" id="lista"></div>
   </div>
 
-  <!-- CHAT -->
   <div class="chat">
     <div class="header" id="header">Selecione uma conversa</div>
 
-    <div class="messages" id="msgs">
-      <div class="empty">Nenhuma conversa selecionada</div>
-    </div>
+    <div class="messages" id="msgs"></div>
+
+    <div class="status" id="status"></div>
 
     <div class="input">
-      <input id="txt" placeholder="Digite uma mensagem..." />
+      <input id="txt" placeholder="Digite..." />
       <button onclick="enviar()">Enviar</button>
     </div>
   </div>
@@ -176,102 +105,139 @@ body{
 
 let numeroAtual = "";
 
-/* ================= LISTAR CONVERSAS ================= */
-
-async function carregarConversas(){
-
-  const res = await fetch("/api/conversas?ts=" + Date.now());
-  const lista = await res.json();
-
-  const div = document.getElementById("lista");
-  div.innerHTML = "";
-
-  lista.forEach(num => {
-
-    const el = document.createElement("div");
-    el.className = "item";
-    el.innerText = num;
-
-    el.onclick = () => {
-      document.querySelectorAll(".item").forEach(i=>i.classList.remove("active"));
-      el.classList.add("active");
-      abrirChat(num);
-    };
-
-    div.appendChild(el);
-
-  });
-
+/* ================= LOG ================= */
+function log(msg){
+  console.log(msg);
+  document.getElementById("status").innerText = msg;
 }
 
-/* ================= ABRIR CHAT ================= */
+/* ================= LISTA ================= */
+async function carregarConversas(){
 
+  try{
+    const res = await fetch("/api/conversas?ts=" + Date.now(), {
+      cache:"no-store"
+    });
+
+    if(!res.ok){
+      log("Erro ao carregar conversas");
+      return;
+    }
+
+    const lista = await res.json();
+
+    const div = document.getElementById("lista");
+    div.innerHTML = "";
+
+    lista.forEach(num => {
+
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerText = num;
+
+      el.onclick = () => {
+        document.querySelectorAll(".item").forEach(i=>i.classList.remove("active"));
+        el.classList.add("active");
+        abrirChat(num);
+      };
+
+      div.appendChild(el);
+
+    });
+
+  } catch(e){
+    log("Erro: " + e.message);
+  }
+}
+
+/* ================= CHAT ================= */
 async function abrirChat(numero){
 
   numeroAtual = numero;
-
   document.getElementById("header").innerText = numero;
 
-  const res = await fetch(`/api/conversas?numero=${numero}&ts=` + Date.now());
-  const msgs = await res.json();
+  try{
+    const res = await fetch(`/api/conversas?numero=${numero}&ts=${Date.now()}`, {
+      cache:"no-store"
+    });
 
-  const div = document.getElementById("msgs");
-  div.innerHTML = "";
-
-  msgs.forEach(m => {
-
-    const el = document.createElement("div");
-
-    el.classList.add("msg");
-
-    if(m.role === "user"){
-      el.classList.add("user");
-    } else {
-      el.classList.add("bot");
+    if(!res.ok){
+      log("Erro ao abrir chat");
+      return;
     }
 
-    el.innerText = m.mensagem;
+    const msgs = await res.json();
 
-    div.appendChild(el);
+    const div = document.getElementById("msgs");
+    div.innerHTML = "";
 
-  });
+    msgs.forEach(m => {
 
-  div.scrollTop = div.scrollHeight;
+      const el = document.createElement("div");
+      el.classList.add("msg");
 
+      if(m.role === "user"){
+        el.classList.add("user");
+      } else {
+        el.classList.add("bot");
+      }
+
+      el.innerText = m.mensagem;
+      div.appendChild(el);
+
+    });
+
+    div.scrollTop = div.scrollHeight;
+
+  } catch(e){
+    log("Erro: " + e.message);
+  }
 }
 
 /* ================= ENVIAR ================= */
-
 async function enviar(){
 
   const texto = document.getElementById("txt").value;
 
-  if(!texto || !numeroAtual) return;
+  if(!texto || !numeroAtual){
+    log("Selecione um chat");
+    return;
+  }
 
-  await fetch("/api/send", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      numero: numeroAtual,
-      mensagem: texto
-    })
-  });
+  log("Enviando...");
 
-  document.getElementById("txt").value = "";
+  try{
 
-  abrirChat(numeroAtual);
+    const res = await fetch("/api/send", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        numero: numeroAtual,
+        mensagem: texto
+      })
+    });
 
+    if(!res.ok){
+      log("Erro ao enviar");
+      return;
+    }
+
+    log("Mensagem enviada ✅");
+
+    document.getElementById("txt").value = "";
+
+    abrirChat(numeroAtual);
+
+  } catch(e){
+    log("Erro: " + e.message);
+  }
 }
 
-/* ================= AUTO REFRESH ================= */
-
+/* ================= AUTO ================= */
 setInterval(()=>{
-  if(numeroAtual){
-    abrirChat(numeroAtual);
-  }
+  carregarConversas();
+  if(numeroAtual) abrirChat(numeroAtual);
 },3000);
-
-/* ================= INIT ================= */
 
 carregarConversas();
 
