@@ -18,7 +18,7 @@ const ADMINS = [
 
 
 const TEMPLATES_PERMITIDOS = [
-"confirmacao_reserva",
+"confirmao_reserva",
 "lembrete_reserva",
 "confirmacao_pedido",
 "video_mercatto",
