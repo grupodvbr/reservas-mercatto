@@ -380,7 +380,6 @@ const { data: memoriaCliente } = await supabase
 
 let nomeMemoria = memoriaCliente?.nome || null
 const ADMIN_NUMERO = "557798253249"
-const message_id = mensagensRecebidas[0]?.id
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
 if(!mensagem){
