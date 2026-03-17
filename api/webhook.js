@@ -22,7 +22,6 @@ export default async function handler(req, res) {
       return res.sendStatus(403);
     }
   }
-
   // 📩 RECEBER MENSAGEM
   if (req.method === "POST") {
     try {
