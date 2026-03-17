@@ -1459,10 +1459,24 @@ console.log("RESPOSTA IA COMPLETA:", resposta)
 /* ================= DETECTAR MIDIA ================= */
 const templateMatch = resposta.match(/ENVIAR_TEMPLATE:([a-zA-Z0-9_\-]+)/)
 
+
 if(templateMatch){
 
   const templateNome = templateMatch[1]
 
+  /* ✅ COLE AQUI */
+  const TEMPLATE_IDIOMAS = {
+    reserva_especial: "en",
+    confirmacao_reserva: "pt_BR",
+    lembrete_reserva: "pt_BR",
+    confirmacao_pedido: "pt_BR",
+    video_mercatto: "pt_BR"
+  }
+
+  const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
+
+
+  
   console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
 
   if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
