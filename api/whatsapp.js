@@ -1495,7 +1495,7 @@ if(templateMatch){
     type:"template",
     template:{
       name:templateNome,
-      language:{ code:"en_US" }
+      language:{ code: idiomaTemplate }
     }
   })
 })
