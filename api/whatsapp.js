@@ -203,24 +203,42 @@ async function buscarBuffetHoje(){
 
 const hojeISO = getHojeBahia()
 
-console.log("DATA CONSULTADA:", hojeISO)
+console.log("DATA CONSULTADA (BAHIA):", hojeISO)
 
 const { data, error } = await supabase
 .from("buffet_lancamentos")
 .select("produto_nome,tipo,data")
 .eq("empresa","MERCATTO DELÍCIA")
 .eq("tipo","MONTAGEM")
-.eq("data", hojeISO)
+.gte("data", hojeISO)
+.lte("data", hojeISO)
 
 if(error){
-console.log("Erro buffet:", error)
+console.log("❌ ERRO AO BUSCAR BUFFET:", error)
 return []
 }
 
-console.log("RESULTADO BUFFET:", data)
-
-return data || []
+if(!data || !data.length){
+console.log("⚠️ SEM DADOS DO BUFFET PARA HOJE")
+return []
 }
+
+/* REMOVE DUPLICADOS */
+const unicos = []
+const nomes = new Set()
+
+for(const item of data){
+
+if(!nomes.has(item.produto_nome)){
+nomes.add(item.produto_nome)
+unicos.push(item)
+}
+
+}
+
+console.log("✅ ITENS DO BUFFET:", unicos)
+
+return unicos
 /* ================= VERIFICAR SE TEM PRODUTO (INTELIGENTE) ================= */
 
 function normalizar(txt){
@@ -455,7 +473,6 @@ return res.status(200).end()
 console.log("Cliente:",cliente)
 console.log("Mensagem:",mensagem)
 
-const texto = mensagem.toLowerCase()
 const textoNormalizado = normalizar(texto)
 /* ================= DETECTAR RECLAMAÇÃO ================= */
 
