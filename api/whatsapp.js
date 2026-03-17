@@ -1244,109 +1244,6 @@ return res.status(200).end()
 
 }
   
-/* ================= BUFFET SIMPLES ================= */
-
-if(querBuffet){
-
-console.log("🔥 BUFFET SIMPLES")
-
-const agora = new Date(
-  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
-)
-
-const hora = agora.getHours()
-const minuto = agora.getMinutes()
-
-/* ⏰ FORA DO HORÁRIO */
-
-if(hora < 11){
-
-resposta = "Nosso buffet começa às 11:00 😋"
-
-}
-else if(hora >= 15){
-
-resposta = "O buffet de hoje já foi encerrado 😕\nFuncionamos das 11:00 às 15:00."
-
-}
-else{
-
-const buffet = await buscarBuffetHoje()
-
-/* PERGUNTA ESPECÍFICA */
-
-const produto = temProduto(buffet, texto)
-
-if(produto){
-
-resposta = `Sim! Temos *${produto}* no buffet hoje 😋`
-
-}else{
-
-/* LISTA SIMPLES */
-
-const lista = [...new Set(buffet.map(p => p.produto_nome))]
-
-if(!lista.length){
-
-resposta = "Hoje ainda não temos itens no buffet 😕"
-
-}else{
-
-resposta = "🍽️ *Buffet de hoje no Mercatto Delícia:*\n\n"
-
-lista.slice(0,20).forEach(p=>{
-
-  let nome = p
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/\b\w/g, l => l.toUpperCase())
-
-  resposta += `• ${nome}\n`
-})
-
-resposta += "\nTe esperamos por aqui 😋"
-
-/* ALERTA FINAL DO HORÁRIO */
-
-if(hora === 14 && minuto >= 30){
-resposta += "\n⚠️ Estamos nos últimos minutos do buffet."
-}
-
-}
-
-}
-
-}
-
-/* ENVIA */
-
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:resposta}
-})
-})
-
-await supabase
-.from("conversas_whatsapp")
-.insert({
-telefone:cliente,
-mensagem:resposta,
-role:"assistant"
-})
-
-return res.status(200).end()
-
-}
 
 
 
@@ -1392,6 +1289,26 @@ FOTO: ${p.foto_url || "sem"}
 `
 
 })
+
+/* ================= BUSCAR BUFFET ================= */
+
+const buffet = await buscarBuffetHoje()
+
+let buffetTexto = ""
+
+if(!buffet.length){
+  buffetTexto = "SEM ITENS NO BUFFET HOJE"
+}else{
+  buffet.forEach(item => {
+    buffetTexto += `
+ITEM: ${item.produto_nome}
+CATEGORIA: ${item.tipo || "geral"}
+`
+  })
+}
+
+
+  
 /* ================= OPENAI ================= */
 
 try{
@@ -1508,6 +1425,28 @@ Regras importantes:
 - Se pedir foto de um prato responda com ENVIAR_FOTO_PRATO.
 `
 },
+
+
+{
+role:"system",
+content:`
+BUFFET DE HOJE (DADOS REAIS):
+
+${buffetTexto}
+
+Regras:
+
+- Esses são os itens reais do buffet de hoje
+- Não invente itens
+- Se o cliente perguntar "o que tem hoje", liste os itens
+- Se perguntar "tem X", verifique nessa lista
+- Organize de forma bonita
+`
+},
+
+
+
+  
 ...mensagens
 
 ]
