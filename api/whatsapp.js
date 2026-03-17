@@ -1293,11 +1293,20 @@ resposta = "Hoje ainda não temos itens no buffet 😕"
 
 }else{
 
-resposta = "🍽️ Hoje temos no buffet:\n\n"
+resposta = "🍽️ *Buffet de hoje no Mercatto Delícia:*\n\n"
 
 lista.slice(0,20).forEach(p=>{
-resposta += `• ${p}\n`
+
+  let nome = p
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/\b\w/g, l => l.toUpperCase())
+
+  resposta += `• ${nome}\n`
 })
+
+resposta += "\nTe esperamos por aqui 😋"
 
 /* ALERTA FINAL DO HORÁRIO */
 
