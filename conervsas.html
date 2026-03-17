@@ -1,242 +1,219 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>WhatsApp • Mercatto</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Gestor Mercatto</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-*{
-  box-sizing:border-box;
-}
-
 body{
-  margin:0;
-  font-family:Inter;
-  background:#0b0f14;
-  color:#fff;
-  overflow:hidden;
+margin:0;
+font-family:Inter;
+background:#0f172a;
+color:white;
+display:flex;
+height:100vh;
 }
 
-/* ===== LAYOUT ===== */
-
-.container{
-  display:flex;
-  height:100vh;
-}
-
-/* ===== SIDEBAR ===== */
-
+/* SIDEBAR */
 .sidebar{
-  width:300px;
-  background:#111827;
-  border-right:1px solid #1f2937;
-  display:flex;
-  flex-direction:column;
+width:320px;
+background:#020617;
+border-right:1px solid #1e293b;
+overflow:auto;
 }
 
-.sidebar h2{
-  padding:20px;
-  margin:0;
-  font-size:18px;
-  border-bottom:1px solid #1f2937;
+.client{
+padding:14px;
+border-bottom:1px solid #1e293b;
+cursor:pointer;
 }
 
-.lista{
-  flex:1;
-  overflow:auto;
+.client:hover{
+background:#1e293b;
 }
 
-.item{
-  padding:12px 16px;
-  border-bottom:1px solid #1f2937;
-  cursor:pointer;
-  transition:0.2s;
+.client.active{
+background:#334155;
 }
 
-.item:hover{
-  background:#1f2937;
-}
-
-.item.active{
-  background:#2563eb;
-}
-
-/* ===== CHAT ===== */
-
+/* CHAT */
 .chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
+flex:1;
+display:flex;
+flex-direction:column;
 }
 
 .header{
-  padding:15px;
-  border-bottom:1px solid #1f2937;
-  font-weight:600;
+padding:16px;
+border-bottom:1px solid #1e293b;
+display:flex;
+justify-content:space-between;
 }
 
 .messages{
-  flex:1;
-  overflow:auto;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
 .msg{
-  max-width:70%;
-  padding:10px 14px;
-  border-radius:14px;
-  font-size:14px;
-  line-height:1.4;
+max-width:60%;
+padding:10px;
+border-radius:10px;
 }
 
 .user{
-  background:#1f2937;
-  align-self:flex-start;
+background:#1e293b;
+align-self:flex-start;
 }
 
 .bot{
-  background:#16a34a;
-  align-self:flex-end;
+background:#22c55e;
+color:black;
+align-self:flex-end;
 }
 
-/* ===== INPUT ===== */
-
-.input{
-  display:flex;
-  padding:10px;
-  border-top:1px solid #1f2937;
+/* INPUT */
+.send{
+display:flex;
+gap:10px;
+padding:10px;
+border-top:1px solid #1e293b;
 }
 
-.input input{
-  flex:1;
-  padding:12px;
-  border:none;
-  outline:none;
-  background:#1f2937;
-  color:#fff;
-  border-radius:10px;
+.send input{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
 }
 
-.input button{
-  margin-left:10px;
-  padding:12px 20px;
-  border:none;
-  background:#16a34a;
-  color:#fff;
-  border-radius:10px;
-  cursor:pointer;
+button{
+padding:10px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
 }
 
-/* ===== EMPTY ===== */
+.pause{
+background:#ef4444;
+color:white;
+}
 
-.empty{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100%;
-  color:#6b7280;
+.ok{
+background:#22c55e;
+}
+
+.log{
+font-size:12px;
+padding:6px;
+opacity:.7;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="sidebar" id="lista"></div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <h2>Conversas</h2>
-    <div class="lista" id="lista"></div>
-  </div>
+<div class="chat">
 
-  <!-- CHAT -->
-  <div class="chat">
-    <div class="header" id="header">Selecione uma conversa</div>
+<div class="header">
+<div id="numero">Selecione</div>
 
-    <div class="messages" id="msgs">
-      <div class="empty">Nenhuma conversa selecionada</div>
-    </div>
+<div>
+<button onclick="pausar()" class="pause">Pausar</button>
+<button onclick="ativar()" class="ok">Ativar</button>
+</div>
+</div>
 
-    <div class="input">
-      <input id="txt" placeholder="Digite uma mensagem..." />
-      <button onclick="enviar()">Enviar</button>
-    </div>
-  </div>
+<div class="messages" id="msgs"></div>
+
+<div class="send">
+<input id="txt" placeholder="Digite...">
+<button onclick="enviar()">Enviar</button>
+</div>
+
+<div class="log" id="log"></div>
 
 </div>
 
 <script>
 
-let numeroAtual = "";
+/* ✅ CORREÇÃO AQUI */
+const db = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
 
-/* ================= LISTAR CONVERSAS ================= */
+let atual = null
 
-async function carregarConversas(){
+/* ================= CLIENTES ================= */
 
-  const res = await fetch("/api/conversas?ts=" + Date.now());
-  const lista = await res.json();
+async function carregar(){
 
-  const div = document.getElementById("lista");
-  div.innerHTML = "";
+const {data} = await db
+.from("conversas_whatsapp")
+.select("telefone")
+.order("created_at",{ascending:false})
 
-  lista.forEach(num => {
+const unicos = [...new Set(data.map(d=>d.telefone))]
 
-    const el = document.createElement("div");
-    el.className = "item";
-    el.innerText = num;
+const lista = document.getElementById("lista")
+lista.innerHTML=""
 
-    el.onclick = () => {
-      document.querySelectorAll(".item").forEach(i=>i.classList.remove("active"));
-      el.classList.add("active");
-      abrirChat(num);
-    };
+unicos.forEach(t=>{
 
-    div.appendChild(el);
+const div = document.createElement("div")
+div.className="client"
+div.innerText=t
 
-  });
+div.onclick=()=>{
+atual=t
+document.getElementById("numero").innerText=t
+abrir()
+}
+
+lista.appendChild(div)
+
+})
 
 }
 
-/* ================= ABRIR CHAT ================= */
+/* ================= CHAT ================= */
 
-async function abrirChat(numero){
+async function abrir(){
 
-  numeroAtual = numero;
+const {data} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",atual)
+.order("created_at",{ascending:true})
 
-  document.getElementById("header").innerText = numero;
+const box = document.getElementById("msgs")
+box.innerHTML=""
 
-  const res = await fetch(`/api/conversas?numero=${numero}&ts=` + Date.now());
-  const msgs = await res.json();
+data.forEach(m=>{
 
-  const div = document.getElementById("msgs");
-  div.innerHTML = "";
+const d = document.createElement("div")
+d.className="msg "+(m.role==="assistant"?"bot":"user")
+d.innerText=m.mensagem
 
-  msgs.forEach(m => {
+box.appendChild(d)
 
-    const el = document.createElement("div");
+})
 
-    el.classList.add("msg");
-
-    if(m.role === "user"){
-      el.classList.add("user");
-    } else {
-      el.classList.add("bot");
-    }
-
-    el.innerText = m.mensagem;
-
-    div.appendChild(el);
-
-  });
-
-  div.scrollTop = div.scrollHeight;
+box.scrollTop = box.scrollHeight
 
 }
 
@@ -244,36 +221,85 @@ async function abrirChat(numero){
 
 async function enviar(){
 
-  const texto = document.getElementById("txt").value;
+const txt = document.getElementById("txt").value
 
-  if(!texto || !numeroAtual) return;
+if(!txt || !atual) return
 
-  await fetch("/api/send", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      numero: numeroAtual,
-      mensagem: texto
-    })
-  });
+log("Enviando...")
 
-  document.getElementById("txt").value = "";
+try{
 
-  abrirChat(numeroAtual);
+await fetch("/api/send",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+telefone:atual,
+mensagem:txt
+})
+})
+
+await db.from("conversas_whatsapp").insert({
+telefone:atual,
+mensagem:txt,
+role:"assistant"
+})
+
+document.getElementById("txt").value=""
+
+abrir()
+
+log("✅ Enviado")
+
+}catch(e){
+log("❌ Erro")
+console.log(e)
+}
 
 }
 
-/* ================= AUTO REFRESH ================= */
+/* ================= BOT ================= */
+
+async function pausar(){
+
+if(!atual) return
+
+await db.from("controle_bot").upsert({
+telefone:atual,
+pausado:true
+})
+
+log("⛔ pausado")
+
+}
+
+async function ativar(){
+
+if(!atual) return
+
+await db.from("controle_bot").upsert({
+telefone:atual,
+pausado:false
+})
+
+log("✅ ativo")
+
+}
+
+/* ================= LOG ================= */
+
+function log(t){
+document.getElementById("log").innerText=t
+}
+
+/* ================= AUTO ================= */
+
+carregar()
 
 setInterval(()=>{
-  if(numeroAtual){
-    abrirChat(numeroAtual);
-  }
-},3000);
-
-/* ================= INIT ================= */
-
-carregarConversas();
+if(atual) abrir()
+},3000)
 
 </script>
 
