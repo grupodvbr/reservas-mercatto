@@ -21,9 +21,9 @@ const TEMPLATES_PERMITIDOS = [
 "confirmacao_reserva",
 "lembrete_reserva",
 "confirmacao_pedido",
-"video_mercatto"
+"video_mercatto",
+"reserva_especial" // 👈 FALTAVA ISSO
 ]
-
 
 
 
@@ -1453,46 +1453,47 @@ resposta = completion.choices[0].message.content
 
 console.log("RESPOSTA IA COMPLETA:", resposta)
 
+
+
+  
 /* ================= DETECTAR MIDIA ================= */
 const templateMatch = resposta.match(/ENVIAR_TEMPLATE:([a-zA-Z0-9_\-]+)/)
 
 if(templateMatch){
 
-const templateNome = templateMatch[1]
+  const templateNome = templateMatch[1]
 
-console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
+  console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
 
-/* VALIDAR TEMPLATE */
+  if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
+    console.log("Template não permitido:",templateNome)
+  }else{
 
-if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
-console.log("Template não permitido:",templateNome)
-}else{
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"template",
+        template:{
+          name:templateNome,
+          language:{ code:"pt_BR" }
+        }
+      })
+    })
 
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body: JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"template",
-template:{
-name:templateNome,
-language:{
-code:"pt_BR"
+    console.log("✅ TEMPLATE ENVIADO")
+
+    // 🔥 ESSA LINHA RESOLVE TUDO
+    return res.status(200).end()
+  }
+
+  resposta = resposta.replace(templateMatch[0],"").trim()
 }
-}
-})
-})
-
-}
-
-resposta = resposta.replace(templateMatch[0],"").trim()
-
-}
-
 
 
 
