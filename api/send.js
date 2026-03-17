@@ -1,8 +1,6 @@
-import fetch from "node-fetch";
+export default async function handler(req,res){
 
-export default async function handler(req, res){
-
-  if(req.method !== "POST"){
+  if(req.method!=="POST"){
     return res.status(405).end();
   }
 
@@ -13,10 +11,13 @@ export default async function handler(req, res){
     const PHONE_ID = process.env.PHONE_NUMBER_ID;
     const TOKEN = process.env.WHATSAPP_TOKEN;
 
-    console.log("Enviando para:", numero);
-    console.log("PHONE_ID:", PHONE_ID);
+    if(!PHONE_ID){
+      return res.status(500).json({ error:"PHONE_NUMBER_ID não definido" });
+    }
 
-    /* ================= ENVIO NORMAL ================= */
+    if(!TOKEN){
+      return res.status(500).json({ error:"WHATSAPP_TOKEN não definido" });
+    }
 
     const response = await fetch(
       `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
@@ -37,71 +38,15 @@ export default async function handler(req, res){
 
     const data = await response.json();
 
-    /* ================= SE DEU ERRO ================= */
-
     if(!response.ok){
-
-      console.log("Erro envio normal:", data);
-
-      const code = data?.error?.code;
-
-      /* 🔥 ERRO 24H → ENVIA TEMPLATE */
-      if(code === 131047){
-
-        console.log("⚠️ 24h expirado → enviando template");
-
-        const templateRes = await fetch(
-          `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
-          {
-            method:"POST",
-            headers:{
-              "Authorization":`Bearer ${TOKEN}`,
-              "Content-Type":"application/json"
-            },
-            body: JSON.stringify({
-              messaging_product:"whatsapp",
-              to: numero,
-              type:"template",
-              template:{
-                name:"hello_world", // 🔥 troca depois
-                language:{ code:"en_US" }
-              }
-            })
-          }
-        );
-
-        const templateData = await templateRes.json();
-
-        if(!templateRes.ok){
-          console.log("Erro template:", templateData);
-          return res.status(500).json({
-            error:"Erro template",
-            detalhe: templateData
-          });
-        }
-
-        return res.json({
-          success:true,
-          modo:"template"
-        });
-      }
-
+      console.log("ERRO WHATSAPP:", data);
       return res.status(500).json(data);
     }
 
-    /* ================= SUCESSO NORMAL ================= */
-
-    return res.json({
-      success:true,
-      modo:"normal"
-    });
+    return res.json({ success:true });
 
   } catch(e){
-
-    console.log("ERRO GERAL:", e);
-
-    return res.status(500).json({
-      error:e.message
-    });
+    console.log(e);
+    return res.status(500).json({ error:e.message });
   }
 }
