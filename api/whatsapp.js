@@ -1488,7 +1488,11 @@ resposta = resposta.replace(/ENVIAR_TEMPLATE_VIDEO/g,"").trim()
 
 }
 
-if(resposta.includes("ENVIAR_FOTO_PRATO")){
+const fotoMatch = resposta.match(/ENVIAR_FOTO_PRATO\s+(.+)/)
+
+if(fotoMatch){
+
+const nomePratoIA = fotoMatch[1].trim()
 
 function normalizar(txt){
 return txt
@@ -1497,10 +1501,8 @@ return txt
 .replace(/[\u0300-\u036f]/g,"")
 }
 
-const respostaNorm = normalizar(resposta)
-
 const prato = cardapio.find(p =>
-respostaNorm.includes(normalizar(p.nome))
+normalizar(p.nome).includes(normalizar(nomePratoIA))
 )
 
 if(prato && prato.foto_url){
@@ -1530,9 +1532,11 @@ mensagem:`[FOTO DO PRATO ENVIADA: ${prato.nome}]`,
 role:"assistant"
 })
 
+}else{
+console.log("❌ PRATO NÃO ENCONTRADO:", nomePratoIA)
 }
 
-resposta = resposta.replace(/ENVIAR_FOTO_PRATO/g,"").trim()
+resposta = resposta.replace(/ENVIAR_FOTO_PRATO\s+(.+)/,"").trim()
 
 }
 console.log("Resposta IA:",resposta)
