@@ -1481,7 +1481,7 @@ if(templateMatch){
     type:"template",
     template:{
       name:templateNome,
-      language:{ code:"pt_BR" }
+      language:{ code:"en_US" }
     }
   })
 })
