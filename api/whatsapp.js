@@ -1303,7 +1303,10 @@ CATEGORIA: ${item.tipo || "geral"}
   })
 }
 
-
+console.log("📨 MENSAGEM:", mensagem)
+console.log("📦 HISTORICO:", mensagens.length)
+console.log("🍽️ CARDAPIO TAMANHO:", cardapioTexto.length)
+console.log("🥗 BUFFET TAMANHO:", buffetTexto.length)
   
 /* ================= OPENAI ================= */
 
@@ -1345,7 +1348,63 @@ const { data: prompts } = await supabase
 .eq("ativo", true)
 .order("ordem",{ascending:true})
 
-const promptSistema = (prompts || [])
+/* 🔥 PROMPT BASE PROFISSIONAL */
+const promptBase = `
+🔥 IDENTIDADE DO AGENTE
+
+Você é o assistente oficial do Mercatto Delícia.
+
+Você atende clientes reais via WhatsApp de forma natural, rápida e profissional.
+
+Nunca fale que é uma IA.
+
+---
+
+⚠️ REGRA MAIS IMPORTANTE
+
+Se o atendimento estiver sendo feito por HUMANO:
+- NÃO responda
+- NÃO gere mensagem
+- NÃO interfira
+
+---
+
+🧠 ESTILO
+
+- Respostas curtas e diretas
+- Linguagem natural (humana)
+- Sem textos longos
+- Use poucos emojis
+- Seja objetivo
+
+---
+
+🚫 PROIBIDO
+
+- Inventar pratos
+- Inventar preços
+- Inventar informações
+- Repetir mensagens
+- Falar genérico tipo "estamos à disposição"
+
+---
+
+📍 MERCATTO
+
+Endereço: Avenida Rui Barbosa 1264  
+Telefone: (77) 3613-5148  
+Instagram: @mercattodelicia  
+
+---
+
+📌 OBJETIVO
+
+Responder como atendente real:
+rápido, direto e profissional
+`
+
+/* 🔥 PROMPT FINAL (BASE + BANCO) */
+const promptSistema = promptBase + "\n\n" + (prompts || [])
 .map(p => p.prompt)
 .join("\n\n")
 
@@ -1383,6 +1442,10 @@ content: nomeMemoria
 },
 
 
+
+
+
+  
 {
 role:"system",
 content: promptSistema
@@ -2203,7 +2266,9 @@ await new Promise(resolve => setTimeout(resolve, tempoDigitando))
 
 /* ================= ENVIAR WHATSAPP ================= */
 
-await fetch(url,{
+try{
+
+const envio = await fetch(url,{
 method:"POST",
 headers:{
 Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -2213,22 +2278,18 @@ body:JSON.stringify({
 messaging_product:"whatsapp",
 to:cliente,
 type:"text",
-text:{
-body:resposta
-}
+text:{ body:resposta }
 })
 })
 
-}catch(error){
+const retorno = await envio.json()
 
-console.log("ERRO GERAL:",error)
+console.log("📤 ENVIO WHATSAPP:", retorno)
 
-return res.status(200).end()
-
+if(retorno.error){
+console.log("❌ ERRO WHATSAPP:", retorno.error)
 }
 
-return res.status(200).end()
-
-}
-
+}catch(err){
+console.log("❌ ERRO AO ENVIAR:", err)
 }
