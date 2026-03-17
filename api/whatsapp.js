@@ -1277,15 +1277,10 @@ const buffet = await buscarBuffetHoje()
 
 const produto = temProduto(buffet, texto)
 
-if(produto){
+const lista = buffet.map(i => i.produto_nome)
 
+/* MONTA RESPOSTA BONITA */
 
-
-
-/* Formato da resposta */
-
-
-  
 resposta = "🍽️ *Buffet de hoje no Mercatto Delícia*\n"
 resposta += "━━━━━━━━━━━━━━━━━━\n\n"
 
@@ -1298,13 +1293,12 @@ const itensFormatados = lista.slice(0,20).map(p => {
     .replace(/[\u0300-\u036f]/g,"")
     .replace(/\b\w/g, l => l.toUpperCase())
 
-  /* CORREÇÕES MANUAIS */
   nome = nome.replace("Alcega", "Acelga")
 
   return nome
 })
 
-/* LISTA EM GRID (2 COLUNAS ESTILO WHATSAPP) */
+/* LISTA EM 2 COLUNAS */
 for(let i = 0; i < itensFormatados.length; i += 2){
 
   const left = itensFormatados[i] || ""
@@ -1321,10 +1315,14 @@ for(let i = 0; i < itensFormatados.length; i += 2){
 resposta += "\n━━━━━━━━━━━━━━━━━━\n"
 resposta += "😋 *Te esperamos para o almoço!*"
 
+/* ALERTA FINAL */
+if(hora === 14 && minuto >= 30){
+  resposta += "\n⚠️ Estamos nos últimos minutos do buffet."
+}
 
 
 
-
+  
 
   
 /* ALERTA FINAL DO HORÁRIO */
