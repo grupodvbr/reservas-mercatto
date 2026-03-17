@@ -1357,10 +1357,56 @@ role:"assistant"
 })
 
 // 🔥 retorna resposta para fluxo principal
-return res.json({ resposta })
+/* ================= RESPOSTA FINAL BUFFET ================= */
 
+// salva no histórico
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:resposta,
+role:"assistant"
+})
 
+// envia mensagem
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
 
+// 🔥 ENCERRA AQUI (IMPORTANTÍSSIMO)
+return res.status(200).end()
+
+/* ================= BLOQUEAR OPENAI SE JÁ RESPONDEU ================= */
+
+if(resposta){
+console.log("⛔ RESPOSTA JÁ DEFINIDA - NÃO CHAMAR OPENAI")
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+}
 /* ================= HISTÓRICO ================= */
 
 const {data:historico} = await supabase
