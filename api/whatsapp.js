@@ -960,34 +960,44 @@ COUVERT: ${m.valor}
 }
 /* ================= INTENÇÕES ================= */
 
+const textoNormalizado = normalizar(texto)
+
 const querReserva =
-texto.includes("reserv") ||
-texto.includes("mesa")
+textoNormalizado.includes("reserv") ||
+textoNormalizado.includes("mesa")
 
 const querCardapio =
-texto.includes("cardap") ||
-texto.includes("menu") ||
-texto.includes("pratos") ||
-texto.includes("comida") ||
-texto.includes("o que tem")
+textoNormalizado.includes("cardap") ||
+textoNormalizado.includes("menu") ||
+textoNormalizado.includes("pratos")
 
+/* 🔥 BUFFET INTELIGENTE */
 const querBuffet =
-texto.includes("buffet") ||
-texto.includes("almoço")
-
+textoNormalizado.includes("buffet") ||
+textoNormalizado.includes("buffer") || // erro comum
+textoNormalizado.includes("almoco") ||
+textoNormalizado.includes("almoço") ||
+textoNormalizado.includes("comida") ||
+textoNormalizado.includes("tem o que") ||
+textoNormalizado.includes("tem hoje") ||
+textoNormalizado.includes("o que tem") ||
+textoNormalizado.startsWith("tem ")
 
 const querVideo =
-texto.includes("video") ||
-texto.includes("vídeo")
+textoNormalizado.includes("video") ||
+textoNormalizado.includes("vídeo")
 
 const querFotos =
-texto.includes("foto") ||
-texto.includes("imagem")
+textoNormalizado.includes("foto") ||
+textoNormalizado.includes("imagem")
 
 const querEndereco =
-texto.includes("onde fica") ||
-texto.includes("endereço") ||
-texto.includes("localização")
+textoNormalizado.includes("onde fica") ||
+textoNormalizado.includes("endereco") ||
+textoNormalizado.includes("endereço") ||
+textoNormalizado.includes("localizacao") ||
+textoNormalizado.includes("localização")
+
 
 const querMusica =
 texto.includes("musica") ||
