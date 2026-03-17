@@ -189,7 +189,12 @@ return []
 return data || []
 
 }
-
+function getHojeBahia(){
+  const agora = new Date().toLocaleString("sv-SE", {
+    timeZone: "America/Bahia"
+  })
+  return agora.split(" ")[0]
+}
 /* ================= BUSCAR BUFFET (SIMPLES) ================= */
 
 
