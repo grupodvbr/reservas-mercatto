@@ -1,156 +1,147 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>WhatsApp • Mercatto</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta charset="UTF-8">
+<title>Gestor Mercatto</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{
-  --bg:#0b0f1a;
-  --card:#111827;
-  --accent:#22c55e;
-  --text:#fff;
-  --muted:#9ca3af;
-}
-
-*{box-sizing:border-box}
-
 body{
-  margin:0;
-  font-family:Inter;
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  height:100vh;
+margin:0;
+font-family:Inter;
+background:#0f172a;
+color:white;
+display:flex;
+height:100vh;
 }
 
-/* LISTA */
+/* SIDEBAR */
 .sidebar{
-  width:300px;
-  background:#020617;
-  border-right:1px solid #111;
-  overflow-y:auto;
+width:320px;
+background:#020617;
+border-right:1px solid #1e293b;
+overflow:auto;
 }
 
-.contato{
-  padding:14px;
-  border-bottom:1px solid #111;
-  cursor:pointer;
+.client{
+padding:14px;
+border-bottom:1px solid #1e293b;
+cursor:pointer;
 }
 
-.contato:hover{
-  background:#111827;
+.client:hover{
+background:#1e293b;
 }
 
-.contato.active{
-  background:#1f2937;
+.client.active{
+background:#334155;
 }
 
 /* CHAT */
 .chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
+flex:1;
+display:flex;
+flex-direction:column;
 }
 
 .header{
-  padding:14px;
-  border-bottom:1px solid #111;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+padding:16px;
+border-bottom:1px solid #1e293b;
+display:flex;
+justify-content:space-between;
 }
 
-.mensagens{
-  flex:1;
-  overflow-y:auto;
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+.messages{
+flex:1;
+overflow:auto;
+padding:20px;
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
 .msg{
-  max-width:70%;
-  padding:10px 14px;
-  border-radius:12px;
+max-width:60%;
+padding:10px;
+border-radius:10px;
 }
 
 .user{
-  background:#1f2937;
-  align-self:flex-start;
+background:#1e293b;
+align-self:flex-start;
 }
 
 .bot{
-  background:#22c55e;
-  color:#000;
-  align-self:flex-end;
+background:#22c55e;
+color:black;
+align-self:flex-end;
 }
 
 /* INPUT */
-.footer{
-  display:flex;
-  padding:10px;
-  gap:10px;
-  border-top:1px solid #111;
+.send{
+display:flex;
+gap:10px;
+padding:10px;
+border-top:1px solid #1e293b;
 }
 
-input{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  outline:none;
+.send input{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
 }
 
 button{
-  background:#22c55e;
-  border:none;
-  padding:12px 18px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
+padding:10px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
 }
 
-button.pause{
-  background:#ef4444;
-  color:#fff;
+.pause{
+background:#ef4444;
+color:white;
+}
+
+.ok{
+background:#22c55e;
 }
 
 .log{
-  font-size:12px;
-  color:#9ca3af;
+font-size:12px;
+padding:6px;
+opacity:.7;
 }
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="lista"></div>
 
-<!-- CHAT -->
 <div class="chat">
 
 <div class="header">
-  <div id="numero">Selecione</div>
+<div id="numero">Selecione</div>
 
-  <div>
-    <button onclick="pausar()" class="pause">Pausar Bot</button>
-    <button onclick="retomar()">Ativar Bot</button>
-  </div>
+<div>
+<button onclick="pausar()" class="pause">Pausar</button>
+<button onclick="ativar()" class="ok">Ativar</button>
+</div>
 </div>
 
-<div class="mensagens" id="mensagens"></div>
+<div class="messages" id="msgs"></div>
 
-<div class="footer">
-  <input id="texto" placeholder="Digite...">
-  <button onclick="enviar()">Enviar</button>
+<div class="send">
+<input id="txt" placeholder="Digite...">
+<button onclick="enviar()">Enviar</button>
 </div>
 
 <div class="log" id="log"></div>
@@ -159,18 +150,19 @@ button.pause{
 
 <script>
 
-const supabase = supabase.createClient(
-  "SUA_SUPABASE_URL",
-  "SUA_SERVICE_ROLE"
+/* ✅ CORREÇÃO AQUI */
+const db = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let telefoneSelecionado = null
+let atual = null
 
-/* ================= LISTAR CONTATOS ================= */
+/* ================= CLIENTES ================= */
 
-async function carregarContatos(){
+async function carregar(){
 
-const { data } = await supabase
+const {data} = await db
 .from("conversas_whatsapp")
 .select("telefone")
 .order("created_at",{ascending:false})
@@ -178,18 +170,18 @@ const { data } = await supabase
 const unicos = [...new Set(data.map(d=>d.telefone))]
 
 const lista = document.getElementById("lista")
-lista.innerHTML = ""
+lista.innerHTML=""
 
 unicos.forEach(t=>{
 
 const div = document.createElement("div")
-div.className="contato"
-div.innerText = t
+div.className="client"
+div.innerText=t
 
-div.onclick = ()=>{
-telefoneSelecionado = t
-document.getElementById("numero").innerText = t
-carregarMensagens()
+div.onclick=()=>{
+atual=t
+document.getElementById("numero").innerText=t
+abrir()
 }
 
 lista.appendChild(div)
@@ -198,28 +190,26 @@ lista.appendChild(div)
 
 }
 
-/* ================= CARREGAR CHAT ================= */
+/* ================= CHAT ================= */
 
-async function carregarMensagens(){
+async function abrir(){
 
-if(!telefoneSelecionado) return
-
-const { data } = await supabase
+const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
-.eq("telefone",telefoneSelecionado)
+.eq("telefone",atual)
 .order("created_at",{ascending:true})
 
-const box = document.getElementById("mensagens")
+const box = document.getElementById("msgs")
 box.innerHTML=""
 
 data.forEach(m=>{
 
-const div = document.createElement("div")
-div.className="msg "+(m.role==="assistant"?"bot":"user")
-div.innerText = m.mensagem
+const d = document.createElement("div")
+d.className="msg "+(m.role==="assistant"?"bot":"user")
+d.innerText=m.mensagem
 
-box.appendChild(div)
+box.appendChild(d)
 
 })
 
@@ -231,88 +221,84 @@ box.scrollTop = box.scrollHeight
 
 async function enviar(){
 
-const texto = document.getElementById("texto").value
+const txt = document.getElementById("txt").value
 
-if(!texto || !telefoneSelecionado) return
+if(!txt || !atual) return
 
 log("Enviando...")
 
 try{
 
-const res = await fetch("/api/send",{
+await fetch("/api/send",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
 body:JSON.stringify({
-telefone:telefoneSelecionado,
-mensagem:texto
+telefone:atual,
+mensagem:txt
 })
 })
 
-const data = await res.json()
+await db.from("conversas_whatsapp").insert({
+telefone:atual,
+mensagem:txt,
+role:"assistant"
+})
+
+document.getElementById("txt").value=""
+
+abrir()
 
 log("✅ Enviado")
 
-document.getElementById("texto").value=""
-
-carregarMensagens()
-
 }catch(e){
-log("❌ ERRO AO ENVIAR")
+log("❌ Erro")
 console.log(e)
 }
 
 }
 
-/* ================= PAUSAR ================= */
+/* ================= BOT ================= */
 
 async function pausar(){
 
-if(!telefoneSelecionado) return
+if(!atual) return
 
-await supabase
-.from("controle_bot")
-.upsert({
-telefone:telefoneSelecionado,
+await db.from("controle_bot").upsert({
+telefone:atual,
 pausado:true
 })
 
-log("⛔ Bot pausado")
+log("⛔ pausado")
 
 }
 
-/* ================= RETOMAR ================= */
+async function ativar(){
 
-async function retomar(){
+if(!atual) return
 
-if(!telefoneSelecionado) return
-
-await supabase
-.from("controle_bot")
-.upsert({
-telefone:telefoneSelecionado,
+await db.from("controle_bot").upsert({
+telefone:atual,
 pausado:false
 })
 
-log("✅ Bot ativado")
+log("✅ ativo")
 
 }
 
 /* ================= LOG ================= */
 
-function log(txt){
-document.getElementById("log").innerText = txt
+function log(t){
+document.getElementById("log").innerText=t
 }
 
-/* ================= AUTO LOAD ================= */
+/* ================= AUTO ================= */
 
-carregarContatos()
+carregar()
 
 setInterval(()=>{
-if(telefoneSelecionado){
-carregarMensagens()
-}
+if(atual) abrir()
 },3000)
 
 </script>
