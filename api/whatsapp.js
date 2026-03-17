@@ -1273,51 +1273,52 @@ else{
 
 const buffet = await buscarBuffetHoje()
 
-/* PERGUNTA ESPECÍFICA */
+if(!buffet || buffet.length === 0){
 
-const produto = temProduto(buffet, texto)
+  resposta = `😕 Hoje ainda não temos itens cadastrados no buffet.
 
-const lista = buffet.map(i => i.produto_nome)
+⏰ Funcionamos das 11:00 às 15:00
+Volte daqui a pouco ou fale com nossa equipe.`
 
-/* MONTA RESPOSTA BONITA */
+}else{
 
-resposta = "🍽️ *Buffet de hoje no Mercatto Delícia*\n"
-resposta += "━━━━━━━━━━━━━━━━━━\n\n"
+  const lista = buffet.map(i => i.produto_nome)
 
-/* ORGANIZAR */
-const itensFormatados = lista.slice(0,20).map(p => {
+  resposta = "🍽️ *Buffet de hoje no Mercatto Delícia*\n"
+  resposta += "━━━━━━━━━━━━━━━━━━\n\n"
 
-  let nome = p
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/\b\w/g, l => l.toUpperCase())
+  const itensFormatados = lista.slice(0,20).map(p => {
 
-  nome = nome.replace("Alcega", "Acelga")
+    let nome = p
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/\b\w/g, l => l.toUpperCase())
 
-  return nome
-})
+    nome = nome.replace("Alcega", "Acelga")
 
-/* LISTA EM 2 COLUNAS */
-for(let i = 0; i < itensFormatados.length; i += 2){
+    return nome
+  })
 
-  const left = itensFormatados[i] || ""
-  const right = itensFormatados[i+1] || ""
+  for(let i = 0; i < itensFormatados.length; i += 2){
 
-  if(right){
-    resposta += `• ${left.padEnd(18," ")} ${right}\n`
-  }else{
-    resposta += `• ${left}\n`
+    const left = itensFormatados[i] || ""
+    const right = itensFormatados[i+1] || ""
+
+    if(right){
+      resposta += `• ${left.padEnd(18," ")} ${right}\n`
+    }else{
+      resposta += `• ${left}\n`
+    }
   }
-}
 
-/* RODAPÉ */
-resposta += "\n━━━━━━━━━━━━━━━━━━\n"
-resposta += "😋 *Te esperamos para o almoço!*"
+  resposta += "\n━━━━━━━━━━━━━━━━━━\n"
+  resposta += "😋 *Te esperamos para o almoço!*"
 
-/* ALERTA FINAL */
-if(hora === 14 && minuto >= 30){
-  resposta += "\n⚠️ Estamos nos últimos minutos do buffet."
+  if(hora === 14 && minuto >= 30){
+    resposta += "\n⚠️ Estamos nos últimos minutos do buffet."
+  }
+
 }
 
 
