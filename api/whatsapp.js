@@ -1289,13 +1289,21 @@ const lista = [...new Set(buffet.map(p => p.produto_nome))]
 
 if(!lista.length){
 
-resposta = "Hoje ainda não temos itens no buffet 😕"
+resposta = `😕 *Buffet ainda em atualização*
+
+Nossa equipe ainda está finalizando os itens de hoje.
+
+⏰ Funcionamento: 11:00 às 15:00
+🍽️ Volte em instantes ou fale com nossa equipe.`
 
 }else{
 
-resposta = "🍽️ *Buffet de hoje no Mercatto Delícia:*\n\n"
+resposta = `🍽️ *Buffet de hoje no Mercatto Delícia*
+━━━━━━━━━━━━━━━━━━
 
-lista.slice(0,20).forEach(p=>{
+`
+
+const itensFormatados = lista.slice(0,20).map(p => {
 
   let nome = p
     .toLowerCase()
@@ -1303,15 +1311,30 @@ lista.slice(0,20).forEach(p=>{
     .replace(/[\u0300-\u036f]/g,"")
     .replace(/\b\w/g, l => l.toUpperCase())
 
-  resposta += `• ${nome}\n`
+  nome = nome.replace("Alcega", "Acelga")
+
+  return nome
 })
 
-resposta += "\nTe esperamos por aqui 😋"
+for(let i = 0; i < itensFormatados.length; i += 2){
 
-/* ALERTA FINAL DO HORÁRIO */
+  const left = itensFormatados[i] || ""
+  const right = itensFormatados[i+1] || ""
+
+  if(right){
+    resposta += `• ${left.padEnd(18," ")} ${right}\n`
+  }else{
+    resposta += `• ${left}\n`
+  }
+}
+
+resposta += `
+━━━━━━━━━━━━━━━━━━
+😋 *Almoço completo esperando por você!*
+`
 
 if(hora === 14 && minuto >= 30){
-resposta += "\n⚠️ Estamos nos últimos minutos do buffet."
+resposta += "\n⚠️ *Últimos minutos do buffet!*"
 }
 
 }
