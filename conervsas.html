@@ -180,7 +180,7 @@ let numeroAtual = "";
 
 async function carregarConversas(){
 
-  const res = await fetch("/api/conversas");
+  const res = await fetch("/api/conversas?ts=" + Date.now());
   const lista = await res.json();
 
   const div = document.getElementById("lista");
@@ -212,7 +212,7 @@ async function abrirChat(numero){
 
   document.getElementById("header").innerText = numero;
 
-  const res = await fetch(`/api/conversas?numero=${numero}`);
+  const res = await fetch(`/api/conversas?numero=${numero}&ts=` + Date.now());
   const msgs = await res.json();
 
   const div = document.getElementById("msgs");
