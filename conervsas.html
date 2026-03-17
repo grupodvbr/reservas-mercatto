@@ -221,41 +221,50 @@ box.scrollTop = box.scrollHeight
 
 async function enviar(){
 
-const txt = document.getElementById("txt").value
+  const txt = document.getElementById("txt").value
 
-if(!txt || !atual) return
+  if(!txt || !atual) return
 
-log("Enviando...")
+  log("Enviando...")
 
-try{
+  try{
 
-await fetch("/api/send",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-telefone:atual,
-mensagem:txt
-})
-})
+    const res = await fetch("/api/send",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        telefone:atual,
+        mensagem:txt
+      })
+    })
 
-await db.from("conversas_whatsapp").insert({
-telefone:atual,
-mensagem:txt,
-role:"assistant"
-})
+    const data = await res.json()
 
-document.getElementById("txt").value=""
+    console.log(data)
 
-abrir()
+    if(!data.ok){
+      log("❌ " + data.erro)
+      return
+    }
 
-log("✅ Enviado")
+    log("✅ Enviado")
 
-}catch(e){
-log("❌ Erro")
-console.log(e)
-}
+    document.getElementById("txt").value=""
+
+    await db.from("conversas_whatsapp").insert({
+      telefone:atual,
+      mensagem:txt,
+      role:"assistant"
+    })
+
+    abrir()
+
+  }catch(e){
+    console.log(e)
+    log("❌ Erro no envio")
+  }
 
 }
 
