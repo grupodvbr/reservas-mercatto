@@ -1,220 +1,449 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Requisições Mercatto</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<title>Requisições Mercatto V4</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-:root{
---azul:#007bff;
---verde:#28a745;
---vermelho:#dc3545;
---cinza:#f1f1f1;
---ink:#222;
---bg:#fff;
+:root {
+  --azul: #007bff;
+  --vermelho: #dc3545;
+  --cinza: #f1f1f1;
+  --verde: #28a745;
+  --amarelo: #ffc107;
+  --roxo: #6f42c1;
+  --ink: #222;
+  --bg: #fff;
 }
-body.dark{
---cinza:#1e1e1e;
---ink:#eee;
---bg:#121212;
+body.dark {
+  --azul: #2196f3;
+  --vermelho: #ef5350;
+  --cinza: #1e1e1e;
+  --verde: #4caf50;
+  --amarelo: #ffca28;
+  --roxo: #9575cd;
+  --ink: #eee;
+  --bg: #121212;
 }
-body{margin:0;font-family:Arial;background:var(--cinza);color:var(--ink)}
-header{display:flex;justify-content:space-between;padding:10px;background:var(--bg);position:sticky;top:0}
-.resumo{display:flex;gap:10px;padding:10px;background:var(--bg);flex-wrap:wrap}
-.card-status{background:#eee;padding:8px;border-radius:8px;font-weight:bold}
-.filtros{display:flex;gap:8px;padding:10px;background:var(--bg);flex-wrap:wrap}
-.filtros input,.filtros select{padding:8px;border-radius:6px;border:1px solid #ccc}
-table{width:100%;border-collapse:collapse;background:var(--bg)}
-th,td{padding:8px;border:1px solid #ddd;text-align:center}
-thead{background:var(--azul);color:#fff}
-#overlay{
-position:fixed;top:0;left:0;right:0;bottom:0;
-background:rgba(255,255,255,0.9);
-display:none;align-items:center;justify-content:center;
-z-index:9999;flex-direction:column
+* { box-sizing: border-box; transition: background .3s, color .3s; }
+body {
+  margin: 0;
+  font-family: "Arial", sans-serif;
+  background: var(--cinza);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
 }
-.alerta{
-position:fixed;top:10px;right:10px;
-background:var(--verde);color:#fff;
-padding:10px;border-radius:6px;display:none
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--cinza);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+header img { height: 45px; }
+header h1 { font-size: 1.3em; margin: 0; }
+#temaBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  margin-left: 10px;
+}
+.resumo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  background: var(--bg);
+  padding: 10px;
+  border-bottom: 2px solid var(--cinza);
+}
+.card-status {
+  background: var(--cinza);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-status span {
+  background: var(--bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  min-width: 32px;
+  text-align: center;
+}
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg);
+  position: sticky;
+  top: 70px;
+  z-index: 10;
+}
+.filtros input, .filtros select {
+  padding: 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  flex: 1 1 140px;
+  min-width: 120px;
+  background: var(--bg);
+  color: var(--ink);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--bg);
+}
+thead {
+  background: var(--azul);
+  color: #fff;
+  position: sticky;
+  top: 130px;
+  z-index: 5;
+}
+th, td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  word-break: break-word;
+}
+tr td[colspan="8"] {
+  background: #e3eaf3;
+  font-weight: bold;
+  text-align: left;
+  font-size: 13px;
+  border-top: 2px solid #ccc;
+  padding: 8px;
+}
+body.dark tr td[colspan="8"] { background: #222; }
+select.status {
+  padding: 4px;
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.alerta {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: var(--verde);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: none;
+  z-index: 9999;
+  font-size: 14px;
+}
+#overlay-carregando {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+body.dark #overlay-carregando { background: rgba(0,0,0,0.8); color: #fff; }
+#overlay-carregando img { width: 100px; margin-bottom: 15px; }
+#menu-solicitantes, #relatorio {
+  position: fixed;
+  right: 20px;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+#menu-solicitantes { bottom: 70px; background: var(--azul); color: #fff; }
+#relatorio { bottom: 20px; background: var(--verde); color: #fff; }
+#lista-solicitantes {
+  position: fixed;
+  bottom: 120px;
+  right: 20px;
+  background: var(--bg);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  display: none;
+  z-index: 1001;
+  padding: 10px;
+  font-size: 14px;
+  width: 220px;
+}
+#lista-solicitantes div {
+  padding: 6px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+#lista-solicitantes div:hover { background: #f0f0f0; }
+@media(max-width:900px){
+  header h1{font-size:1.1em}
+  .filtros input,.filtros select{flex:1 1 45%}
+  table{font-size:12px}
 }
 </style>
 </head>
-
 <body>
-
 <header>
-<h2>REQUISIÇÕES</h2>
-<button onclick="carregar()">🔄</button>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" alt="Logo">
+    <h1>REQUISIÇÕES Mercatto</h1>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="temaBtn" title="Alternar tema">🌙</button>
+    <button onclick="carregarRequisicoes()" style="background:var(--verde);color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:13px;">🔄 Atualizar</button>
+  </div>
 </header>
 
 <div class="resumo">
-<div>PENDENTE: <span id="pend">0</span></div>
-<div>CARRINHO: <span id="carrinho">0</span></div>
-<div>COMPRADO: <span id="comp">0</span></div>
-<div>NEGADO: <span id="neg">0</span></div>
-<div>ENTREGUE: <span id="ent">0</span></div>
+  <div class="card-status" style="background:#f9f9f9">🕓 PENDENTE <span id="countPendente">0</span></div>
+  <div class="card-status" style="background:#d1ecf1">🛒 CARRINHO <span id="countCarrinho">0</span></div>
+  <div class="card-status" style="background:#fff3cd">💰 COMPRADO <span id="countComprado">0</span></div>
+  <div class="card-status" style="background:#f8d7da">❌ NEGADO <span id="countNegado">0</span></div>
+  <div class="card-status" style="background:#d4edda">✅ ENTREGUE <span id="countEntregue">0</span></div>
+  <div class="card-status" style="background:#ede7f6">🚫 SEM ESTOQUE <span id="countSemEstoque">0</span></div>
+</div>
+
+<div id="overlay-carregando">
+  <img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" alt="Carregando">
+  <p>Carregando dados...</p>
 </div>
 
 <div class="filtros">
-<input id="busca" placeholder="Buscar">
-<select id="status">
-<option value="TODOS">TODOS</option>
-<option>PENDENTE</option>
-<option>COMPRADO</option>
-<option>NO CARRINHO</option>
-<option>NEGADO</option>
-<option>ENTREGUE</option>
-</select>
+  <input type="date" id="dataInicio" onchange="filtrarRequisicoes()">
+  <input type="date" id="dataFim" onchange="filtrarRequisicoes()">
+  <input type="text" id="filtroItem" placeholder="Item ou Observação" oninput="filtrarRequisicoes()">
+  <select id="filtroSolicitante" onchange="filtrarRequisicoes()"><option value="">Todos os Solicitantes</option></select>
+  <select id="filtroStatus" onchange="filtrarRequisicoes()">
+    <option value="PENDENTE" selected>PENDENTE</option>
+    <option value="TODOS">TODOS</option>
+    <option value="COMPRADO">COMPRADO</option>
+    <option value="NO CARRINHO">NO CARRINHO</option>
+    <option value="NEGADO">NEGADO</option>
+    <option value="ENTREGUE">ENTREGUE</option>
+    <option value="SEM ESTOQUE">SEM ESTOQUE</option>
+  </select>
+  <select id="filtroSetor" onchange="filtrarRequisicoes()"><option value="">Todos os Setores</option></select>
+  <select id="filtroExibicao" onchange="filtrarRequisicoes()">
+    <option value="setor">Exibir por Setor</option>
+    <option value="solicitante">Exibir por Solicitante</option>
+  </select>
+  <button onclick="liquidarMassa('ENTREGUE')">📦 Entregue</button>
+  <button onclick="window.location.href='index.cotacao.html'">💲 Cotação</button>
 </div>
 
 <table>
-<thead>
-<tr>
-<th>Data</th>
-<th>Item</th>
-<th>Qtd</th>
-<th>Setor</th>
-<th>Solicitante</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="tabela"></tbody>
+  <thead>
+    <tr>
+      <th>Data e Hora</th><th>Item</th><th>Qtd</th><th>Unid.</th><th>Setor</th><th>Solicitante</th><th>Obs</th><th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="tabelaRequisicoes"></tbody>
 </table>
 
-<div id="overlay">
-<img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" width="80">
-<p>Carregando...</p>
-</div>
-
-<div class="alerta" id="alerta"></div>
+<button id="menu-solicitantes" onclick="toggleSolicitantes()">👤 Solicitantes</button>
+<div id="lista-solicitantes"></div>
+<button id="relatorio" onclick="gerarRelatorio()">📤 Relatório</button>
 
 <script>
 const sb = supabase.createClient(
-"https://mybsriouiwqsdufujbsc.supabase.co",
-"sb_publishable_AUyBEIVCAMUoXwDKUmlqSw_v8EY8rVN"
+ "https://mybsriouiwqsdufujbsc.supabase.co",
+ "sb_publishable_AUyBEIVCAMUoXwDKUmlqSw_v8EY8rVN"
 );
 
-let dados=[];
+let dadosRequisicoes=[];
 
-/* ================= ALERTA ================= */
-function alerta(msg){
-const a=document.getElementById("alerta");
-a.innerText=msg;
-a.style.display="block";
-setTimeout(()=>a.style.display="none",2000);
+/* ================= DATA ================= */
+function formatarDataHora(valor){
+ if(!valor) return "";
+ const d=new Date(valor);
+ return d.toLocaleString("pt-BR");
+}
+
+/* ================= TEMA ================= */
+temaBtn.onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.setItem("tema",document.body.classList.contains("dark")?"dark":"light");
+ temaBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+};
+
+if(localStorage.getItem("tema")==="dark"){
+ document.body.classList.add("dark");
+ temaBtn.textContent="☀️";
 }
 
 /* ================= CARREGAR ================= */
-async function carregar(){
+async function carregarRequisicoes(){
 
-document.getElementById("overlay").style.display="flex";
-
-const {data,error}=await sb
+document.getElementById("overlay-carregando").style.display = "flex";
+  const { data, error } = await sb
 .from("requisicoes")
 .select("*")
-.order("created_at",{ascending:false})
-.limit(20);
+.order("created_at",{ascending:false});
 
 if(error){
-console.error(error);
-alerta("Erro ao carregar");
-return;
+ console.error(error);
+ alert("Erro ao carregar");
+ return;
 }
 
-dados=(data||[]);
+dadosRequisicoes = data.map(r=>({
+ index: r.id,
+ dataHora: formatarDataHora(r.created_at),
+ item: r.produto,
+ unidade: r.unidade,
+ qtd: r.quantidade,
+ setor: r.setor,
+ solicitante: r.usuario,
+ observacoes: r.observacoes,
+ status: r.status || "PENDENTE"
+}));
 
-render();
-document.getElementById("overlay").style.display="none";
+preencherFiltros();
+filtrarRequisicoes();
+
+document.getElementById("overlay-carregando").style.display = "none";}
+
+/* ================= FILTROS ================= */
+function preencherFiltros(){
+ const setores=[...new Set(dadosRequisicoes.map(r=>r.setor).filter(Boolean))];
+ filtroSetor.innerHTML='<option value="">Todos</option>'+setores.map(s=>`<option>${s}</option>`);
+
+ const solicitantes=[...new Set(dadosRequisicoes.map(r=>r.solicitante).filter(Boolean))];
+ filtroSolicitante.innerHTML='<option value="">Todos</option>'+solicitantes.map(s=>`<option>${s}</option>`);
+
+ lista-solicitantes.innerHTML=solicitantes.map(n=>`<div onclick="filtrarPorSolicitante('${n}')">${n}</div>`);
 }
 
-/* ================= RENDER ================= */
-function render(){
+/* ================= FILTRAR ================= */
+function filtrarRequisicoes(){
 
-const busca=document.getElementById("busca").value.toLowerCase();
-const statusFiltro=document.getElementById("status").value;
+const fs=filtroStatus.value;
+const termo=filtroItem.value.toLowerCase();
 
-let lista=dados.filter(i=>{
-const st=i.status||"PENDENTE";
-if(statusFiltro!=="TODOS" && st!==statusFiltro) return false;
-if(busca && !i.produto.toLowerCase().includes(busca)) return false;
-return true;
+const lista=dadosRequisicoes.filter(i=>{
+ if(fs!=="TODOS" && i.status!==fs) return false;
+ if(termo && !i.item.toLowerCase().includes(termo)) return false;
+ return true;
 });
 
-const tabela=document.getElementById("tabela");
-tabela.innerHTML="";
+renderizarTabela(lista);
+atualizarResumo();
+}
+
+/* ================= TABELA ================= */
+function renderizarTabela(lista){
+
+tabelaRequisicoes.innerHTML="";
 
 lista.forEach(i=>{
-tabela.innerHTML+=`
-<tr>
-<td>${new Date(i.created_at).toLocaleString()}</td>
-<td>${i.produto}</td>
-<td>${parseInt(i.quantidade)}</td>
-<td>${i.setor}</td>
-<td>${i.usuario}</td>
-<td>
-<select onchange="update('${i.id}',this.value)">
-<option ${i.status==="PENDENTE"?"selected":""}>PENDENTE</option>
-<option ${i.status==="COMPRADO"?"selected":""}>COMPRADO</option>
-<option ${i.status==="NO CARRINHO"?"selected":""}>NO CARRINHO</option>
-<option ${i.status==="NEGADO"?"selected":""}>NEGADO</option>
-<option ${i.status==="ENTREGUE"?"selected":""}>ENTREGUE</option>
-</select>
-</td>
-</tr>
-`;
+ tabelaRequisicoes.innerHTML+=`
+ <tr>
+ <td>${i.dataHora}</td>
+ <td>${i.item}</td>
+ <td>${i.qtd}</td>
+ <td>${i.unidade}</td>
+ <td>${i.setor}</td>
+ <td>${i.solicitante}</td>
+ <td>${i.observacoes}</td>
+ <td>
+ <select onchange="atualizarStatus('${i.index}',this.value)">
+ <option ${i.status==="PENDENTE"?"selected":""}>PENDENTE</option>
+ <option ${i.status==="COMPRADO"?"selected":""}>COMPRADO</option>
+ <option ${i.status==="NO CARRINHO"?"selected":""}>NO CARRINHO</option>
+ <option ${i.status==="NEGADO"?"selected":""}>NEGADO</option>
+ <option ${i.status==="ENTREGUE"?"selected":""}>ENTREGUE</option>
+ <option ${i.status==="SEM ESTOQUE"?"selected":""}>SEM ESTOQUE</option>
+ </select>
+ </td>
+ </tr>`;
 });
-
-contar();
 }
 
-/* ================= UPDATE ================= */
-async function update(id,status){
+/* ================= STATUS ================= */
+async function atualizarStatus(id,status){
 
-alerta("Atualizando...");
+mostrarAlerta("Atualizando...");
 
-const {error}=await sb
+const { error } = await sb
 .from("requisicoes")
-.update({status})
-.eq("id",id);
+.update({ status })
+.eq("id", id);
 
 if(error){
-alerta("Erro");
-return;
+ console.error(error);
+ mostrarAlerta("Erro!");
+ return;
 }
 
-const item=dados.find(i=>i.id===id);
+const item=dadosRequisicoes.find(r=>r.index===id);
 if(item) item.status=status;
 
-render();
-alerta("Atualizado");
+filtrarRequisicoes();
+mostrarAlerta("Atualizado!");
 }
 
-/* ================= CONTADORES ================= */
-function contar(){
-let c={PENDENTE:0,COMPRADO:0,"NO CARRINHO":0,NEGADO:0,ENTREGUE:0};
+/* ================= MASSA ================= */
+async function liquidarMassa(status){
 
-dados.forEach(i=>{
-const s=i.status||"PENDENTE";
-if(c[s]!=null) c[s]++;
+if(!confirm("Aplicar para todos?")) return;
+
+for(const i of dadosRequisicoes){
+ await sb.from("requisicoes")
+ .update({ status })
+ .eq("id", i.index);
+
+ i.status=status;
+}
+
+filtrarRequisicoes();
+}
+
+/* ================= RESUMO ================= */
+function atualizarResumo(){
+ const c={PENDENTE:0,COMPRADO:0,NEGADO:0,ENTREGUE:0,"NO CARRINHO":0,"SEM ESTOQUE":0};
+dadosRequisicoes.forEach(r=>{
+ const s = r.status || "PENDENTE";
+ if(c[s] != null) c[s]++;
 });
-
-pend.innerText=c.PENDENTE;
-comp.innerText=c.COMPRADO;
-carrinho.innerText=c["NO CARRINHO"];
-neg.innerText=c.NEGADO;
-ent.innerText=c.ENTREGUE;
+  
+  countPendente.textContent=c.PENDENTE;
+ countComprado.textContent=c.COMPRADO;
+ countNegado.textContent=c.NEGADO;
+ countEntregue.textContent=c.ENTREGUE;
+ countCarrinho.textContent=c["NO CARRINHO"];
+ countSemEstoque.textContent=c["SEM ESTOQUE"];
 }
 
-/* ================= EVENTOS ================= */
-document.getElementById("busca").oninput=render;
-document.getElementById("status").onchange=render;
+/* ================= ALERTA ================= */
+function mostrarAlerta(m){
+ alertaStatus.textContent=m;
+ alertaStatus.style.display="block";
+ setTimeout(()=>alertaStatus.style.display="none",2000);
+}
 
-window.onload=carregar;
+/* ================= INIT ================= */
+window.onload=carregarRequisicoes;
 </script>
-
 </body>
 </html>
