@@ -475,96 +475,11 @@ const textoNormalizado = normalizar(texto)
 let nomeDetectado = null
 let querAtualizarNome = false
 
-/* 🔥 INTENÇÃO DE ATUALIZAÇÃO */
+/* 🔥 INTENÇÃO DE ATUALIZAÇÃO (CORRIGIDA) */
 if(
-mensagem.match(/(meu nome agora é|corrigir meu nome|nome correto é|pode atualizar meu nome)/i)
+mensagem.match(/(meu nome|me chamo|atualiza(r)? meu nome|nome correto)/i)
 ){
   querAtualizarNome = true
-}
-
-/* 🔥 DETECTAR NOME */
-const regexNome = mensagem.match(
-/(?:meu nome completo é|meu nome é|me chamo|sou|aqui é|pode chamar de)\s+([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,2})/i
-)
-
-const regexAqui = mensagem.match(
-/^([A-Za-zÀ-ÿ]+)\s+aqu[ií]/i
-)
-
-const regexSimples = mensagem.match(
-/^([A-Za-zÀ-ÿ]{3,})$/
-)
-
-/* 🔥 PRIORIDADE */
-if(regexNome){
-  nomeDetectado = regexNome[1]
-} 
-else if(regexAqui){
-  nomeDetectado = regexAqui[1]
-}
-else if(regexSimples){
-  nomeDetectado = regexSimples[1]
-}
-
-/* ================= VALIDAÇÃO FORTE ================= */
-
-function nomeValido(nome){
-
-if(!nome) return false
-
-const proibidos = [
-"ok","sim","nao","não","oi","ola","menu","cardapio","quero",
-"reserva","mesa","pedido","bom","boa","tarde","noite"
-]
-
-const nomeLower = nome.toLowerCase()
-
-if(proibidos.includes(nomeLower)) return false
-
-if(nome.length < 3) return false
-
-if(nome.match(/[0-9]/)) return false
-
-return true
-}
-
-/* ================= DECISÃO ================= */
-
-if(nomeDetectado && nomeValido(nomeDetectado)){
-
-nomeDetectado = nomeDetectado
-.split(" ")
-.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
-.join(" ")
-
-console.log("Nome detectado:", nomeDetectado)
-
-/* 🔥 REGRA DE ATUALIZAÇÃO */
-const deveAtualizar =
-!nomeMemoria || // não tem nome ainda
-querAtualizarNome || // cliente pediu
-nomeDetectado !== nomeMemoria // nome diferente
-
-if(deveAtualizar){
-
-console.log("ATUALIZANDO NOME NO BANCO")
-
-await supabase
-.from("memoria_clientes")
-.upsert({
-telefone:cliente,
-nome:nomeDetectado,
-ultima_interacao:new Date().toISOString()
-})
-
-nomeMemoria = nomeDetectado
-
-}else{
-
-console.log("NOME IGNORADO (já existe e não pediu alteração)")
-
-}
-
 }
 
 /* ================= PRIORIDADE: ATUALIZAR NOME ================= */
@@ -576,16 +491,16 @@ if(nomeDetectado && nomeValido(nomeDetectado)){
   .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
   .join(" ")
 
-  console.log("Nome detectado:", nomeDetectado)
+  console.log("✅ Nome detectado:", nomeDetectado)
 
+  /* 🔥 NÃO DEPENDE MAIS DE INTENÇÃO */
   const deveAtualizar =
     !nomeMemoria ||
-    querAtualizarNome ||
     nomeDetectado !== nomeMemoria
 
   if(deveAtualizar){
 
-    console.log("✅ SALVANDO NOME NO SUPABASE")
+    console.log("🔥 ATUALIZANDO NOME NO SUPABASE")
 
     const { data, error } = await supabase
     .from("memoria_clientes")
@@ -596,14 +511,13 @@ if(nomeDetectado && nomeValido(nomeDetectado)){
     },{ onConflict:"telefone" })
 
     if(error){
-      console.log("❌ ERRO AO SALVAR:", error)
+      console.log("❌ ERRO:", error)
     }else{
-      console.log("🔥 SALVO COM SUCESSO:", data)
+      console.log("✅ SALVO:", data)
     }
 
     nomeMemoria = nomeDetectado
 
-    // 🔥 RESPONDE E PARA AQUI
     await fetch(url,{
       method:"POST",
       headers:{
@@ -621,8 +535,6 @@ if(nomeDetectado && nomeValido(nomeDetectado)){
     return res.status(200).end()
   }
 }
-
-
 
 
   
