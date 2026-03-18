@@ -162,7 +162,7 @@ display:none;
 <div id="listaProdutos"></div>
 
 <label>Quantidade</label>
-<input id="quantidade" type="number" min="1">
+<input id="quantidade" type="number" min="1" step="1">
 
 <label>Unidade</label>
 <div class="unidades">
@@ -207,38 +207,31 @@ let unidade="UN";
 let usuarioAtual=null;
 let dadosUsuario=null;
 
-/* ===== LOGIN ===== */
+/* LOGIN */
 async function login(){
 
 const user = usuario.value.toUpperCase();
 
-const { data } = await sb
+const { data, error } = await sb
 .from("usuarios")
 .select("*")
-.eq("usuario", user)
+.eq("nome", user)
 .eq("senha", senha.value)
-.eq("ativo", true)
 .single();
 
-if(!data){
+if(error || !data){
 alert("Login inválido");
 return;
 }
 
-salvarSessao(data);
+localStorage.setItem("user_data", JSON.stringify(data));
 init();
 }
 
-/* ===== SALVAR SESSÃO ===== */
-function salvarSessao(user){
-localStorage.setItem("user_data", JSON.stringify(user));
-}
-
-/* ===== VALIDAR SESSÃO ===== */
+/* VALIDAR SESSÃO */
 async function validarSessao(){
 
 const saved = localStorage.getItem("user_data");
-
 if(!saved) return false;
 
 const user = JSON.parse(saved);
@@ -247,7 +240,6 @@ const { data } = await sb
 .from("usuarios")
 .select("*")
 .eq("id", user.id)
-.eq("ativo", true)
 .single();
 
 if(!data || data.senha !== user.senha){
@@ -259,7 +251,7 @@ dadosUsuario = data;
 return true;
 }
 
-/* ===== INIT ===== */
+/* INIT */
 async function init(){
 
 loginArea.classList.add("hidden");
@@ -271,33 +263,33 @@ usuarioAtual = saved.nome;
 dadosUsuario = saved;
 
 solicitante.value = saved.nome;
-
-/* trava setor automático */
 setor.innerHTML = `<option>${saved.setor}</option>`;
+
+setUnidade("UN");
 
 carregarHistorico();
 }
 
-/* ===== AUTO LOGIN ===== */
+/* AUTO LOGIN */
 window.addEventListener("DOMContentLoaded", async ()=>{
 const ok = await validarSessao();
 if(ok) init();
 });
 
-/* ===== LOGOUT ===== */
+/* LOGOUT */
 function logout(){
 localStorage.removeItem("user_data");
 location.reload();
 }
 
-/* ===== UNIDADE ===== */
+/* UNIDADE */
 function setUnidade(u){
 unidade=u;
 document.querySelectorAll(".unidades button").forEach(b=>b.classList.remove("active"));
 document.getElementById("u"+u).classList.add("active");
 }
 
-/* ===== BUSCA ===== */
+/* BUSCA */
 produto.onkeyup=async()=>{
 
 const q=produto.value.toUpperCase();
@@ -326,7 +318,7 @@ produto.value=nome;
 listaProdutos.innerHTML="";
 }
 
-/* ===== ENVIAR ===== */
+/* ENVIAR */
 async function enviar(){
 
 if(!produto.value || !quantidade.value){
@@ -377,7 +369,7 @@ limparCampos();
 carregarHistorico();
 }
 
-/* ===== HISTÓRICO ===== */
+/* HISTÓRICO */
 async function carregarHistorico(){
 
 const { data } = await sb
@@ -399,7 +391,7 @@ tabela.innerHTML+=`
 });
 }
 
-/* ===== LIMPAR ===== */
+/* LIMPAR */
 function limparCampos(){
 produto.value="";
 quantidade.value="";
