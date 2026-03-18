@@ -206,38 +206,25 @@ const promptAgente = (prompts || [])
 
 const agora = new Date()
 
-const formatter = new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Bahia",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit"
-})
+const hoje = new Date(
+  agora.toLocaleString("en-US",{timeZone:"America/Bahia"})
+)
 
-const parts = formatter.formatToParts(agora)
-
-const get = type => parts.find(p => p.type === type)?.value
-
-const hojeISO = `${get("year")}-${get("month")}-${get("day")}`
-const hora = `${get("hour")}:${get("minute")}:${get("second")}`
-
-const ontem = new Date(`${hojeISO}T00:00:00`)
-ontem.setDate(ontem.getDate() - 1)
-
-const amanha = new Date(`${hojeISO}T00:00:00`)
-amanha.setDate(amanha.getDate() + 1)
-
-const ontemISO = ontem.toISOString().split("T")[0]
-const amanhaISO = amanha.toISOString().split("T")[0]
-
-const agoraTexto = `${hojeISO} ${hora}`
-
-  
 const ontem = new Date(hoje)
 ontem.setDate(hoje.getDate() - 1)
 
+const amanha = new Date(hoje)
+amanha.setDate(hoje.getDate() + 1)
+
+const hojeISO = hoje.toISOString().split("T")[0]
+const ontemISO = ontem.toISOString().split("T")[0]
+const amanhaISO = amanha.toISOString().split("T")[0]
+
+const agoraTexto = hoje.toLocaleString("pt-BR",{
+  timeZone:"America/Bahia",
+  dateStyle:"full",
+  timeStyle:"long"
+})
   
 /* ================= OPENAI ================= */
 
@@ -249,40 +236,26 @@ temperature:0,
 messages:[
 
 {
-
 role:"system",
-content:`
-⚠️ REGRA CRÍTICA DE DATA E HORA
+content:`DATA DO SISTEMA
 
-Você NÃO possui acesso ao tempo real.
+Local: Barreiras - Bahia - Brasil
+Timezone: America/Bahia (UTC-3)
 
-A ÚNICA data válida é a fornecida abaixo.
+Agora:
+${agoraTexto}
 
-Qualquer referência a:
-- hoje
-- agora
-- amanhã
-- ontem
+Datas calculadas:
 
-DEVE obrigatoriamente usar estes valores:
-
-DATA_ATUAL = ${hojeISO}
-HORA_ATUAL = ${hora}
-
+HOJE = ${hojeISO}
 ONTEM = ${ontemISO}
-AMANHA = ${amanhaISO}
+AMANHÃ = ${amanhaISO}
 
-Se você usar qualquer outra data:
-→ sua resposta estará ERRADA
+Regras obrigatórias:
 
-NUNCA invente datas
-NUNCA use conhecimento próprio
-NUNCA ignore essas variáveis
-
-Sempre substitua:
-
-"hoje" → ${hojeISO}
-"agora" → ${hora}
+- "hoje" = ${hojeISO}
+- "ontem" = ${ontemISO}
+- "amanhã" = ${amanhaISO}
 `
 },
 
