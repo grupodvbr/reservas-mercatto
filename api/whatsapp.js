@@ -569,23 +569,41 @@ console.log("NOME IGNORADO (já existe e não pediu alteração)")
 
 /* ================= PRIORIDADE: ATUALIZAR NOME ================= */
 
-if(querAtualizarNome || nomeDetectado){
-  const nomeFinal = nomeDetectado || nomeMemoria
+if(nomeDetectado && nomeValido(nomeDetectado)){
 
-  if(nomeFinal){
+  nomeDetectado = nomeDetectado
+  .split(" ")
+  .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+  .join(" ")
 
-    console.log("INTENÇÃO: ATUALIZAR NOME DO CLIENTE")
+  console.log("Nome detectado:", nomeDetectado)
 
-    await supabase
+  const deveAtualizar =
+    !nomeMemoria ||
+    querAtualizarNome ||
+    nomeDetectado !== nomeMemoria
+
+  if(deveAtualizar){
+
+    console.log("✅ SALVANDO NOME NO SUPABASE")
+
+    const { data, error } = await supabase
     .from("memoria_clientes")
     .upsert({
       telefone:cliente,
-      nome:nomeFinal,
+      nome:nomeDetectado,
       ultima_interacao:new Date().toISOString()
-    })
+    },{ onConflict:"telefone" })
 
-    const respostaNome = `Perfeito! Atualizei seu nome para ${nomeFinal} 😊`
+    if(error){
+      console.log("❌ ERRO AO SALVAR:", error)
+    }else{
+      console.log("🔥 SALVO COM SUCESSO:", data)
+    }
 
+    nomeMemoria = nomeDetectado
+
+    // 🔥 RESPONDE E PARA AQUI
     await fetch(url,{
       method:"POST",
       headers:{
@@ -596,14 +614,13 @@ if(querAtualizarNome || nomeDetectado){
         messaging_product:"whatsapp",
         to:cliente,
         type:"text",
-        text:{ body: respostaNome }
+        text:{ body:`Perfeito! Atualizei seu nome para ${nomeDetectado} 😊` }
       })
     })
 
     return res.status(200).end()
   }
 }
-
 
 
 
