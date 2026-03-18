@@ -484,8 +484,8 @@ background:#020617;
 
 <textarea id="msgManual" placeholder="Digite a mensagem"></textarea>
 
-<button onclick="enviarManual()">
-Enviar
+<button onclick="enviarTemplate()">
+Template
 </button>
 
 <button onclick="falarComAgente()" style="background:#2563eb">
@@ -825,18 +825,10 @@ carregarClientes()
 }
 
 
-async function enviarManual(){
+async function enviarTemplate(){
 
 if(!clienteSelecionado){
 alert("Selecione um cliente")
-return
-}
-
-const textarea = document.getElementById("msgManual")
-const msg = textarea.value.trim()
-
-if(!msg){
-alert("Digite uma mensagem")
 return
 }
 
@@ -844,14 +836,24 @@ const telefone = clienteSelecionado.replace(/\D/g,"").trim()
 
 try {
 
-const res = await fetch("/api/send", {
+const res = await fetch("/api/send-template", {
   method:"POST",
   headers:{
     "Content-Type":"application/json"
   },
   body:JSON.stringify({
     telefone,
-    mensagem:msg
+    tipo:"template",
+    template:{
+      nome:"confirmao_de_reserva",
+      idioma:"en_US",
+     parametros:[
+  nomes[telefone] || "Cliente",
+  "14-04-2026",
+  "17:00",
+  "5"
+]
+    }
   })
 })
 
@@ -862,18 +864,8 @@ if(!res.ok){
   return
 }
 
-/* ✅ SALVA NO BANCO (IMPORTANTE) */
+alert("Template enviado com sucesso 🚀")
 
-await db.from("conversas_whatsapp").insert({
-  telefone: telefone,
-  mensagem: msg,
-  role: "assistant"
-})
-
-textarea.value = ""
-
-/* atualiza chat */
-abrirChatIframe(telefone)
 } catch (err){
 alert("Erro ao enviar: " + err.message)
 }
