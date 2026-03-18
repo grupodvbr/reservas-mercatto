@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
 <title>Requisições Mercatto V4</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --azul: #007bff;
@@ -265,114 +266,182 @@ body.dark #overlay-carregando { background: rgba(0,0,0,0.8); color: #fff; }
 <button id="relatorio" onclick="gerarRelatorio()">📤 Relatório</button>
 
 <script>
-const endpoint="https://script.google.com/macros/s/AKfycbxIsX_rF2zV0OuVD5TKawbceywaQVajShswms-MZ39hQeNiWa3buMN2xV7j_CsE2VoRhQ/exec";
+const sb = supabase.createClient(
+ "https://mybsriouiwqsdufujbsc.supabase.co",
+ "sb_publishable_AUyBEIVCAMUoXwDKUmlqSw_v8EY8rVN"
+);
+
 let dadosRequisicoes=[];
 
+/* ================= DATA ================= */
 function formatarDataHora(valor){
-  if(!valor) return "";
-  try{
-    const d=new Date(valor);
-    const dd=String(d.getDate()).padStart(2,"0");
-    const mm=String(d.getMonth()+1).padStart(2,"0");
-    const yyyy=d.getFullYear();
-    const hh=String(d.getHours()).padStart(2,"0");
-    const min=String(d.getMinutes()).padStart(2,"0");
-    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-  }catch{return valor;}
+ if(!valor) return "";
+ const d=new Date(valor);
+ return d.toLocaleString("pt-BR");
 }
 
-document.getElementById("temaBtn").onclick=()=>{document.body.classList.toggle("dark");
-localStorage.setItem("tema",document.body.classList.contains("dark")?"dark":"light");
-document.getElementById("temaBtn").textContent=document.body.classList.contains("dark")?"☀️":"🌙";};
-if(localStorage.getItem("tema")==="dark"){document.body.classList.add("dark");document.getElementById("temaBtn").textContent="☀️";}
+/* ================= TEMA ================= */
+temaBtn.onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.setItem("tema",document.body.classList.contains("dark")?"dark":"light");
+ temaBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+};
 
+if(localStorage.getItem("tema")==="dark"){
+ document.body.classList.add("dark");
+ temaBtn.textContent="☀️";
+}
+
+/* ================= CARREGAR ================= */
 async function carregarRequisicoes(){
- document.getElementById("overlay-carregando").style.display="flex";
- const res=await fetch(`${endpoint}?acao=ler`);
- const dados=await res.json();
- dadosRequisicoes=dados.map((l,i)=>({
-   index:i+2,
-   dataHora:formatarDataHora(l[0]),
-   item:l[1],
-   unidade:l[2],
-   qtd:l[3],
-   setor:l[4],
-   solicitante:l[5],
-   observacoes:l[6],
-   status:l[7]
- }));
- preencherFiltros();filtrarRequisicoes();
- document.getElementById("overlay-carregando").style.display="none";
+
+overlay-carregando.style.display="flex";
+
+const { data, error } = await sb
+.from("requisicoes")
+.select("*")
+.order("created_at",{ascending:false});
+
+if(error){
+ console.error(error);
+ alert("Erro ao carregar");
+ return;
 }
+
+dadosRequisicoes = data.map(r=>({
+ index: r.id,
+ dataHora: formatarDataHora(r.created_at),
+ item: r.produto,
+ unidade: r.unidade,
+ qtd: r.quantidade,
+ setor: r.setor,
+ solicitante: r.usuario,
+ observacoes: r.observacoes,
+ status: r.status || "PENDENTE"
+}));
+
+preencherFiltros();
+filtrarRequisicoes();
+
+overlay-carregando.style.display="none";
+}
+
+/* ================= FILTROS ================= */
 function preencherFiltros(){
  const setores=[...new Set(dadosRequisicoes.map(r=>r.setor).filter(Boolean))];
- document.getElementById("filtroSetor").innerHTML='<option value="">Todos os Setores</option>'+setores.map(s=>`<option>${s}</option>`).join('');
+ filtroSetor.innerHTML='<option value="">Todos</option>'+setores.map(s=>`<option>${s}</option>`);
+
  const solicitantes=[...new Set(dadosRequisicoes.map(r=>r.solicitante).filter(Boolean))];
- document.getElementById("filtroSolicitante").innerHTML='<option value="">Todos os Solicitantes</option>'+solicitantes.map(s=>`<option>${s}</option>`).join('');
- document.getElementById("lista-solicitantes").innerHTML=solicitantes.map(n=>`<div onclick="filtrarPorSolicitante('${n}')">${n}</div>`).join('');
+ filtroSolicitante.innerHTML='<option value="">Todos</option>'+solicitantes.map(s=>`<option>${s}</option>`);
+
+ lista-solicitantes.innerHTML=solicitantes.map(n=>`<div onclick="filtrarPorSolicitante('${n}')">${n}</div>`);
 }
-function parseData(d){if(!d)return null;const p=d.includes('/')?d.split('/'):[...d.split('-')];if(p.length===3){const[a,b,c]=p.map(x=>parseInt(x));return new Date(d.includes('/')?`${c}-${b}-${a}`:`${a}-${b}-${c}`);}return null;}
+
+/* ================= FILTRAR ================= */
 function filtrarRequisicoes(){
- const fs=document.getElementById('filtroStatus').value.toUpperCase(),fi=document.getElementById('filtroItem').value.toLowerCase(),
- fsol=document.getElementById('filtroSolicitante').value,fset=document.getElementById('filtroSetor').value,
- din=parseData(document.getElementById('dataInicio').value),df=parseData(document.getElementById('dataFim').value),
- modo=document.getElementById('filtroExibicao').value,validos=['COMPRADO','NO CARRINHO','NEGADO','ENTREGUE','SEM ESTOQUE'];
- const filtrados=dadosRequisicoes.filter(i=>{
-  const st=(i.status||'').toUpperCase().trim();const pendente=!validos.includes(st);
-  if(fs!=='TODOS'){if(fs==='PENDENTE'&&!pendente)return false;if(fs!=='PENDENTE'&&st!==fs)return false;}
-  if(fi&&!i.item.toLowerCase().includes(fi))return false;if(fsol&&i.solicitante!==fsol)return false;if(fset&&i.setor!==fset)return false;
-  const dataItem=parseData((i.dataHora||'').split(' ')[0]);
-  if(dataItem&&(din||df)){if(din&&dataItem<din)return false;if(df&&dataItem>df)return false;}
-  return true;
- });
- renderizarTabela(filtrados,modo);atualizarResumo();
+
+const fs=filtroStatus.value;
+const termo=filtroItem.value.toLowerCase();
+
+const lista=dadosRequisicoes.filter(i=>{
+ if(fs!=="TODOS" && i.status!==fs) return false;
+ if(termo && !i.item.toLowerCase().includes(termo)) return false;
+ return true;
+});
+
+renderizarTabela(lista);
+atualizarResumo();
 }
-function renderizarTabela(lista,modo='setor'){
- const t=document.getElementById('tabelaRequisicoes');t.innerHTML='';
- const g={};lista.forEach(i=>{const c=modo==='setor'?i.setor:i.solicitante||'Sem Nome';if(!g[c])g[c]=[];g[c].push(i);});
- for(const k in g){
-  t.insertAdjacentHTML('beforeend',`<tr><td colspan="8">${modo==='setor'?'Setor':'Solicitante'}: ${k}</td></tr>`);
-  g[k].forEach(i=>{
-   const st=(i.status||'').toUpperCase().trim();
-   const pendente=!['COMPRADO','NO CARRINHO','NEGADO','ENTREGUE','SEM ESTOQUE'].includes(st);
-   t.insertAdjacentHTML('beforeend',`
-    <tr>
-     <td>${i.dataHora}</td><td>${i.item}</td><td>${i.qtd}</td><td>${i.unidade}</td>
-     <td>${i.setor}</td><td>${i.solicitante}</td><td>${i.observacoes}</td>
-     <td><select class="status" onchange="atualizarStatus(${i.index},this.value)">
-       <option value="PENDENTE" ${st==='PENDENTE'||pendente?'selected':''}>PENDENTE</option>
-       <option value="COMPRADO" ${st==='COMPRADO'?'selected':''}>COMPRADO</option>
-       <option value="NO CARRINHO" ${st==='NO CARRINHO'?'selected':''}>NO CARRINHO</option>
-       <option value="NEGADO" ${st==='NEGADO'?'selected':''}>NEGADO</option>
-       <option value="ENTREGUE" ${st==='ENTREGUE'?'selected':''}>ENTREGUE</option>
-       <option value="SEM ESTOQUE" ${st==='SEM ESTOQUE'?'selected':''}>SEM ESTOQUE</option>
-     </select></td></tr>`);
-  });
- }
+
+/* ================= TABELA ================= */
+function renderizarTabela(lista){
+
+tabelaRequisicoes.innerHTML="";
+
+lista.forEach(i=>{
+ tabelaRequisicoes.innerHTML+=`
+ <tr>
+ <td>${i.dataHora}</td>
+ <td>${i.item}</td>
+ <td>${i.qtd}</td>
+ <td>${i.unidade}</td>
+ <td>${i.setor}</td>
+ <td>${i.solicitante}</td>
+ <td>${i.observacoes}</td>
+ <td>
+ <select onchange="atualizarStatus('${i.index}',this.value)">
+ <option ${i.status==="PENDENTE"?"selected":""}>PENDENTE</option>
+ <option ${i.status==="COMPRADO"?"selected":""}>COMPRADO</option>
+ <option ${i.status==="NO CARRINHO"?"selected":""}>NO CARRINHO</option>
+ <option ${i.status==="NEGADO"?"selected":""}>NEGADO</option>
+ <option ${i.status==="ENTREGUE"?"selected":""}>ENTREGUE</option>
+ <option ${i.status==="SEM ESTOQUE"?"selected":""}>SEM ESTOQUE</option>
+ </select>
+ </td>
+ </tr>`;
+});
 }
-async function atualizarStatus(i,st){
- mostrarAlerta("Atualizando...");await fetch(endpoint,{method:'POST',body:JSON.stringify({action:'atualizar_status',id:i,status:st})});
- const it=dadosRequisicoes.find(r=>r.index===i);if(it)it.status=st;filtrarRequisicoes();mostrarAlerta("Status atualizado!");
+
+/* ================= STATUS ================= */
+async function atualizarStatus(id,status){
+
+mostrarAlerta("Atualizando...");
+
+const { error } = await sb
+.from("requisicoes")
+.update({ status })
+.eq("id", id);
+
+if(error){
+ console.error(error);
+ mostrarAlerta("Erro!");
+ return;
 }
-async function liquidarMassa(st){
- if(!confirm("Marcar todos como ENTREGUE?"))return;
- const filtrados=dadosRequisicoes.filter(r=>document.getElementById('tabelaRequisicoes').innerText.includes(r.item));
- for(const item of filtrados){await fetch(endpoint,{method:"POST",body:JSON.stringify({action:"atualizar_status",id:item.index,status:st})});item.status=st;}
- filtrarRequisicoes();mostrarAlerta(`${filtrados.length} registros marcados como ENTREGUE!`);
+
+const item=dadosRequisicoes.find(r=>r.index===id);
+if(item) item.status=status;
+
+filtrarRequisicoes();
+mostrarAlerta("Atualizado!");
 }
-function toggleSolicitantes(){const l=document.getElementById("lista-solicitantes");l.style.display=l.style.display==="block"?"none":"block";}
-function filtrarPorSolicitante(n){document.getElementById("filtroSolicitante").value=n;filtrarRequisicoes();document.getElementById("lista-solicitantes").style.display="none";}
-function atualizarResumo(){const c={PENDENTE:0,"NO CARRINHO":0,COMPRADO:0,NEGADO:0,ENTREGUE:0,"SEM ESTOQUE":0};
- dadosRequisicoes.forEach(r=>{const s=(r.status||'').toUpperCase().trim();if(c[s]!=null)c[s]++;else c.PENDENTE++;});
- countPendente.textContent=c.PENDENTE;countCarrinho.textContent=c["NO CARRINHO"];
- countComprado.textContent=c.COMPRADO;countNegado.textContent=c.NEGADO;
- countEntregue.textContent=c.ENTREGUE;countSemEstoque.textContent=c["SEM ESTOQUE"];
+
+/* ================= MASSA ================= */
+async function liquidarMassa(status){
+
+if(!confirm("Aplicar para todos?")) return;
+
+for(const i of dadosRequisicoes){
+ await sb.from("requisicoes")
+ .update({ status })
+ .eq("id", i.index);
+
+ i.status=status;
 }
-function mostrarAlerta(m){const a=document.getElementById("alertaStatus");a.textContent=m;a.style.display="block";setTimeout(()=>a.style.display="none",2500);}
-function gerarRelatorio(){let html="<img src='https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png' height='60'><h2>Relatório</h2><table border='1' cellspacing='0' cellpadding='4'><thead><tr><th>Data</th><th>Item</th><th>Qtd</th><th>Unid</th><th>Setor</th><th>Solicitante</th><th>Obs</th></tr></thead><tbody>";
- Array.from(document.querySelectorAll("#tabelaRequisicoes tr")).forEach(tr=>{const tds=Array.from(tr.children).map(td=>td.innerText);if(tds.length===8)html+="<tr>"+tds.slice(0,7).map(td=>`<td>${td}</td>`).join("")+"</tr>";});
- html+="</tbody></table>";const w=window.open("","Relatório");w.document.write(html);w.document.close();}
-window.addEventListener("DOMContentLoaded",()=>carregarRequisicoes());
+
+filtrarRequisicoes();
+}
+
+/* ================= RESUMO ================= */
+function atualizarResumo(){
+ const c={PENDENTE:0,COMPRADO:0,NEGADO:0,ENTREGUE:0,"NO CARRINHO":0,"SEM ESTOQUE":0};
+ dadosRequisicoes.forEach(r=>c[r.status]++);
+ countPendente.textContent=c.PENDENTE;
+ countComprado.textContent=c.COMPRADO;
+ countNegado.textContent=c.NEGADO;
+ countEntregue.textContent=c.ENTREGUE;
+ countCarrinho.textContent=c["NO CARRINHO"];
+ countSemEstoque.textContent=c["SEM ESTOQUE"];
+}
+
+/* ================= ALERTA ================= */
+function mostrarAlerta(m){
+ alertaStatus.textContent=m;
+ alertaStatus.style.display="block";
+ setTimeout(()=>alertaStatus.style.display="none",2000);
+}
+
+/* ================= INIT ================= */
+window.onload=carregarRequisicoes;
 </script>
 </body>
 </html>
