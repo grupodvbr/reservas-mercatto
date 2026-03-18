@@ -1375,7 +1375,41 @@ CATEGORIA: ${item.tipo || "geral"}
 `
   })
 }
+/* ================= BUSCAR RESERVAS DO DIA ================= */
 
+let reservasHojeTexto = "SEM RESERVAS"
+
+try {
+
+  const { data: reservasHoje } = await supabase
+    .from("reservas_mercatto")
+    .select("*")
+    .gte("datahora", dataAtualISO + "T00:00")
+    .lte("datahora", dataAtualISO + "T23:59")
+
+  if (reservasHoje && reservasHoje.length) {
+
+    reservasHojeTexto = ""
+
+    reservasHoje.forEach(r => {
+
+      const hora = r.datahora?.split("T")[1]?.substring(0,5) || "--:--"
+
+      reservasHojeTexto += `
+NOME: ${r.nome}
+SALA: ${r.mesa}
+HORA: ${hora}
+STATUS: ${r.status}
+-------------------
+`
+
+    })
+
+  }
+
+} catch (err) {
+  console.log("ERRO AO BUSCAR RESERVAS:", err)
+}
 
   
 /* ================= OPENAI ================= */
@@ -1513,7 +1547,25 @@ Regras:
 `
 },
 
+{
+role:"system",
+content:`
+RESERVAS REAIS DO DIA:
 
+${reservasHojeTexto}
+
+Regras:
+
+- Essas são as reservas reais do sistema
+- Nunca inventar disponibilidade
+- Sempre verificar conflito antes de responder
+- Considerar duração de 4h30 + 1h bloqueio
+`
+},
+
+
+
+  
 
   
 ...mensagens
