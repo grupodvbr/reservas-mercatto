@@ -473,7 +473,23 @@ const textoNormalizado = normalizar(texto)
 
 let nomeDetectado = null
 let querAtualizarNome = false
+function nomeValido(nome){
 
+if(!nome) return false
+
+const proibidos = [
+"ok","sim","nao","não","oi","ola","menu","cardapio","quero",
+"reserva","mesa","pedido","bom","boa","tarde","noite"
+]
+
+const nomeLower = nome.toLowerCase()
+
+if(proibidos.includes(nomeLower)) return false
+if(nome.length < 3) return false
+if(nome.match(/[0-9]/)) return false
+
+return true
+}
 /* 🔥 EXTRAIR NOME DIRETO DA FRASE (COLE AQUI) */
 
 const matchNome = mensagem.match(
