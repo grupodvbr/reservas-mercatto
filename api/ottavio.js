@@ -1,265 +1,471 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Assistente IA • Mercatto</title>
+const OpenAI = require("openai")
+const { createClient } = require("@supabase/supabase-js")
 
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-user-scalable=no">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-
-:root{
---bg:#020617;
---card:#0f172a;
---user:#1e293b;
---assistant:#22c55e;
---text:#f1f5f9;
---border:#334155;
-}
-
-*{box-sizing:border-box}
-
-body{
-margin:0;
-font-family:Inter;
-background:var(--bg);
-color:var(--text);
-display:flex;
-flex-direction:column;
-height:100vh;
-}
-
-/* HEADER */
-
-.header{
-padding:16px;
-border-bottom:1px solid var(--border);
-font-weight:700;
-}
-
-/* CHAT */
-
-.messages{
-flex:1;
-overflow:auto;
-padding:20px;
-display:flex;
-flex-direction:column;
-gap:14px;
-}
-
-/* BOLHAS */
-
-.msg{
-max-width:70%;
-padding:14px;
-border-radius:14px;
-font-size:14px;
-line-height:1.5;
-white-space:pre-wrap;
-}
-
-.user{
-background:var(--user);
-align-self:flex-end;
-}
-
-.assistant{
-background:var(--assistant);
-align-self:flex-start;
-color:white;
-}
-
-/* LOADING */
-
-.loading{
-opacity:.6;
-font-style:italic;
-}
-
-/* INPUT */
-
-.send{
-display:flex;
-gap:10px;
-padding:14px;
-border-top:1px solid var(--border);
-}
-
-.send textarea{
-flex:1;
-resize:none;
-border-radius:10px;
-border:1px solid var(--border);
-background:var(--card);
-color:white;
-padding:10px;
-height:55px;
-font-family:Inter;
-}
-
-.send button{
-background:#22c55e;
-border:none;
-color:white;
-padding:10px 16px;
-border-radius:10px;
-font-weight:600;
-cursor:pointer;
-}
-
-.send button:disabled{
-opacity:.5;
-cursor:not-allowed;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="header">
-Assistente IA (Simulação WhatsApp)
-</div>
-
-<div id="messages" class="messages"></div>
-
-<div class="send">
-<textarea id="input" placeholder="Pergunte como cliente..."></textarea>
-<button id="btnEnviar" onclick="enviar()">Enviar</button>
-</div>
-
-<script>
-
-const db = supabase.createClient(
-"https://dxkszikemntfusfyrzos.supabase.co",
-"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-)
-
-const telefoneFake = "SIMULADOR"
-
-/* ENTER ENVIA */
-
-document.getElementById("input").addEventListener("keydown", function(e){
-  if(e.key === "Enter" && !e.shiftKey){
-    e.preventDefault()
-    enviar()
-  }
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 })
 
-/* SCROLL */
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
+)
 
-function scrollBottom(){
-  const el = document.getElementById("messages")
-  el.scrollTop = el.scrollHeight
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN
+
+module.exports = async function handler(req, res){
+
+try{
+
+/* ================= AUTORIZAÇÃO ================= */
+
+if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
+return res.status(403).json({erro:"acesso negado"})
 }
 
-/* RENDER */
+/* ================= BODY ================= */
 
-function addMsg(text,role,loading=false){
+const body =
+typeof req.body === "string"
+? JSON.parse(req.body)
+: req.body
 
-  const div = document.createElement("div")
-  div.className = "msg " + role
+const pergunta = body?.pergunta || ""
+let confirmar = body?.confirmar || null
+/* ================= CONFIRMAR COM "SIM" ================= */
 
-  if(loading){
-    div.classList.add("loading")
-    div.innerText = "Digitando..."
-  }else{
-    div.innerText = text
-  }
+if(pergunta && pergunta.toLowerCase() === "sim"){
 
-  document.getElementById("messages").appendChild(div)
+const { data:last } = await supabase
+.from("administrador_chat")
+.select("acao_json")
+.not("acao_json","is",null)
+.order("created_at",{ascending:false})
+.limit(1)
 
-  scrollBottom()
-
-  return div
+if(last && last[0]){
+confirmar = last[0].acao_json
 }
 
-/* ENVIAR */
-
-async function enviar(){
-
-  const input = document.getElementById("input")
-  const btn = document.getElementById("btnEnviar")
-
-  const msg = input.value.trim()
-  if(!msg) return
-
-  /* UI */
-
-  addMsg(msg,"user")
-  input.value=""
-  btn.disabled = true
-
-  /* SALVA USER */
-
-  await db.from("conversas_whatsapp").insert({
-    telefone: telefoneFake,
-    mensagem: msg,
-    role: "user"
-  })
-
-  /* LOADING */
-
-  const loadingMsg = addMsg("","assistant",true)
-
-  try{
-
-    /* CHAMA OTAVIO */
-
-    const res = await fetch("/api/otavio",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        mensagem: msg,
-        telefone: telefoneFake,
-        origem: "painel"
-      })
-    })
-
-    const data = await res.json()
-
-    if(!res.ok){
-      throw new Error(data.error || "Erro na API")
-    }
-
-    const resposta = data.resposta || "Sem resposta"
-
-    /* REMOVE LOADING */
-    loadingMsg.remove()
-
-    /* MOSTRA */
-    addMsg(resposta,"assistant")
-
-    /* SALVA IA */
-    await db.from("conversas_whatsapp").insert({
-      telefone: telefoneFake,
-      mensagem: resposta,
-      role: "assistant"
-    })
-
-  }catch(err){
-
-    loadingMsg.remove()
-
-    addMsg("Erro: " + err.message,"assistant")
-
-  }
-
-  btn.disabled = false
 }
 
-</script>
+/* ================= CONFIRMAR AÇÃO ================= */
 
-</body>
-</html>
+if(confirmar){
+
+try{
+
+const acao = confirmar
+// remove campos proibidos
+if(acao.dados && acao.dados.created_at){
+delete acao.dados.created_at
+}
+if(acao.operacao === "insert"){
+
+const { data, error } = await supabase
+.from(acao.tabela)
+.insert(acao.dados)
+.select()
+
+if(error){
+console.error("Erro insert:", error)
+throw error
+}
+
+}
+
+if(acao.operacao === "update"){
+
+const { data, error } = await supabase
+.from(acao.tabela)
+.update(acao.dados)
+.match(acao.filtro)
+.select()
+
+if(error){
+console.error("Erro update:", error)
+throw error
+}
+
+}
+
+if(acao.operacao === "delete"){
+
+const { error } = await supabase
+.from(acao.tabela)
+.delete()
+.match(acao.filtro)
+
+if(error){
+console.error("Erro delete:", error)
+throw error
+}
+
+}
+
+await supabase
+.from("administrador_chat")
+.insert({
+role:"assistant",
+mensagem:"✅ Ação executada com sucesso"
+})
+
+return res.json({
+resposta:"✅ Ação executada com sucesso"
+})
+
+}catch(e){
+
+console.error("Erro executar ação:",e)
+
+return res.json({
+resposta:"Erro ao executar ação"
+})
+
+}
+
+}
+
+/* ================= SALVAR PERGUNTA ================= */
+
+await supabase
+.from("administrador_chat")
+.insert({
+role:"user",
+mensagem:pergunta
+})
+
+/* ================= HISTÓRICO ================= */
+
+const {data:historico} = await supabase
+.from("administrador_chat")
+.select("*")
+.order("created_at",{ascending:false})
+.limit(20)
+
+const mensagens = (historico || [])
+.reverse()
+.map(m => ({
+role: m.role,
+content: m.mensagem
+}))
+
+mensagens.push({
+role:"user",
+content: pergunta
+})
+/* ================= BUSCAR DADOS SISTEMA ================= */
+
+const {data:reservas} = await supabase
+.from("reservas_mercatto")
+.select("*")
+.limit(100)
+
+const {data:agenda} = await supabase
+.from("agenda_musicos")
+.select("*")
+.limit(100)
+
+const {data:clientes} = await supabase
+.from("memoria_clientes")
+.select("*")
+.limit(100)
+
+const {data:conversas} = await supabase
+.from("conversas_whatsapp")
+.select("*")
+.limit(50)
+
+const {data:buffet} = await supabase
+.from("buffet")
+.select("*")
+.limit(100)
+
+/* ================= BUSCAR PROMPTS DO AGENTE ================= */
+
+const {data:promptTabela} = await supabase
+.from("prompt_agente")
+.select("*")
+.order("ordem",{ascending:true})
+
+  
+/* ================= BUSCAR PROMPT DO AGENTE ================= */
+
+const { data: prompts } = await supabase
+.from("prompt_agente")
+.select("prompt")
+.eq("ativo", true)
+.order("ordem",{ascending:true})
+
+const promptAgente = (prompts || [])
+.map(p => p.prompt)
+.join("\n\n")
+
+
+
+/* ================= DATAS SISTEMA ================= */
+
+const agora = new Date()
+
+const formatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Bahia",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit"
+})
+
+const parts = formatter.formatToParts(agora)
+
+const get = type => parts.find(p => p.type === type)?.value
+
+const hojeISO = `${get("year")}-${get("month")}-${get("day")}`
+const hora = `${get("hour")}:${get("minute")}:${get("second")}`
+
+const ontem = new Date(`${hojeISO}T00:00:00`)
+ontem.setDate(ontem.getDate() - 1)
+
+const amanha = new Date(`${hojeISO}T00:00:00`)
+amanha.setDate(amanha.getDate() + 1)
+
+const ontemISO = ontem.toISOString().split("T")[0]
+const amanhaISO = amanha.toISOString().split("T")[0]
+
+const agoraTexto = `${hojeISO} ${hora}`
+
+  
+const ontem = new Date(hoje)
+ontem.setDate(hoje.getDate() - 1)
+
+  
+/* ================= OPENAI ================= */
+
+const completion = await openai.chat.completions.create({
+
+model:"gpt-4.1-mini",
+temperature:0,
+
+messages:[
+
+{
+
+role:"system",
+content:`
+⚠️ REGRA CRÍTICA DE DATA E HORA
+
+Você NÃO possui acesso ao tempo real.
+
+A ÚNICA data válida é a fornecida abaixo.
+
+Qualquer referência a:
+- hoje
+- agora
+- amanhã
+- ontem
+
+DEVE obrigatoriamente usar estes valores:
+
+DATA_ATUAL = ${hojeISO}
+HORA_ATUAL = ${hora}
+
+ONTEM = ${ontemISO}
+AMANHA = ${amanhaISO}
+
+Se você usar qualquer outra data:
+→ sua resposta estará ERRADA
+
+NUNCA invente datas
+NUNCA use conhecimento próprio
+NUNCA ignore essas variáveis
+
+Sempre substitua:
+
+"hoje" → ${hojeISO}
+"agora" → ${hora}
+`
+},
+
+{
+role:"system",
+content:`REGRAS DO AGENTE:
+
+${promptAgente}
+
+Todas as regras acima são obrigatórias e devem ser seguidas rigorosamente.
+`
+},
+
+{
+role:"system",
+content:`
+TABELA: reservas_mercatto
+
+Os dados abaixo são TODOS os registros retornados da tabela reservas_mercatto.
+
+Se uma reserva não aparecer nessa lista, significa que ela NÃO EXISTE no sistema.
+
+Nunca invente reservas.
+Nunca deduza reservas.
+Use apenas os registros abaixo.
+
+Dados:
+
+${JSON.stringify(reservas || [])}
+`},
+
+
+{
+role:"system",
+content:`AGENDA:\n${JSON.stringify(agenda || [])}`
+},
+
+{
+role:"system",
+content:`CLIENTES:\n${JSON.stringify(clientes || [])}`
+},
+
+{
+role:"system",
+content:`CONVERSAS:\n${JSON.stringify(conversas || [])}`
+},
+
+{
+role:"system",
+content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
+},
+{
+role:"system",
+content:`PROMPTS DO AGENTE:\n${JSON.stringify(promptTabela || [])}`
+},
+
+
+{
+role:"system",
+content:`
+
+Você pode criar, editar ou apagar prompts da tabela "prompt_agente".
+
+Estrutura da tabela:
+
+prompt_agente
+- id
+- prompt
+- ordem
+- ativo
+- created_at
+
+Se o usuário pedir para alterar ou criar prompts, gere uma ação usando:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"insert | update | delete",
+"tabela":"prompt_agente",
+"dados":{...},
+"filtro":{...}
+}
+
+Exemplo criar prompt:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"insert",
+"tabela":"prompt_agente",
+"dados":{
+"prompt":"Sempre enviar a foto do prato antes da descrição.",
+"ordem":10,
+"ativo":true
+}
+}
+
+Exemplo editar prompt:
+
+ALTERAR_REGISTRO_JSON:
+{
+"operacao":"update",
+"tabela":"prompt_agente",
+"dados":{
+"prompt":"texto atualizado"
+},
+"filtro":{
+"id":5
+}
+}
+
+Se o usuário pedir para criar, editar ou apagar um prompt:
+
+1. Gere obrigatoriamente a ação ALTERAR_REGISTRO_JSON.
+2. Não explique nada antes.
+3. Não escreva texto adicional.
+4. Apenas retorne o JSON da ação.
+
+Se não gerar o JSON a ação será ignorada.
+`
+},
+
+
+  
+...mensagens
+]
+
+})
+
+let resposta = completion.choices[0].message.content
+
+/* ================= DETECTAR AÇÃO ================= */
+
+const match = resposta.match(/ALTERAR_REGISTRO_JSON:\s*(\{[\s\S]*\})/)
+
+let acao = null
+
+if(match){
+
+try{
+
+let jsonTexto = match[1]
+
+jsonTexto = jsonTexto
+.replace(/```json/g,"")
+.replace(/```/g,"")
+.trim()
+
+acao = JSON.parse(jsonTexto)
+
+if(!resposta.includes("Confirme")){
+resposta += "\n\n⚠️ Confirme para executar esta ação."
+}
+
+}catch(e){
+
+console.log("Erro parse JSON ação:", match[1])
+
+}
+
+}
+
+/* ================= SALVAR RESPOSTA ================= */
+
+await supabase
+.from("administrador_chat")
+.insert({
+role:"assistant",
+mensagem:resposta,
+acao_json:acao
+})
+
+return res.json({
+resposta,
+acao
+})
+
+}catch(e){
+
+console.error("ERRO GERAL:",e)
+
+return res.status(500).json({
+erro:"erro interno"
+})
+
+}
+
+}
