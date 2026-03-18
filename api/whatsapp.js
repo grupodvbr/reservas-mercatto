@@ -567,10 +567,50 @@ console.log("NOME IGNORADO (já existe e não pediu alteração)")
 
 }
 
+/* ================= PRIORIDADE: ATUALIZAR NOME ================= */
+
+if(querAtualizarNome && nomeMemoria){
+
+console.log("INTENÇÃO: ATUALIZAR NOME DO CLIENTE")
+
+const respostaNome = `Perfeito! Atualizei seu nome para ${nomeMemoria} 😊`
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body: respostaNome }
+})
+})
+
+return res.status(200).end()
+}
+
+
+
+
+
+
+  
+
+
+
+
+  
 /* ================= AGORA SIM CLASSIFICA ================= */
 
 const tipoMensagem = await classificarMensagem(mensagem)
 
+
+
+
+  
 console.log("CLASSIFICAÇÃO:", tipoMensagem)
 
 if(
