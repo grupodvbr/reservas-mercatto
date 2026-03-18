@@ -353,6 +353,12 @@ body.dark .card-status span {
   cursor:pointer;
   font-size:16px;
 }
+
+.input-erro{
+  border:1px solid #dc3545 !important;
+  box-shadow:0 0 0 2px rgba(220,53,69,.2);
+}
+  
 </style>
 </head>
 <body>
@@ -633,11 +639,31 @@ async function salvarUsuario(){
  const setor = document.getElementById("setorUser").value.trim();
  const senha = document.getElementById("senhaUser").value.trim();
 
- // 🔥 VALIDAÇÃO TOTAL
- if(!nome || !setor || !senha){
-  mostrarAlerta("Preencha TODOS os campos");
+// limpa erros anteriores
+["nomeUser","setorUser","senhaUser"].forEach(id=>{
+  document.getElementById(id).classList.remove("input-erro");
+});
+
+if(!nome){
+  document.getElementById("nomeUser").classList.add("input-erro");
+  document.getElementById("nomeUser").focus();
+  mostrarAlerta("Informe o nome");
   return;
- }
+}
+
+if(!setor){
+  document.getElementById("setorUser").classList.add("input-erro");
+  document.getElementById("setorUser").focus();
+  mostrarAlerta("Informe o setor");
+  return;
+}
+
+if(!senha){
+  document.getElementById("senhaUser").classList.add("input-erro");
+  document.getElementById("senhaUser").focus();
+  mostrarAlerta("Informe a senha");
+  return;
+}
 
  try{
 
