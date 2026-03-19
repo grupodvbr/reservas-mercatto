@@ -10,8 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE
 )
 const ADMINS = [
-  "557798253249",
-  "557798315510"
+  "557798253249"
 ]
 
 
