@@ -413,70 +413,48 @@ console.log("Mensagem do próprio bot ignorada")
 return res.status(200).end()
 }
 
-const msgObj = mensagensRecebidas[0]
 
 
+const msg = mensagensRecebidas[0]
 
-
-
-
-  
 let mensagem = ""
 let tipo = "texto"
 let media_url = null
 let nome_arquivo = null
 
-async function baixarMidia(mediaId){
-
-  const metaResp = await fetch(
-    `https://graph.facebook.com/v19.0/${mediaId}`,
-    {
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
-      }
-    }
-  )
-
-  const metaData = await metaResp.json()
-
-  if(!metaData.url){
-    console.log("❌ ERRO AO PEGAR URL DA MIDIA:", metaData)
-    return null
-  }
-
-  return metaData.url
-}
-
 // TEXTO
-if(msgObj.text){
-  mensagem = msgObj.text.body
+if(msg.text){
+  mensagem = msg.text.body
 }
 
 // IMAGEM
-else if(msgObj.image){
+else if(msg.image){
   tipo = "imagem"
-  media_url = await baixarMidia(msgObj.image.id)
+  media_url = msg.image.url || msg.image.id
+  mensagem = "[Imagem]"
 }
 
-// VÍDEO
-else if(msgObj.video){
+// VIDEO
+else if(msg.video){
   tipo = "video"
-  media_url = await baixarMidia(msgObj.video.id)
+  media_url = msg.video.url || msg.video.id
+  mensagem = "[Vídeo]"
 }
 
-// ÁUDIO
-else if(msgObj.audio){
+// AUDIO
+else if(msg.audio){
   tipo = "audio"
-  media_url = await baixarMidia(msgObj.audio.id)
+  media_url = msg.audio.url || msg.audio.id
+  mensagem = "[Áudio]"
 }
 
 // DOCUMENTO
-else if(msgObj.document){
+else if(msg.document){
   tipo = "documento"
-  media_url = await baixarMidia(msgObj.document.id)
-  nome_arquivo = msgObj.document.filename
+  media_url = msg.document.url || msg.document.id
+  nome_arquivo = msg.document.filename
+  mensagem = `[Documento: ${nome_arquivo || "arquivo"}]`
 }
-
 
 
 
