@@ -463,7 +463,7 @@ let mensagem = ""
 let tipo = "texto"
 let media_url = null
 let nome_arquivo = null
-
+const msg = mensagensRecebidas[0]
 // TEXTO
 if(msg.text){
   mensagem = msg.text.body
