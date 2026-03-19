@@ -338,8 +338,19 @@ const buffer = Buffer.from(await fileRes.arrayBuffer())
       .from("buffet_whatsa_mercatto")
       .getPublicUrl(fileName)
 
-    return data.publicUrl
+const publicUrl = data.publicUrl
 
+if(!publicUrl){
+  console.log("❌ URL NÃO GERADA")
+  return null
+}
+
+console.log("🌍 URL FINAL:", publicUrl)
+
+return publicUrl
+
+
+    
   }catch(err){
     console.log("❌ ERRO MIDIA:", err)
     return null
@@ -1288,7 +1299,9 @@ await supabase
 .from("conversas_whatsapp")
 .insert({
   telefone:cliente,
-  mensagem:mensagem || `[${tipo.toUpperCase()} RECEBIDO]`,
+mensagem:
+  mensagem ||
+  (tipo !== "texto" ? `[${tipo.toUpperCase()} RECEBIDO]` : ""),
   tipo,
   media_url,
   nome_arquivo,
