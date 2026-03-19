@@ -300,7 +300,53 @@ Responda apenas com UMA palavra.
     .toLowerCase()
     .trim()
 }
+async function baixarESalvarMidia(mediaId, extensao, mime){
 
+  try{
+
+    const mediaInfo = await fetch(
+      `https://graph.facebook.com/v19.0/${mediaId}`,
+      {
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
+        }
+      }
+    )
+
+    const mediaJson = await mediaInfo.json()
+
+    const fileRes = await fetch(mediaJson.url,{
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
+      }
+    })
+
+    const buffer = await fileRes.arrayBuffer()
+
+    const fileName = `whatsapp/${Date.now()}.${extensao}`
+
+    const { error } = await supabase.storage
+      .from("buffet_whatsa_mercatto")
+      .upload(fileName, buffer, {
+        contentType: mime
+      })
+
+    if(error){
+      console.log("❌ ERRO UPLOAD:", error)
+      return null
+    }
+
+    const { data } = supabase.storage
+      .from("buffet_whatsa_mercatto")
+      .getPublicUrl(fileName)
+
+    return data.publicUrl
+
+  }catch(err){
+    console.log("❌ ERRO MIDIA:", err)
+    return null
+  }
+}
 
 
 
@@ -414,9 +460,6 @@ return res.status(200).end()
 }
 
 
-
-const msg = mensagensRecebidas[0]
-
 let mensagem = ""
 let tipo = "texto"
 let media_url = null
@@ -427,84 +470,62 @@ if(msg.text){
   mensagem = msg.text.body
 }
 
+// IMAGEM
 else if(msg.image){
 
   tipo = "imagem"
   mensagem = "[Imagem]"
 
-  try{
-
-    /* 1. BUSCAR URL REAL */
-    const mediaInfo = await fetch(
-      `https://graph.facebook.com/v19.0/${msg.image.id}`,
-      {
-        headers:{
-          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
-        }
-      }
-    )
-
-    const mediaJson = await mediaInfo.json()
-
-    /* 2. BAIXAR ARQUIVO */
-    const fileRes = await fetch(mediaJson.url,{
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`
-      }
-    })
-
-    const buffer = await fileRes.arrayBuffer()
-
-    /* 3. SALVAR NO SUPABASE */
-    const fileName = `whatsapp/${Date.now()}.jpg`
-
-    const { error: uploadError } = await supabase.storage
-      .from("buffet_whatsa_mercatto")
-      .upload(fileName, buffer, {
-        contentType: "image/jpeg"
-      })
-
-    if(uploadError){
-      console.log("❌ ERRO UPLOAD:", uploadError)
-    }else{
-
-      /* 4. GERAR URL PUBLICA */
-      const { data } = supabase.storage
-        .from("buffet_whatsa_mercatto")
-        .getPublicUrl(fileName)
-
-      media_url = data.publicUrl
-
-      console.log("✅ URL FINAL:", media_url)
-    }
-
-  }catch(err){
-    console.log("❌ ERRO AO PROCESSAR MIDIA:", err)
-  }
+  media_url = await baixarESalvarMidia(
+    msg.image.id,
+    "jpg",
+    msg.image.mime_type || "image/jpeg"
+  )
 }
+
 // VIDEO
 else if(msg.video){
+
   tipo = "video"
-  media_url = msg.video.url || msg.video.id
   mensagem = "[Vídeo]"
+
+  media_url = await baixarESalvarMidia(
+    msg.video.id,
+    "mp4",
+    msg.video.mime_type || "video/mp4"
+  )
 }
 
 // AUDIO
 else if(msg.audio){
+
   tipo = "audio"
-  media_url = msg.audio.url || msg.audio.id
   mensagem = "[Áudio]"
+
+  media_url = await baixarESalvarMidia(
+    msg.audio.id,
+    "ogg",
+    msg.audio.mime_type || "audio/ogg"
+  )
 }
 
 // DOCUMENTO
 else if(msg.document){
+
   tipo = "documento"
-  media_url = msg.document.url || msg.document.id
-  nome_arquivo = msg.document.filename
-  mensagem = `[Documento: ${nome_arquivo || "arquivo"}]`
+
+  nome_arquivo = msg.document.filename || "arquivo"
+
+  mensagem = `[Documento: ${nome_arquivo}]`
+
+  const ext = nome_arquivo.split(".").pop() || "bin"
+
+  media_url = await baixarESalvarMidia(
+    msg.document.id,
+    ext,
+    msg.document.mime_type || "application/octet-stream"
+  )
 }
-
-
 
 
 
