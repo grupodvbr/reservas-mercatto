@@ -491,14 +491,30 @@ preview.innerHTML=`📄 ${arquivo.name}`
 /* ===== UPLOAD ===== */
 async function uploadMidia(file){
 
-const nome = Date.now()+"-"+file.name
+  const nome = Date.now() + "-" + file.name.replace(/\s+/g,"_")
 
-await db.storage.from("buffet_whatsa_mercatto").upload(nome,file)
+  const { data, error } = await db
+    .storage
+    .from("buffet_whatsa_mercatto")
+    .upload(nome, file)
 
-const {data} = db.storage.from("buffet_whatsa_mercatto").getPublicUrl(nome)
+  if(error){
+    console.error("ERRO UPLOAD:", error)
+    alert("Erro ao enviar arquivo")
+    return null
+  }
 
-return data.publicUrl
+  const { data: publicUrlData } = db
+    .storage
+    .from("buffet_whatsa_mercatto")
+    .getPublicUrl(nome)
 
+  if(!publicUrlData?.publicUrl){
+    alert("Erro ao gerar URL pública")
+    return null
+  }
+
+  return publicUrlData.publicUrl
 }
 
 /* ===== ENVIAR ===== */
@@ -528,13 +544,19 @@ let nomeArquivo=null
 
 if(arquivo){
 
-media = await uploadMidia(arquivo)
-nomeArquivo = arquivo.name
+  media = await uploadMidia(arquivo)
 
-if(arquivo.type.includes("image")) tipo="imagem"
-else if(arquivo.type.includes("video")) tipo="video"
-else if(arquivo.type.includes("audio")) tipo="audio"
-else tipo="documento"
+  if(!media){
+    alert("Falha no upload. Cancelando envio.")
+    return
+  }
+
+  nomeArquivo = arquivo.name
+
+  if(arquivo.type.includes("image")) tipo="imagem"
+  else if(arquivo.type.includes("video")) tipo="video"
+  else if(arquivo.type.includes("audio")) tipo="audio"
+  else tipo="documento"
 
 }
 
