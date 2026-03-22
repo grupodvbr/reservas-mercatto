@@ -135,7 +135,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      id: data.messages?.[0]?.id || null
+       message_id: data.messages?.[0]?.id || null
     })
 
   } catch (err) {
