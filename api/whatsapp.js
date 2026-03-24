@@ -17,11 +17,9 @@ const ADMINS = [
 
 
 const TEMPLATES_PERMITIDOS = [
-"confirmao_reserva",
-"lembrete_reserva",
-"confirmacao_pedido",
-"video_mercatto",
-"reserva_especial" // 👈 FALTAVA ISSO
+"confirmao_de_reserva",
+"reserva_especial",
+"hello_world"
 ]
 
 
@@ -1761,13 +1759,11 @@ if(templateMatch){
   const templateNome = templateMatch[1]
 
   /* ✅ COLE AQUI */
-  const TEMPLATE_IDIOMAS = {
-    reserva_especial: "en",
-    confirmacao_reserva: "pt_BR",
-    lembrete_reserva: "pt_BR",
-    confirmacao_pedido: "pt_BR",
-    video_mercatto: "pt_BR"
-  }
+const TEMPLATE_IDIOMAS = {
+  confirmao_de_reserva: "en_US",
+  reserva_especial: "en_US",
+  hello_world: "en_US"
+}
 
   const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
 
@@ -1789,10 +1785,24 @@ if(templateMatch){
     messaging_product:"whatsapp",
     to:cliente,
     type:"template",
-    template:{
-      name:templateNome,
-      language:{ code: idiomaTemplate }
+template:{
+  name:templateNome,
+  language:{ code: idiomaTemplate },
+  components:[
+    {
+      type:"body",
+      parameters:[
+components:[
+  {
+    type:"body",
+    parameters:[
+      { type:"text", text: nomeMemoria || "Cliente" }
+    ]
+  }
+]      ]
     }
+  ]
+}
   })
 })
 
