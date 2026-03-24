@@ -1799,9 +1799,7 @@ components:[
       { type:"text", text: nomeMemoria || "Cliente" }
     ]
   }
-]      ]
-    }
-  ]
+]
 }
   })
 })
