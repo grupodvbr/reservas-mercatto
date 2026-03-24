@@ -182,12 +182,38 @@ align-items:center;
 <div class="inputBox">
 <input type="file" id="fileInput" hidden>
 <button onclick="fileInput.click()">📎</button>
+<button onclick="abrirTemplates()">📩</button>
 <textarea id="msg" placeholder="Mensagem..."></textarea>
 <button onclick="enviar()">➤</button>
 </div>
 
 <div id="preview" class="preview" style="display:none"></div>
 
+
+<div id="menuTemplates" style="
+position:absolute;
+bottom:80px;
+left:10px;
+background:#fff;
+border-radius:10px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+display:none;
+flex-direction:column;
+padding:10px;
+gap:5px;
+">
+
+<button onclick="enviarTemplate('confirmao_de_reserva')">Reserva</button>
+<button onclick="enviarTemplate('reserva_especial')">Sala VIP</button>
+<button onclick="enviarTemplate('hello_world')">Teste</button>
+
+</div>
+
+
+
+
+
+  
 <script>
 
 /* ===== SUPABASE ===== */
@@ -577,6 +603,38 @@ preview.style.display="none"
 /* ===== START ===== */
 iniciar()
 
+
+function abrirTemplates(){
+  const menu = document.getElementById("menuTemplates")
+  menu.style.display = menu.style.display === "flex" ? "none" : "flex"
+}
+
+
+async function enviarTemplate(nome){
+
+  if(!telefone) return
+
+  console.log("📤 Enviando template:", nome)
+
+  await fetch("/api/send-template",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      telefone,
+      template: nome
+    })
+  })
+
+  document.getElementById("menuTemplates").style.display = "none"
+}
+
+
+
+
+
+  
 </script>
 
 </body>
