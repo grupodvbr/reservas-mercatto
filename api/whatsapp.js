@@ -383,7 +383,7 @@ return res.status(403).end()
 
 if(req.method === "POST" && req.body?.admin_chat){
 
-if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
+if(req.headers.authorization !== `Bearer ${process.env.ADMIN_TOKEN}`){
 return res.status(403).json({erro:"Acesso negado"})
 }
 
@@ -1275,7 +1275,7 @@ const { data: jaProcessada } = await supabase
 .from("mensagens_processadas")
 .select("*")
 .eq("message_id", message_id)
-.single()
+.maybeSingle()
 
 if(jaProcessada){
 console.log("Mensagem duplicada ignorada")
@@ -1758,72 +1758,56 @@ if(templateMatch){
 
   const templateNome = templateMatch[1]
 
-  /* ✅ COLE AQUI */
-const TEMPLATE_IDIOMAS = {
-  confirmao_de_reserva: "en_US",
-  reserva_especial: "en_US",
-  hello_world: "en_US"
-}
+  const TEMPLATE_IDIOMAS = {
+    confirmao_de_reserva: "en_US",
+    reserva_especial: "en_US",
+    hello_world: "en_US"
+  }
 
   const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
 
-
-  
   console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
 
   if(!TEMPLATES_PERMITIDOS.includes(templateNome)){
     console.log("Template não permitido:",templateNome)
   }else{
 
-  const resp = await fetch(url,{
-  method:"POST",
-  headers:{
-    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-    "Content-Type":"application/json"
-  },
-  body: JSON.stringify({
-    messaging_product:"whatsapp",
-    to:cliente,
-    type:"template",
-const resp = await fetch(url,{
-  method:"POST",
-  headers:{
-    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-    "Content-Type":"application/json"
-  },
-  body: JSON.stringify({
-    messaging_product:"whatsapp",
-    to:cliente,
-    type:"template",
-    template:{
-      name:templateNome,
-      language:{ code: idiomaTemplate },
-      components:[
-        {
-          type:"body",
-          parameters:[
-            { type:"text", text: nomeMemoria || "Cliente" }
+    const resp = await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"template",
+        template:{
+          name:templateNome,
+          language:{ code: idiomaTemplate },
+          components:[
+            {
+              type:"body",
+              parameters:[
+                { type:"text", text: nomeMemoria || "Cliente" }
+              ]
+            }
           ]
         }
-      ]
-    }
-  })
-})
+      })
+    })
 
+    const data = await resp.json()
 
-const data = await resp.json()
-
-console.log("📩 RESPOSTA META TEMPLATE:", data)
+    console.log("📩 RESPOSTA META TEMPLATE:", data)
 
     console.log("✅ TEMPLATE ENVIADO")
 
-    // 🔥 ESSA LINHA RESOLVE TUDO
     return res.status(200).end()
   }
 
   resposta = resposta.replace(templateMatch[0],"").trim()
 }
-
 
 
 
