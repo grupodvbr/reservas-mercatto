@@ -500,22 +500,12 @@ case "image":
 
   console.log("🖼️ IMAGEM RECEBIDA")
 
-  if(msg.image.url){
-
-    console.log("⚡ USANDO URL DIRETA META")
-
-    media_url = msg.image.url
-
-  }else{
-
-    console.log("⬇️ BAIXANDO VIA API")
-
-    media_url = await baixarESalvarMidia(
-      msg.image.id,
-      "jpg",
-      msg.image.mime_type || "image/jpeg"
-    )
-  }
+  // 🔥 SEMPRE baixar e salvar
+  media_url = await baixarESalvarMidia(
+    msg.image.id,
+    "jpg",
+    msg.image.mime_type || "image/jpeg"
+  )
 
 break
 
@@ -728,8 +718,13 @@ if(nomeDetectado && nomeValido(nomeDetectado)){
   
 /* ================= AGORA SIM CLASSIFICA ================= */
 
-const tipoMensagem = await classificarMensagem(mensagem)
+let tipoMensagem = "neutro"
 
+if(tipo === "texto" && mensagem && mensagem.trim()){
+  tipoMensagem = await classificarMensagem(mensagem)
+}else{
+  console.log("⚠️ Pulando classificação (mídia)")
+}
 
 
 
