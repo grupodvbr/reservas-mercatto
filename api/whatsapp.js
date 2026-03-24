@@ -1758,13 +1758,13 @@ if(templateMatch){
 
   const templateNome = templateMatch[1]
 
-  const TEMPLATE_IDIOMAS = {
-    confirmao_de_reserva: "en_US",
-    reserva_especial: "en_US",
-    hello_world: "en_US"
-  }
+const TEMPLATE_IDIOMAS = {
+  confirmao_de_reserva: "en_US",
+  reserva_especial: "en_US",
+  hello_world: "en_US"
+}
 
-  const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
+const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
 
   console.log("TENTANDO ENVIAR TEMPLATE:",templateNome)
 
@@ -1778,7 +1778,7 @@ let templatePayload = null
 if(templateNome === "confirmao_de_reserva"){
   templatePayload = {
     name: templateNome,
-    language:{ code:"en_US" },
+    language:{ code: idiomaTemplate }, // ✅ CORRIGIDO
     components:[
       {
         type:"body",
@@ -1795,17 +1795,17 @@ if(templateNome === "confirmao_de_reserva"){
 
 /* ===== TEMPLATE VIDEO ===== */
 else if(templateNome === "reserva_especial"){
-  templatePayload = {
-    name: templateNome,
-    language:{ code:"en_US" }
-  }
+templatePayload = {
+  name: templateNome,
+  language:{ code: idiomaTemplate } // ✅ DINÂMICO
+}
 }
 
 /* ===== TEMPLATE SIMPLES ===== */
 else if(templateNome === "hello_world"){
   templatePayload = {
     name: templateNome,
-    language:{ code:"en_US" }
+    language:{ code: idiomaTemplate }
   }
 }
 
