@@ -609,27 +609,61 @@ function abrirTemplates(){
   menu.style.display = menu.style.display === "flex" ? "none" : "flex"
 }
 
-
 async function enviarTemplate(nome){
 
   if(!telefone) return
 
   console.log("📤 Enviando template:", nome)
 
-  await fetch("/api/send-template",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      telefone,
-      template: nome
+  let parametros = {}
+
+  if(nome === "confirmao_de_reserva"){
+    parametros = {
+      nome: "Cliente",
+      data: "20/03",
+      hora: "20:00",
+      pessoas: "2"
+    }
+  }
+
+  if(nome === "reserva_especial"){
+    parametros = {
+      video: "https://ehxrrpsiksceljmhsfxk.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Video%202026-03-10%20at%2021.08.40.mp4"
+    }
+  }
+
+  if(nome === "hello_world"){
+    parametros = {}
+  }
+
+  try{
+
+    const response = await fetch("/api/send-template",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        telefone,
+        template: nome,
+        parametros
+      })
     })
-  })
+
+    const data = await response.json()
+
+    console.log("📩 RESPOSTA:", data)
+
+    if(data?.error){
+      alert("Erro: " + JSON.stringify(data.error))
+    }
+
+  }catch(err){
+    console.error("🔥 ERRO:", err)
+  }
 
   document.getElementById("menuTemplates").style.display = "none"
 }
-
 
 
 
