@@ -684,7 +684,7 @@ schema:"public",
 table:"controle_bot"
 },
 payload=>{
-carregarClientes()
+  atualizarClientesSilencioso()
 }
 )
 .subscribe()
@@ -697,7 +697,6 @@ let clienteSelecionado = null
 /* ================= CARREGAR CLIENTES ================= */
 
 async function carregarClientes(){
-document.getElementById("frameChat").src = ""
 const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
@@ -1255,7 +1254,92 @@ if(sendBox){
 }
 
 
-  
+  async function atualizarClientesSilencioso(){
+
+  const container = document.getElementById("clientes")
+
+  const {data} = await db
+  .from("conversas_whatsapp")
+  .select("*")
+  .order("created_at",{ascending:false})
+
+  const {data:memoria} = await db
+  .from("memoria_clientes")
+  .select("telefone,nome")
+
+  /* nomes */
+  const nomesTemp = {}
+  memoria.forEach(c=>{
+    nomesTemp[c.telefone] = c.nome
+  })
+
+  /* agrupar */
+  const map = {}
+  data.forEach(m=>{
+    if(!map[m.telefone]) map[m.telefone] = m
+  })
+
+  const clientes = Object.values(map)
+
+  /* 🔥 NÃO LIMPA TUDO → ATUALIZA OU CRIA */
+  clientes.forEach(async c=>{
+
+    let card = document.querySelector(`[data-telefone="${c.telefone}"]`)
+
+    const pausado = await verificarPausa(c.telefone)
+
+    const nome = nomesTemp[c.telefone] || c.telefone
+
+    /* SE NÃO EXISTE → CRIA */
+    if(!card){
+
+      card = document.createElement("div")
+      card.setAttribute("data-telefone", c.telefone)
+
+      card.className = pausado ? "client pausado" : "client"
+
+      card.innerHTML = `
+        <div class="avatar">
+          <img src="https://ui-avatars.com/api/?name=${nome}&background=25d366&color=fff&size=128"
+          style="width:100%;height:100%;border-radius:50%">
+        </div>
+
+        <div>
+          <div class="phone">${nome}</div>
+          <div class="preview">${c.mensagem}</div>
+          <div class="status ${pausado?'off':'on'}">
+            ● ${pausado?'BOT PAUSADO':'BOT ATIVO'}
+          </div>
+        </div>
+
+        <div class="menuDots" onclick="event.stopPropagation(); abrirMenu(event,'${c.telefone}')">⋮</div>
+      `
+
+      card.addEventListener("click", () => {
+        if(window.innerWidth <= 768){
+          window.location.assign("chat.html?telefone=" + c.telefone)
+        } else {
+          abrirChatIframe(c.telefone)
+        }
+      })
+
+      container.prepend(card) // 🔥 NOVO VAI PRO TOPO
+    }
+
+    /* 🔥 ATUALIZA SEM RECRIAR */
+    else{
+      card.querySelector(".phone").innerText = nome
+      card.querySelector(".preview").innerText = c.mensagem
+      card.querySelector(".status").innerHTML =
+        `● ${pausado?'BOT PAUSADO':'BOT ATIVO'}`
+    }
+
+  })
+
+}
+setInterval(() => {
+  atualizarClientesSilencioso()
+}, 5000)
 
 
 
