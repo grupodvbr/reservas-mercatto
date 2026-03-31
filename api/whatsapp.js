@@ -585,6 +585,7 @@ break
 
 
 const cliente = mensagensRecebidas[0]?.from
+  const isAdmin = ADMINS.includes(cliente)
 const message_id = mensagensRecebidas[0]?.id
 /* ================= VERIFICAR PAUSA BOT ================= */
 
@@ -633,6 +634,63 @@ return res.status(200).end()
 }
 
 const texto = mensagem.toLowerCase()
+/* ================= ADMIN RESPONDENDO CLIENTE ================= */
+
+if(isAdmin){
+
+  console.log("👨‍💼 MENSAGEM DO ADMIN DETECTADA")
+
+  /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
+  const { data: ultimaDuvida } = await supabase
+  .from("duvidas_pendentes")
+  .select("*")
+  .order("created_at",{ascending:false})
+  .limit(1)
+  .maybeSingle()
+
+  if(!ultimaDuvida){
+    console.log("⚠️ SEM DÚVIDA PENDENTE")
+    return res.status(200).end()
+  }
+
+  const telefoneCliente = ultimaDuvida.telefone
+
+  /* 🔥 SALVAR APRENDIZADO */
+  await supabase
+  .from("aprendizado_bot")
+  .insert({
+    pergunta: ultimaDuvida.pergunta,
+    resposta: mensagem
+  })
+
+  console.log("🧠 APRENDIZADO SALVO")
+
+  /* 🔥 RESPONDER CLIENTE */
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: telefoneCliente,
+      type:"text",
+      text:{ body: mensagem }
+    })
+  })
+
+  console.log("📤 RESPOSTA ENVIADA PARA CLIENTE")
+
+  /* 🔥 LIMPAR DÚVIDA */
+  await supabase
+  .from("duvidas_pendentes")
+  .delete()
+  .eq("id", ultimaDuvida.id)
+
+  return res.status(200).end()
+}
+  
 const textoNormalizado = normalizar(texto)
 /* ================= DETECTAR NOME INTELIGENTE ================= */
 
@@ -1871,7 +1929,13 @@ resposta.toLowerCase().includes("não tenho") ||
 resposta.toLowerCase().includes("não encontrei")
 
 if(naoSabe){
-
+/* 🔥 SALVAR DÚVIDA */
+await supabase
+.from("duvidas_pendentes")
+.insert({
+  telefone: cliente,
+  pergunta: mensagem
+})
   console.log("🚨 IA NÃO SABE → ESCALANDO")
 
   const resumo = mensagens
