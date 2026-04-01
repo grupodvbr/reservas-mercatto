@@ -693,10 +693,10 @@ body:JSON.stringify({
   console.log("📤 RESPOSTA ENVIADA PARA CLIENTE")
 
   /* 🔥 LIMPAR DÚVIDA */
-  await supabase
-  .from("duvidas_pendentes")
-  .delete()
-  .eq("id", ultimaDuvida.id)
+await supabase
+.from("duvidas_pendentes")
+.delete()
+.eq("id", id)
 
   return res.status(200).end()
 }
@@ -1116,13 +1116,12 @@ observacao: pedido.observacao || "",
 status: "novo"
 }])
 
-return res.status(200).end()
-/* limpar pedido pendente */
-
 await supabase
 .from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
+
+return res.status(200).end()
 }
 
 /* limpar estado conversa */
@@ -2538,8 +2537,10 @@ pessoas: parseInt(reservaVip.pessoas) || 1,
 mesa: salaBanco,
 cardapio: "",
 
-observacoes: "Reserva sala VIP via WhatsApp",
-
+observacoes: reservaVip.observacoes && reservaVip.observacoes.trim() !== ""
+  ? reservaVip.observacoes
+  : "Reserva sala VIP via WhatsApp",
+  
 datahora: datahora,
 
 valorEstimado: 0,
@@ -2551,8 +2552,7 @@ banco: "",
 comandaindividual: false,
 comandaIndividual: reservaVip.comandaIndividual || "Não",
 
-origem: "whatsapp"
-
+origem: "whatsapp",
 })
 
 if(error){
@@ -2732,7 +2732,9 @@ mesa:mesa,
 cardapio:"",
 comandaIndividual: reserva.comandaIndividual || "Não",
   datahora:datahora,
-observacoes:"Reserva via Automação WhatsApp",
+observacoes: reserva.observacoes && reserva.observacoes.trim() !== ""
+  ? reserva.observacoes
+  : "",
 valorEstimado:0,
 pagamentoAntecipado:0,
 banco:"",
@@ -2747,6 +2749,12 @@ const [anoR, mesR, diaR] = dataISO.split("-")
 
 const dataClienteReserva = `${diaR}/${mesR}/${anoR}`
 
+let textoObs = ""
+
+if(reserva.observacoes && reserva.observacoes.trim() !== ""){
+  textoObs = `\n📝 Observação: ${reserva.observacoes}`
+}
+
 resposta =
 `✅ *Reserva confirmada!*
 
@@ -2754,7 +2762,7 @@ Nome: ${reserva.nome}
 Pessoas: ${reserva.pessoas}
 Data: ${dataClienteReserva}
 Hora: ${reserva.hora}
-Área: ${mesa}
+Área: ${mesa}${textoObs}
 
 📍 Mercatto Delícia
 Avenida Rui Barbosa 1264
