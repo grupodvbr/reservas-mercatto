@@ -2020,6 +2020,30 @@ REGRAS DE PRIORIDADE DO AGENTE
 
 {
 role:"system",
+content:`
+AGENDA REAL DO SISTEMA
+
+HOJE:
+${agendaHojeTexto}
+
+PRÓXIMOS DIAS:
+${agendaTexto}
+
+REGRAS CRÍTICAS:
+
+- Use SOMENTE essas informações
+- Nunca invente artista
+- Nunca invente datas
+- Nunca invente horários
+- Se não tiver programação, diga que não tem
+`
+},
+
+
+
+  
+{
+role:"system",
 content: assuntoMusica 
 ? "A pergunta atual do cliente é sobre música ao vivo. Ignore reservas."
 : "A pergunta atual do cliente não é sobre música."
