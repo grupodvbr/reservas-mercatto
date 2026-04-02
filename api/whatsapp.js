@@ -2696,6 +2696,7 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 
 }
 try{
+
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
@@ -2706,6 +2707,13 @@ try{
 reserva = JSON.parse(alterarMatch[1])
 }catch(err){
 console.log("Erro JSON alteração:", err)
+}
+
+}
+
+/* 👇 FECHAMENTO CORRETO DO TRY */
+}catch(e){
+console.log("Erro ao processar alteração:", e)
 }
 
 /* BLOQUEAR ALTERAÇÃO VAZIA */
