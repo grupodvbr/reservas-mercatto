@@ -2159,82 +2159,24 @@ const resp = await fetch(url,{
 
 
   
-if(querFotos){
+if(resposta.includes("ENVIAR_FOTOS")){
 
-/* ================= LISTA DE FOTOS ================= */
-
-const FOTOS = {
-
-  "sala vip 1": [
-    "https://ehxrrpsiksceljmhsfxk.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.26.jpeg",
-    "https://link2.jpg",
-    "https://link3.jpg"
-  ],
-
-  "sala vip 2": [
-    "https://link4.jpg",
-    "https://link5.jpg"
-  ],
-
-  "sacada": [
-    "https://link6.jpg",
-    "https://link7.jpg"
-  ],
-
-  "salao": [
-    "https://link8.jpg",
-    "https://link9.jpg"
-  ]
-
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/images%20(1).jpg",
+caption:"Mercatto Delícia"
 }
-
-/* ================= DETECTAR ÁREA ================= */
-
-let area = "sala vip 1" // padrão
-
-if(texto.includes("vip 2")) area = "sala vip 2"
-if(texto.includes("vip 1")) area = "sala vip 1"
-if(texto.includes("sacada")) area = "sacada"
-if(texto.includes("salão") || texto.includes("salao")) area = "salao"
-
-/* ================= PEGAR LISTA ================= */
-
-const lista = FOTOS[area] || FOTOS["sala vip 1"]
-
-/* ================= ENVIAR TODAS ================= */
-
-for(const foto of lista){
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"image",
-      image:{
-        link:foto,
-        caption:"Mercatto Delícia"
-      }
-    })
-  })
-
-}
-
-await supabase
-.from("conversas_whatsapp")
-.insert({
-telefone:cliente,
-mensagem:`[FOTOS ENVIADAS - ${area}]`,
-role:"assistant"
 })
-
-resposta = resposta.replace(/ENVIAR_FOTOS/g,"").trim()
-
-}
+})
 
 await supabase
 .from("conversas_whatsapp")
@@ -2492,69 +2434,21 @@ Deseja confirmar o pedido?`
 
 console.log("ERRO OPENAI",e)
 
-resposta = `👋 Bem-vindo ao Mercatto Delícia`
+resposta=
+`👋 Bem-vindo ao Mercatto Delícia
+
+Digite:
+
+1️⃣ Cardápio
+2️⃣ Reservas
+3️⃣ Endereço`
 
 }
 
-/* ================= PROCESSAR ALTERAÇÃO ================= */
+/* ================= RESERVA SALA VIP ================= */
 
-try{
-
-const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
-
-if(alterarMatch){
-
-let reserva
-
-try{
-reserva = JSON.parse(alterarMatch[1])
-}catch(err){
-console.log("Erro JSON alteração:", err)
-}
-
-/* BLOQUEAR ALTERAÇÃO VAZIA */
-
-if(
-!reserva?.nome &&
-!reserva?.pessoas &&
-!reserva?.data &&
-!reserva?.hora &&
-!reserva?.area &&
-!reserva?.comandaIndividual
-){
-console.log("ALTERAÇÃO IGNORADA - JSON VAZIO")
-}else{
-
-console.log("Alteração detectada:", reserva)
-
-await supabase
-.from("reservas_mercatto")
-.update({
-nome: reserva.nome,
-pessoas: parseInt(reserva.pessoas) || 1,
-comandaIndividual: reserva.comandaIndividual || "Não"
-})
-.eq("telefone", cliente)
-.eq("status","Pendente")
-.order("datahora",{ascending:false})
-.limit(1)
-
-resposta = `✅ *Reserva atualizada!*
-
-Nome: ${reserva.nome}
-Pessoas: ${reserva.pessoas}
-Data: ${reserva.data}
-Hora: ${reserva.hora}
-
-Sua reserva foi atualizada.`
-
-}
-
-}
-
-}catch(e){
-console.log("Erro ao processar alteração:", e)
-}
+const vipMatch = resposta?.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
+if(vipMatch){
 
 let reservaVip
 
@@ -2744,7 +2638,6 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 
 }
 try{
-
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
@@ -2755,13 +2648,6 @@ try{
 reserva = JSON.parse(alterarMatch[1])
 }catch(err){
 console.log("Erro JSON alteração:", err)
-}
-
-}
-
-/* 👇 FECHAMENTO CORRETO DO TRY */
-}catch(e){
-console.log("Erro ao processar alteração:", e)
 }
 
 /* BLOQUEAR ALTERAÇÃO VAZIA */
