@@ -3288,6 +3288,7 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 
 }
 try{
+
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
 if(alterarMatch){
@@ -3328,16 +3329,19 @@ comandaIndividual: reserva.comandaIndividual || "Não"
 .order("datahora",{ascending:false})
 .limit(1)
 
-resposta = `✅ *Reserva atualizada!*
+resposta = `✅ *Reserva atualizada!*`
+}
 
-Nome: ${reserva.nome}
-Pessoas: ${reserva.pessoas}
-Data: ${reserva.data}
-Hora: ${reserva.hora}
+}catch(e){
 
-Sua reserva foi atualizada.`
+console.log("❌ ERRO AO PROCESSAR ALTERAÇÃO:", e)
 
 }
+
+
+
+
+  
 const match = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
 if(match){
 
