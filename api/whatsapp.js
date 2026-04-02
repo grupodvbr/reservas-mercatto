@@ -1620,47 +1620,79 @@ return res.status(200).end()
   
 
 /* ================= MUSICA AO VIVO ================= */
-
 if(querMusica){
 
-console.log("RESPONDENDO AUTOMATICO MUSICA")
+console.log("🔥 BLOQUEIO TOTAL MUSICA")
 
-resposta=""
+/* ===== SEMANA ===== */
+if(querSemana){
 
+  const agenda = await buscarAgendaPeriodo(hojeISO, seteDiasISO)
+
+  if(!agenda.length){
+    resposta = "Ainda não temos programação musical para essa semana."
+  }else{
+
+    resposta = "🎶 Programação musical da semana:\n\n"
+
+    agenda.forEach(m=>{
+      resposta += `📅 ${m.data}\n`
+      resposta += `🎤 ${m.cantor}\n`
+      resposta += `🕒 ${m.hora}\n`
+      resposta += `🎵 ${m.estilo}\n\n`
+    })
+
+  }
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{body:resposta}
+    })
+  })
+
+  return res.status(200).end()
+}
+
+/* ===== DIA NORMAL ===== */
 if(agendaDia.length){
 
-if(textoDia==="ontem"){
-resposta = `🎶 Ontem tivemos música ao vivo no Mercatto:\n\n`
+  resposta = "🎶 Música ao vivo:\n\n"
+
+  agendaDia.forEach(m=>{
+    resposta += `🎤 ${m.cantor}\n`
+    resposta += `🕒 ${m.hora}\n`
+    resposta += `🎵 ${m.estilo}\n\n`
+  })
+
+  resposta += `💰 Couvert: R$ ${couvertHoje.toFixed(2)}`
+
+}else{
+  resposta = "Hoje não temos música ao vivo."
 }
-else if(textoDia==="amanhã"){
-resposta = `🎶 Música ao vivo amanhã no Mercatto:\n\n`
-}
-else{
-resposta = `🎶 Música ao vivo hoje no Mercatto:\n\n`
-}
 
-
-  
-agendaDia.forEach(m=>{
-
-resposta += `🎤 ${m.cantor}\n`
-resposta += `🕒 ${m.hora}\n`
-resposta += `🎵 ${m.estilo}\n\n`
-
+await fetch(url,{
+  method:"POST",
+  headers:{
+    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    messaging_product:"whatsapp",
+    to:cliente,
+    type:"text",
+    text:{body:resposta}
+  })
 })
 
-resposta += `💰 Couvert artístico: R$ ${couvertHoje.toFixed(2)}`
-}else{
-
-if(textoDia==="ontem"){
-resposta = "Ontem não tivemos música ao vivo no Mercatto."
-}
-else if(textoDia==="amanhã"){
-resposta = "Ainda não temos música ao vivo programada para amanhã."
-}
-else{
-resposta = "Hoje não temos música ao vivo programada."
-}
+return res.status(200).end()
 }
 
 /* ENVIA POSTER */
