@@ -7,7 +7,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -15,8 +15,8 @@
 body{
 margin:0;
 font-family:Inter;
-background:#0f172a;
-color:#fff;
+background:#f8fafc;
+color:#0f172a;
 }
 
 /* HEADER */
@@ -25,8 +25,8 @@ color:#fff;
 padding:20px;
 font-size:22px;
 font-weight:800;
-background:#020617;
-border-bottom:1px solid #1e293b;
+background:#ffffff;
+border-bottom:1px solid #e5e7eb;
 }
 
 /* CONTAINER */
@@ -34,70 +34,72 @@ border-bottom:1px solid #1e293b;
 .container{
 padding:20px;
 display:grid;
-grid-template-columns: 350px 1fr;
+grid-template-columns: 360px 1fr;
 gap:20px;
 }
 
 /* CARD */
 
 .card{
-background:#020617;
-border:1px solid #1e293b;
+background:#ffffff;
+border:1px solid #e5e7eb;
 border-radius:16px;
-padding:16px;
+padding:18px;
+box-shadow:0 4px 20px rgba(0,0,0,0.04);
 }
 
-/* FORM */
+/* INPUTS */
 
 input, textarea, select{
 width:100%;
-padding:10px;
+padding:12px;
 border-radius:10px;
-border:1px solid #1e293b;
-background:#0f172a;
-color:#fff;
+border:1px solid #e5e7eb;
+background:#f9fafb;
 margin-top:5px;
-margin-bottom:10px;
+margin-bottom:12px;
+font-size:14px;
 }
+
+/* BUTTON */
 
 button{
 width:100%;
-padding:12px;
+padding:14px;
 border:none;
 border-radius:12px;
 background:#22c55e;
 color:#fff;
 font-weight:700;
 cursor:pointer;
+transition:0.2s;
 }
 
-/* LOADING */
-
-.loading{
-opacity:0.6;
-pointer-events:none;
+button:hover{
+background:#16a34a;
 }
 
 /* GRID */
 
 .grid{
 display:grid;
-grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
 gap:16px;
 }
 
 /* ITEM */
 
 .item{
-background:#020617;
-border:1px solid #1e293b;
-border-radius:12px;
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:14px;
 padding:10px;
 transition:0.2s;
 }
 
 .item:hover{
-transform:scale(1.02);
+transform:translateY(-3px);
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
 }
 
 .item img, .item video{
@@ -112,19 +114,25 @@ margin-top:8px;
 
 .desc{
 font-size:12px;
-color:#94a3b8;
+color:#64748b;
 }
 
 .tipo{
 font-size:11px;
 margin-top:5px;
-color:#22c55e;
+color:#16a34a;
 }
 
 .delete{
 margin-top:10px;
 background:#ef4444;
 }
+
+.delete:hover{
+background:#dc2626;
+}
+
+/* PREVIEW */
 
 .preview{
 margin-top:10px;
@@ -133,6 +141,13 @@ margin-top:10px;
 .preview img, .preview video{
 width:100%;
 border-radius:10px;
+}
+
+/* LOADING */
+
+.loading{
+opacity:0.5;
+pointer-events:none;
 }
 
 </style>
@@ -152,7 +167,7 @@ border-radius:10px;
 <label>Nome</label>
 <input id="nome">
 
-<label>Descrição (PROMPT DA IA)</label>
+<label>Descrição (prompt da IA)</label>
 <textarea id="descricao"></textarea>
 
 <label>Tipo</label>
@@ -181,10 +196,13 @@ border-radius:10px;
 
 <script>
 
-const supabase = window.supabase.createClient(
+/* 🔥 CLIENT GLOBAL (SEM ERRO DUPLICADO) */
+window.supabaseClient = window.supabaseClient || window.supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
+
+const supabase = window.supabaseClient
 
 /* ================= PREVIEW ================= */
 
@@ -227,26 +245,23 @@ return
 
 const fileName = `midias/${Date.now()}_${file.name}`
 
-/* UPLOAD */
 const { error: uploadError } = await supabase.storage
 .from("midias")
 .upload(fileName, file, { upsert:true })
 
 if(uploadError){
 console.log(uploadError)
-alert("Erro upload")
+alert("Erro no upload")
 form.classList.remove("loading")
 return
 }
 
-/* URL */
 const { data } = supabase.storage
 .from("midias")
 .getPublicUrl(fileName)
 
 const url = data.publicUrl
 
-/* INSERT */
 const { error: insertError } = await supabase
 .from("midias_mercatto")
 .insert({
