@@ -1499,7 +1499,18 @@ textoNormalizado.includes("endereço") ||
 textoNormalizado.includes("localizacao") ||
 textoNormalizado.includes("localização")
 
+const querSemana =
+textoNormalizado.includes("semana") ||
+textoNormalizado.includes("essa semana") ||
+textoNormalizado.includes("da semana") ||
+textoNormalizado.includes("proximos dias") ||
+textoNormalizado.includes("próximos dias")
 
+
+
+
+
+  
 const querMusica =
 texto.includes("musica") ||
 texto.includes("música") ||
