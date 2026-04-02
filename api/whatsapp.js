@@ -1627,6 +1627,9 @@ resposta = `🎶 Música ao vivo amanhã no Mercatto:\n\n`
 else{
 resposta = `🎶 Música ao vivo hoje no Mercatto:\n\n`
 }
+
+
+  
 agendaDia.forEach(m=>{
 
 resposta += `🎤 ${m.cantor}\n`
