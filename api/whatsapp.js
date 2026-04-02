@@ -649,12 +649,11 @@ let nomeMemoria = memoriaCliente?.nome || null
 const ADMIN_NUMERO = "557798253249"
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
-if(!mensagem && tipo === "texto"){
-  console.log("Mensagem texto vazia")
-  return res.status(200).end()
+if(!mensagem){
+console.log("Mensagem vazia")
+return res.status(200).end()
 }
 
-  
 const texto = mensagem.toLowerCase()
 /* ================= ADMIN RESPONDENDO CLIENTE ================= */
 
@@ -665,107 +664,62 @@ if(isAdmin){
   /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
 const match = mensagem.match(/^([a-z0-9\-]+)\s+([\s\S]+)/i)
 
-if(isAdmin){
+if(!match){
+  console.log("❌ ADMIN NÃO INFORMOU ID")
+  return res.status(200).end()
+}
 
-  console.log("👨‍💼 ADMIN DETECTADO")
+const id = match[1]
+const respostaAdmin = match[2]
 
-  const match = mensagem.match(/^([a-z0-9\-]+)\s+([\s\S]+)/i)
+const { data: duvida } = await supabase
+.from("duvidas_pendentes")
+.select("*")
+.eq("id", id)
+.maybeSingle()
 
-  // =============================
-  // 🔥 CASO 1: ADMIN RESPONDENDO DÚVIDA
-  // =============================
-  if(match){
+if(!duvida){
+  console.log("❌ DÚVIDA NÃO ENCONTRADA")
+  return res.status(200).end()
+}
 
-    const id = match[1]
-    const respostaAdmin = match[2]
+const telefoneCliente = duvida.telefone
 
-    const { data: duvida } = await supabase
-    .from("duvidas_pendentes")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle()
+  /* 🔥 SALVAR APRENDIZADO */
+await supabase
+.from("aprendizado_bot")
+.insert({
+  pergunta: duvida.pergunta,
+  resposta: respostaAdmin
+})
 
-    if(!duvida){
-      console.log("❌ DÚVIDA NÃO ENCONTRADA")
+  console.log("🧠 APRENDIZADO SALVO")
 
-      await fetch(url,{
-        method:"POST",
-        headers:{
-          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          messaging_product:"whatsapp",
-          to:cliente,
-          type:"text",
-          text:{ body:"⚠️ ID não encontrado ou já respondido." }
-        })
-      })
-
-      return res.status(200).end()
-    }
-
-    const telefoneCliente = duvida.telefone
-
-    // salvar aprendizado
-    await supabase
-    .from("aprendizado_bot")
-    .insert({
-      pergunta: duvida.pergunta,
-      resposta: respostaAdmin
-    })
-
-    // responder cliente
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to: telefoneCliente,
-        type:"text",
-        text:{ body: respostaAdmin }
-      })
-    })
-
-    // apagar dúvida
-    await supabase
-    .from("duvidas_pendentes")
-    .delete()
-    .eq("id", id)
-
-    return res.status(200).end()
-  }
-
-  // =============================
-  // 🔥 CASO 2: ADMIN FALANDO NORMAL
-  // =============================
-
-  console.log("💬 ADMIN MODO NORMAL")
-
-  const resposta = `👨‍💼 Admin:
-
-${mensagem}`
-
+  /* 🔥 RESPONDER CLIENTE */
   await fetch(url,{
     method:"POST",
     headers:{
       Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
       "Content-Type":"application/json"
     },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to: cliente,
-      type:"text",
-      text:{ body: resposta }
-    })
+body:JSON.stringify({
+  messaging_product:"whatsapp",
+  to: telefoneCliente,
+  type:"text",
+  text:{ body: respostaAdmin }
+})
   })
+
+  console.log("📤 RESPOSTA ENVIADA PARA CLIENTE")
+
+  /* 🔥 LIMPAR DÚVIDA */
+await supabase
+.from("duvidas_pendentes")
+.delete()
+.eq("id", id)
 
   return res.status(200).end()
 }
-
   
 const textoNormalizado = normalizar(texto)
 
@@ -3361,41 +3315,21 @@ if(ultimaMsg?.mensagem === resposta){
 
   
 const envio = await fetch(url,{
-  method:"POST",
-  headers:{
-    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-    "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-    messaging_product:"whatsapp",
-    to:cliente,
-    type:"text",
-    text:{ body:resposta }
-  })
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
 })
 
 const retorno = await envio.json()
 
-/* 🔥 LOG COMPLETO */
-console.log("📤 ENVIO WHATSAPP STATUS:", envio.status)
-console.log("📤 ENVIO WHATSAPP RESPOSTA:", JSON.stringify(retorno,null,2))
-
-/* ❌ SE DER ERRO → PARA TUDO */
-if(!envio.ok || retorno.error){
-
-  console.log("❌ ERRO AO ENVIAR MENSAGEM")
-
-  await supabase
-  .from("logs_erros_whatsapp")
-  .insert({
-    telefone: cliente,
-    erro: JSON.stringify(retorno)
-  })
-
-  return res.status(200).end()
-}
-
-/* ✅ SUCESSO REAL */
 const messageId = retorno?.messages?.[0]?.id
 
 await supabase
@@ -3413,16 +3347,21 @@ const tempoDigitando = Math.min(
 Math.max(resposta.length * 35, 1500), // mínimo 1.5s
 6000 // máximo 6s
 )
+
 await new Promise(resolve => setTimeout(resolve, tempoDigitando))
 
-} catch(error){
 
-  console.log("ERRO GERAL:", error)
 
-  return res.status(200).end()
+}catch(error){
+
+console.log("ERRO GERAL:",error)
+
+return res.status(200).end()
 
 }
 
 return res.status(200).end()
+
+}
 
 }
