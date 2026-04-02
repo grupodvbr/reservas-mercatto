@@ -705,13 +705,23 @@ const textoNormalizado = normalizar(texto)
 
 /* ================= FORÇAR PROMOÇÕES ================= */
 
-if(
-  textoNormalizado.includes("promo") ||
-  textoNormalizado.includes("oferta") ||
-  textoNormalizado.includes("rodizio") ||
-  textoNormalizado.includes("rodízio") ||
-  textoNormalizado.includes("desconto")
-){
+const querPromocao =
+textoNormalizado.includes("promo") ||
+textoNormalizado.includes("oferta") ||
+textoNormalizado.includes("rodizio") ||
+textoNormalizado.includes("rodízio") ||
+textoNormalizado.includes("desconto") ||
+textoNormalizado.includes("oriental") ||
+textoNormalizado.includes("italiano") ||
+textoNormalizado.includes("happy") ||
+textoNormalizado.includes("tem rodizio") ||
+textoNormalizado.includes("tem rodízio") ||
+textoNormalizado.includes("tem promoção") ||
+textoNormalizado.includes("tem promocao") ||
+textoNormalizado.includes("vende oriental") ||
+textoNormalizado.includes("todo dia")
+
+if(querPromocao){
 
   console.log("🔥 FORÇANDO ENVIO DE TODAS PROMOÇÕES")
 
