@@ -8,7 +8,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -72,7 +71,14 @@ font-weight:700;
 cursor:pointer;
 }
 
-/* GRID MIDIAS */
+/* LOADING */
+
+.loading{
+opacity:0.6;
+pointer-events:none;
+}
+
+/* GRID */
 
 .grid{
 display:grid;
@@ -87,6 +93,11 @@ background:#020617;
 border:1px solid #1e293b;
 border-radius:12px;
 padding:10px;
+transition:0.2s;
+}
+
+.item:hover{
+transform:scale(1.02);
 }
 
 .item img, .item video{
@@ -115,6 +126,15 @@ margin-top:10px;
 background:#ef4444;
 }
 
+.preview{
+margin-top:10px;
+}
+
+.preview img, .preview video{
+width:100%;
+border-radius:10px;
+}
+
 </style>
 </head>
 
@@ -125,7 +145,7 @@ background:#ef4444;
 <div class="container">
 
 <!-- FORM -->
-<div class="card">
+<div class="card" id="formCard">
 
 <h3>Nova mídia</h3>
 
@@ -144,7 +164,9 @@ background:#ef4444;
 </select>
 
 <label>Arquivo</label>
-<input type="file" id="file">
+<input type="file" id="file" onchange="previewFile()">
+
+<div class="preview" id="preview"></div>
 
 <button onclick="upload()">Salvar mídia</button>
 
@@ -164,26 +186,56 @@ const supabase = window.supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
+/* ================= PREVIEW ================= */
+
+function previewFile(){
+
+const file = document.getElementById("file").files[0]
+const preview = document.getElementById("preview")
+
+if(!file) return
+
+const url = URL.createObjectURL(file)
+
+if(file.type.includes("video")){
+preview.innerHTML = `<video src="${url}" controls></video>`
+}else{
+preview.innerHTML = `<img src="${url}">`
+}
+
+}
+
 /* ================= UPLOAD ================= */
 
 async function upload(){
 
+const form = document.getElementById("formCard")
+form.classList.add("loading")
+
+try{
+
 const file = document.getElementById("file").files[0]
-const nome = document.getElementById("nome").value
-const descricao = document.getElementById("descricao").value
+const nome = document.getElementById("nome").value.trim()
+const descricao = document.getElementById("descricao").value.trim()
 const tipo = document.getElementById("tipo").value
 
-if(!file) return alert("Selecione um arquivo")
+if(!file || !nome){
+alert("Preencha nome e arquivo")
+form.classList.remove("loading")
+return
+}
 
 const fileName = `midias/${Date.now()}_${file.name}`
 
-/* UPLOAD STORAGE */
-const { error } = await supabase.storage
+/* UPLOAD */
+const { error: uploadError } = await supabase.storage
 .from("midias")
-.upload(fileName, file)
+.upload(fileName, file, { upsert:true })
 
-if(error){
+if(uploadError){
+console.log(uploadError)
 alert("Erro upload")
+form.classList.remove("loading")
 return
 }
 
@@ -194,19 +246,40 @@ const { data } = supabase.storage
 
 const url = data.publicUrl
 
-/* SALVAR NO BANCO */
-await supabase
+/* INSERT */
+const { error: insertError } = await supabase
 .from("midias_mercatto")
 .insert({
 nome,
 descricao,
 tipo,
-url
+url,
+ativo:true
 })
 
-alert("Salvo com sucesso")
+if(insertError){
+console.log(insertError)
+alert("Erro ao salvar no banco")
+form.classList.remove("loading")
+return
+}
+
+/* LIMPAR */
+document.getElementById("nome").value = ""
+document.getElementById("descricao").value = ""
+document.getElementById("file").value = ""
+document.getElementById("preview").innerHTML = ""
+
+alert("✅ Mídia salva!")
 
 carregar()
+
+}catch(err){
+console.log(err)
+alert("Erro inesperado")
+}
+
+form.classList.remove("loading")
 
 }
 
@@ -214,11 +287,16 @@ carregar()
 
 async function carregar(){
 
-const { data } = await supabase
+const { data, error } = await supabase
 .from("midias_mercatto")
 .select("*")
 .eq("ativo",true)
 .order("created_at",{ascending:false})
+
+if(error){
+console.log(error)
+return
+}
 
 const lista = document.getElementById("lista")
 lista.innerHTML = ""
@@ -266,6 +344,7 @@ carregar()
 
 }
 
+/* INIT */
 carregar()
 
 </script>
