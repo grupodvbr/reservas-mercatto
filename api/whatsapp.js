@@ -2492,11 +2492,69 @@ Deseja confirmar o pedido?`
 
 console.log("ERRO OPENAI",e)
 
-resposta=`👋 Bem-vindo ao Mercatto Delícia`
+resposta = `👋 Bem-vindo ao Mercatto Delícia`
+
+}
+
+/* ================= PROCESSAR ALTERAÇÃO ================= */
 
 try{
+
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
-if(vipMatch){
+
+if(alterarMatch){
+
+let reserva
+
+try{
+reserva = JSON.parse(alterarMatch[1])
+}catch(err){
+console.log("Erro JSON alteração:", err)
+}
+
+/* BLOQUEAR ALTERAÇÃO VAZIA */
+
+if(
+!reserva?.nome &&
+!reserva?.pessoas &&
+!reserva?.data &&
+!reserva?.hora &&
+!reserva?.area &&
+!reserva?.comandaIndividual
+){
+console.log("ALTERAÇÃO IGNORADA - JSON VAZIO")
+}else{
+
+console.log("Alteração detectada:", reserva)
+
+await supabase
+.from("reservas_mercatto")
+.update({
+nome: reserva.nome,
+pessoas: parseInt(reserva.pessoas) || 1,
+comandaIndividual: reserva.comandaIndividual || "Não"
+})
+.eq("telefone", cliente)
+.eq("status","Pendente")
+.order("datahora",{ascending:false})
+.limit(1)
+
+resposta = `✅ *Reserva atualizada!*
+
+Nome: ${reserva.nome}
+Pessoas: ${reserva.pessoas}
+Data: ${reserva.data}
+Hora: ${reserva.hora}
+
+Sua reserva foi atualizada.`
+
+}
+
+}
+
+}catch(e){
+console.log("Erro ao processar alteração:", e)
+}
 
 let reservaVip
 
