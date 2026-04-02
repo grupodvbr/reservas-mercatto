@@ -1412,9 +1412,77 @@ await supabase
   media_url,
   nome_arquivo,
   role:"user",
-  message_id: message_id, // 🔥 ESSENCIAL
-  status: "received"      // 🔥 ESSENCIAL
+  message_id: message_id,
+  status: "received"
 })
+
+/* ================= ENVIAR CARDAPIO PDF ================= */
+
+if(resposta && resposta.includes("ENVIAR_CARDAPIO")){
+
+  console.log("📖 ENVIANDO CARDÁPIO PDF")
+
+  resposta = resposta.replace("ENVIAR_CARDAPIO","").trim()
+
+  const pdf = req.body?.cardapio_link || "https://ehxrrpsiksceljmhsfxk.supabase.co/storage/v1/object/public/MERCATTO/CARDAPIO.pdf"
+
+  /* 1️⃣ ENVIA TEXTO */
+  if(resposta){
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"text",
+        text:{ body: resposta }
+      })
+    })
+
+    await supabase
+    .from("conversas_whatsapp")
+    .insert({
+      telefone:cliente,
+      mensagem:resposta,
+      role:"assistant"
+    })
+  }
+
+  /* 2️⃣ ENVIA PDF */
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"document",
+      document:{
+        link: pdf,
+        filename: "Cardapio_Mercatto.pdf"
+      }
+    })
+  })
+
+  await supabase
+  .from("conversas_whatsapp")
+  .insert({
+    telefone:cliente,
+    mensagem:"[CARDÁPIO PDF ENVIADO]",
+    tipo:"documento",
+    media_url: pdf,
+    role:"assistant"
+  })
+
+  return res.status(200).end()
+}
+
+/* ================= CONTINUA O RESTO DO CÓDIGO ================= */
 
 if(querEndereco){
 
