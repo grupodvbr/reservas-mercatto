@@ -804,7 +804,7 @@ async function abrirConversa(telefone){
 
 clienteSelecionado = telefone
 pagina = 0
-
+acabou = false
 const container = document.getElementById("mensagens")
 container.innerHTML = ""
 
@@ -1175,8 +1175,7 @@ const container = document.getElementById("mensagens")
 
 container.onscroll = async () => {
 
-if(container.scrollTop === 0 && !carregando){
-
+if(container.scrollTop < 50 && !carregando){
 carregando = true
 pagina++
 
