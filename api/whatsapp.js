@@ -1612,45 +1612,112 @@ return res.status(200).end()
 
 if(querMusica){
 
-console.log("RESPONDENDO AUTOMATICO MUSICA")
+console.log("🎯 MODO AGENDA REAL (SEM IA)")
 
-resposta=""
+const { inicio, fim } = interpretarPeriodo(texto)
 
-if(agendaDia.length){
+console.log("📅 PERIODO:", inicio, fim)
 
-if(textoDia==="ontem"){
-resposta = `🎶 Ontem tivemos música ao vivo no Mercatto:\n\n`
+const agenda = await buscarAgendaPeriodo(inicio, fim)
+
+if(!agenda.length){
+
+let resposta = "Não temos programação musical cadastrada para esse período 🎶"
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body: resposta }
+})
+})
+
+return res.status(200).end()
 }
-else if(textoDia==="amanhã"){
-resposta = `🎶 Música ao vivo amanhã no Mercatto:\n\n`
+
+/* AGRUPAR POR DATA */
+const porData = {}
+
+agenda.forEach(m => {
+if(!porData[m.data]) porData[m.data] = []
+porData[m.data].push(m)
+})
+
+let resposta = "🎶 Programação musical:\n\n"
+
+for(const data in porData){
+
+const dataBR = data.split("-").reverse().join("/")
+
+resposta += `📅 ${dataBR}\n`
+
+porData[data].forEach(m => {
+resposta += `• ${m.cantor} — ${m.hora.slice(0,5)} (${m.estilo})\n`
+})
+
+resposta += "\n"
 }
-else{
-resposta = `🎶 Música ao vivo hoje no Mercatto:\n\n`
+
+/* ENVIAR POSTER DO PRIMEIRO */
+const poster = pegarPoster(agenda)
+
+if(poster){
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"image",
+image:{
+link:poster,
+caption:"🎶 Programação do Mercatto"
 }
+})
+})
+
+}
+
+/* ENVIAR TEXTO */
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body: resposta }
+})
+})
+
+await supabase
+.from("conversas_whatsapp")
+.insert({
+telefone:cliente,
+mensagem:resposta,
+role:"assistant"
+})
+
+return res.status(200).end()
+}
+
+
 
 
   
-agendaDia.forEach(m=>{
-
-resposta += `🎤 ${m.cantor}\n`
-resposta += `🕒 ${m.hora}\n`
-resposta += `🎵 ${m.estilo}\n\n`
-
-})
-
-resposta += `💰 Couvert artístico: R$ ${couvertHoje.toFixed(2)}`
-}else{
-
-if(textoDia==="ontem"){
-resposta = "Ontem não tivemos música ao vivo no Mercatto."
-}
-else if(textoDia==="amanhã"){
-resposta = "Ainda não temos música ao vivo programada para amanhã."
-}
-else{
-resposta = "Hoje não temos música ao vivo programada."
-}
-}
 
 /* ENVIA POSTER */
 
@@ -3515,4 +3582,42 @@ return res.status(200).end()
 
 }
 
+}
+function interpretarPeriodo(texto){
+
+  const hoje = new Date(
+    new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+  )
+
+  let inicio = new Date(hoje)
+  let fim = new Date(hoje)
+
+  if(texto.includes("amanhã")){
+    inicio.setDate(hoje.getDate()+1)
+    fim = new Date(inicio)
+  }
+
+  else if(texto.includes("ontem")){
+    inicio.setDate(hoje.getDate()-1)
+    fim = new Date(inicio)
+  }
+
+  else if(texto.includes("semana passada")){
+    inicio.setDate(hoje.getDate()-7)
+    fim = new Date(hoje)
+  }
+
+  else if(texto.includes("próxima semana") || texto.includes("semana que vem")){
+    inicio.setDate(hoje.getDate()+7)
+    fim.setDate(hoje.getDate()+14)
+  }
+
+  else if(texto.includes("semana")){
+    fim.setDate(hoje.getDate()+7)
+  }
+
+  return {
+    inicio: inicio.toISOString().split("T")[0],
+    fim: fim.toISOString().split("T")[0]
+  }
 }
