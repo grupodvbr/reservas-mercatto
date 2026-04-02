@@ -1,304 +1,65 @@
+
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
-
-<title>Disparo Inteligente • Mercatto</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Disparo em Massa</title>
 
 <style>
-
-/* ===== BASE ===== */
-*{box-sizing:border-box}
-
 body{
-  margin:0;
   font-family:Inter;
-  background:#0b1220;
-  color:#fff;
-}
-
-/* ===== HEADER ===== */
-.header{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  height:60px;
-  background:#020617;
-  border-bottom:1px solid #1e293b;
-  display:flex;
-  align-items:center;
-  padding:0 15px;
-  font-weight:700;
-  z-index:10;
-}
-
-/* ===== CONTAINER ===== */
-.container{
-  padding:80px 15px 20px;
-  max-width:900px;
-  margin:auto;
-}
-
-/* ===== CARD ===== */
-.card{
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:16px;
-  padding:20px;
-  margin-bottom:15px;
-}
-
-/* ===== BUTTON ===== */
-.btn{
-  width:100%;
-  padding:16px;
-  border-radius:14px;
-  border:none;
-  font-weight:700;
-  font-size:15px;
-  cursor:pointer;
-  background:linear-gradient(135deg,#22c55e,#16a34a);
-  color:#fff;
-  transition:.2s;
-}
-
-.btn:disabled{
-  opacity:.4;
-  cursor:not-allowed;
-}
-
-.btn:hover{
-  transform:scale(1.02);
-}
-
-/* ===== GRID ===== */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:15px;
-}
-
-.box{
   background:#0f172a;
-  padding:12px;
+  color:#fff;
+  padding:20px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin:10px 0;
+  border:none;
   border-radius:10px;
-  font-size:13px;
+  background:#22c55e;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
 }
 
-/* ===== PROGRESS ===== */
-.progress{
-  height:12px;
-  background:#1e293b;
-  border-radius:10px;
-  overflow:hidden;
-  margin-top:15px;
+button:hover{
+  opacity:.9;
 }
-
-.bar{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#22c55e,#4ade80);
-  transition:.4s;
-}
-
-/* ===== LOG ===== */
-.log{
-  margin-top:15px;
-  max-height:250px;
-  overflow:auto;
-  font-size:12px;
-}
-
-.log-item{
-  padding:6px;
-  border-bottom:1px solid #1e293b;
-}
-
-.ok{ color:#22c55e }
-.err{ color:#ef4444 }
-
-/* ===== STATUS BADGE ===== */
-.badge{
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:11px;
-  margin-left:6px;
-}
-
-.success{ background:#065f46 }
-.error{ background:#7f1d1d }
-
-/* ===== LOADING ===== */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:99;
-  display:none;
-}
-
-.loader{
-  width:50px;
-  height:50px;
-  border:5px solid #1e293b;
-  border-top:5px solid #22c55e;
-  border-radius:50%;
-  animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-  0%{transform:rotate(0)}
-  100%{transform:rotate(360deg)}
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="header">
-📢 Disparo Inteligente • Mercatto
-</div>
+<h2>📢 Disparo em Massa</h2>
 
-<div class="container">
+<button onclick="disparar('confirmao_de_reserva')">
+Confirmar Reservas
+</button>
 
-<div class="card">
+<button onclick="disparar('reserva_especial')">
+Sala VIP
+</button>
 
-<button id="btn" class="btn" onclick="iniciar()">🚀 Iniciar Disparo</button>
-
-<div class="grid">
-  <div class="box">📊 Enviados: <b id="enviados">0</b></div>
-  <div class="box">❌ Erros: <b id="erros">0</b></div>
-  <div class="box">👥 Total: <b id="total">0</b></div>
-  <div class="box">📱 Atual: <b id="atual">-</b></div>
-</div>
-
-<div class="progress">
-  <div class="bar" id="bar"></div>
-</div>
-
-<div style="margin-top:10px;font-size:13px">
-📈 Progresso: <b id="progresso">0%</b>
-</div>
-
-</div>
-
-<div class="card">
-<div style="font-weight:600;margin-bottom:10px">📜 Logs</div>
-<div class="log" id="log"></div>
-</div>
-
-</div>
-
-<div class="overlay" id="overlay">
-  <div class="loader"></div>
-</div>
+<button onclick="disparar('hello_world')">
+Teste
+</button>
 
 <script>
+async function disparar(template){
 
-let interval = null
+  if(!confirm("Deseja enviar para TODOS os clientes?")) return
 
-/* ===== SAFE JSON ===== */
-async function safe(res){
-  const text = await res.text()
-  try{ return JSON.parse(text) }
-  catch{ return { error:"Resposta inválida", raw:text } }
+  await fetch("/api/send-template-massa",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ template })
+  })
+
+  alert("🚀 Disparo iniciado!")
 }
-
-/* ===== INICIAR ===== */
-async function iniciar(){
-
-  const btn = document.getElementById("btn")
-  const overlay = document.getElementById("overlay")
-
-  btn.disabled = true
-  overlay.style.display = "flex"
-
-  try{
-
-    const res = await fetch("/api/send-template-massa",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        template:"confirmao_de_reserva"
-      })
-    })
-
-    const data = await safe(res)
-
-    if(!res.ok || data.error){
-      throw new Error(data.error || "Erro ao iniciar")
-    }
-
-    interval = setInterval(update, 1000)
-
-  }catch(e){
-
-    alert("❌ " + e.message)
-    btn.disabled = false
-    overlay.style.display = "none"
-
-  }
-
-}
-
-/* ===== UPDATE ===== */
-async function update(){
-
-  try{
-
-    const res = await fetch("/api/send-template-massa")
-    const data = await safe(res)
-
-    document.getElementById("enviados").innerText = data.enviados || 0
-    document.getElementById("erros").innerText = data.erros || 0
-    document.getElementById("total").innerText = data.total || 0
-    document.getElementById("atual").innerText = data.atual || "-"
-
-    document.getElementById("bar").style.width = (data.progresso || 0) + "%"
-    document.getElementById("progresso").innerText = (data.progresso || 0) + "%"
-
-    document.getElementById("log").innerHTML =
-      (data.logs || []).slice(-50).reverse().map(l => `
-        <div class="log-item ${l.status === "ok" ? "ok" : "err"}">
-          📞 ${l.telefone}
-          <span class="badge ${l.status === "ok" ? "success" : "error"}">
-            ${l.status === "ok" ? "ENVIADO" : "ERRO"}
-          </span>
-          ${l.detalhe ? "<br><small>"+l.detalhe+"</small>" : ""}
-        </div>
-      `).join("")
-
-    if(data.finalizado){
-
-      clearInterval(interval)
-
-      document.getElementById("overlay").style.display = "none"
-      document.getElementById("btn").disabled = false
-
-      alert("✅ Disparo concluído com sucesso")
-
-    }
-
-  }catch(e){
-
-    document.getElementById("log").innerHTML += `
-      <div class="log-item err">❌ ERRO: ${e.message}</div>
-    `
-
-  }
-
-}
-
 </script>
 
 </body>
