@@ -848,7 +848,7 @@ const resposta = `Claro! 😊
 
 Você pode falar diretamente com um dos nossos gerentes:
 
-📱 77 99846-5586
+📱 77 9 8129-3963
 
 Eles vão te atender com prioridade 👌`
 
