@@ -702,6 +702,88 @@ await supabase
 }
   
 const textoNormalizado = normalizar(texto)
+
+/* ================= FORÇAR PROMOÇÕES ================= */
+
+if(
+  textoNormalizado.includes("promo") ||
+  textoNormalizado.includes("oferta") ||
+  textoNormalizado.includes("rodizio") ||
+  textoNormalizado.includes("rodízio") ||
+  textoNormalizado.includes("desconto")
+){
+
+  console.log("🔥 FORÇANDO ENVIO DE TODAS PROMOÇÕES")
+
+  const comandos = [
+    "ENVIAR_PROMO_HAPPY",
+    "ENVIAR_PROMO_ORIENTAL",
+    "ENVIAR_PROMO_ITALIANO"
+  ]
+
+  for(const cmd of comandos){
+
+    if(cmd === "ENVIAR_PROMO_HAPPY"){
+      await fetch(url,{
+        method:"POST",
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          messaging_product:"whatsapp",
+          to:cliente,
+          type:"image",
+          image:{
+            link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.27.52.jpeg",
+            caption:"🍻 Happy Hour • Todos os dias 17h às 20h"
+          }
+        })
+      })
+    }
+
+    if(cmd === "ENVIAR_PROMO_ORIENTAL"){
+      await fetch(url,{
+        method:"POST",
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          messaging_product:"whatsapp",
+          to:cliente,
+          type:"image",
+          image:{
+            link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.03.jpeg",
+            caption:"🍣 Rodízio Oriental • Domingo a partir das 19h"
+          }
+        })
+      })
+    }
+
+    if(cmd === "ENVIAR_PROMO_ITALIANO"){
+      await fetch(url,{
+        method:"POST",
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          messaging_product:"whatsapp",
+          to:cliente,
+          type:"image",
+          image:{
+            link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.26.jpeg",
+            caption:"🍝 Rodízio Italiano • Quinta-feira"
+          }
+        })
+      })
+    }
+
+  }
+
+  return res.status(200).end()
+}
 /* ================= DETECTAR NOME INTELIGENTE ================= */
 
 let nomeDetectado = null
@@ -2497,8 +2579,7 @@ timeZone:"America/Bahia",
 weekday:"long"
 }).toLowerCase()
 
-if(hoje.includes("quinta")){
-
+if(true){
 const midias = [
 "https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.26.jpeg"
 ]
