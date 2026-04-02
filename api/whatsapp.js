@@ -649,11 +649,12 @@ let nomeMemoria = memoriaCliente?.nome || null
 const ADMIN_NUMERO = "557798253249"
 const phone_number_id = change.metadata.phone_number_id
 const url = `https://graph.facebook.com/v19.0/${phone_number_id}/messages`
-if(!mensagem){
-console.log("Mensagem vazia")
-return res.status(200).end()
+if(!mensagem && tipo === "texto"){
+  console.log("Mensagem texto vazia")
+  return res.status(200).end()
 }
 
+  
 const texto = mensagem.toLowerCase()
 /* ================= ADMIN RESPONDENDO CLIENTE ================= */
 
@@ -3360,21 +3361,41 @@ if(ultimaMsg?.mensagem === resposta){
 
   
 const envio = await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:resposta}
-})
+  method:"POST",
+  headers:{
+    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    messaging_product:"whatsapp",
+    to:cliente,
+    type:"text",
+    text:{ body:resposta }
+  })
 })
 
 const retorno = await envio.json()
 
+/* 🔥 LOG COMPLETO */
+console.log("📤 ENVIO WHATSAPP STATUS:", envio.status)
+console.log("📤 ENVIO WHATSAPP RESPOSTA:", JSON.stringify(retorno,null,2))
+
+/* ❌ SE DER ERRO → PARA TUDO */
+if(!envio.ok || retorno.error){
+
+  console.log("❌ ERRO AO ENVIAR MENSAGEM")
+
+  await supabase
+  .from("logs_erros_whatsapp")
+  .insert({
+    telefone: cliente,
+    erro: JSON.stringify(retorno)
+  })
+
+  return res.status(200).end()
+}
+
+/* ✅ SUCESSO REAL */
 const messageId = retorno?.messages?.[0]?.id
 
 await supabase
