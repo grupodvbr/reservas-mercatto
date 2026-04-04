@@ -2897,9 +2897,17 @@ if(fotoMatch){
 
 const nomePratoIA = fotoMatch[1].trim()
 
-const prato = cardapio.find(p =>
-normalizar(p.nome).includes(normalizar(nomePratoIA))
-)
+const nomeBusca = normalizar(nomePratoIA)
+
+const prato = cardapio.find(p => {
+  const nome = normalizar(p.nome)
+
+  return (
+    nome === nomeBusca ||                 // match exato
+    nome.includes(nomeBusca) ||           // nome contém busca
+    nomeBusca.includes(nome)              // busca contém nome
+  )
+})
 
 if(prato && prato.foto_url){
 
