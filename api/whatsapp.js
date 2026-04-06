@@ -1184,23 +1184,53 @@ texto.includes("enviar")
   
 if(confirmou){
 
-const { data: estado } = await supabase
-.from("estado_conversa")
-.select("*")
-.eq("telefone",cliente)
-.maybeSingle()
+console.log("🧾 REGISTRANDO PEDIDO DIRETO NO SUPABASE")
 
-if(estado?.tipo === "confirmacao_pedido"){
+const valorTotal = pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0)
 
-console.log("CONFIRMAÇÃO DE PEDIDO")
+if(!cliente){
+  console.log("❌ TELEFONE NÃO EXISTE")
+  return res.status(200).end()
+}
 
-const { data: pedidoPendente } = await supabase
-.from("pedidos_pendentes")
-.select("*")
-.eq("cliente_telefone",cliente)
-.order("created_at",{ascending:false})
-.limit(1)
+  
+const { data, error } = await supabase
+.from("pedidos")
+.insert([{
+  cliente_nome: pedido.nome || nomeMemoria || "Cliente",
+  cliente_telefone: cliente,
+  itens: pedido.itens,
+  valor_total: valorTotal,
+  forma_pagamento: pedido.pagamento,
+  observacao: pedido.observacao || "",
+  status: "Pendente",
+  origem: "whatsapp",
+  criado_por: "bot"
+}])
+.select()
 .single()
+
+if(error){
+  console.log("❌ ERRO AO SALVAR PEDIDO:", error)
+}else{
+  console.log("✅ PEDIDO SALVO:", data.id)
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{ body:`✅ Pedido confirmado!\nNúmero: ${data?.id || "gerado"}` }
+})
+})
+
+}
 
 
   
