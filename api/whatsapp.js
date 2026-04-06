@@ -1108,6 +1108,63 @@ console.log("🔥 TENTANDO INTERPRETAR TEXTO LIVRE")
 
 const texto = mensagem.toLowerCase()
 
+/* 🚫 BLOQUEAR CONSULTAS */
+const NAO_PEDIDO = [
+"resumo",
+"pedido que fiz",
+"o que pedi",
+"me mostra",
+"ver pedido",
+"consulta",
+"historico"
+]
+
+const ehConsulta = NAO_PEDIDO.some(p => texto.includes(p))
+
+if(ehConsulta){
+  console.log("🚫 NÃO É PEDIDO — É CONSULTA")
+  pedido = null
+}else{
+
+// 🔥 EXTRAI PRODUTO
+let produto = texto
+  .replace(/quero|pedir|pra viagem|para viagem|um|uma|o|a|por favor|me manda|gostaria/g,"")
+  .trim()
+
+produto = produto.replace(/\s+/g," ")
+
+produto = produto
+  .split(" ")
+  .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+  .join(" ")
+
+if(produto.length < 2){
+
+console.log("❌ NÃO IDENTIFICOU PRODUTO")
+pedido = null
+
+}else{
+
+pedido = {
+  nome: nomeMemoria || "Cliente",
+  endereco: "",
+  bairro: "",
+  pagamento: "não informado",
+  itens: [
+    {
+      nome: produto,
+      quantidade: 1,
+      preco: 0
+    }
+  ]
+}
+
+console.log("✅ PEDIDO LIMPO:", pedido)
+
+}
+
+}
+
 // 🔥 EXTRAI PRODUTO (REMOVE FRASES COMUNS)
 let produto = texto
   .replace(/quero|pedir|pra viagem|para viagem|um|uma|o|a|por favor|me manda|gostaria/g,"")
