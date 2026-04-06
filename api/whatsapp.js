@@ -54,8 +54,9 @@ const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
-const hoje = agoraBahia.toISOString().split("T")[0]
-const {data:reservas} = await supabase
+const hoje = agoraBahia.toLocaleDateString("sv-SE", {
+  timeZone: "America/Bahia"
+})const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
 .gte("datahora", hoje+"T00:00")
@@ -1313,8 +1314,9 @@ const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
-const hoje = agoraBahia.toISOString().split("T")[0]
-const {data:reservas} = await supabase
+const hoje = agoraBahia.toLocaleDateString("sv-SE", {
+  timeZone: "America/Bahia"
+})const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
 .gte("datahora", hoje+"T00:00")
