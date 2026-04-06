@@ -205,7 +205,6 @@ const { data, error } = await supabase
 .from("buffet_lancamentos")
 .select("produto_nome,tipo,data")
 .eq("empresa","MERCATTO DELÍCIA")
-.eq("tipo","MONTAGEM")
 .gte("data", hojeISO)
 .lte("data", hojeISO)
 
@@ -1962,10 +1961,7 @@ if(!buffet.length){
   buffetTexto = "SEM ITENS NO BUFFET HOJE"
 }else{
   buffet.forEach(item => {
-    buffetTexto += `
-ITEM: ${item.produto_nome}
-CATEGORIA: ${item.tipo || "geral"}
-`
+buffetTexto += `${item.produto_nome}\n`
   })
 }
 
@@ -2150,17 +2146,41 @@ BUFFET DE HOJE (DADOS REAIS):
 
 ${buffetTexto}
 
-Regras:
+REGRAS IMPORTANTES:
 
-- Esses são os itens reais do buffet de hoje
-- Não invente itens
-- Se o cliente perguntar "o que tem hoje", liste os itens
-- Se perguntar "tem X", verifique nessa lista
-- Organize em lista simples
-- NÃO use símbolos estranhos
-- NÃO use caracteres especiais
-- NÃO use marcadores diferentes de "-"
-- Sempre use apenas texto simples`
+- Você deve organizar os itens em categorias alimentares reais como:
+
+🍖 Carnes  
+🍝 Massas  
+🥗 Saladas  
+🍚 Acompanhamentos  
+🍗 Frango  
+🐟 Peixes  
+🥔 Guarnições  
+
+- NUNCA use termos técnicos como:
+"MONTAGEM", "PRODUÇÃO", "FINALIZAÇÃO"
+
+- NÃO repita categorias
+
+- NÃO invente itens
+
+- Formate exatamente assim:
+
+Buffet de hoje no Mercatto Delícia:
+
+🍖 Carnes
+- item
+- item
+
+🍝 Massas
+- item
+
+🥗 Saladas
+- item
+
+- Use apenas texto simples (sem caracteres estranhos)
+`
 },
 
 {
