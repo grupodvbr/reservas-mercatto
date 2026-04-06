@@ -1085,15 +1085,15 @@ Vamos resolver o mais rápido possível. 💛`
 
 const pedidoClienteMatch = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
-let pedidoIA = null
-  
+let pedido = null
+
 /* ================= TENTAR JSON ================= */
 
 if(pedidoClienteMatch){
 
 try{
-pedidoIA = JSON.parse(pedidoClienteMatch[1])
-  console.log("✅ PEDIDO VIA JSON:", pedido)
+pedido = JSON.parse(pedidoClienteMatch[1])
+console.log("✅ PEDIDO VIA JSON:", pedido)
 }catch(err){
 console.log("❌ ERRO JSON:", err)
 }
@@ -1102,14 +1102,53 @@ console.log("❌ ERRO JSON:", err)
 
 /* ================= 🔥 NOVO: TEXTO LIVRE ================= */
 
-if(!pedidoIA){
+if(!pedido){
 
 console.log("🔥 TENTANDO INTERPRETAR TEXTO LIVRE")
 
-console.log("⛔ BLOQUEADO: texto livre não gera pedido")
+const textoLower = mensagem.toLowerCase()
 
-pedidoIA = null
+const palavrasPedido = [
+  "quero pedir",
+  "vou querer",
+  "me vê",
+  "me ver",
+  "manda",
+  "entrega",
+  "pra entrega",
+  "retirada",
+  "fechar pedido"
+]
 
+const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
+
+if(temIntencaoPedido){
+
+  console.log("🧾 INTENÇÃO DE PEDIDO DETECTADA")
+
+  const dados = extrairDadosPedido(mensagem)
+
+  pedido = {
+    nome: dados.nome || nomeMemoria || "Cliente",
+    endereco: dados.endereco || "",
+    bairro: dados.bairro || "",
+    pagamento: dados.pagamento || "não informado",
+    troco_para: dados.troco || null,
+    observacao: dados.observacao || "",
+    itens: [
+      {
+        nome: dados.item || "Pedido não identificado",
+        quantidade: dados.quantidade || 1,
+        preco: 0
+      }
+    ]
+  }
+
+  console.log("✅ PEDIDO GERADO:", pedido)
+
+}else{
+  console.log("❌ NÃO É PEDIDO")
+}
 }
 
 
@@ -1216,14 +1255,14 @@ item = item
 
 /* ================= SE NÃO TEM PEDIDO, IGNORA ================= */
 
-if(!pedidoIA){
-  console.log("❌ NÃO É PEDIDO")
+if(!pedido){
+console.log("❌ NÃO É PEDIDO")
 }else{
 
 /* ================= CALCULAR TOTAL ================= */
 
-const valorTotal = (pedidoIA?.dados?.itens || []).reduce((s,i)=>{
-  const preco = Number(i.preco || 0)
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+const preco = Number(i.preco || 0)
 const qtd = Number(i.quantidade || 1)
 return s + (preco * qtd)
 },0)
@@ -1231,83 +1270,39 @@ return s + (preco * qtd)
 /* 🔥 GARANTIR DADOS DO CLIENTE */
 
 const nomeFinal =
-pedidoIA?.dados?.cliente_nome ||
-nomeMemoria ||
-"Cliente"
+pedido.nome ||
 nomeMemoria ||
 memoriaCliente?.nome ||
 "Cliente"
 
 const enderecoFinal =
-pedidoIA?.dados?.cliente_endereco ||
+pedido.endereco ||
 memoriaCliente?.endereco ||
 ""
 
 const bairroFinal =
-pedidoIA?.dados?.cliente_bairro ||
+pedido.bairro ||
 memoriaCliente?.bairro ||
 ""
 
 /* ================= SALVAR ================= */
 
-let pedidoIA = null
-
-const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
-
-if(pedidoMatch){
-
-let jsonTexto = pedidoMatch[1]
-
-jsonTexto = jsonTexto
-.replace(/,\s*}/g,"}")
-.replace(/,\s*]/g,"]")
-.replace(/\n/g,"")
-.replace(/\t/g,"")
-.trim()
-
-try{
-pedidoIA = JSON.parse(jsonTexto)
-console.log("✅ Pedido detectado:", pedidoIA)
-}catch(err){
-console.log("❌ ERRO JSON:", err)
-}
-
-if(pedidoIA){
-
-const dados = pedidoIA.dados || {}
-
-const valorTotal = (dados.itens || []).reduce((s,i)=>{
-const preco = Number(i.preco || 0)
-const qtd = Number(i.quantidade || 1)
-return s + (preco * qtd)
-},0)
-
-console.log("💰 TOTAL:", valorTotal)
-
 const { data, error } = await supabase
 .from("pedidos")
 .insert([{
-cliente_nome: dados.cliente_nome || nomeMemoria || "Cliente",
+cliente_nome: nomeFinal,
 cliente_telefone: cliente,
-cliente_endereco: dados.cliente_endereco || "",
-cliente_bairro: dados.cliente_bairro || "",
-itens: dados.itens || [],
+cliente_endereco: enderecoFinal,
+cliente_bairro: bairroFinal,
+itens: pedido.itens || [],
 valor_total: valorTotal,
-forma_pagamento: dados.forma_pagamento || "",
-observacao: dados.observacao || "",
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || "",
 status: "novo",
 origem: "whatsapp"
 }])
 .select()
 
-if(error){
-console.log("❌ ERRO AO SALVAR:", error)
-}else{
-console.log("✅ SALVO NO SUPABASE:", data)
-}
-
-}
-}
 
 
 /* 🔥 SALVAR MEMORIA CLIENTE */
@@ -1447,11 +1442,9 @@ cliente_telefone: cliente,
 cliente_endereco: pedido.endereco || "",
 cliente_bairro: pedido.bairro || "",
 tipo: pedido.tipo || "entrega",
-itens: pedidoIA.dados.itens || [],
-valor_total: pedidoIA.dados.valor_total || 0,
-forma_pagamento: pedidoIA.dados.forma_pagamento || "",
-observacao: pedidoIA.dados.observacao || "",
-cliente_nome: pedidoIA.dados.cliente_nome || nomeMemoria || "Cliente",
+itens: pedido.itens || [],
+valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+forma_pagamento: pedido.pagamento || "",
 observacao: pedido.observacao || "",
 status: "novo"
 }])
@@ -3235,11 +3228,11 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-let pedidoIA = null
-
 const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
 if(pedidoMatch){
+
+let pedido = null
 
 let jsonTexto = pedidoMatch[1]
 
@@ -3256,7 +3249,8 @@ jsonTexto = jsonTexto
 
 try{
 
-pedidoIA = JSON.parse(jsonTexto)
+pedido = JSON.parse(jsonTexto)
+
 console.log("JSON DO PEDIDO OK:", pedido)
 
 }catch(err){
@@ -3267,11 +3261,14 @@ console.log("ERRO:", err)
 
 }
 
-if(pedidoIA){
-console.log("Pedido detectado:",pedidoIA)
+if(pedido){
+
+console.log("Pedido detectado:",pedido)
+
 /* CALCULAR TOTAL */
 
-const valorTotal = (pedidoIA?.dados?.itens || []).reduce((s,i)=>{
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
 const preco = Number(i.preco || 0)
 const qtd = Number(i.quantidade || 1)
 
@@ -3297,11 +3294,9 @@ cliente_nome: pedido.nome,
 cliente_telefone: cliente,
 cliente_endereco: pedido.endereco || "",
 cliente_bairro: pedido.bairro || "",
-itens: pedidoIA.dados.itens || [],
-valor_total: pedidoIA.dados.valor_total || 0,
-forma_pagamento: pedidoIA.dados.forma_pagamento || "",
-observacao: pedidoIA.dados.observacao || "",
-cliente_nome: pedidoIA.dados.cliente_nome || nomeMemoria || "Cliente",
+itens: pedido.itens || [],
+valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
 observacao: pedido.observacao || ""
 })
 .select()
