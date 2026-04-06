@@ -937,9 +937,10 @@ texto.includes("falar com alguem") ||
 texto.includes("atendimento humano") ||
 texto.includes("falar com atendente") ||
 texto.includes("contato") ||
-texto.includes("telefone") ||
-texto.includes("numero") ||
-texto.includes("whatsapp") ||
+texto.includes("falar com gerente") ||
+texto.includes("quero gerente") ||
+texto.includes("atendimento humano") ||
+texto.includes("falar com atendente") ||
 texto.match(/\d{2}\s?\d{4,5}-?\d{4}/)
 
 if(querGerente){
