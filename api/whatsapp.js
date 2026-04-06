@@ -1149,7 +1149,6 @@ console.log("✅ PEDIDO LIMPO:", pedido)
 
 console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
 
-}
 
 }
 
