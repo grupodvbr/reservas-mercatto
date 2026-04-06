@@ -1100,14 +1100,43 @@ console.log("❌ ERRO JSON:", err)
 
 }
 
-/* ================= 🔥 REMOVIDO TEXTO LIVRE ================= */
-
-/* ================= SE NÃO TEM PEDIDO REAL, IGNORA ================= */
+/* ================= 🔥 NOVO: TEXTO LIVRE ================= */
 
 if(!pedido){
-console.log("❌ NÃO É PEDIDO REAL — IGNORADO")
-return res.status(200).end()
+
+console.log("🔥 TENTANDO INTERPRETAR TEXTO LIVRE")
+
+if(
+mensagem.toLowerCase().includes("pedido") ||
+mensagem.toLowerCase().includes("pizza") ||
+mensagem.toLowerCase().includes("quero")
+){
+
+pedido = {
+nome: "Cliente",
+endereco: mensagem,
+bairro: "",
+pagamento: "não informado",
+itens: [
+{
+nome: mensagem,
+quantidade: 1,
+preco: 0
 }
+]
+}
+
+console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
+
+}
+
+}
+
+/* ================= SE NÃO TEM PEDIDO, IGNORA ================= */
+
+if(!pedido){
+console.log("❌ NÃO É PEDIDO")
+}else{
 
 /* ================= CALCULAR TOTAL ================= */
 
@@ -1117,13 +1146,13 @@ const qtd = Number(i.quantidade || 1)
 return s + (preco * qtd)
 },0)
 
-/* ================= GARANTIR DADOS REAIS ================= */
+/* 🔥 GARANTIR DADOS DO CLIENTE */
 
 const nomeFinal =
 pedido.nome ||
 nomeMemoria ||
 memoriaCliente?.nome ||
-"Não informado"
+"Cliente"
 
 const enderecoFinal =
 pedido.endereco ||
@@ -1135,7 +1164,7 @@ pedido.bairro ||
 memoriaCliente?.bairro ||
 ""
 
-/* ================= SALVAR PEDIDO REAL ================= */
+/* ================= SALVAR ================= */
 
 const { data, error } = await supabase
 .from("pedidos")
@@ -1153,7 +1182,9 @@ origem: "whatsapp"
 }])
 .select()
 
-/* ================= SALVAR MEMORIA CLIENTE ================= */
+
+
+/* 🔥 SALVAR MEMORIA CLIENTE */
 
 await supabase
 .from("memoria_clientes")
@@ -1164,20 +1195,23 @@ endereco: enderecoFinal,
 bairro: bairroFinal,
 ultima_interacao: new Date().toISOString()
 },{ onConflict:"telefone" })
+  
 
 if(error){
 console.log("❌ ERRO AO SALVAR PEDIDO:", error)
 }else{
-console.log("✅ PEDIDO SALVO CORRETAMENTE")
+console.log("✅ PEDIDO SALVO COM SUCESSO")
 console.log("🧾 ID:", data?.[0]?.id)
 console.log("📦 DADOS:", data)
 }
 
 /* ================= RESPOSTA ================= */
 
-resposta = `🧾 Pedido registrado com sucesso!
+resposta = `✅ Pedido recebido!
 
-Estamos preparando seu pedido 🍕🔥`
+Seu pedido já foi registrado e enviado para a cozinha 🚀`
+
+}
 
   
 
