@@ -3245,6 +3245,11 @@ Digite:
 
 }
 
+/* 🔥 GARANTE RESPOSTA MESMO EM ERRO */
+if(!resposta){
+resposta = "Ocorreu um erro, tente novamente."
+}
+
 /* ================= RESERVA SALA VIP ================= */
 
 const vipMatch = resposta?.match(/RESERVA_SALA_VIP_JSON:\s*({[\s\S]*?})/)
