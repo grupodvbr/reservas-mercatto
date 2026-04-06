@@ -2309,6 +2309,111 @@ RESERVA_JSON: {
 resposta = completion.choices[0].message.content
 /* 🚨 BLOQUEIO TOTAL DE ALERTA */
 
+
+/* ================= 🚀 CAPTURA IMEDIATA RESERVA ================= */
+
+const reservaMatch = resposta.match(/RESERVA_JSON:\s*({[\s\S]*?})/)
+
+if(reservaMatch){
+
+  console.log("🔥 RESERVA DETECTADA IMEDIATA")
+
+  let reserva
+
+  try{
+    reserva = JSON.parse(reservaMatch[1])
+  }catch(err){
+    console.log("❌ ERRO JSON:", reservaMatch[1])
+    console.log(err)
+    return res.status(200).end()
+  }
+
+  console.log("✅ RESERVA PARSEADA:", reserva)
+
+  /* ================= NORMALIZAR DATA ================= */
+
+  let dataISO = reserva.data
+
+  if(reserva.data && reserva.data.includes("/")){
+
+    const [dia,mes] = reserva.data.split("/")
+
+    const agoraBahia = new Date(
+      new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+    )
+
+    const ano = agoraBahia.getFullYear()
+
+    dataISO = `${ano}-${mes}-${dia}`
+  }
+
+  /* ================= NORMALIZAR AREA ================= */
+
+  let mesa="Salão Central"
+  const areaTexto=(reserva.area || "").toLowerCase()
+
+  if(areaTexto.includes("extern") || areaTexto.includes("sacada")){
+    mesa="Área Externa"
+  }
+
+  if(areaTexto.includes("vip 2")){
+    mesa="Sala VIP 2"
+  }
+  else if(areaTexto.includes("vip")){
+    mesa="Sala VIP 1"
+  }
+
+  /* ================= DATAHORA ================= */
+
+  const datahora = dataISO+"T"+reserva.hora
+
+  /* ================= SALVAR ================= */
+
+  const { error } = await supabase
+  .from("reservas_mercatto")
+  .insert({
+    nome: reserva.nome,
+    telefone: cliente,
+    pessoas: parseInt(reserva.pessoas) || 1,
+    mesa: mesa,
+    datahora: datahora,
+    comandaIndividual: reserva.comandaIndividual || "Não",
+    status: "Pendente",
+    origem: "whatsapp"
+  })
+
+  if(error){
+    console.log("❌ ERRO AO SALVAR:", error)
+  }else{
+    console.log("✅ RESERVA SALVA COM SUCESSO")
+  }
+
+  /* ================= RESPOSTA FINAL ================= */
+
+  const [anoR, mesR, diaR] = dataISO.split("-")
+  const dataCliente = `${diaR}/${mesR}/${anoR}`
+
+  resposta =
+`✅ *Reserva confirmada!*
+
+Nome: ${reserva.nome}
+Pessoas: ${reserva.pessoas}
+Data: ${dataCliente}
+Hora: ${reserva.hora}
+Área: ${mesa}
+
+📍 Mercatto Delícia
+Avenida Rui Barbosa 1264
+
+Aguardamos você! 😊`
+
+}
+
+
+
+
+
+  
 if(resposta.includes("🚨 DÚVIDA DO CLIENTE")){
 
   const { data: novaDuvida } = await supabase
