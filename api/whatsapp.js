@@ -1483,7 +1483,7 @@ if(!pedido){
   
   
   
-.from("pedidos_pendentes")
+.from("pedidos")
 .select("*")
 .eq("cliente_telefone",cliente)
 .order("created_at",{ascending:false})
@@ -1548,7 +1548,7 @@ text:{body:resposta}
 })
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -1575,7 +1575,7 @@ status: "novo"
 }])
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -2503,12 +2503,12 @@ if(
   if(pratoEncontrado){
 
     await supabase
-    .from("pedidos_pendentes")
+    .from("pedidos")
     .delete()
     .eq("cliente_telefone",cliente)
 
     await supabase
-    .from("pedidos_pendentes")
+    .from("pedidos")
     .insert({
       cliente_nome: nomeMemoria || "Cliente",
       cliente_telefone: cliente,
@@ -3408,15 +3408,15 @@ console.log("TOTAL PEDIDO:",valorTotal)
 
 /* SALVAR PEDIDO PENDENTE */
 
-console.log("SALVANDO EM pedidos_pendentes")
+console.log("SALVANDO EM pedidos")
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
 const {data,error} = await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .insert({
 cliente_nome: pedido.nome,
 cliente_telefone: cliente,
