@@ -1444,6 +1444,64 @@ POSTER: ${m.foto || "sem"}
 
 })
 
+
+
+/* ================= RESPOSTA SEMANA ================= */
+
+const querSemana =
+texto.includes("semana") ||
+texto.includes("essa semana") ||
+texto.includes("da semana")
+
+if(querSemana){
+
+if(!agendaSemana.length){
+
+resposta = "Ainda não temos música ao vivo programada para essa semana 🎶"
+
+}else{
+
+resposta = "🎶 Programação da semana:\n\n"
+
+agendaSemana.forEach(m => {
+
+resposta += `📅 ${m.data}\n`
+resposta += `🎤 ${m.cantor}\n`
+resposta += `🕒 ${m.hora}\n\n`
+
+})
+
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+}
+
+
+
+
+
+
+  
+
+
+
+
+
+  
 let agendaHojeTexto = "SEM SHOW HOJE"
 
 if(agendaDia.length){
@@ -1501,6 +1559,63 @@ textoNormalizado.includes("endereço") ||
 textoNormalizado.includes("localizacao") ||
 textoNormalizado.includes("localização")
 
+
+
+/* ================= DATA ESPECIFICA ================= */
+
+const matchData = texto.match(/(\d{2})\/(\d{2})/)
+
+if(matchData){
+
+const dia = matchData[1]
+const mes = matchData[2]
+
+const ano = new Date().getFullYear()
+
+const dataISO = `${ano}-${mes}-${dia}`
+
+const agendaDia = await buscarAgendaDoDia(dataISO)
+
+if(!agendaDia.length){
+
+resposta = `Ainda não temos música ao vivo programada para o dia ${dia}/${mes} 🎶`
+
+}else{
+
+resposta = `🎶 Programação do dia ${dia}/${mes}:\n\n`
+
+agendaDia.forEach(m => {
+
+resposta += `🎤 ${m.cantor}\n`
+resposta += `🕒 ${m.hora}\n\n`
+
+})
+
+}
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+return res.status(200).end()
+}
+
+
+
+
+
+
+  
 
 const querMusica =
 texto.includes("musica") ||
