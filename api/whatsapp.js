@@ -1393,60 +1393,9 @@ textoDia = "ontem"
 if(texto.includes("amanhã")){
 textoDia = "amanhã"
 }
-/* ================= RESPOSTA DIRETA DIA (HOJE / AMANHÃ / ONTEM) ================= */
+const dataISO = dataConsulta.toISOString().split("T")[0]
 
-if(assuntoMusica){
-
-if(!agendaDia.length){
-
-if(texto.includes("amanhã")){
-resposta = "Ainda não temos música ao vivo programada para amanhã 🎶"
-}else if(texto.includes("ontem")){
-resposta = "Não houve música ao vivo ontem 🎶"
-}else{
-resposta = "Hoje não temos música ao vivo programada 🎶"
-}
-
-}else{
-
-if(texto.includes("amanhã")){
-resposta = "🎶 Música ao vivo amanhã:\n\n"
-}else if(texto.includes("ontem")){
-resposta = "🎶 Música ao vivo ontem:\n\n"
-}else{
-resposta = "🎶 Música ao vivo hoje:\n\n"
-}
-
-agendaDia.forEach(m => {
-
-resposta += `🎤 ${m.cantor}\n`
-resposta += `🕒 ${m.hora}\n`
-resposta += `🎵 ${m.estilo}\n\n`
-
-})
-
-}
-
-/* ENVIA RESPOSTA */
-await fetch(url,{
-method:"POST",
-headers:{
-Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-messaging_product:"whatsapp",
-to:cliente,
-type:"text",
-text:{body:resposta}
-})
-})
-
-return res.status(200).end()
-}
-
-
-  
+const agendaDia = await buscarAgendaDoDia(dataISO)
 const couvertHoje = calcularCouvert(agendaDia)
 const agora = new Date()
 
