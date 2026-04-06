@@ -1106,10 +1106,26 @@ if(!pedido){
 
 console.log("🔥 TENTANDO INTERPRETAR TEXTO LIVRE")
 
+const textoLower = mensagem.toLowerCase()
+
+const palavrasPedido = [
+  "quero pedir",
+  "vou querer",
+  "me vê",
+  "me ver",
+  "manda",
+  "entrega",
+  "pra entrega",
+  "retirada",
+  "fechar pedido"
+]
+
+const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
+
 if(
-mensagem.toLowerCase().includes("pedido") ||
-mensagem.toLowerCase().includes("pizza") ||
-mensagem.toLowerCase().includes("quero")
+  textoLower.includes("pizza") ||
+  textoLower.includes("pedido") ||
+  temIntencaoPedido
 ){
 
 pedido = {
