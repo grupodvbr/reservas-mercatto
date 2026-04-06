@@ -1798,7 +1798,72 @@ if(pediuFotoEspecifica){
 
 }
 
+/* ================= RESPOSTA DIRETA BUFFET ================= */
 
+if(querBuffet){
+
+  console.log("🍽️ RESPONDENDO BUFFET DIRETO")
+
+  const buffet = await buscarBuffetHoje()
+
+  let resposta = "🍽️ *Buffet de hoje no Mercatto Delícia:*\n\n"
+
+  if(!buffet.length){
+
+    resposta += "Hoje não temos buffet disponível 😢"
+
+  }else{
+
+    const categorias = {}
+
+    for(const item of buffet){
+
+      const tipo = item.tipo || "Outros"
+
+      if(!categorias[tipo]){
+        categorias[tipo] = []
+      }
+
+      categorias[tipo].push(item.produto_nome)
+    }
+
+    for(const tipo in categorias){
+
+      resposta += `🍴 *${tipo}*\n`
+
+      categorias[tipo].forEach(nome=>{
+        resposta += `- ${nome}\n`
+      })
+
+      resposta += `\n`
+    }
+
+  }
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body:resposta }
+    })
+  })
+
+  await supabase
+  .from("conversas_whatsapp")
+  .insert({
+    telefone:cliente,
+    mensagem:resposta,
+    role:"assistant"
+  })
+
+  return res.status(200).end()
+}
   
 
 
