@@ -1410,6 +1410,9 @@ const { data: estadoMusica } = await supabase
 
 const jaFalouMusica = !!estadoMusica
 console.log("JA ENVIOU PROGRAMAÇÃO:", jaFalouMusica)
+
+
+  
 let dataConsulta = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
@@ -1429,8 +1432,9 @@ textoDia = "ontem"
 if(texto.includes("amanhã")){
 textoDia = "amanhã"
 }
-const dataISO = dataConsulta.toISOString().split("T")[0]
-
+const dataISO = dataConsulta.toLocaleDateString("sv-SE", {
+  timeZone: "America/Bahia"
+})
 const agendaDia = await buscarAgendaDoDia(dataISO)
 const couvertHoje = calcularCouvert(agendaDia)
 const agora = new Date()
