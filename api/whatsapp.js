@@ -2091,8 +2091,11 @@ Regras:
 - Não invente itens
 - Se o cliente perguntar "o que tem hoje", liste os itens
 - Se perguntar "tem X", verifique nessa lista
-- Organize de forma bonita
-`
+- Organize em lista simples
+- NÃO use símbolos estranhos
+- NÃO use caracteres especiais
+- NÃO use marcadores diferentes de "-"
+- Sempre use apenas texto simples`
 },
 
 {
