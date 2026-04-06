@@ -1165,83 +1165,98 @@ if(produto && temIntencao){
     pedido = null
   }else{
 
-    /* 🚨 CAMPOS OBRIGATÓRIOS */
-    const endereco = memoriaCliente?.endereco || ""
-    const bairro = memoriaCliente?.bairro || ""
-    const pagamento = "não informado"
+/* ================= VALIDAÇÃO OBRIGATÓRIA COMPLETA ================= */
 
-    const dadosCompletos =
-      produto &&
-      preco > 0 &&
-      endereco &&
-      bairro
+const nomeFinal = nomeMemoria || memoriaCliente?.nome || ""
+const endereco = memoriaCliente?.endereco || ""
+const bairro = memoriaCliente?.bairro || ""
+const pagamentoDetectado = textoLower.includes("pix") ? "pix"
+  : textoLower.includes("cartao") ? "cartao"
+  : textoLower.includes("dinheiro") ? "dinheiro"
+  : ""
 
-    if(!dadosCompletos){
+/* 🔥 VALIDAÇÕES INDIVIDUAIS */
 
-      console.log("⚠️ FALTAM DADOS PARA GERAR PEDIDO")
+const nomeValido =
+  nomeFinal &&
+  nomeFinal.length > 2
 
-      /* NÃO GERA JSON */
-      pedido = null
+const produtoValido =
+  produto &&
+  produto.nome
 
-      /* PEDE DADOS PRO CLIENTE */
-      await fetch(url,{
-        method:"POST",
-        headers:{
-          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          messaging_product:"whatsapp",
-          to:cliente,
-          type:"text",
-          text:{ body:`Perfeito! 😊
+const precoValido =
+  preco &&
+  preco > 0
 
-Para finalizar seu pedido de *${produto.nome}*, preciso de:
+const enderecoValido =
+  endereco &&
+  endereco.length > 5
 
-📍 Seu endereço completo
-💳 Forma de pagamento
+const bairroValido =
+  bairro &&
+  bairro.length > 2
 
-Pode me informar?` }
-        })
-      })
+const pagamentoValido =
+  pagamentoDetectado &&
+  pagamentoDetectado !== "não informado"
 
-      return res.status(200).end()
-    }
+/* 🔥 VALIDAÇÃO FINAL */
 
-    /* ✅ GERAR PEDIDO CORRETO */
-    pedido = {
-      nome: nomeMemoria || "Cliente",
-      endereco,
-      bairro,
-      pagamento,
-      itens: [
-        {
-          nome: produto.nome,
-          quantidade: 1,
-          preco
-        }
-      ]
-    }
+const pedidoValido =
+  nomeValido &&
+  produtoValido &&
+  precoValido &&
+  enderecoValido &&
+  bairroValido &&
+  pagamentoValido
 
-    console.log("✅ PEDIDO VÁLIDO:", pedido)
-  }
+/* ================= SE NÃO FOR VÁLIDO ================= */
 
-}else{
-  console.log("❌ NÃO É PEDIDO REAL")
+if(!pedidoValido){
+
+  console.log("🚫 PEDIDO BLOQUEADO — DADOS INCOMPLETOS")
+
+  let faltando = []
+
+  if(!nomeValido) faltando.push("nome")
+  if(!enderecoValido) faltando.push("endereço")
+  if(!bairroValido) faltando.push("bairro")
+  if(!pagamentoValido) faltando.push("forma de pagamento")
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{
+        body:`Perfeito! 😊
+
+Para finalizar seu pedido, preciso de:
+
+${faltando.map(f => `• ${f}`).join("\n")}
+
+Pode me informar?`
+      }
+    })
+  })
+
   pedido = null
+  return res.status(200).end()
 }
 
 
 
 
-  
 
-console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
 
-}
 
-}
-
+    
 /* ================= SE NÃO TEM PEDIDO, IGNORA ================= */
 
 if(!pedido){
