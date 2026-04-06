@@ -1122,7 +1122,39 @@ const palavrasPedido = [
 
 const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
 
+if(temIntencaoPedido){
+
+  console.log("🧾 INTENÇÃO DE PEDIDO DETECTADA")
+
+  const dados = extrairDadosPedido(mensagem)
+
+  pedido = {
+    nome: dados.nome || nomeMemoria || "Cliente",
+    endereco: dados.endereco || "",
+    bairro: dados.bairro || "",
+    pagamento: dados.pagamento || "não informado",
+    troco_para: dados.troco || null,
+    observacao: dados.observacao || "",
+    itens: [
+      {
+        nome: dados.item || "Pedido não identificado",
+        quantidade: dados.quantidade || 1,
+        preco: 0
+      }
+    ]
+  }
+
+  console.log("✅ PEDIDO GERADO:", pedido)
+
+}else{
+  console.log("❌ NÃO É PEDIDO")
+}
+}
+
+
 function extrairDadosPedido(texto){
+
+  const textoLower = texto.toLowerCase()
 
   const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean)
 
@@ -1130,123 +1162,94 @@ function extrairDadosPedido(texto){
   let endereco = ""
   let bairro = ""
   let pagamento = ""
+  let troco = null
   let item = ""
+  let quantidade = 1
+  let observacao = ""
 
   for(const linha of linhas){
 
     const lower = linha.toLowerCase()
 
-    if(lower.includes("pix") || lower.includes("cartao") || lower.includes("dinheiro")){
-      pagamento = linha
-      continue
+    // 🔥 PAGAMENTO
+    if(lower.includes("pix")) pagamento = "Pix"
+    if(lower.includes("cartao") || lower.includes("cartão")) pagamento = "Cartão"
+    if(lower.includes("dinheiro")) pagamento = "Dinheiro"
+
+    // 🔥 TROCO
+    if(lower.includes("troco")){
+      const match = linha.match(/\d+/)
+      if(match) troco = match[0]
     }
 
+    // 🔥 ENDEREÇO
     if(
       lower.includes("rua") ||
-      lower.includes("av") ||
       lower.includes("avenida") ||
+      lower.includes("av") ||
       lower.match(/\d+/)
     ){
       endereco += linha + " "
       continue
     }
 
+    // 🔥 BAIRRO
+    if(lower.includes("bairro") || lower.includes("vila")){
+      bairro = linha
+      continue
+    }
+
+    // 🔥 NOME
     if(!nome && linha.split(" ").length <= 3 && !lower.includes("quero")){
       nome = linha
       continue
     }
 
-    if(!item){
-      item = linha
+    // 🔥 QUANTIDADE (ex: 2 pizzas)
+    const qtdMatch = linha.match(/(\d+)\s*(x|pizza|hamburguer|lanche|sushi|salmao)/i)
+    if(qtdMatch){
+      quantidade = parseInt(qtdMatch[1])
     }
 
-  }
-
-  return {
-    nome,
-    endereco: endereco.trim(),
-    bairro,
-    pagamento,
-    item
-  }
-}
-
-// ✅ AQUI ESTAVA FALTANDO NO SEU CÓDIGO
-const dados = extrairDadosPedido(mensagem)
-
-pedido = {
-  nome: dados.nome || nomeMemoria || "Cliente",
-  endereco: dados.endereco || "",
-  bairro: dados.bairro || "",
-  pagamento: dados.pagamento || "não informado",
-  itens: [
-    {
-      nome: dados.item || "Pedido não identificado",
-      quantidade: 1,
-      preco: 0
-    }
-  ]
-}
-
-console.log("✅ PEDIDO CORRIGIDO:", pedido)
-
-function extrairDadosPedido(texto){
-
-  const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean)
-
-  let nome = null
-  let endereco = ""
-  let bairro = ""
-  let pagamento = ""
-  let item = ""
-
-  for(const linha of linhas){
-
-    const lower = linha.toLowerCase()
-
-    // pagamento
-    if(lower.includes("pix") || lower.includes("cartao") || lower.includes("dinheiro")){
-      pagamento = linha
-      continue
-    }
-
-    // endereço
+    // 🔥 OBSERVAÇÃO
     if(
-      lower.includes("rua") ||
-      lower.includes("av") ||
-      lower.includes("avenida") ||
-      lower.match(/\d+/)
+      lower.includes("sem") ||
+      lower.includes("tirar") ||
+      lower.includes("observacao")
     ){
-      endereco += linha + " "
+      observacao += linha + " "
       continue
     }
 
-    // nome (linha curta)
-    if(!nome && linha.split(" ").length <= 3 && !lower.includes("quero")){
-      nome = linha
-      continue
-    }
-
-    // item (primeira frase útil)
-    if(!item){
+    // 🔥 ITEM PRINCIPAL
+    if(!item && (
+      lower.includes("quero") ||
+      lower.includes("pedido") ||
+      lower.includes("pizza") ||
+      lower.includes("salmao") ||
+      lower.includes("hamburguer") ||
+      lower.includes("sushi")
+    )){
       item = linha
     }
 
   }
+
+  // 🔥 LIMPAR ITEM (tirar "quero pedir")
+  item = item
+    .replace(/quero pedir|vou querer|me vê|me ver/gi,"")
+    .trim()
 
   return {
     nome,
     endereco: endereco.trim(),
     bairro,
     pagamento,
-    item
+    troco,
+    item,
+    quantidade,
+    observacao: observacao.trim()
   }
-}
-
-console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
-
-}
-
 }
 
 /* ================= SE NÃO TEM PEDIDO, IGNORA ================= */
