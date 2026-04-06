@@ -1365,19 +1365,38 @@ text:{body:resposta}
 return res.status(200).end()
 
 }
-let assuntoMusica = false
 
-if(
-texto.includes("tocando") ||
-texto.includes("quem toca") ||
-texto.includes("quem canta") ||
+
+let querMusica =
+texto.includes("musica") ||
+texto.includes("música") ||
+texto.includes("cantor") ||
+texto.includes("cantora") ||
 texto.includes("banda") ||
 texto.includes("show") ||
+texto.includes("ao vivo") ||
 texto.includes("dj") ||
-texto.includes("música")
-){
-assuntoMusica = true
-}
+texto.includes("quem canta") ||
+texto.includes("quem vai cantar") ||
+texto.includes("quem vai tocar") ||
+texto.includes("quem toca") ||
+texto.includes("tocando") ||
+texto.includes("quem está tocando") ||
+texto.includes("quem ta tocando") ||
+texto.includes("tem musica") ||
+texto.includes("tem música") ||
+texto.includes("tem banda") ||
+texto.includes("tem show") ||
+texto.includes("vai ter musica") ||
+texto.includes("vai ter música") ||
+texto.includes("programação") ||
+texto.includes("programacao") ||
+texto.includes("agenda") ||
+texto.includes("quem canta hoje") ||
+texto.includes("qual o couvert") ||
+texto.includes("couvert")
+
+let assuntoMusica = querMusica
 
   
 /* ================= CONTROLE MUSICA ================= */
@@ -1628,50 +1647,6 @@ return res.status(200).end()
 }
 
 
-
-
-
-
-  
-
-const querMusica =
-texto.includes("musica") ||
-texto.includes("música") ||
-texto.includes("cantor") ||
-texto.includes("cantora") ||
-texto.includes("banda") ||
-texto.includes("show") ||
-texto.includes("ao vivo") ||
-texto.includes("dj") ||
-texto.includes("quem canta") ||
-texto.includes("quem vai cantar") ||
-texto.includes("quem vai tocar") ||
-texto.includes("quem toca") ||
-texto.includes("tocando") ||
-texto.includes("quem está tocando") ||
-texto.includes("quem ta tocando") ||
-texto.includes("tem musica") ||
-texto.includes("tem música") ||
-texto.includes("tem banda") ||
-texto.includes("tem show") ||
-texto.includes("vai ter musica") ||
-texto.includes("vai ter música") ||
-texto.includes("programação") ||
-texto.includes("programacao") ||
-texto.includes("agenda") ||
-texto.includes("quem canta hoje") ||
-texto.includes("qual o couvert") ||
-texto.includes("couvert")
-
-
-
-  
-console.log("DETECTOU MUSICA:", querMusica)
-assuntoMusica = querMusica
-
-if(querMusica){
-console.log("FORÇANDO ASSUNTO MUSICA")
-}
 /* ================= BLOQUEAR DUPLICIDADE ================= */
 
 const { data: jaProcessada } = await supabase
