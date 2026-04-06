@@ -1351,11 +1351,13 @@ await supabase
 /* ================= RELATORIO ADMIN ================= */
 
 if(ADMINS.includes(cliente) && texto.includes("Reservas do dia")){
+
 const agoraBahia = new Date(
 new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
 const hoje = agoraBahia.toISOString().split("T")[0]
+
 const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
@@ -1407,6 +1409,17 @@ text:{body:resposta}
 return res.status(200).end()
 
 }
+
+
+
+
+
+
+
+
+
+
+
 let assuntoMusica = false
 
 if(
