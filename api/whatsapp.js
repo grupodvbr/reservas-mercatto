@@ -1753,8 +1753,8 @@ return res.status(200).end()
 
 /* ================= FOTO DE PRATO ================= */
 
-if(pediuFotoEspecifica){
-
+if(pediuFotoPrato){
+  
   console.log("📸 CLIENTE PEDIU FOTO")
 
   const cardapio = await buscarCardapio()
@@ -1818,21 +1818,33 @@ if(pediuFotoAmbiente){
 
   console.log("📸 FOTO DE AMBIENTE DETECTADA")
 
+  let comando = ""
+
   if(textoNormalizado.includes("sacada")){
-    resposta = "ENVIAR_FOTOS_SACADA"
+    comando = "ENVIAR_FOTOS_SACADA"
   }
 
   else if(textoNormalizado.includes("vip")){
-    resposta = "ENVIAR_FOTOS_VIP1"
+    comando = "ENVIAR_FOTOS_VIP1"
   }
 
   else if(textoNormalizado.includes("salão") || textoNormalizado.includes("salao")){
-    resposta = "ENVIAR_FOTOS_SALAO"
+    comando = "ENVIAR_FOTOS_SALAO"
   }
 
   else{
-    resposta = "ENVIAR_FOTOS_SALAO"
+    comando = "ENVIAR_FOTOS_SALAO"
   }
+
+  resposta = comando
+
+  /* 🔥 EXECUTA DIRETO SEM IA */
+
+  if(comando === "ENVIAR_FOTOS_SACADA"){
+    // deixa cair no seu bloco de envio lá embaixo
+  }
+
+  return res.status(200).end()
 
 }
 
