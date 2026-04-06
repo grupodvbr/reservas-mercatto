@@ -1236,9 +1236,10 @@ function extrairDadosPedido(texto){
   }
 
   // 🔥 LIMPAR ITEM (tirar "quero pedir")
-  item = item
-    .replace(/quero pedir|vou querer|me vê|me ver/gi,"")
-    .trim()
+item = item
+  .replace(/quero pedir|vou querer|me vê|me ver|manda|pra entrega/gi,"")
+  .replace(/\d+/g,"")
+  .trim()
 
   return {
     nome,
@@ -2355,6 +2356,60 @@ REGRAS:
 })
 
 resposta = completion.choices[0].message.content
+
+
+// ================= PRE-PEDIDO (ANTES DO ENVIO) =================
+
+if(
+  resposta.toLowerCase().includes("você quer") ||
+  resposta.toLowerCase().includes("so para confirmar") ||
+  resposta.toLowerCase().includes("só para confirmar")
+){
+
+  console.log("🧾 SALVANDO PRE-PEDIDO DA IA")
+
+  const matchQtd = resposta.match(/(\d+)/)
+  const quantidade = matchQtd ? parseInt(matchQtd[1]) : 1
+
+  const pratoEncontrado = cardapio.find(p =>
+    resposta.toLowerCase().includes(normalizar(p.nome))
+  )
+
+  if(pratoEncontrado){
+
+    await supabase
+    .from("pedidos_pendentes")
+    .delete()
+    .eq("cliente_telefone",cliente)
+
+    await supabase
+    .from("pedidos_pendentes")
+    .insert({
+      cliente_nome: nomeMemoria || "Cliente",
+      cliente_telefone: cliente,
+      itens: [{
+        nome: pratoEncontrado.nome,
+        quantidade: quantidade,
+        preco: pratoEncontrado.preco_venda
+      }],
+      valor_total: pratoEncontrado.preco_venda * quantidade,
+      forma_pagamento: "",
+      observacao: ""
+    })
+
+    await supabase
+    .from("estado_conversa")
+    .upsert({
+      telefone: cliente,
+      tipo: "confirmacao_pedido"
+    })
+
+    console.log("✅ PRE-PEDIDO SALVO")
+  }
+}
+
+
+  
 /* 🚨 BLOQUEIO TOTAL DE ALERTA */
 
 if(resposta.includes("🚨 DÚVIDA DO CLIENTE")){
