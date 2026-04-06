@@ -1122,24 +1122,125 @@ const palavrasPedido = [
 
 const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
 
-if(
-  textoLower.includes("pizza") ||
-  textoLower.includes("pedido") ||
-  temIntencaoPedido
-){
+function extrairDadosPedido(texto){
+
+  const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean)
+
+  let nome = null
+  let endereco = ""
+  let bairro = ""
+  let pagamento = ""
+  let item = ""
+
+  for(const linha of linhas){
+
+    const lower = linha.toLowerCase()
+
+    if(lower.includes("pix") || lower.includes("cartao") || lower.includes("dinheiro")){
+      pagamento = linha
+      continue
+    }
+
+    if(
+      lower.includes("rua") ||
+      lower.includes("av") ||
+      lower.includes("avenida") ||
+      lower.match(/\d+/)
+    ){
+      endereco += linha + " "
+      continue
+    }
+
+    if(!nome && linha.split(" ").length <= 3 && !lower.includes("quero")){
+      nome = linha
+      continue
+    }
+
+    if(!item){
+      item = linha
+    }
+
+  }
+
+  return {
+    nome,
+    endereco: endereco.trim(),
+    bairro,
+    pagamento,
+    item
+  }
+}
+
+// ✅ AQUI ESTAVA FALTANDO NO SEU CÓDIGO
+const dados = extrairDadosPedido(mensagem)
 
 pedido = {
-nome: "Cliente",
-endereco: mensagem,
-bairro: "",
-pagamento: "não informado",
-itens: [
-{
-nome: mensagem,
-quantidade: 1,
-preco: 0
+  nome: dados.nome || nomeMemoria || "Cliente",
+  endereco: dados.endereco || "",
+  bairro: dados.bairro || "",
+  pagamento: dados.pagamento || "não informado",
+  itens: [
+    {
+      nome: dados.item || "Pedido não identificado",
+      quantidade: 1,
+      preco: 0
+    }
+  ]
 }
-]
+
+console.log("✅ PEDIDO CORRIGIDO:", pedido)
+
+function extrairDadosPedido(texto){
+
+  const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean)
+
+  let nome = null
+  let endereco = ""
+  let bairro = ""
+  let pagamento = ""
+  let item = ""
+
+  for(const linha of linhas){
+
+    const lower = linha.toLowerCase()
+
+    // pagamento
+    if(lower.includes("pix") || lower.includes("cartao") || lower.includes("dinheiro")){
+      pagamento = linha
+      continue
+    }
+
+    // endereço
+    if(
+      lower.includes("rua") ||
+      lower.includes("av") ||
+      lower.includes("avenida") ||
+      lower.match(/\d+/)
+    ){
+      endereco += linha + " "
+      continue
+    }
+
+    // nome (linha curta)
+    if(!nome && linha.split(" ").length <= 3 && !lower.includes("quero")){
+      nome = linha
+      continue
+    }
+
+    // item (primeira frase útil)
+    if(!item){
+      item = linha
+    }
+
+  }
+
+  return {
+    nome,
+    endereco: endereco.trim(),
+    bairro,
+    pagamento,
+    item
+  }
 }
 
 console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
