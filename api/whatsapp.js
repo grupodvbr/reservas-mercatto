@@ -1748,8 +1748,6 @@ return res.status(200).end()
 
 /* ================= FOTO DE PRATO ================= */
 
-/* ================= FOTO DE AMBIENTE (PRIORIDADE) ================= */
-
 if(pediuFotoAmbiente){
 
   console.log("📸 FOTO DE AMBIENTE DETECTADA")
@@ -1772,6 +1770,8 @@ if(pediuFotoAmbiente){
 
   return res.status(200).end()
 }
+
+
 
 
 /* ================= FOTO DE PRATO ================= */
