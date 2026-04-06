@@ -1138,25 +1138,72 @@ if(temIntencaoPedido){
 
   console.log("🧾 INTENÇÃO DE PEDIDO DETECTADA")
 
-  const dados = extrairDadosPedido(mensagem)
+  // 🔥 GARANTE CARDÁPIO CARREGADO
+  if(!global.cardapioAtual){
+    global.cardapioAtual = await buscarCardapio()
+  }
+
+  const textoNormalizado = normalizar(mensagem)
+
+  let itemEncontrado = null
+
+  for(const p of global.cardapioAtual){
+
+    const nomeCardapio = normalizar(p.nome)
+
+    if(
+      textoNormalizado.includes(nomeCardapio) ||
+      nomeCardapio.split(" ").some(palavra => textoNormalizado.includes(palavra))
+    ){
+      itemEncontrado = p
+      break
+    }
+  }
+
+  // 🚨 BLOQUEIO SE NÃO ENCONTRAR PRODUTO
+  if(!itemEncontrado){
+    console.log("❌ PRODUTO NÃO ENCONTRADO — NÃO SALVA")
+
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"text",
+        text:{ body:"Não consegui identificar o item do pedido 😕\nPode me informar o nome exato do prato?" }
+      })
+    })
+
+    return res.status(200).end()
+  }
+
+  // 🔥 QUANTIDADE
+  let quantidade = 1
+  const qtdMatch = mensagem.match(/(\d+)/)
+  if(qtdMatch){
+    quantidade = parseInt(qtdMatch[1])
+  }
 
   pedido = {
-    nome: dados.nome || nomeMemoria || "Cliente",
-    endereco: dados.endereco || "",
-    bairro: dados.bairro || "",
-    pagamento: dados.pagamento || "não informado",
-    troco_para: dados.troco || null,
-    observacao: dados.observacao || "",
+    nome: nomeMemoria || "Cliente",
+    endereco: memoriaCliente?.endereco || "",
+    bairro: memoriaCliente?.bairro || "",
+    pagamento: "não informado",
+    observacao: "",
     itens: [
       {
-        nome: dados.item || "Pedido não identificado",
-        quantidade: dados.quantidade || 1,
-        preco: 0
+        nome: itemEncontrado.nome,
+        quantidade: quantidade,
+        preco: Number(itemEncontrado.preco_venda) || 0
       }
     ]
   }
 
-  console.log("✅ PEDIDO GERADO:", pedido)
+  console.log("✅ PEDIDO CORRETO:", pedido)
 
 }else{
   console.log("❌ NÃO É PEDIDO")
