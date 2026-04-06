@@ -1489,7 +1489,7 @@ textoNormalizado.includes("video") ||
 textoNormalizado.includes("vídeo")
 
 const pediuFotoAmbiente =
-textoNormalizado.includes("foto") &&
+textoNormalizado.match(/foto|imagem|mostrar|ver|conhecer/) &&
 (
   textoNormalizado.includes("sacada") ||
   textoNormalizado.includes("ambiente") ||
