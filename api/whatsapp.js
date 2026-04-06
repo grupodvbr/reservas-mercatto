@@ -1122,25 +1122,119 @@ const palavrasPedido = [
 
 const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
 
-if(
-  textoLower.includes("pizza") ||
-  textoLower.includes("pedido") ||
-  temIntencaoPedido
-){
+const cardapio = await buscarCardapio()
 
-pedido = {
-nome: "Cliente",
-endereco: mensagem,
-bairro: "",
-pagamento: "não informado",
-itens: [
-{
-nome: mensagem,
-quantidade: 1,
-preco: 0
-}
+const textoLimpo = normalizar(mensagem)
+
+/* 🔥 IDENTIFICAR PRODUTO REAL */
+const produto = cardapio.find(p =>
+  textoLimpo.includes(normalizar(p.nome))
+)
+
+/* 🔥 DETECTAR INTENÇÃO */
+const palavrasPedido = [
+  "quero", "vou querer", "me vê", "manda", "entrega", "retirada"
 ]
+
+const temIntencao = palavrasPedido.some(p => textoLimpo.includes(p))
+
+/* 🔥 BLOQUEIOS (NÃO É PEDIDO) */
+const bloqueios = [
+  "ver pedido",
+  "meu pedido",
+  "pedido anterior",
+  "o que pedi",
+  "historico",
+  "resumo"
+]
+
+const bloqueado = bloqueios.some(b => textoLimpo.includes(b))
+
+if(bloqueado){
+  console.log("🚫 BLOQUEADO — NÃO É PEDIDO")
+  pedido = null
 }
+
+/* 🔥 VALIDAÇÃO COMPLETA */
+if(produto && temIntencao){
+
+  const preco = Number(produto.preco_venda || 0)
+
+  if(preco <= 0){
+    console.log("❌ PRODUTO SEM PREÇO")
+    pedido = null
+  }else{
+
+    /* 🚨 CAMPOS OBRIGATÓRIOS */
+    const endereco = memoriaCliente?.endereco || ""
+    const bairro = memoriaCliente?.bairro || ""
+    const pagamento = "não informado"
+
+    const dadosCompletos =
+      produto &&
+      preco > 0 &&
+      endereco &&
+      bairro
+
+    if(!dadosCompletos){
+
+      console.log("⚠️ FALTAM DADOS PARA GERAR PEDIDO")
+
+      /* NÃO GERA JSON */
+      pedido = null
+
+      /* PEDE DADOS PRO CLIENTE */
+      await fetch(url,{
+        method:"POST",
+        headers:{
+          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          messaging_product:"whatsapp",
+          to:cliente,
+          type:"text",
+          text:{ body:`Perfeito! 😊
+
+Para finalizar seu pedido de *${produto.nome}*, preciso de:
+
+📍 Seu endereço completo
+💳 Forma de pagamento
+
+Pode me informar?` }
+        })
+      })
+
+      return res.status(200).end()
+    }
+
+    /* ✅ GERAR PEDIDO CORRETO */
+    pedido = {
+      nome: nomeMemoria || "Cliente",
+      endereco,
+      bairro,
+      pagamento,
+      itens: [
+        {
+          nome: produto.nome,
+          quantidade: 1,
+          preco
+        }
+      ]
+    }
+
+    console.log("✅ PEDIDO VÁLIDO:", pedido)
+  }
+
+}else{
+  console.log("❌ NÃO É PEDIDO REAL")
+  pedido = null
+}
+
+
+
+
+  
 
 console.log("⚠️ PEDIDO GERADO VIA TEXTO:", pedido)
 
