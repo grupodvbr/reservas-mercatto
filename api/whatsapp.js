@@ -1748,17 +1748,43 @@ return res.status(200).end()
 
 /* ================= FOTO DE PRATO ================= */
 
-if(pediuFotoEspecifica){
+/* ================= FOTO DE AMBIENTE (PRIORIDADE) ================= */
 
-  console.log("📸 CLIENTE PEDIU FOTO")
+if(pediuFotoAmbiente){
+
+  console.log("📸 FOTO DE AMBIENTE DETECTADA")
+
+  let resposta = "Claro! Vou te mostrar 😊 ENVIAR_FOTOS_SACADA"
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
+
+  return res.status(200).end()
+}
+
+
+/* ================= FOTO DE PRATO ================= */
+
+if(pediuFotoPrato){
+
+  console.log("📸 CLIENTE PEDIU FOTO DE PRATO")
 
   const cardapio = await buscarCardapio()
 
   const prato = encontrarPratoComFoto(cardapio, mensagem)
 
   if(prato){
-
-    console.log("✅ FOTO ENCONTRADA:", prato.nome)
 
     await fetch(url,{
       method:"POST",
@@ -1787,8 +1813,6 @@ if(pediuFotoEspecifica){
 
   }else{
 
-    console.log("❌ PRATO SEM FOTO")
-
     await fetch(url,{
       method:"POST",
       headers:{
@@ -1807,6 +1831,10 @@ if(pediuFotoEspecifica){
   }
 
 }
+
+
+
+
 
 /* ================= RESPOSTA DIRETA BUFFET ================= */
 
