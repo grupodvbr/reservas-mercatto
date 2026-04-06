@@ -1467,28 +1467,26 @@ if(estado?.tipo === "confirmacao_pedido"){
 
 console.log("CONFIRMAÇÃO DE PEDIDO")
 
-const { data: estado } = await supabase
-.from("estado_conversa")
-.select("*")
-.eq("telefone",cliente)
-.maybeSingle()
-
-const pedido = estado?.dados
-
-if(!pedido){
-  console.log("❌ SEM PEDIDO EM MEMÓRIA")
-  return res.status(200).end()
-}
-  
-  
-  
-  
+const { data: ultimoPedido } = await supabase
 .from("pedidos")
 .select("*")
 .eq("cliente_telefone",cliente)
 .order("created_at",{ascending:false})
 .limit(1)
 .single()
+
+if(!ultimoPedido){
+  console.log("❌ NENHUM PEDIDO ENCONTRADO")
+  return res.status(200).end()
+}
+
+const pedido = {
+  nome: ultimoPedido.cliente_nome,
+  endereco: ultimoPedido.cliente_endereco,
+  bairro: ultimoPedido.cliente_bairro,
+  itens: ultimoPedido.itens,
+  pagamento: ultimoPedido.forma_pagamento
+}
 
 
   
