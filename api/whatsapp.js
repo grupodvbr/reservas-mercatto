@@ -1814,6 +1814,34 @@ if(pediuFotoEspecifica){
 }
 
 
+if(pediuFotoAmbiente){
+
+  console.log("📸 FOTO DE AMBIENTE DETECTADA")
+
+  if(textoNormalizado.includes("sacada")){
+    resposta = "ENVIAR_FOTOS_SACADA"
+  }
+
+  else if(textoNormalizado.includes("vip")){
+    resposta = "ENVIAR_FOTOS_VIP1"
+  }
+
+  else if(textoNormalizado.includes("salão") || textoNormalizado.includes("salao")){
+    resposta = "ENVIAR_FOTOS_SALAO"
+  }
+
+  else{
+    resposta = "ENVIAR_FOTOS_SALAO"
+  }
+
+}
+
+if(resposta.includes("ENVIAR_FOTOS_")){
+  console.log("🚀 ENVIANDO FOTO DE AMBIENTE DIRETO")
+}
+
+
+  
   
 
 
