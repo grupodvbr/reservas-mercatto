@@ -1215,7 +1215,10 @@ Seu pedido já foi registrado e enviado para a cozinha 🚀`
 
   
 
-const confirmou =
+
+
+
+const confirmouPedido =
 texto.includes("sim") ||
 texto.includes("ok") ||
 texto.includes("confirm") ||
@@ -1224,11 +1227,41 @@ texto.includes("manda") ||
 texto.includes("confirmar") ||
 texto.includes("pode sim") ||
 texto.includes("certo") ||
-texto.includes("isso mesmo") ||  
-texto.includes("enviar")
+texto.includes("isso mesmo")
+
+  
+// 🔥 SÓ ENTRA SE ESTIVER EM PEDIDO
+if(confirmouPedido){
+
+const { data: estado } = await supabase
+.from("estado_conversa")
+.select("*")
+.eq("telefone",cliente)
+.eq("tipo","confirmacao_pedido")
+.maybeSingle()
+
+if(!estado){
+  console.log("❌ NÃO É CONFIRMAÇÃO DE PEDIDO")
+}else{
+
+  console.log("✅ CONFIRMANDO PEDIDO")
+
+  // fluxo do pedido aqui
+
+}
+}
 
 
 
+
+
+
+
+
+
+
+
+  
 
   
 if(confirmou){
