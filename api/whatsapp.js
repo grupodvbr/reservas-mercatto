@@ -1750,32 +1750,29 @@ if(pediuFotoAmbiente){
 
   console.log("📸 FOTO DE AMBIENTE DETECTADA")
 
-  resposta = "Claro! Vou te mostrar 😊 "
+  resposta = "Claro! Vou te mostrar nosso ambiente 😊\n\nENVIAR_VIDEO_RESTAURANTE"
 
-  if(textoNormalizado.includes("sacada")){
-    resposta += "ENVIAR_FOTOS_SACADA"
-  }
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
 
-  else if(textoNormalizado.includes("vip 1") || textoNormalizado.includes("vip")){
-    resposta += "ENVIAR_FOTOS_VIP1"
-  }
-
-  else if(textoNormalizado.includes("vip 2")){
-    resposta += "ENVIAR_FOTOS_VIP2"
-  }
-
-  else if(
-    textoNormalizado.includes("salão") ||
-    textoNormalizado.includes("salao")
-  ){
-    resposta += "ENVIAR_FOTOS_SALAO"
-  }
-
-  else{
-    resposta += "ENVIAR_VIDEO_RESTAURANTE"
-  }
-
+  return res.status(200).end()
 }
+
+
+
+
+  
   await fetch(url,{
     method:"POST",
     headers:{
