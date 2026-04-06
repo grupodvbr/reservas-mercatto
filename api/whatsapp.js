@@ -1087,21 +1087,20 @@ const pedidoClienteMatch = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/
 
 if(pedidoClienteMatch){
 
-console.log("PEDIDO RECEBIDO DIRETAMENTE DO CLIENTE")
+console.log("🔥 PEDIDO DETECTADO")
 
 let pedido
-
 let jsonTexto = pedidoClienteMatch[1]
 
 try{
 
 pedido = JSON.parse(jsonTexto)
 
-console.log("JSON DO CLIENTE OK:", pedido)
+console.log("✅ JSON OK:", pedido)
 
 }catch(err){
 
-console.log("ERRO JSON CLIENTE:", err)
+console.log("❌ ERRO JSON:", err)
 console.log("JSON RECEBIDO:", jsonTexto)
 
 return res.status(200).end()
@@ -1111,24 +1110,16 @@ return res.status(200).end()
 /* CALCULAR TOTAL */
 
 const valorTotal = (pedido.itens || []).reduce((s,i)=>{
-
 const preco = Number(i.preco || 0)
 const qtd = Number(i.quantidade || 1)
-
 return s + (preco * qtd)
-
 },0)
 
-console.log("SALVANDO PEDIDO CLIENTE")
+/* SALVAR DIRETO NA TABELA pedidos */
 
-await supabase
-.from("pedidos_pendentes")
-.delete()
-.eq("cliente_telefone",cliente)
-
-const {error} = await supabase
-.from("pedidos_pendentes")
-.insert({
+const { data, error } = await supabase
+.from("pedidos")
+.insert([{
 cliente_nome: pedido.nome,
 cliente_telefone: cliente,
 cliente_endereco: pedido.endereco || "",
@@ -1136,31 +1127,28 @@ cliente_bairro: pedido.bairro || "",
 itens: pedido.itens || [],
 valor_total: valorTotal,
 forma_pagamento: pedido.pagamento || "",
-observacao: pedido.observacao || ""
-})
+observacao: pedido.observacao || "",
+status: "novo",
+origem: "whatsapp"
+}])
+.select()
 
 if(error){
-console.log("ERRO AO SALVAR:",error)
+console.log("❌ ERRO AO SALVAR PEDIDO:", error)
 }else{
-console.log("PEDIDO SALVO")
+console.log("✅ PEDIDO SALVO COM SUCESSO:", data)
 }
 
-/* ESTADO */
+/* RESPOSTA PARA CLIENTE */
 
-await supabase
-.from("estado_conversa")
-.upsert({
-telefone:cliente,
-tipo:"confirmacao_pedido"
-})
+resposta = `✅ Pedido confirmado!
 
-resposta = `🧾 *Resumo do seu pedido*
-
+🧾 Itens:
 ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
 💰 Total: R$ ${valorTotal.toFixed(2)}
 
-Deseja confirmar o pedido?`
+Seu pedido já foi enviado para a cozinha 🚀`
 
 }
 
