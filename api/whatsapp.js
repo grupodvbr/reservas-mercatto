@@ -238,33 +238,6 @@ return unicos
 }
 
 
-
-function pediuFotoAmbiente(texto){
-
-  const t = texto.toLowerCase()
-
-  return (
-    t.includes("foto") &&
-    (
-      t.includes("sacada") ||
-      t.includes("ambiente") ||
-      t.includes("restaurante") ||
-      t.includes("lugar") ||
-      t.includes("estrutura") ||
-      t.includes("salão") ||
-      t.includes("salao") ||
-      t.includes("vip")
-    )
-  )
-}
-
-
-
-
-
-
-
-
 /* ================= VERIFICAR SE TEM PRODUTO (INTELIGENTE) ================= */
 
 function normalizar(txt){
@@ -1733,59 +1706,6 @@ return res.status(200).end()
 
 }
 
-
-
-/* ================= FOTO AMBIENTE ================= */
-
-if(pediuFotoAmbiente(textoNormalizado)){
-
-  console.log("📸 PEDIU FOTO DO AMBIENTE")
-
-  let resposta = ""
-
-  if(textoNormalizado.includes("sacada")){
-    resposta = "ENVIAR_FOTOS_SACADA"
-  }
-  else if(textoNormalizado.includes("vip")){
-    resposta = "ENVIAR_FOTOS_VIP2"
-  }
-  else if(textoNormalizado.includes("salão") || textoNormalizado.includes("salao")){
-    resposta = "ENVIAR_FOTOS_SALAO"
-  }
-  else{
-    // 🔥 PADRÃO → manda vídeo
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"video",
-        video:{
-          link:"https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Video%202026-03-10%20at%2021.08.40.mp4",
-          caption:"Conheça o ambiente do Mercatto Delícia"
-        }
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  // 🔥 injeta no fluxo de mídia que você já tem
-  mensagem = resposta
-  texto = resposta
-
-}
-
-
-
-
-
-
-  
 if(querVideo){
   
 await fetch(url,{
@@ -1816,30 +1736,9 @@ return res.status(200).end()
 }
   
 
-/* ================= FOTO AMBIENTE OU PRATO ================= */
-
-if(pediuFotoAmbiente(textoNormalizado)){
-
-  console.log("📸 AMBIENTE DETECTADO")
-
-  if(textoNormalizado.includes("sacada")){
-    resposta = "ENVIAR_FOTOS_SACADA"
-  }
-  else if(textoNormalizado.includes("vip")){
-    resposta = "ENVIAR_FOTOS_VIP2"
-  }
-  else if(textoNormalizado.includes("salão") || textoNormalizado.includes("salao")){
-    resposta = "ENVIAR_FOTOS_SALAO"
-  }
-  else{
-    resposta = "ENVIAR_VIDEO"
-  }
-
-}
-
 /* ================= FOTO DE PRATO ================= */
 
-else if(pediuFotoEspecifica){
+if(pediuFotoEspecifica){
 
   console.log("📸 CLIENTE PEDIU FOTO")
 
@@ -1898,6 +1797,8 @@ else if(pediuFotoEspecifica){
   }
 
 }
+
+
   
 
 
