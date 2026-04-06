@@ -2144,6 +2144,11 @@ model:"gpt-4.1-mini",
 
 messages:[
 
+
+
+
+
+  
 {
 role:"system",
 content:`
@@ -2253,6 +2258,43 @@ REGRAS CRÍTICAS:
 `
 },
 
+{
+role:"system",
+content:`
+REGRA CRÍTICA DE RESERVA (AÇÃO AUTOMÁTICA)
+
+1. Sempre que o cliente fornecer:
+- nome
+- quantidade de pessoas
+- data
+- horário
+
+→ Você DEVE gerar automaticamente:
+
+RESERVA_JSON: {
+  "nome": "...",
+  "pessoas": "...",
+  "data": "...",
+  "hora": "...",
+  "area": "...",
+  "comandaIndividual": "Sim ou Não"
+}
+
+2. NÃO peça confirmação se os dados já estiverem completos.
+
+3. NÃO apenas responda em texto.
+
+4. SEMPRE execute a reserva automaticamente.
+
+5. O cliente pode escolher QUALQUER data.
+
+6. IMPORTANTE:
+- Se o cliente mencionar um evento (ex: rodízio oriental), você pode sugerir a data correta
+- MAS nunca impedir a escolha do cliente
+- Se ele escolher outro dia, você deve respeitar e reservar normalmente
+
+`
+},
 
 
   
