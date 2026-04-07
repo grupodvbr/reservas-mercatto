@@ -1467,28 +1467,26 @@ if(estado?.tipo === "confirmacao_pedido"){
 
 console.log("CONFIRMAÇÃO DE PEDIDO")
 
-const { data: estado } = await supabase
-.from("estado_conversa")
-.select("*")
-.eq("telefone",cliente)
-.maybeSingle()
-
-const pedido = estado?.dados
-
-if(!pedido){
-  console.log("❌ SEM PEDIDO EM MEMÓRIA")
-  return res.status(200).end()
-}
-  
-  
-  
-  
-.from("pedidos_pendentes")
+const { data: ultimoPedido } = await supabase
+.from("pedidos")
 .select("*")
 .eq("cliente_telefone",cliente)
 .order("created_at",{ascending:false})
 .limit(1)
 .single()
+
+if(!ultimoPedido){
+  console.log("❌ NENHUM PEDIDO ENCONTRADO")
+  return res.status(200).end()
+}
+
+const pedido = {
+  nome: ultimoPedido.cliente_nome,
+  endereco: ultimoPedido.cliente_endereco,
+  bairro: ultimoPedido.cliente_bairro,
+  itens: ultimoPedido.itens,
+  pagamento: ultimoPedido.forma_pagamento
+}
 
 
   
@@ -1548,7 +1546,7 @@ text:{body:resposta}
 })
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -1575,7 +1573,7 @@ status: "novo"
 }])
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -2503,12 +2501,12 @@ if(
   if(pratoEncontrado){
 
     await supabase
-    .from("pedidos_pendentes")
+    .from("pedidos")
     .delete()
     .eq("cliente_telefone",cliente)
 
     await supabase
-    .from("pedidos_pendentes")
+    .from("pedidos")
     .insert({
       cliente_nome: nomeMemoria || "Cliente",
       cliente_telefone: cliente,
@@ -3408,15 +3406,15 @@ console.log("TOTAL PEDIDO:",valorTotal)
 
 /* SALVAR PEDIDO PENDENTE */
 
-console.log("SALVANDO EM pedidos_pendentes")
+console.log("SALVANDO EM pedidos")
 
 await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .delete()
 .eq("cliente_telefone",cliente)
 
 const {data,error} = await supabase
-.from("pedidos_pendentes")
+.from("pedidos")
 .insert({
 cliente_nome: pedido.nome,
 cliente_telefone: cliente,
