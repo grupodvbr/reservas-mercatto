@@ -698,12 +698,23 @@ const texto = mensagem.toLowerCase()
 
 /* ================= CONFIRMAÇÃO DE PEDIDO ================= */
 
+/* 🔥 VERIFICAR SE EXISTE PEDIDO PENDENTE PRIMEIRO */
+const { data: ultimoPedido } = await supabase
+  .from("pedidos_pendentes")
+  .select("*")
+  .eq("cliente_telefone", cliente)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle()
+
 const confirmouPedido =
-  texto === "sim" ||
-  texto.includes("confirmar") ||
-  texto.includes("pode confirmar") ||
-  texto.includes("ok pode pedir") ||
-  texto.includes("fechar pedido")
+  ultimoPedido && (
+    texto === "sim" ||
+    texto.includes("confirmar") ||
+    texto.includes("pode confirmar") ||
+    texto.includes("ok pode pedir") ||
+    texto.includes("fechar pedido")
+  )
 
 if(confirmouPedido){
 
@@ -718,10 +729,25 @@ if(confirmouPedido){
     .limit(1)
     .maybeSingle()
 
-  if(!ultimoPedido){
-    console.log("❌ NÃO EXISTE PEDIDO PARA CONFIRMAR")
-    return res.status(200).end()
-  }
+if(!ultimoPedido){
+  console.log("❌ CONFIRMOU MAS NÃO TEM PEDIDO")
+  
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: cliente,
+      type:"text",
+      text:{ body:"⚠️ Não encontrei nenhum pedido para confirmar. Me diga o que deseja pedir 😊" }
+    })
+  })
+
+  return res.status(200).end()
+}
 
   /* 🔥 SALVAR PEDIDO FINAL */
   const { error } = await supabase
