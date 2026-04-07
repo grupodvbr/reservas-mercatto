@@ -519,6 +519,7 @@ if(!change){
 console.log("Evento inválido")
 return res.status(200).end()
 }
+
 /* IGNORA EVENTOS DE STATUS */
 
 /* ================= TRATAR STATUS ================= */
@@ -693,13 +694,56 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
+/* ================= PEGAR JSON DO PEDIDO ================= */
+
+let pedidoJSON = null
+
+if(mensagem.includes("PEDIDO_DELIVERY_JSON:")){
+
+  try{
+
+    const jsonString = mensagem.split("PEDIDO_DELIVERY_JSON:")[1].trim()
+
+    pedidoJSON = JSON.parse(jsonString)
+
+    console.log("🧾 PEDIDO JSON DETECTADO:", pedidoJSON)
+
+  }catch(err){
+    console.log("❌ ERRO AO PARSEAR JSON:", err)
+  }
+
+}
 
 
 
 
+/* ================= SALVAR PEDIDO PENDENTE ================= */
+
+if(pedidoJSON){
+
+  const dados = pedidoJSON.dados
+
+  await supabase
+    .from("pedidos_pendentes")
+    .insert({
+      cliente_nome: dados.cliente_nome || "Cliente",
+      cliente_telefone: cliente,
+      cliente_endereco: dados.cliente_endereco || "",
+      cliente_bairro: dados.cliente_bairro || "",
+      itens: dados.itens,
+      valor_total: dados.valor_total,
+      forma_pagamento: dados.forma_pagamento,
+      observacao: dados.observacao,
+      origem: "whatsapp"
+    })
+
+  console.log("✅ PEDIDO PENDENTE SALVO CORRETAMENTE")
+
+  // 🔥 LINHA QUE FALTA (CRÍTICA)
+  return res.status(200).end()
+}
 
 
-  
 
 
 
@@ -707,7 +751,7 @@ const texto = mensagem.toLowerCase()
 /* ================= CONFIRMAÇÃO DE PEDIDO ================= */
 
 /* 🔥 VERIFICAR SE EXISTE PEDIDO PENDENTE PRIMEIRO */
-const { data: pedidoConfirmacao } = await supabase
+const { data: ultimoPedido } = await supabase
   .from("pedidos_pendentes")
   .select("*")
   .eq("cliente_telefone", cliente)
@@ -716,7 +760,7 @@ const { data: pedidoConfirmacao } = await supabase
   .maybeSingle()
 
 const confirmouPedido =
-  pedidoConfirmacao && (
+  ultimoPedido && (
     texto === "sim" ||
     texto.includes("confirmar") ||
     texto.includes("pode confirmar") ||
@@ -1196,6 +1240,528 @@ if(!global.cardapioAtual){
 
 
   
+/* ================= PEDIDO DIRETO DO CLIENTE ================= */
+
+const pedidoClienteMatch = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+let pedido = null
+
+/* ================= TENTAR JSON ================= */
+
+if(pedidoClienteMatch){
+
+try{
+pedido = JSON.parse(pedidoClienteMatch[1])
+console.log("✅ PEDIDO VIA JSON:", pedido)
+}catch(err){
+console.log("❌ ERRO JSON:", err)
+}
+
+}
+
+/* ================= 🔥 NOVO: TEXTO LIVRE ================= */
+
+if(!pedido){
+
+console.log("🔥 TENTANDO INTERPRETAR TEXTO LIVRE")
+
+const textoLower = mensagem.toLowerCase()
+
+const palavrasPedido = [
+  "quero pedir",
+  "vou querer",
+  "me vê",
+  "me ver",
+  "manda",
+  "entrega",
+  "pra entrega",
+  "retirada",
+  "fechar pedido"
+]
+
+const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
+
+if(temIntencaoPedido){
+
+  console.log("🧾 INTENÇÃO DE PEDIDO DETECTADA")
+
+  // 🔥 GARANTE CARDÁPIO CARREGADO
+  if(!global.cardapioAtual){
+    global.cardapioAtual = await buscarCardapio()
+  }
+
+  const textoNormalizado = normalizar(mensagem)
+
+  let itemEncontrado = null
+
+  for(const p of global.cardapioAtual){
+
+    const nomeCardapio = normalizar(p.nome)
+
+const palavrasCliente = textoNormalizado.split(" ")
+
+const match = palavrasCliente.some(p => 
+  nomeCardapio.includes(p)
+)
+
+if(match){
+  itemEncontrado = p
+  break
+}
+    
+    
+    {
+      itemEncontrado = p
+      break
+    }
+  }
+
+  // 🚨 BLOQUEIO SE NÃO ENCONTRAR PRODUTO
+  if(!itemEncontrado){
+    console.log("❌ PRODUTO NÃO ENCONTRADO — NÃO SALVA")
+
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"text",
+        text:{ body:"Não consegui identificar o item do pedido 😕\nPode me informar o nome exato do prato?" }
+      })
+    })
+
+    return res.status(200).end()
+  }
+
+  // 🔥 QUANTIDADE
+  let quantidade = 1
+  const qtdMatch = mensagem.match(/(\d+)/)
+  if(qtdMatch){
+    quantidade = parseInt(qtdMatch[1])
+  }
+
+  pedido = {
+    nome: nomeMemoria || "Cliente",
+    endereco: memoriaCliente?.endereco || "",
+    bairro: memoriaCliente?.bairro || "",
+    pagamento: "não informado",
+    observacao: "",
+    itens: [
+      {
+        nome: itemEncontrado.nome,
+        quantidade: quantidade,
+        preco: Number(itemEncontrado.preco_venda) || 0
+      }
+    ]
+  }
+
+
+
+
+
+// 🔥 SALVAR PEDIDO PENDENTE (AQUI É O PONTO CRÍTICO)
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone", cliente)
+
+await supabase
+.from("pedidos_pendentes")
+.insert({
+  cliente_nome: nomeMemoria || "Cliente",
+  cliente_telefone: cliente,
+  cliente_endereco: memoriaCliente?.endereco || "",
+  cliente_bairro: memoriaCliente?.bairro || "",
+  itens: pedido.itens,
+  valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+  forma_pagamento: "",
+  observacao: ""
+})
+
+// 🔥 MARCAR ESTADO
+await supabase
+.from("estado_conversa")
+.upsert({
+  telefone: cliente,
+  tipo: "confirmacao_pedido"
+})
+
+
+
+
+
+
+
+
+  
+  console.log("✅ PEDIDO CORRETO:", pedido)
+
+}else{
+  console.log("❌ NÃO É PEDIDO")
+}
+}
+
+
+function extrairDadosPedido(texto){
+
+  const textoLower = texto.toLowerCase()
+
+  const linhas = texto.split("\n").map(l => l.trim()).filter(Boolean)
+
+  let nome = null
+  let endereco = ""
+  let bairro = ""
+  let pagamento = ""
+  let troco = null
+  let item = ""
+  let quantidade = 1
+  let observacao = ""
+
+  for(const linha of linhas){
+
+    const lower = linha.toLowerCase()
+
+    // 🔥 PAGAMENTO
+    if(lower.includes("pix")) pagamento = "Pix"
+    if(lower.includes("cartao") || lower.includes("cartão")) pagamento = "Cartão"
+    if(lower.includes("dinheiro")) pagamento = "Dinheiro"
+
+    // 🔥 TROCO
+    if(lower.includes("troco")){
+      const match = linha.match(/\d+/)
+      if(match) troco = match[0]
+    }
+
+    // 🔥 ENDEREÇO
+    if(
+      lower.includes("rua") ||
+      lower.includes("avenida") ||
+      lower.includes("av") ||
+      lower.match(/\d+/)
+    ){
+      endereco += linha + " "
+      continue
+    }
+
+    // 🔥 BAIRRO
+    if(lower.includes("bairro") || lower.includes("vila")){
+      bairro = linha
+      continue
+    }
+
+    // 🔥 NOME
+    if(!nome && linha.split(" ").length <= 3 && !lower.includes("quero")){
+      nome = linha
+      continue
+    }
+
+    // 🔥 QUANTIDADE (ex: 2 pizzas)
+    const qtdMatch = linha.match(/(\d+)\s*(x|pizza|hamburguer|lanche|sushi|salmao)/i)
+    if(qtdMatch){
+      quantidade = parseInt(qtdMatch[1])
+    }
+
+    // 🔥 OBSERVAÇÃO
+    if(
+      lower.includes("sem") ||
+      lower.includes("tirar") ||
+      lower.includes("observacao")
+    ){
+      observacao += linha + " "
+      continue
+    }
+
+    // 🔥 ITEM PRINCIPAL
+// 🔥 ITEM PRINCIPAL COM MATCH NO CARDÁPIO
+if(!item && (
+  lower.includes("quero") ||
+  lower.includes("pedido") ||
+  lower.includes("pizza") ||
+  lower.includes("salmao") ||
+  lower.includes("hamburguer") ||
+  lower.includes("sushi")
+)){
+
+  // 🔥 BUSCAR CARDÁPIO REAL
+  const cardapio = global.cardapioAtual || []
+
+  let itemEncontrado = null
+
+  for(const p of cardapio){
+
+    const nomeCardapio = normalizar(p.nome)
+    const linhaNormalizada = normalizar(linha)
+
+const palavrasLinha = linhaNormalizada.split(" ")
+
+if(
+  palavrasLinha.some(p => nomeCardapio.includes(p))
+){
+  itemEncontrado = p
+  break
+}
+    
+    
+    {
+      itemEncontrado = p
+      break
+    }
+  }
+
+  if(itemEncontrado){
+    item = itemEncontrado.nome
+    preco = Number(itemEncontrado.preco_venda) || 0
+  }else{
+    item = linha
+    preco = 0
+  }
+}
+
+  }
+
+  // 🔥 LIMPAR ITEM (tirar "quero pedir")
+item = item
+  .replace(/quero pedir|vou querer|me vê|me ver|manda|pra entrega|para viagem|delivery/gi,"")
+  .replace(/\d+/g,"")
+  .replace(/\bum\b|\buma\b/g,"")
+  .trim()
+
+return {
+  nome,
+  endereco,
+  bairro,
+  pagamento,
+  troco,
+  item,
+  preco,
+  quantidade,
+  observacao
+  }
+}
+
+/* ================= SE NÃO TEM PEDIDO, IGNORA ================= */
+
+if(!pedido){
+console.log("❌ NÃO É PEDIDO")
+}else{
+
+/* ================= CALCULAR TOTAL ================= */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+return s + (preco * qtd)
+},0)
+
+/* 🔥 GARANTIR DADOS DO CLIENTE */
+
+const nomeFinal =
+pedido.nome ||
+nomeMemoria ||
+memoriaCliente?.nome ||
+"Cliente"
+
+const enderecoFinal =
+pedido.endereco ||
+memoriaCliente?.endereco ||
+""
+
+const bairroFinal =
+pedido.bairro ||
+memoriaCliente?.bairro ||
+""
+
+/* ================= SALVAR ================= */
+
+const { data, error } = await supabase
+.from("pedidos")
+.insert([{
+cliente_nome: nomeFinal,
+cliente_telefone: cliente,
+cliente_endereco: enderecoFinal,
+cliente_bairro: bairroFinal,
+
+
+  
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || "",
+status: "novo",
+origem: "whatsapp"
+}])
+.select()
+
+
+
+/* 🔥 SALVAR MEMORIA CLIENTE */
+
+await supabase
+.from("memoria_clientes")
+.upsert({
+telefone: cliente,
+nome: nomeFinal,
+endereco: enderecoFinal,
+bairro: bairroFinal,
+ultima_interacao: new Date().toISOString()
+},{ onConflict:"telefone" })
+  
+
+if(error){
+console.log("❌ ERRO AO SALVAR PEDIDO:", error)
+}else{
+console.log("✅ PEDIDO SALVO COM SUCESSO")
+console.log("🧾 ID:", data?.[0]?.id)
+console.log("📦 DADOS:", data)
+}
+
+/* ================= RESPOSTA ================= */
+
+resposta = `✅ Pedido recebido!
+
+Seu pedido já foi registrado e enviado para a cozinha 🚀`
+
+}
+
+  
+
+const confirmou =
+texto.includes("sim") ||
+texto.includes("ok") ||
+texto.includes("confirm") ||
+texto.includes("pode") ||
+texto.includes("manda") ||
+texto.includes("confirmar") ||
+texto.includes("pode sim") ||
+texto.includes("certo") ||
+texto.includes("isso mesmo") ||  
+texto.includes("enviar")
+
+
+
+
+  
+if(confirmou){
+
+const { data: estado } = await supabase
+.from("estado_conversa")
+.select("*")
+.eq("telefone",cliente)
+.maybeSingle()
+
+if(estado?.tipo === "confirmacao_pedido"){
+
+console.log("CONFIRMAÇÃO DE PEDIDO")
+
+const { data: pedidoPendente } = await supabase
+.from("pedidos_pendentes")
+.select("*")
+.eq("cliente_telefone",cliente)
+.order("created_at",{ascending:false})
+.limit(1)
+.single()
+
+
+  
+if(pedidoPendente){
+
+const pedido = {
+nome: pedidoPendente.cliente_nome,
+endereco: pedidoPendente.cliente_endereco,
+bairro: pedidoPendente.cliente_bairro,
+itens: pedidoPendente.itens,
+pagamento: pedidoPendente.forma_pagamento
+}
+
+  
+console.log("ENVIANDO PEDIDO PARA API")
+
+const api = await fetch(`${process.env.API_URL}/api/pedidos`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body: JSON.stringify({
+  acao: "criar",
+  dados: {
+    cliente_nome: pedido.nome,
+    cliente_telefone: cliente,
+    itens: pedido.itens,
+    valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+    forma_pagamento: pedido.pagamento,
+    observacao: pedido.observacao || ""
+  }
+})
+})
+
+const retorno = await api.json()
+
+console.log("RETORNO API:",retorno)
+
+resposta = `✅ *Pedido enviado com sucesso!*
+
+🧾 Número do pedido: ${retorno.pedido_id}
+
+Nossa cozinha já recebeu seu pedido.`
+
+await fetch(url,{
+method:"POST",
+headers:{
+Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+messaging_product:"whatsapp",
+to:cliente,
+type:"text",
+text:{body:resposta}
+})
+})
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+await supabase
+.from("pedidos")
+.insert([{
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+tipo: pedido.tipo || "entrega",
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],
+  
+  valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || "",
+status: "novo"
+}])
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+return res.status(200).end()
+}
 
 /* limpar estado conversa */
 
@@ -1204,6 +1770,8 @@ await supabase
 .delete()
 .eq("telefone",cliente)
 
+}
+}
 /* ================= RELATORIO ADMIN ================= */
 
 if(ADMINS.includes(cliente) && texto.includes("Reservas do dia")){
@@ -2079,32 +2647,8 @@ REGRAS:
 - Sempre calcule o valor_total corretamente
 - Sempre use "acao": "criar" para novos pedidos
 - Nunca envie texto junto com JSON
-REGRAS CRÍTICAS DE PEDIDO:
+- O JSON deve ser puro e válido
 
-- Sempre que for um pedido real, você DEVE responder EXATAMENTE assim:
-
-PEDIDO_DELIVERY_JSON:
-{
-  "acao": "criar",
-  "dados": {
-    "cliente_nome": "...",
-    "cliente_telefone": "...",
-    "itens": [
-      {
-        "nome": "...",
-        "quantidade": 1,
-        "preco": 0
-      }
-    ],
-    "valor_total": 0,
-    "forma_pagamento": "...",
-    "observacao": "..."
-  }
-}
-
-- Não escreva nada antes
-- Não escreva nada depois
-- Se não for pedido REAL → NÃO gere JSON
 `
 },
 
@@ -2122,11 +2666,11 @@ resposta = completion.choices[0].message.content
 
 // ================= PRE-PEDIDO (ANTES DO ENVIO) =================
 
-const temPedidoJSON = resposta.includes("PEDIDO_DELIVERY_JSON")
-
-if(temPedidoJSON){
-  console.log("🧾 DETECTADO PEDIDO REAL DA IA")
-}{
+if(
+  resposta.toLowerCase().includes("você quer") ||
+  resposta.toLowerCase().includes("so para confirmar") ||
+  resposta.toLowerCase().includes("só para confirmar")
+){
 
   console.log("🧾 SALVANDO PRE-PEDIDO DA IA")
 
@@ -2286,76 +2830,6 @@ ${resumo}
 console.log("RESPOSTA IA COMPLETA:", resposta)
 
 
-
-
-
-/* ================= SALVAR SOMENTE JSON DA IA ================= */
-
-const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*([\s\S]*?\})/)
-
-if(!pedidoMatch){
-  console.log("❌ NÃO VEIO JSON DE PEDIDO")
-}else{
-  console.log("✅ JSON DETECTADO")
-}
-
-
-
-
-  
-if(pedidoMatch){
-
-  try{
-
-    let jsonTexto = pedidoMatch[1]
-      .replace(/,\s*}/g,"}")
-      .replace(/,\s*]/g,"]")
-      .trim()
-
-    const pedidoJSON = JSON.parse(jsonTexto)
-
-    console.log("🧾 PEDIDO FINAL DA IA:", pedidoJSON)
-
-    const dados = pedidoJSON.dados
-
-    // 🔥 LIMPA QUALQUER PEDIDO ANTERIOR
-    await supabase
-      .from("pedidos_pendentes")
-      .delete()
-      .eq("cliente_telefone", cliente)
-
-    // 🔥 SALVA EXATAMENTE O JSON
-    await supabase
-      .from("pedidos_pendentes")
-      .insert({
-        cliente_nome: dados.cliente_nome || "Cliente",
-        cliente_telefone: cliente,
-        cliente_endereco: dados.cliente_endereco || "",
-        cliente_bairro: dados.cliente_bairro || "",
-        itens: dados.itens,
-        valor_total: dados.valor_total,
-        forma_pagamento: dados.forma_pagamento,
-        observacao: dados.observacao,
-        origem: "whatsapp"
-      })
-
-    console.log("✅ PEDIDO SALVO PERFEITO")
-
-  }catch(err){
-    console.log("❌ ERRO JSON FINAL:", err)
-  }
-
-}
-
-
-
-
-
-
-
-
-
-  
 
   
 /* ================= DETECTAR MIDIA ================= */
@@ -3058,7 +3532,119 @@ resposta = resposta.replace(/ENVIAR_FOTO_PRATO\s+(.+)/,"").trim()
 }
 console.log("Resposta IA:",resposta)
 
+/* ================= PEDIDO DELIVERY ================= */
 
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
+
+if(pedidoMatch){
+
+let pedido = null
+
+let jsonTexto = pedidoMatch[1]
+
+console.log("JSON EXTRAIDO:", jsonTexto)
+
+/* LIMPAR JSON */
+
+jsonTexto = jsonTexto
+.replace(/,\s*}/g,"}")
+.replace(/,\s*]/g,"]")
+.replace(/\n/g,"")
+.replace(/\t/g,"")
+.trim()
+
+try{
+
+pedido = JSON.parse(jsonTexto)
+
+console.log("JSON DO PEDIDO OK:", pedido)
+
+}catch(err){
+
+console.log("ERRO AO PARSEAR JSON DO PEDIDO")
+console.log("JSON RECEBIDO:", jsonTexto)
+console.log("ERRO:", err)
+
+}
+
+if(pedido){
+
+console.log("Pedido detectado:",pedido)
+
+/* CALCULAR TOTAL */
+
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
+
+return s + (preco * qtd)
+
+},0)
+
+console.log("TOTAL PEDIDO:",valorTotal)
+
+/* SALVAR PEDIDO PENDENTE */
+
+console.log("SALVANDO EM pedidos_pendentes")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {data,error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+
+  
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],
+  
+  
+  
+  
+  
+  valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+.select()
+
+if(error){
+console.log("ERRO AO SALVAR PEDIDO:",error)
+}else{
+console.log("PEDIDO SALVO COM SUCESSO:",data)
+}
+
+/* MARCAR ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
+
+${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
+
+💰 Total: R$ ${valorTotal.toFixed(2)}
+
+Deseja confirmar o pedido?`
+
+}
 
 }
 
