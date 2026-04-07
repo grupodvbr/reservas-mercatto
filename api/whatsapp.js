@@ -1204,13 +1204,6 @@ await supabase
 .delete()
 .eq("telefone",cliente)
 
-}catch(e){
-
-console.log("❌ ERRO NO WEBHOOK:", e)
-
-return res.status(200).end()
-
-}
 /* ================= RELATORIO ADMIN ================= */
 
 if(ADMINS.includes(cliente) && texto.includes("Reservas do dia")){
