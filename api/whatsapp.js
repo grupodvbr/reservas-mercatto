@@ -2829,7 +2829,39 @@ ${resumo}
   
 console.log("RESPOSTA IA COMPLETA:", resposta)
 
+if(resposta.includes("PEDIDO_DELIVERY_JSON:")){
 
+  try{
+
+    const jsonString = resposta.split("PEDIDO_DELIVERY_JSON:")[1].trim()
+
+    const pedidoJSON = JSON.parse(jsonString)
+
+    console.log("🧾 SALVANDO PEDIDO DIRETO DA IA:", pedidoJSON)
+
+    const dados = pedidoJSON.dados
+
+    await supabase
+      .from("pedidos_pendentes")
+      .insert({
+        cliente_nome: dados.cliente_nome || "Cliente",
+        cliente_telefone: cliente,
+        cliente_endereco: dados.cliente_endereco || "",
+        cliente_bairro: dados.cliente_bairro || "",
+        itens: dados.itens,
+        valor_total: dados.valor_total,
+        forma_pagamento: dados.forma_pagamento,
+        observacao: dados.observacao,
+        origem: "whatsapp"
+      })
+
+    console.log("✅ PEDIDO SALVO DIRETO DA IA")
+
+  }catch(err){
+    console.log("❌ ERRO AO PEGAR JSON DA IA:", err)
+  }
+
+}
 
   
 /* ================= DETECTAR MIDIA ================= */
