@@ -1467,23 +1467,8 @@ if(estado?.tipo === "confirmacao_pedido"){
 
 console.log("CONFIRMAÇÃO DE PEDIDO")
 
-const { data: estado } = await supabase
-.from("estado_conversa")
-.select("*")
-.eq("telefone",cliente)
-.maybeSingle()
-
-const pedido = estado?.dados
-
-if(!pedido){
-  console.log("❌ SEM PEDIDO EM MEMÓRIA")
-  return res.status(200).end()
-}
-  
-  
-  
-  
-.from("pedidos")
+const { data: pedidoPendente } = await supabase
+.from("pedidos_pendentes")
 .select("*")
 .eq("cliente_telefone",cliente)
 .order("created_at",{ascending:false})
@@ -1548,7 +1533,7 @@ text:{body:resposta}
 })
 
 await supabase
-.from("pedidos")
+.from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -1560,13 +1545,13 @@ cliente_telefone: cliente,
 cliente_endereco: pedido.endereco || "",
 cliente_bairro: pedido.bairro || "",
 tipo: pedido.tipo || "entrega",
-// 🚨 BLOQUEIO TOTAL DE PEDIDO INVALIDO
-if(!pedido.itens || !pedido.itens.length){
-  console.log("❌ PEDIDO INVALIDO — SEM ITENS")
-  return res.status(200).end()
-}
-
-itens: pedido.itens,
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],
   
   valor_total: pedido.itens.reduce((s,i)=>s+(i.preco*i.quantidade),0),
 forma_pagamento: pedido.pagamento || "",
@@ -1575,7 +1560,7 @@ status: "novo"
 }])
 
 await supabase
-.from("pedidos")
+.from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
 
@@ -2503,12 +2488,12 @@ if(
   if(pratoEncontrado){
 
     await supabase
-    .from("pedidos")
+    .from("pedidos_pendentes")
     .delete()
     .eq("cliente_telefone",cliente)
 
     await supabase
-    .from("pedidos")
+    .from("pedidos_pendentes")
     .insert({
       cliente_nome: nomeMemoria || "Cliente",
       cliente_telefone: cliente,
@@ -3393,30 +3378,27 @@ console.log("Pedido detectado:",pedido)
 /* CALCULAR TOTAL */
 
 const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+
 const preco = Number(i.preco || 0)
 const qtd = Number(i.quantidade || 1)
-return s + (preco * qtd)
-},0)
 
-// 🚨 BLOQUEIA PEDIDO ZERADO
-if(valorTotal <= 0){
-  console.log("❌ PEDIDO INVALIDO — TOTAL ZERO")
-  return res.status(200).end()
-}
+return s + (preco * qtd)
+
+},0)
 
 console.log("TOTAL PEDIDO:",valorTotal)
 
 /* SALVAR PEDIDO PENDENTE */
 
-console.log("SALVANDO EM pedidos")
+console.log("SALVANDO EM pedidos_pendentes")
 
 await supabase
-.from("pedidos")
+.from("pedidos_pendentes")
 .delete()
 .eq("cliente_telefone",cliente)
 
 const {data,error} = await supabase
-.from("pedidos")
+.from("pedidos_pendentes")
 .insert({
 cliente_nome: pedido.nome,
 cliente_telefone: cliente,
