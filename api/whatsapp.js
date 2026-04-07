@@ -739,6 +739,8 @@ if(pedidoJSON){
 
   console.log("✅ PEDIDO PENDENTE SALVO CORRETAMENTE")
 
+  // 🔥 LINHA QUE FALTA (CRÍTICA)
+  return res.status(200).end()
 }
 
 
