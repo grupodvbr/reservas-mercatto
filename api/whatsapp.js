@@ -1220,10 +1220,19 @@ if(temIntencaoPedido){
 
     const nomeCardapio = normalizar(p.nome)
 
-    if(
-      textoNormalizado.includes(nomeCardapio) ||
-      nomeCardapio.split(" ").some(palavra => textoNormalizado.includes(palavra))
-    ){
+const palavrasCliente = textoNormalizado.split(" ")
+
+const match = palavrasCliente.some(p => 
+  nomeCardapio.includes(p)
+)
+
+if(match){
+  itemEncontrado = p
+  break
+}
+    
+    
+    {
       itemEncontrado = p
       break
     }
