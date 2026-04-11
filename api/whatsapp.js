@@ -3007,7 +3007,7 @@ const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
 
 🆔 *COPIAR ID:*
-${novaDuvida.id}
+${novaDuvida.id}.com
 
 📱 Cliente:
 ${cliente}
