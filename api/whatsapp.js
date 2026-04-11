@@ -2954,9 +2954,9 @@ const { data: novaDuvida } = await supabase
 .single()
   console.log("🚨 IA NÃO SABE → ESCALANDO")
 
-  const resumo = mensagens
-    .map(m => `${m.role}: ${m.content}`)
-    .join("\n")
+const resumo = mensagens
+  .map(m => `${m.role}: ${m.content}`)
+  .join("\n")
 
 const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
@@ -2968,14 +2968,11 @@ const alerta = `
 💬 Pergunta:
 "${mensagem}"
 
-
 📄 Histórico:
 ${resumo}
 `
 
- for(const admin of ADMINS){
-
-  console.log("📤 ENVIANDO PARA ADM:", admin)
+for(const admin of ADMINS){
 
   const resp = await fetch(url,{
     method:"POST",
@@ -2987,13 +2984,12 @@ ${resumo}
       messaging_product:"whatsapp",
       to: admin,
       type:"text",
-      text:{ body: alertaAdmin }
+      text:{ body: alerta }
     })
   })
 
   const data = await resp.json()
-
-  console.log("📩 RESPOSTA WHATSAPP ADM:", data)
+  console.log("📩 ENVIO ADM:", admin, data)
 
 }
 
