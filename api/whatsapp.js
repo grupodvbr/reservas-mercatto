@@ -737,14 +737,37 @@ if(querCancelar){
 
   console.log("❌ CANCELAMENTO DETECTADO")
 
-  const { data: reserva } = await supabase
+  const hoje = new Date().toISOString()
+
+  const { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
   .eq("telefone", cliente)
-  .order("datahora",{ ascending:false })
-  .limit(1)
-  .maybeSingle()
+  .in("status", ["Pendente","Confirmada"])
+  .gte("datahora", hoje)
+  .order("datahora",{ ascending:true })
+  .limit(5)
 
+  if(error){
+    console.log("❌ ERRO AO BUSCAR RESERVAS:", error)
+  }
+
+  let reserva = null
+
+  if(reservas && reservas.length){
+
+    reserva = reservas.find(r => {
+      const nomeBanco = (r.nome || "").toLowerCase()
+      const nomeCliente = (nomeMemoria || "").toLowerCase()
+
+      return (
+        nomeBanco.includes(nomeCliente) ||
+        nomeCliente.includes(nomeBanco)
+      )
+    }) || reservas[0]
+  }
+
+  // 🚫 SE NÃO EXISTE
   if(!reserva){
 
     await fetch(url,{
@@ -757,24 +780,41 @@ if(querCancelar){
         messaging_product:"whatsapp",
         to: cliente,
         type:"text",
-        text:{ body:"Não encontrei nenhuma reserva ativa para cancelar" }
+        text:{ body:"Não encontrei nenhuma reserva futura ativa para cancelar 😕" }
       })
     })
 
     return res.status(200).end()
   }
 
-  await supabase
+  // 🔥 RESUMO ANTES DE CANCELAR
+  const resumoAntes = `
+📋 *Reserva encontrada*
+
+👤 Nome: ${reserva.nome}
+📅 Data: ${reserva.datahora.split("T")[0]}
+⏰ Hora: ${reserva.datahora.split("T")[1].substring(0,5)}
+👥 Pessoas: ${reserva.pessoas}
+📍 Local: ${reserva.mesa}
+`
+
+  // 🔥 CANCELAR
+  const { error: erroUpdate } = await supabase
   .from("reservas_mercatto")
   .update({ status:"Cancelada" })
   .eq("id", reserva.id)
 
-  const resumo = `
+  if(erroUpdate){
+    console.log("❌ ERRO AO CANCELAR:", erroUpdate)
+  }
+
+  // 🔥 RESPOSTA FINAL
+  const respostaFinal = `
 ❌ *Reserva cancelada com sucesso*
 
 👤 Nome: ${reserva.nome}
-📅 Data: ${reserva.datahora?.split("T")[0]}
-⏰ Hora: ${reserva.datahora?.split("T")[1]?.substring(0,5)}
+📅 Data: ${reserva.datahora.split("T")[0]}
+⏰ Hora: ${reserva.datahora.split("T")[1].substring(0,5)}
 👥 Pessoas: ${reserva.pessoas}
 `
 
@@ -788,12 +828,17 @@ if(querCancelar){
       messaging_product:"whatsapp",
       to: cliente,
       type:"text",
-      text:{ body: resumo }
+      text:{ body: respostaFinal }
     })
   })
 
   return res.status(200).end()
 }
+
+
+
+
+  
 
 
 
