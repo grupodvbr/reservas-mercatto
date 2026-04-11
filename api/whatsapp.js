@@ -3014,7 +3014,6 @@ if(precisaEscalar){
 
   console.log("🚨 ESCALANDO PARA ADM")
 
-  // 🔥 SALVA DÚVIDA
   const { data: novaDuvida } = await supabase
   .from("duvidas_pendentes")
   .insert({
@@ -3024,15 +3023,15 @@ if(precisaEscalar){
   .select()
   .single()
 
-const resumo = mensagens
-  .slice(-5)
-  .map(m => `${m.role === "user" ? "👤" : "🤖"} ${m.content}`)
-  .join("\n")
+  const resumo = mensagens
+    .slice(-5)
+    .map(m => `${m.role === "user" ? "👤" : "🤖"} ${m.content}`)
+    .join("\n")
 
-const alerta = `
+  const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
 
-🆔 *COPIAR ID:*
+🆔 ID:
 ${novaDuvida.id}
 
 📱 Cliente:
@@ -3041,54 +3040,44 @@ ${cliente}
 💬 Pergunta:
 ${mensagem}
 
-✍️ *RESPONDA ASSIM:*
-${novaDuvida.id} sua resposta aqui
-
 📄 Últimas mensagens:
 ${resumo}
 `
 
-  // 🔥 ENVIA PARA TODOS ADM
-for(const admin of ADMINS){
+  for(const admin of ADMINS){
 
-  console.log("📤 ENVIANDO PARA ADM:", admin)
-
-  const resp = await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      messaging_product:"whatsapp",
-      to: admin,
-      type:"text",
-      text:{ body: alerta }
+    const resp = await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        messaging_product:"whatsapp",
+        to: admin,
+        type:"text",
+        text:{ body: alerta }
+      })
     })
-  })
 
-  const data = await resp.json()
+    const data = await resp.json()
 
-  console.log("📩 RESPOSTA WHATSAPP ADM:", data)
+    // 🔥 SALVAR ID DA MENSAGEM DO ADMIN (ESSENCIAL)
+    const messageIdAdmin = data?.messages?.[0]?.id
 
-  // 🔥 COLE EXATAMENTE AQUI ↓↓↓
-  const messageIdAdmin = data?.messages?.[0]?.id
+    if(messageIdAdmin){
+      await supabase
+      .from("duvidas_pendentes")
+      .update({
+        message_id_admin: messageIdAdmin
+      })
+      .eq("id", novaDuvida.id)
+    }
 
-  if(messageIdAdmin){
-    await supabase
-    .from("duvidas_pendentes")
-    .update({
-      message_id_admin: messageIdAdmin
-    })
-    .eq("id", novaDuvida.id)
   }
 
-}
-
-  // 🚫 NÃO RESPONDE O CLIENTE
   return res.status(200).end()
 }
-
 
   
 console.log("RESPOSTA IA COMPLETA:", resposta)
