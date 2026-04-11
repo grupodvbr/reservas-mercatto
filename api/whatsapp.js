@@ -751,22 +751,41 @@ const hoje = getHojeBahia() + "T00:00:00"
     console.log("❌ ERRO AO BUSCAR RESERVAS:", error)
   }
 
-  let reserva = null
+ let reserva = null
 
-  if(reservas && reservas.length){
+if(reservas && reservas.length){
 
-const nomeDigitado = mensagem.toLowerCase()
+  const texto = mensagem.toLowerCase()
 
-reserva = reservas.find(r => {
-  const nomeBanco = (r.nome || "").toLowerCase()
+  // 🔥 EXTRAIR DIA (ex: 16)
+  const matchDia = texto.match(/\b(\d{1,2})\b/)
+  const diaDesejado = matchDia ? matchDia[1].padStart(2,"0") : null
 
-  return (
-    nomeBanco.includes(nomeDigitado) ||
-    nomeDigitado.includes(nomeBanco) ||
-    nomeBanco.includes(nomeMemoria?.toLowerCase() || "")
-  )
-}) || reservas[0]
+  // 🔥 EXTRAIR POSSÍVEL NOME
+  const palavras = texto.split(" ")
+  const nomePossivel = palavras.find(p => p.length > 3)
+
+  reserva = reservas.find(r => {
+
+    const dataReserva = r.datahora?.split("T")[0] || ""
+    const diaReserva = dataReserva.split("-")[2]
+
+    const nomeBanco = (r.nome || "").toLowerCase()
+
+    const bateDia = !diaDesejado || diaReserva === diaDesejado
+    const bateNome =
+      !nomePossivel ||
+      nomeBanco.includes(nomePossivel)
+
+    return bateDia && bateNome
+
+  })
+
+  // 🔥 fallback seguro (mais próxima)
+  if(!reserva){
+    reserva = reservas[0]
   }
+}
 
   // 🚫 SE NÃO EXISTE
   if(!reserva){
