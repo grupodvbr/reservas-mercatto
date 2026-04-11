@@ -2994,7 +2994,7 @@ const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
 
 🆔 *COPIAR ID:*
-https://wa.me/${novaDuvida.id}
+${novaDuvida.id}
 
 📱 Cliente:
 ${cliente}
