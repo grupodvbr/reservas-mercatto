@@ -17,7 +17,8 @@ const ADMINS = [
   "5577981291635"
 ]
 
-
+// 🔥 BUFFER DE MENSAGENS (AGRUPAR WHATSAPP)
+const bufferMensagens = {}
 
 
 
@@ -576,9 +577,9 @@ let nome_arquivo = null
 
 switch(msg.type){
 
-  case "text":
-    mensagem = msg.text?.body || ""
-  break
+case "text":
+  tipo = "texto"
+break
 
 case "image":
 
@@ -639,7 +640,27 @@ break
 }
 
 
+/* ================= 🔥 BUFFER DE MENSAGENS ================= */
 
+const telefone = msg.from
+
+if(!bufferMensagens[telefone]){
+  bufferMensagens[telefone] = []
+}
+
+// só texto entra no buffer
+if(msg.type === "text" && msg.text?.body){
+  bufferMensagens[telefone].push(msg.text.body)
+}
+
+// ⏳ espera juntar mensagens
+await new Promise(r => setTimeout(r, 1500))
+
+// junta tudo
+mensagem = bufferMensagens[telefone].join(" ")
+
+// limpa buffer
+bufferMensagens[telefone] = []
 
   
 
