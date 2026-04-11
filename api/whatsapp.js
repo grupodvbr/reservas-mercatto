@@ -522,6 +522,23 @@ return res.json({
 
 if(req.method==="POST"){
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 const body=req.body
 
 console.log("Webhook recebido:",JSON.stringify(body,null,2))
@@ -530,6 +547,53 @@ try{
 
 const change = body.entry?.[0]?.changes?.[0]?.value
 
+
+
+
+const agoraStr = new Date().toLocaleString("sv-SE", {
+  timeZone: "America/Bahia"
+})
+
+const hoje = agoraStr.split(" ")[0]
+const hora = agoraStr.split(" ")[1]
+
+
+
+  
+const { data: jaEnviou } = await supabase
+.from("controle_envio")
+.select("*")
+.eq("tipo","relatorio")
+.eq("data", hoje)
+.maybeSingle()
+
+if(hora.startsWith("10:00") && !jaEnviou){
+
+  console.log("📊 ENVIANDO RELATÓRIO AUTOMÁTICO")
+
+  const relatorio = await enviarRelatorioAutomatico()
+
+  for(const admin of ADMINS){
+    await fetch(`https://graph.facebook.com/v19.0/${change.metadata.phone_number_id}/messages`,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to: admin,
+        type:"text",
+        text:{ body: relatorio }
+      })
+    })
+  }
+
+  await supabase.from("controle_envio").insert({
+    tipo:"relatorio",
+    data: hoje
+  })
+}
 if(!change){
 console.log("Evento inválido")
 return res.status(200).end()
@@ -856,6 +920,37 @@ if(!ultimoPedido){
     console.log("❌ ERRO AO SALVAR PEDIDO:", error)
   }else{
     console.log("✅ PEDIDO SALVO COM SUCESSO")
+
+
+
+/* ================= ALERTA ADMIN PEDIDO ================= */
+
+const alertaPedido = `
+🛒 *NOVO PEDIDO CONFIRMADO*
+
+👤 Nome: ${nomeMemoria || "Cliente"}
+📱 Telefone: ${cliente}
+💰 Valor: R$ ${Number(ultimoPedido.valor_total || 0).toFixed(2)}
+📦 Itens: ${JSON.stringify(ultimoPedido.itens)}
+`
+
+for(const admin of ADMINS){
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: admin,
+      type:"text",
+      text:{ body: alertaPedido }
+    })
+  })
+}
+
+
   }
 
   /* 🔥 LIMPAR PENDENTE */
@@ -1203,10 +1298,24 @@ return res.status(200).end()
 
 /* ================= CONTINUA NORMAL ================= */
 
-if(
-  tipoMensagem === "reclamacao" ||
-  tipoMensagem === "feedback"
-){
+const textoReclamacao = mensagem.toLowerCase()
+
+const ehReclamacao =
+textoReclamacao.includes("ruim") ||
+textoReclamacao.includes("horrivel") ||
+textoReclamacao.includes("péssimo") ||
+textoReclamacao.includes("pessimo") ||
+textoReclamacao.includes("demorou") ||
+textoReclamacao.includes("atraso") ||
+textoReclamacao.includes("frio") ||
+textoReclamacao.includes("errado") ||
+textoReclamacao.includes("reclamar")
+
+if(ehReclamacao || tipoMensagem.includes("reclam")){
+  
+  
+  
+  {
 
   console.log("🚨 RECLAMAÇÃO OU FEEDBACK DETECTADO")
 
@@ -4028,6 +4137,41 @@ if(error){
 console.log("ERRO AO SALVAR VIP:", error)
 }else{
 console.log("Reserva VIP salva com sucesso")
+
+
+
+/* ================= ALERTA ADMIN RESERVA VIP ================= */
+
+const alertaReserva = `
+📅 *NOVA RESERVA VIP*
+
+👤 Nome: ${reservaVip.nome}
+📱 Telefone: ${cliente}
+👥 Pessoas: ${reservaVip.pessoas}
+🏠 Sala: ${salaBanco}
+⏰ Data/Hora: ${reservaVip.data} ${reservaVip.hora}
+`
+
+for(const admin of ADMINS){
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: admin,
+      type:"text",
+      text:{ body: alertaReserva }
+    })
+  })
+}
+
+
+
+
+  
 }
 
 /* DATA FORMATADA */
@@ -4226,6 +4370,39 @@ if(reserva.observacoes && reserva.observacoes.trim() !== ""){
 
 resposta =
 `✅ *Reserva confirmada!*
+
+
+
+/* ================= ALERTA ADMIN RESERVA NORMAL ================= */
+
+const alertaReserva = `
+📅 *NOVA RESERVA*
+
+👤 Nome: ${reserva.nome}
+📱 Telefone: ${cliente}
+👥 Pessoas: ${reserva.pessoas}
+🏠 Área: ${mesa}
+⏰ Data: ${dataClienteReserva}
+🕒 Hora: ${reserva.hora}
+`
+
+for(const admin of ADMINS){
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: admin,
+      type:"text",
+      text:{ body: alertaReserva }
+    })
+  })
+}
+
+
 
 Nome: ${reserva.nome}
 Pessoas: ${reserva.pessoas}
