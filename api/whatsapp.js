@@ -879,8 +879,6 @@ const match = mensagem.match(/^([a-z0-9\-]+)\s+([\s\S]+)/i)
 // ================= CASO 1: ADM RESPONDENDO COM ID =================
 if(match){
 
-  const id = match[1]
-  const respostaAdmin = match[2]
 
   const { data: duvida } = await supabase
   .from("duvidas_pendentes")
