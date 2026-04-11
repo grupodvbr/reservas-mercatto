@@ -396,6 +396,45 @@ return publicUrl
 
 
 
+
+async function gerarRespostaCompleta(texto, telefone){
+
+  console.log("🧠 PROCESSANDO INTELIGÊNCIA COMPLETA")
+
+  // 🔥 AQUI VOCÊ PODE REAPROVEITAR SUA LÓGICA
+
+  const completion = await openai.chat.completions.create({
+    model:"gpt-4.1-mini",
+    messages:[
+      {
+        role:"system",
+        content:`
+Você é atendente do Mercatto Delícia.
+
+REGRAS:
+- Responda tudo em uma única mensagem
+- Seja natural
+- Não repita respostas
+- Seja direto
+`
+      },
+      {
+        role:"user",
+        content: texto
+      }
+    ]
+  })
+
+  return completion.choices[0].message.content
+}
+
+
+
+
+
+
+
+
 module.exports = async function handler(req,res){
 
 
@@ -444,8 +483,7 @@ if(req.query.processar === "true"){
     console.log("📦 AGRUPADO:", textoFinal)
 
     // 🔥 AQUI VOCÊ PODE CHAMAR SUA LÓGICA ATUAL OU GPT
-    const resposta = `Perfeito! Recebi tudo 👍\n\n${textoFinal}`
-
+const resposta = await gerarRespostaCompleta(textoFinal, telefone)
     await fetch(url,{
       method:"POST",
       headers:{
