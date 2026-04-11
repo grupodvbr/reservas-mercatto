@@ -746,7 +746,7 @@ if(querCancelar){
   .in("status", ["Pendente","Confirmada"])
   .gte("datahora", hoje)
   .order("datahora",{ ascending:true })
-  .limit(5)
+  .limit(20)
 
   if(error){
     console.log("❌ ERRO AO BUSCAR RESERVAS:", error)
