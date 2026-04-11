@@ -1892,7 +1892,7 @@ agoraBahia.getHours().toString().padStart(2,"0") +
 agoraBahia.getMinutes().toString().padStart(2,"0")
 
   
-resposta += `💰 Couvert artístico: R$ ${couvertHoje.toFixed(2)}`
+resposta += `Couvert artístico: R$ ${couvertHoje.toFixed(2)}`
 const posterHoje = pegarPoster(agendaDia)
 
 /* ================= AGENDA PARA IA ================= */
