@@ -479,7 +479,7 @@ if(req.query.processar === "true"){
     const lista = grupos[telefone]
 
     const textoFinal = lista.map(m => m.mensagem).join("\n")
-
+const texto = textoFinal.toLowerCase()
     console.log("📦 AGRUPADO:", textoFinal)
 
     // 🔥 AQUI VOCÊ PODE CHAMAR SUA LÓGICA ATUAL OU GPT
