@@ -2904,8 +2904,8 @@ if(resposta.includes("🚨 DÚVIDA DO CLIENTE")){
   const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
 
-🆔 ID: ${novaDuvida.id}
-
+🆔
+${novaDuvida.id}
 📱 Telefone: ${cliente}
 
 💬 Pergunta:
