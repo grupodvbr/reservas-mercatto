@@ -876,9 +876,8 @@ if(isAdmin){
   /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
 const match = mensagem.match(/^([a-z0-9\-]+)\s+([\s\S]+)/i)
 
-if(!match){
-  console.log("⚠️ ADMIN SEM ID → CONTINUANDO NORMAL")
-}else{
+// ================= CASO 1: ADM RESPONDENDO COM ID =================
+if(match){
 
   const id = match[1]
   const respostaAdmin = match[2]
@@ -914,18 +913,14 @@ if(!match){
       })
     })
 
+    await supabase
+    .from("conversas_whatsapp")
+    .insert({
+      telefone: telefoneCliente,
+      mensagem: respostaAdmin,
+      role: "assistant"
+    })
 
-
-
-    
-// ✅ SANVA NAS CONVERSAS A RESPOSTA DOS ADMS
-await supabase
-.from("conversas_whatsapp")
-.insert({
-  telefone: telefoneCliente,
-  mensagem: respostaAdmin,
-  role: "assistant"
-})
     await supabase
     .from("duvidas_pendentes")
     .delete()
@@ -933,11 +928,53 @@ await supabase
 
     return res.status(200).end()
   }
-
 }
 
-const id = match[1]
-const respostaAdmin = match[2]
+// ================= CASO 2: ADM SEM ID → IA RESPONDE =================
+console.log("🧠 ADMIN SEM ID → IA ASSUMINDO")
+
+const completion = await openai.chat.completions.create({
+  model:"gpt-4.1-mini",
+  messages:[
+    {
+      role:"system",
+      content:`
+Você está falando com um ADMIN do sistema.
+
+REGRAS:
+- Ele tem acesso TOTAL
+- Pode alterar reservas
+- Pode alterar cardápio
+- Pode alterar preços
+- Pode consultar tudo
+
+Responda direto, sem enrolação e execute o pedido.
+`
+    },
+    {
+      role:"user",
+      content: mensagem
+    }
+  ]
+})
+
+const respostaAdmin = completion.choices[0].message.content
+
+await fetch(url,{
+  method:"POST",
+  headers:{
+    Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    messaging_product:"whatsapp",
+    to: cliente,
+    type:"text",
+    text:{ body: respostaAdmin }
+  })
+})
+
+return res.status(200).end()
 
 const { data: duvida } = await supabase
 .from("duvidas_pendentes")
