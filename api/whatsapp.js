@@ -475,21 +475,7 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
-{
-role:"system",
-content:`
-DADOS OFICIAIS DO SISTEMA:
 
-${contextoAgenda}
-
-REGRAS:
-- Se a pergunta for sobre música ou hoje:
-  → use SOMENTE os dados acima
-- Nunca invente cantor
-- Nunca invente horário
-- Se não houver agenda, diga isso
-`
-},
 
   
 {
@@ -522,23 +508,6 @@ return res.json({
 
 if(req.method==="POST"){
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 const body=req.body
 
 console.log("Webhook recebido:",JSON.stringify(body,null,2))
@@ -547,53 +516,6 @@ try{
 
 const change = body.entry?.[0]?.changes?.[0]?.value
 
-
-
-
-const agoraStr = new Date().toLocaleString("sv-SE", {
-  timeZone: "America/Bahia"
-})
-
-const hoje = agoraStr.split(" ")[0]
-const hora = agoraStr.split(" ")[1]
-
-
-
-  
-const { data: jaEnviou } = await supabase
-.from("controle_envio")
-.select("*")
-.eq("tipo","relatorio")
-.eq("data", hoje)
-.maybeSingle()
-
-if(hora.startsWith("10:00") && !jaEnviou){
-
-  console.log("📊 ENVIANDO RELATÓRIO AUTOMÁTICO")
-
-  const relatorio = await enviarRelatorioAutomatico()
-
-  for(const admin of ADMINS){
-    await fetch(`https://graph.facebook.com/v19.0/${change.metadata.phone_number_id}/messages`,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to: admin,
-        type:"text",
-        text:{ body: relatorio }
-      })
-    })
-  }
-
-  await supabase.from("controle_envio").insert({
-    tipo:"relatorio",
-    data: hoje
-  })
-}
 if(!change){
 console.log("Evento inválido")
 return res.status(200).end()
@@ -920,37 +842,6 @@ if(!ultimoPedido){
     console.log("❌ ERRO AO SALVAR PEDIDO:", error)
   }else{
     console.log("✅ PEDIDO SALVO COM SUCESSO")
-
-
-
-/* ================= ALERTA ADMIN PEDIDO ================= */
-
-const alertaPedido = `
-🛒 *NOVO PEDIDO CONFIRMADO*
-
-👤 Nome: ${nomeMemoria || "Cliente"}
-📱 Telefone: ${cliente}
-💰 Valor: R$ ${Number(ultimoPedido.valor_total || 0).toFixed(2)}
-📦 Itens: ${JSON.stringify(ultimoPedido.itens)}
-`
-
-for(const admin of ADMINS){
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to: admin,
-      type:"text",
-      text:{ body: alertaPedido }
-    })
-  })
-}
-
-
   }
 
   /* 🔥 LIMPAR PENDENTE */
@@ -1195,54 +1086,6 @@ if(tipo === "texto" && mensagem && mensagem.trim()){
   
 console.log("CLASSIFICAÇÃO:", tipoMensagem)
 
-/* ================= AGENDA INTELIGENTE (COLE AQUI) ================= */
-
-const perguntaAgenda =
-texto.includes("toca") ||
-texto.includes("musica") ||
-texto.includes("música") ||
-texto.includes("show") ||
-texto.includes("hoje a noite") ||
-texto.includes("quem toca")
-
-let contextoAgenda = ""
-
-if(perguntaAgenda){
-
-  const hoje = getHojeBahia()
-
-  const agendaHoje = await buscarAgendaDoDia(hoje)
-
-  if(!agendaHoje.length){
-
-    contextoAgenda = "Hoje não há música ao vivo programada."
-
-  }else{
-
-    contextoAgenda = "Agenda de hoje:\n"
-
-    agendaHoje.forEach(m=>{
-      contextoAgenda += `
-Cantor: ${m.cantor?.trim()}
-Horário: ${m.hora?.slice(0,5)}
-Estilo: ${m.estilo?.trim() || "Não informado"}
-Couvert: R$ ${Number(m.valor || 0).toFixed(2)}
-`
-    })
-  }
-
-}
-
-
-
-
-
-
-
-
-
-
-  
 /* ================= PRIORIDADE MÁXIMA — CONTATO HUMANO ================= */
 
 const querGerente =
@@ -1298,24 +1141,10 @@ return res.status(200).end()
 
 /* ================= CONTINUA NORMAL ================= */
 
-const textoReclamacao = mensagem.toLowerCase()
-
-const ehReclamacao =
-textoReclamacao.includes("ruim") ||
-textoReclamacao.includes("horrivel") ||
-textoReclamacao.includes("péssimo") ||
-textoReclamacao.includes("pessimo") ||
-textoReclamacao.includes("demorou") ||
-textoReclamacao.includes("atraso") ||
-textoReclamacao.includes("frio") ||
-textoReclamacao.includes("errado") ||
-textoReclamacao.includes("reclamar")
-
-if(ehReclamacao || tipoMensagem.includes("reclam")){
-  
-  
-  
-  {
+if(
+  tipoMensagem === "reclamacao" ||
+  tipoMensagem === "feedback"
+){
 
   console.log("🚨 RECLAMAÇÃO OU FEEDBACK DETECTADO")
 
@@ -4137,41 +3966,6 @@ if(error){
 console.log("ERRO AO SALVAR VIP:", error)
 }else{
 console.log("Reserva VIP salva com sucesso")
-
-
-
-/* ================= ALERTA ADMIN RESERVA VIP ================= */
-
-const alertaReserva = `
-📅 *NOVA RESERVA VIP*
-
-👤 Nome: ${reservaVip.nome}
-📱 Telefone: ${cliente}
-👥 Pessoas: ${reservaVip.pessoas}
-🏠 Sala: ${salaBanco}
-⏰ Data/Hora: ${reservaVip.data} ${reservaVip.hora}
-`
-
-for(const admin of ADMINS){
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to: admin,
-      type:"text",
-      text:{ body: alertaReserva }
-    })
-  })
-}
-
-
-
-
-  
 }
 
 /* DATA FORMATADA */
