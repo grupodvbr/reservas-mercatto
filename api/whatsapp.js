@@ -2684,37 +2684,19 @@ const { data: aprendizado } = await supabase
 .from("aprendizado_bot")
 .select("*")
 .ilike("pergunta", `%${mensagem}%`)
-.limit(1)
+.limit(3)
+
+let aprendizadoTexto = ""
 
 if(aprendizado && aprendizado.length){
 
-  console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
+  console.log("🧠 USANDO APRENDIZADO COMO CONTEXTO")
 
-  const resposta = aprendizado[0].resposta
+  aprendizadoTexto = aprendizado.map(a => `
+PERGUNTA: ${a.pergunta}
+RESPOSTA: ${a.resposta}
+`).join("\n")
 
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"text",
-      text:{ body: resposta }
-    })
-  })
-
-  await supabase
-  .from("conversas_whatsapp")
-  .insert({
-    telefone:cliente,
-    mensagem:resposta,
-    role:"assistant"
-  })
-
-  return res.status(200).end()
 }
 
 
@@ -2978,6 +2960,26 @@ REGRAS CRÍTICAS:
 `
 },
 
+
+{
+role:"system",
+content:`
+APRENDIZADO ANTERIOR DO SISTEMA:
+
+${aprendizadoTexto}
+
+Regras:
+
+- Use isso apenas como referência
+- Nunca copie exatamente
+- Adapte para o contexto atual
+`
+},
+
+
+
+
+  
 {
 role:"system",
 content:`
