@@ -992,18 +992,7 @@ const textoNormalizado = normalizar(texto)
 const querPromocao =
 textoNormalizado.includes("promo") ||
 textoNormalizado.includes("oferta") ||
-textoNormalizado.includes("rodizio") ||
-textoNormalizado.includes("rodízio") ||
-textoNormalizado.includes("desconto") ||
-textoNormalizado.includes("oriental") ||
-textoNormalizado.includes("italiano") ||
-textoNormalizado.includes("happy") ||
-textoNormalizado.includes("tem rodizio") ||
-textoNormalizado.includes("tem rodízio") ||
-textoNormalizado.includes("tem promoção") ||
-textoNormalizado.includes("tem promocao") ||
-textoNormalizado.includes("vende oriental") ||
-textoNormalizado.includes("todo dia")
+textoNormalizado.includes("desconto")
 
 const hojeInicio = getHojeBahia() + "T00:00"
 const hojeFim = getHojeBahia() + "T23:59"
@@ -2036,15 +2025,25 @@ textoNormalizado.includes("menu") ||
 textoNormalizado.includes("pratos")
 
 /* 🔥 BUFFET INTELIGENTE */
+// 🔥 SOMENTE BUFFET
 const querBuffet =
 textoNormalizado.includes("buffet") ||
-textoNormalizado.includes("buffer") ||
 textoNormalizado.includes("almoco") ||
-textoNormalizado.includes("comida") ||
+textoNormalizado.includes("comida")
+
+
+
+
+  
+// 🔥 PERGUNTA GENÉRICA (VAI PRA IA)
+const querHoje =
 textoNormalizado.includes("tem o que") ||
 textoNormalizado.includes("tem hoje") ||
 textoNormalizado.includes("o que tem") ||
 textoNormalizado.startsWith("tem ")
+
+
+  
 
 const querVideo =
 textoNormalizado.includes("video") ||
