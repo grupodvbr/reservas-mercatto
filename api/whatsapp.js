@@ -3003,56 +3003,9 @@ const resumo = mensagens
   .map(m => `${m.role === "user" ? "👤" : "🤖"} ${m.content}`)
   .join("\n")
 
-const alerta = `
-🚨 *DÚVIDA DO CLIENTE*
-
-🆔 *COPIAR ID:*
-${novaDuvida.id}
-
-📱 Cliente:
-${cliente}
-
-💬 Pergunta:
-${mensagem}
-
-✍️ *RESPONDA ASSIM:*
-${novaDuvida.id} sua resposta aqui
-
-📄 Últimas mensagens:
-${resumo}
-`
-
-  // 🔥 ENVIA PARA TODOS ADM
-  for(const admin of ADMINS){
-
-    const resp = await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        messaging_product:"whatsapp",
-        to: admin,
-        type:"text",
-        text:{ body: alerta }
-      })
-    })
-
-    const data = await resp.json()
-    console.log("📩 ENVIO ADM:", admin, data)
-  }
-
-  // 🚫 NÃO RESPONDE O CLIENTE
-  return res.status(200).end()
-}
 
 
   
-console.log("RESPOSTA IA COMPLETA:", resposta)
-
-
-
   
 /* ================= DETECTAR MIDIA ================= */
 const templateMatch = resposta.match(/ENVIAR_TEMPLATE:([a-zA-Z0-9_\-]+)/)
