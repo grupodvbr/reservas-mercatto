@@ -2926,12 +2926,35 @@ ${resumo}
       Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
       "Content-Type":"application/json"
     },
+body: JSON.stringify({
+  messaging_product:"whatsapp",
+  to: admin,
+  type:"text",
+  text:{ body: alertaAdmin }
+})
+})
+
+const data = await resp.json()
+
+// 🔥 PEGA O ID DA MENSAGEM
+const messageIdAdmin = data?.messages?.[0]?.id
+
+// 🔥 ENVIA SEGUNDA MENSAGEM SÓ COM ID
+if(messageIdAdmin){
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
     body: JSON.stringify({
       messaging_product:"whatsapp",
       to: admin,
       type:"text",
-      text:{ body: alertaAdmin }
+      text:{ body: messageIdAdmin }
     })
+  })
+}
   })
 
   const data = await resp.json()
