@@ -874,8 +874,7 @@ if(isAdmin){
   console.log("👨‍💼 MENSAGEM DO ADMIN DETECTADA")
 
   /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
-const match = mensagem.match(/^([a-z0-9\-]+)\s+([\s\S]+)/i)
-
+const match = mensagem.match(/^([a-z0-9\-.]+)\s+([\s\S]+)/i)
 if(!match){
   console.log("⚠️ ADMIN SEM ID → CONTINUANDO NORMAL")
 }else{
