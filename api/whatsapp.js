@@ -3105,6 +3105,22 @@ resposta.toLowerCase().includes("não encontrei")
 
 const respostaLower = (resposta || "").toLowerCase()
 
+
+const ehAcaoDireta =
+querCancelar ||
+confirmouPedido ||
+querReservar ||
+pedidoJSON ||
+texto.includes("confirmar") ||
+texto.includes("cancelar") ||
+texto.includes("reservar") ||
+texto.includes("pedir")
+
+
+
+
+
+  
 const precisaEscalar =
 !resposta ||
 resposta.length < 5 ||
@@ -3120,8 +3136,7 @@ respostaLower.includes("nao possuo") ||
 respostaLower.includes("sem informação") ||
 respostaLower.includes("no momento")
 
-if(precisaEscalar){
-
+if(precisaEscalar && !ehAcaoDireta){
   console.log("🚨 ESCALANDO PARA ADM")
 
   // 🔥 SALVA DÚVIDA
