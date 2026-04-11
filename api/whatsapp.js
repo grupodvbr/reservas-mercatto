@@ -2901,26 +2901,28 @@ if(resposta.includes("🚨 DÚVIDA DO CLIENTE")){
   .select()
   .single()
 
-  const alerta = `
+const alerta = `
 🚨 *DÚVIDA DO CLIENTE*
 
-🆔
-${novaDuvida.id}
-📱 Telefone: ${cliente}
+📱 Cliente:
+${cliente}
 
 💬 Pergunta:
-"${mensagem}"
+${mensagem}
 
+✍️ *RESPONDA ASSIM:*
+(copie o ID da próxima mensagem)
 
-📄 Histórico:
+📄 Últimas mensagens:
 ${resumo}
 `
 
- for(const admin of ADMINS){
+for(const admin of ADMINS){
 
   console.log("📤 ENVIANDO PARA ADM:", admin)
 
-  const resp = await fetch(url,{
+  // 🔥 1ª mensagem → DÚVIDA
+  await fetch(url,{
     method:"POST",
     headers:{
       Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -2930,15 +2932,24 @@ ${resumo}
       messaging_product:"whatsapp",
       to: admin,
       type:"text",
-      text:{ body: alertaAdmin }
+      text:{ body: alerta }
     })
   })
 
-  const data = await resp.json()
-
-  console.log("📩 RESPOSTA WHATSAPP ADM:", data)
-
-}
+  // 🔥 2ª mensagem → ID LIMPO
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to: admin,
+      type:"text",
+      text:{ body: novaDuvida.id }
+    })
+  })
 
   /* 🚫 BLOQUEIA ENVIO PARA CLIENTE */
   return res.status(200).end()
