@@ -880,8 +880,11 @@ if(!match){
   console.log("⚠️ ADMIN SEM ID → CONTINUANDO NORMAL")
 }else{
 
-  const id = match[1]
-  const respostaAdmin = match[2]
+const idRaw = match[1]
+
+// 🔥 REMOVE O .com SE EXISTIR
+const id = idRaw.replace(".com","")
+const respostaAdmin = match[2]
 
   const { data: duvida } = await supabase
   .from("duvidas_pendentes")
