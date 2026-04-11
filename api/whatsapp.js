@@ -475,7 +475,21 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
+{
+role:"system",
+content:`
+DADOS OFICIAIS DO SISTEMA:
 
+${contextoAgenda}
+
+REGRAS:
+- Se a pergunta for sobre música ou hoje:
+  → use SOMENTE os dados acima
+- Nunca invente cantor
+- Nunca invente horário
+- Se não houver agenda, diga isso
+`
+},
 
   
 {
@@ -1086,6 +1100,54 @@ if(tipo === "texto" && mensagem && mensagem.trim()){
   
 console.log("CLASSIFICAÇÃO:", tipoMensagem)
 
+/* ================= AGENDA INTELIGENTE (COLE AQUI) ================= */
+
+const perguntaAgenda =
+texto.includes("toca") ||
+texto.includes("musica") ||
+texto.includes("música") ||
+texto.includes("show") ||
+texto.includes("hoje a noite") ||
+texto.includes("quem toca")
+
+let contextoAgenda = ""
+
+if(perguntaAgenda){
+
+  const hoje = getHojeBahia()
+
+  const agendaHoje = await buscarAgendaDoDia(hoje)
+
+  if(!agendaHoje.length){
+
+    contextoAgenda = "Hoje não há música ao vivo programada."
+
+  }else{
+
+    contextoAgenda = "Agenda de hoje:\n"
+
+    agendaHoje.forEach(m=>{
+      contextoAgenda += `
+Cantor: ${m.cantor?.trim()}
+Horário: ${m.hora?.slice(0,5)}
+Estilo: ${m.estilo?.trim() || "Não informado"}
+Couvert: R$ ${Number(m.valor || 0).toFixed(2)}
+`
+    })
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+  
 /* ================= PRIORIDADE MÁXIMA — CONTATO HUMANO ================= */
 
 const querGerente =
