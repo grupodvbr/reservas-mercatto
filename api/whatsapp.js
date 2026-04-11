@@ -1129,17 +1129,6 @@ const bloqueiaPromo = false
 
 
 
-const querHoje =
-texto.includes("hoje") ||
-texto.includes("hj") ||
-texto.includes("tem oq") ||
-texto.includes("o que tem")
-
-
-
-
-
-
   
 /* ================= DETECTAR NOME INTELIGENTE ================= */
 
