@@ -645,24 +645,37 @@ break
 const telefone = msg.from
 
 if(!bufferMensagens[telefone]){
-  bufferMensagens[telefone] = []
+  bufferMensagens[telefone] = {
+    mensagens: [],
+    timeout: null
+  }
 }
 
-// só texto entra no buffer
-if(msg.type === "text" && msg.text?.body){
-  bufferMensagens[telefone].push(msg.text.body)
+// adiciona mensagem
+bufferMensagens[telefone].mensagens.push(msg.text.body)
+
+// limpa timeout anterior (ESSENCIAL)
+if(bufferMensagens[telefone].timeout){
+  clearTimeout(bufferMensagens[telefone].timeout)
 }
 
-// ⏳ espera juntar mensagens
-await new Promise(r => setTimeout(r, 1500))
+// cria novo timeout (espera o cliente parar)
+await new Promise(resolve => {
 
-// junta tudo
-mensagem = bufferMensagens[telefone].join(" ")
+  bufferMensagens[telefone].timeout = setTimeout(() => {
 
-// limpa buffer
-bufferMensagens[telefone] = []
+    mensagem = bufferMensagens[telefone].mensagens.join(" ")
 
-  
+    // limpa buffer
+    bufferMensagens[telefone] = {
+      mensagens: [],
+      timeout: null
+    }
+
+    resolve()
+
+  }, 2000) // 🔥 tempo ideal (2 segundos)
+})
 
 
 const cliente = mensagensRecebidas[0]?.from
