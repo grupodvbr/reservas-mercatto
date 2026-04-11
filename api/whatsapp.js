@@ -939,8 +939,14 @@ await supabase
 
 }
 
-const id = match[1]
-const respostaAdmin = match[2]
+const partes = mensagem.split(" ")
+
+const idRaw = partes[0]
+const respostaAdmin = partes.slice(1).join(" ")
+
+const id = idRaw.split(".")[0]
+  
+  const respostaAdmin = match[2]
 
 const { data: duvida } = await supabase
 .from("duvidas_pendentes")
