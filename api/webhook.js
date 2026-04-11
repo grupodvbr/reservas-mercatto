@@ -8,41 +8,39 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
 
-  // 🔐 VERIFICAÇÃO META
-  if (req.method === "GET") {
-    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+  // 🔥 ================= PROCESSADOR =================
+  if (req.query.processar === "true") {
 
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+    console.log("🚀 PROCESSANDO FILA");
 
-    if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      return res.status(200).send(challenge);
-    } else {
-      return res.sendStatus(403);
+    const limite = new Date(Date.now() - 5000).toISOString();
+
+    const { data: mensagens } = await supabase
+      .from("fila_mensagens")
+      .select("*")
+      .eq("processado", false)
+      .lte("created_at", limite)
+      .order("created_at", { ascending: true });
+
+    if (!mensagens || !mensagens.length) {
+      return res.json({ ok: true });
     }
-  }
-  // 📩 RECEBER MENSAGEM
-  if (req.method === "POST") {
-    try {
-      const body = req.body;
 
-      const msg =
-        body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const grupos = {};
 
-      if (!msg) return res.sendStatus(200);
+    for (const m of mensagens) {
+      if (!grupos[m.telefone]) grupos[m.telefone] = [];
+      grupos[m.telefone].push(m);
+    }
 
-      const from = msg.from;
-      const text = msg.text?.body || "";
+    for (const telefone in grupos) {
 
-      // 💾 SALVAR NO SUPABASE
-      await supabase.from("mensagens").insert({
-        numero: from,
-        mensagem: text,
-        origem: "cliente"
-      });
+      const lista = grupos[telefone];
+      const textoFinal = lista.map(m => m.mensagem).join("\n");
 
-      // 🤖 CHAMAR OPENAI
+      console.log("📦 AGRUPADO:", textoFinal);
+
+      // 🤖 GPT (UMA VEZ SÓ)
       const ai = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -53,14 +51,14 @@ export default async function handler(req, res) {
           model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "Você é atendente do Mercatto Delícia, responda de forma simpática e objetiva." },
-            { role: "user", content: text }
+            { role: "user", content: textoFinal }
           ]
         })
       }).then(r => r.json());
 
       const resposta = ai.choices[0].message.content;
 
-      // 💬 ENVIAR RESPOSTA
+      // 💬 ENVIA
       await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
         method: "POST",
         headers: {
@@ -69,19 +67,72 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: from,
+          to: telefone,
           type: "text",
           text: { body: resposta }
         })
       });
 
-      // 💾 SALVAR RESPOSTA
+      // 💾 SALVA RESPOSTA
       await supabase.from("mensagens").insert({
-        numero: from,
+        numero: telefone,
         mensagem: resposta,
         origem: "bot"
       });
 
+      // 🔥 MARCA PROCESSADO
+      await supabase
+        .from("fila_mensagens")
+        .update({ processado: true })
+        .in("id", lista.map(m => m.id));
+    }
+
+    return res.json({ ok: true });
+  }
+
+  // 🔐 VERIFICAÇÃO META
+  if (req.method === "GET") {
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+
+    if (
+      req.query["hub.mode"] === "subscribe" &&
+      req.query["hub.verify_token"] === VERIFY_TOKEN
+    ) {
+      return res.status(200).send(req.query["hub.challenge"]);
+    }
+
+    return res.sendStatus(403);
+  }
+
+  // 📩 RECEBER MENSAGEM
+  if (req.method === "POST") {
+
+    try {
+
+      const msg =
+        req.body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+
+      if (!msg) return res.sendStatus(200);
+
+      const from = msg.from;
+      const text = msg.text?.body || "";
+
+      // 💾 SALVA NORMAL
+      await supabase.from("mensagens").insert({
+        numero: from,
+        mensagem: text,
+        origem: "cliente"
+      });
+
+      // 🔥 SALVA NA FILA (NOVO)
+      await supabase.from("fila_mensagens").insert({
+        telefone: from,
+        mensagem: text
+      });
+
+      console.log("📥 FILA:", text);
+
+      // 🚫 NÃO RESPONDE AQUI
       return res.sendStatus(200);
 
     } catch (err) {
