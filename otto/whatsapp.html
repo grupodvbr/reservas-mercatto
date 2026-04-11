@@ -737,8 +737,10 @@ for (const c of clientes){
 
   const pausado = await verificarPausa(c.telefone)
 
-  div.className = pausado ? "client pausado" : "client"
+div.className = pausado ? "client pausado" : "client"
+div.setAttribute("data-telefone", c.telefone)
 
+  
   div.innerHTML = `
 <div class="avatar">
   <img 
