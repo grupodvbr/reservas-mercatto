@@ -16,13 +16,25 @@ const ADMINS = [
   "557781293963",
   "5577981291635"
 ]
+
+// 🔥 BUFFER DE MENSAGENS (AGRUPAR WHATSAPP)
 const bufferMensagens = {}
+
+
 
 const TEMPLATES_PERMITIDOS = [
 "confirmao_de_reserva",
 "reserva_especial",
 "hello_world"
 ]
+
+
+
+
+
+
+
+
 
 
 
@@ -46,16 +58,11 @@ new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
 const hoje = agoraBahia.toISOString().split("T")[0]
-
 const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
-.in("status", ["Pendente","Confirmada"])
-.gte("datahora", hoje+"T00:00") // 🔥 daqui pra frente
-.order("datahora",{ascending:true})
-
-
-  
+.gte("datahora", hoje+"T00:00")
+.lte("datahora", hoje+"T23:59")
 .order("datahora",{ascending:true})
 
 let resposta = "📊 *Relatório automático de reservas (Hoje)*\n\n"
@@ -234,52 +241,6 @@ console.log("✅ ITENS DO BUFFET:", unicos)
 return unicos
 }
 
-
-
-function buscarRespostaAprendida(textoCliente, aprendizados){
-
-  const textoLimpo = normalizar(textoCliente || "")
-  const palavrasCliente = textoLimpo
-    .split(/\s+/)
-    .filter(p => p.length > 2)
-
-  let melhor = null
-  let melhorScore = 0
-
-  for(const item of aprendizados){
-
-    const perguntaBanco = normalizar(item.pergunta || "")
-    const palavrasBanco = perguntaBanco
-      .split(/\s+/)
-      .filter(p => p.length > 2)
-
-    if(!palavrasBanco.length) continue
-
-    let iguais = 0
-
-    for(const palavra of palavrasCliente){
-      if(palavrasBanco.includes(palavra)){
-        iguais++
-      }
-    }
-
-    const scoreCliente = iguais / Math.max(palavrasCliente.length, 1)
-    const scoreBanco = iguais / Math.max(palavrasBanco.length, 1)
-    const scoreFinal = Math.max(scoreCliente, scoreBanco)
-
-    if(scoreFinal > melhorScore){
-      melhorScore = scoreFinal
-      melhor = item
-    }
-  }
-
-  // ajuste o limite aqui se quiser mais rígido ou mais solto
-  if(melhor && melhorScore >= 0.45){
-    return melhor
-  }
-
-  return null
-}
 
 /* ================= VERIFICAR SE TEM PRODUTO (INTELIGENTE) ================= */
 
@@ -521,35 +482,7 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
-{
-  role: "system",
-  content: `
-Você é o atendente do Mercatto Delícia.
 
-Se o cliente fizer um pedido de delivery:
-
-1. Responda normalmente confirmando o pedido
-2. E NO FINAL da resposta, gere EXATAMENTE isso:
-
-PEDIDO_DELIVERY_JSON: {
-  "nome": "",
-  "telefone": "",
-  "endereco": "",
-  "bairro": "",
-  "itens": [
-    { "nome": "", "preco": 0, "quantidade": 0 }
-  ],
-  "valor_total": 0,
-  "pagamento": "",
-  "obs": ""
-}
-
-REGRAS:
-- SEMPRE gerar esse JSON se for pedido
-- NÃO explicar o JSON
-- NÃO alterar o nome PEDIDO_DELIVERY_JSON
-`
-},
 
   
 {
@@ -725,9 +658,8 @@ if(!bufferMensagens[telefone]){
 }
 
 // adiciona mensagem
-bufferMensagens[telefone].mensagens.push(
-  msg.text?.body || mensagem || ""
-)
+bufferMensagens[telefone].mensagens.push(msg.text.body)
+
 // limpa timeout anterior (ESSENCIAL)
 if(bufferMensagens[telefone].timeout){
   clearTimeout(bufferMensagens[telefone].timeout)
@@ -755,15 +687,6 @@ await new Promise(resolve => {
 const cliente = mensagensRecebidas[0]?.from
   const isAdmin = ADMINS.includes(cliente)
 const message_id = mensagensRecebidas[0]?.id
-
-
-
-
-
-
-
-
-  
 /* ================= VERIFICAR PAUSA BOT ================= */
 
 const { data: pausaBot } = await supabase
@@ -826,21 +749,57 @@ const { data: aprendizadoContexto } = await supabase
 .select("*")
 .limit(50)
 
-let melhorAprendizado = null
 let aprendizadoTexto = ""
+let respostaAprendida = null
 
 if(aprendizadoContexto && aprendizadoContexto.length){
 
-  melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
+  const textoLimpo = normalizar(texto)
 
-  if(melhorAprendizado){
-    console.log("🧠 CONHECIMENTO ENCONTRADO:", melhorAprendizado.pergunta)
+  for(const item of aprendizadoContexto){
+
+    const perguntaBanco = normalizar(item.pergunta || "")
+
+    if(
+      textoLimpo.includes(perguntaBanco) ||
+      perguntaBanco.includes(textoLimpo)
+    ){
+      respostaAprendida = item.resposta
+      console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
+      break
+    }
+
   }
 
+  // 🔥 CONTEXTO PARA IA
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
-RESPOSTA_BASE: ${a.resposta}
+RESPOSTA: ${a.resposta}
 `).join("\n")
+
+}
+
+/* ================= USAR RESPOSTA ================= */
+
+if(respostaAprendida){
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: respostaAprendida }
+    })
+  })
+
+  console.log("✅ RESPONDIDO VIA APRENDIZADO")
+
+  return res.status(200).end()
 }
 
 
@@ -886,7 +845,7 @@ let { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
   .in("status", ["Pendente","Confirmada"])
-  .gte("datahora", hoje + "T00:00") // 🔥 CORRETO
+  .gte("datahora", agoraISO)
   .order("datahora",{ ascending:true })
   .limit(50)
 
@@ -1101,13 +1060,7 @@ const itensTratados = (dados.itens || []).map(item => {
     foto: produto?.foto_url || "https://via.placeholder.com/300"
   }
 })
-const valor_total = itensTratados.reduce((total, item) => {
-  return total + (item.total || 0)
-}, 0)
 
-
-
-  
 await supabase
   .from("pedidos_pendentes")
   .insert({
@@ -1120,7 +1073,6 @@ cliente_endereco:
   dados.cliente_endereco ||
   dados.endereco ||
   dados.entrega ||
-  dados.rua ||
   "",
 
 cliente_bairro:
@@ -1129,9 +1081,9 @@ cliente_bairro:
   "",
 
     
-itens: itensTratados,
-valor_total: valor_total,
-forma_pagamento: dados.forma_pagamento,
+ itens: itensTratados,
+    const valor_total = itensTratados.reduce((acc, item) => acc + item.total, 0),
+    forma_pagamento: dados.forma_pagamento,
     observacao: dados.observacao,
     origem: "whatsapp"
   })
@@ -1252,49 +1204,36 @@ if(isAdmin){
 
   console.log("👨‍💼 MENSAGEM DO ADMIN DETECTADA")
 
-const match = mensagem.match(
-  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\.com)?\s+([\s\S]+)/i
-)
-  // Admin mandou mensagem comum, sem ID
-  if(!match){
-    console.log("⚠️ ADMIN SEM ID → CONTINUANDO FLUXO NORMAL")
-  } else {
+  /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
+const match = mensagem.match(/^([a-z0-9\-.]+)\s+([\s\S]+)/i)
+if(!match){
+  console.log("⚠️ ADMIN SEM ID → CONTINUANDO NORMAL")
+}else{
 
-    const idRaw = match[1]
-    const id = idRaw.replace(".com","").trim()
-    const respostaAdmin = match[2].trim()
+const idRaw = match[1]
 
-    console.log("🆔 ID RECEBIDO:", id)
-    console.log("💬 RESPOSTA ADMIN:", respostaAdmin)
+// 🔥 REMOVE O .com SE EXISTIR
+const id = idRaw.replace(".com","")
+const respostaAdmin = match[2]
 
-    const { data: duvida, error: erroDuvida } = await supabase
-      .from("duvidas_pendentes")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
+  const { data: duvida } = await supabase
+  .from("duvidas_pendentes")
+  .select("*")
+  .eq("id", id)
+  .maybeSingle()
 
-    if(erroDuvida){
-      console.log("❌ ERRO AO BUSCAR DÚVIDA:", erroDuvida)
-      return res.status(200).end()
-    }
-
-    if(!duvida){
-      console.log("❌ DÚVIDA NÃO ENCONTRADA:", id)
-      return res.status(200).end()
-    }
+  if(duvida){
 
     const telefoneCliente = duvida.telefone
 
     await supabase
-      .from("aprendizado_bot")
-      .insert({
-        pergunta: duvida.pergunta,
-        resposta: respostaAdmin
-      })
+    .from("aprendizado_bot")
+    .insert({
+      pergunta: duvida.pergunta,
+      resposta: respostaAdmin
+    })
 
-    console.log("🧠 APRENDIZADO SALVO")
-
-    const envioAdmin = await fetch(url,{
+    await fetch(url,{
       method:"POST",
       headers:{
         Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -1308,29 +1247,78 @@ const match = mensagem.match(
       })
     })
 
-    const retornoEnvioAdmin = await envioAdmin.json()
-    const messageIdAdmin = retornoEnvioAdmin?.messages?.[0]?.id || null
 
-    console.log("📤 RESPOSTA ENVIADA PARA CLIENTE:", retornoEnvioAdmin)
 
+
+    
+// ✅ SANVA NAS CONVERSAS A RESPOSTA DOS ADMS
+await supabase
+.from("conversas_whatsapp")
+.insert({
+  telefone: telefoneCliente,
+  mensagem: respostaAdmin,
+  role: "assistant"
+})
     await supabase
-      .from("conversas_whatsapp")
-      .insert({
-        telefone: telefoneCliente,
-        mensagem: respostaAdmin,
-        role: "assistant",
-        message_id: messageIdAdmin,
-        status: "sent"
-      })
+    .from("duvidas_pendentes")
+    .delete()
+    .eq("id", id)
 
-    await supabase
-      .from("duvidas_pendentes")
-      .delete()
-      .eq("id", id)
-
-    console.log("✅ DÚVIDA FINALIZADA")
     return res.status(200).end()
   }
+
+}
+
+const id = match[1]
+const respostaAdmin = match[2]
+
+const { data: duvida } = await supabase
+.from("duvidas_pendentes")
+.select("*")
+.eq("id", id)
+.maybeSingle()
+
+if(!duvida){
+  console.log("❌ DÚVIDA NÃO ENCONTRADA")
+  return res.status(200).end()
+}
+
+const telefoneCliente = duvida.telefone
+
+  /* 🔥 SALVAR APRENDIZADO */
+await supabase
+.from("aprendizado_bot")
+.insert({
+  pergunta: duvida.pergunta,
+  resposta: respostaAdmin
+})
+
+  console.log("🧠 APRENDIZADO SALVO")
+
+  /* 🔥 RESPONDER CLIENTE */
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+body:JSON.stringify({
+  messaging_product:"whatsapp",
+  to: telefoneCliente,
+  type:"text",
+  text:{ body: respostaAdmin }
+})
+  })
+
+  console.log("📤 RESPOSTA ENVIADA PARA CLIENTE")
+
+  /* 🔥 LIMPAR DÚVIDA */
+await supabase
+.from("duvidas_pendentes")
+.delete()
+.eq("id", id)
+
+  return res.status(200).end()
 }
   
 const textoNormalizado = normalizar(texto)
@@ -1494,16 +1482,29 @@ console.log("CLASSIFICAÇÃO:", tipoMensagem)
 /* ================= PRIORIDADE MÁXIMA — CONTATO HUMANO ================= */
 
 const querGerente =
+texto.includes("gerente") ||
+texto.includes("responsavel") ||
+texto.includes("falar com alguem") ||
+texto.includes("atendimento humano") ||
+texto.includes("falar com atendente") ||
 texto.includes("falar com gerente") ||
+texto.includes("quero gerente") ||
+texto.includes("quero falar com alguém") ||
+texto.includes("preciso falar com atendente") ||
 texto.match(/\d{2}\s?\d{4,5}-?\d{4}/)
 
 if(querGerente){
 
 console.log("🚨 PRIORIDADE TOTAL → CONTATO HUMANO")
 
-const resposta = `Eles são gerentes do restaurante
+const resposta = `Claro! 😊
 
-Pode falaro com o Dheure França Dheure França 77 9 8129-3963 `
+Você pode falar diretamente com um dos nossos gerentes:
+
+Dheure França
+📱 77 9 8129-3963
+
+Eles vão te atender com prioridade`
 
 await fetch(url,{
 method:"POST",
@@ -1684,7 +1685,12 @@ if(match){
   itemEncontrado = p
   break
 }
-
+    
+    
+    {
+      itemEncontrado = p
+      break
+    }
   }
 
   // 🚨 BLOQUEIO SE NÃO ENCONTRAR PRODUTO
@@ -2906,18 +2912,17 @@ console.log("📅 DATA RESERVAS:", dataAtualISO)
 
 
   
-/* ================= BUSCAR RESERVAS FUTURAS ================= */
+/* ================= BUSCAR RESERVAS DO DIA ================= */
 
-let reservasHojeTexto = "SEM RESERVAS FUTURAS"
+let reservasHojeTexto = "SEM RESERVAS"
 
 try {
 
   const { data: reservasHoje } = await supabase
     .from("reservas_mercatto")
     .select("*")
-    .in("status", ["Pendente","Confirmada"])
-    .gte("datahora", dataAtualISO + "T00:00") // 🔥 HOJE PRA FRENTE
-    .order("datahora",{ ascending:true })
+    .gte("datahora", dataAtualISO + "T00:00")
+    .lte("datahora", dataAtualISO + "T23:59")
 
   console.log("📊 RESERVAS DO DIA:", reservasHoje)
 
@@ -2929,13 +2934,11 @@ try {
 
       const hora = r.datahora?.split("T")[1]?.substring(0,5) || "--:--"
 
-reservasHojeTexto += `
+      reservasHojeTexto += `
 NOME: ${r.nome}
-PESSOAS: ${r.pessoas || 0}
 SALA: ${r.mesa}
 HORA: ${hora}
 STATUS: ${r.status}
-OBSERVACOES: ${r.observacoes || "-"}
 -------------------
 `
 
@@ -3009,35 +3012,7 @@ REGRAS DE PRIORIDADE DO AGENTE
 4. Nunca use respostas antigas como regra se o prompt atual disser algo diferente.
 `
 },
-{
-role:"system",
-content:`
-BASE DE CONHECIMENTO APRENDIDA
 
-Abaixo estão respostas aprendidas anteriormente com o administrador.
-
-Use isso como BASE DE CONHECIMENTO e NÃO como resposta pronta.
-
-REGRAS:
-- Você pode reaproveitar o conteúdo se a pergunta do cliente for igual ou parecida
-- Reescreva de forma natural, clara e adequada ao contexto atual
-- Nunca copie mecanicamente
-- Nunca invente além do que está salvo
-- Se houver um conhecimento mais parecido, priorize ele
-
-MELHOR CONHECIMENTO ENCONTRADO:
-${melhorAprendizado ? `
-PERGUNTA_BASE: ${melhorAprendizado.pergunta}
-RESPOSTA_BASE: ${melhorAprendizado.resposta}
-` : "NENHUM"}
-
-OUTROS CONHECIMENTOS DISPONÍVEIS:
-${aprendizadoTexto || "SEM CONHECIMENTO SALVO"}
-`
-},
-
-
-  
 {
 role:"system",
 content: assuntoMusica 
@@ -3045,70 +3020,6 @@ content: assuntoMusica
 : "A pergunta atual do cliente não é sobre música."
 },
 
-{
-role:"system",
-content: `
-Você é atendente do Mercatto Delícia especializado em reservas.
-
-📍 ESPAÇOS DISPONÍVEIS NO RESTAURANTE:
-
-1. Salão Principal
-2. Sacada
-3. Sala Paulo Augusto 1 (VIP 1)
-4. Sala Paulo Augusto 2 (VIP 2)
-
-📌 REGRAS IMPORTANTES:
-
-- "VIP", "Sala VIP", "VIP 1" = Sala Paulo Augusto 1
-- "VIP 2" = Sala Paulo Augusto 2
-- Nunca invente nomes de salas diferentes desses
-- Sempre use exatamente esses nomes ao responder
-
-📌 SOBRE DISPONIBILIDADE:
-
-- Você receberá uma lista de reservas reais do sistema
-- Use APENAS essas reservas para responder
-- Se já existir reserva no mesmo espaço e horário → está OCUPADO
-- Se não existir → está DISPONÍVEL
-
-📌 INTERPRETAÇÃO DE DATA:
-
-- "hoje" = data atual (Bahia)
-- "amanhã" = hoje +1
-- "depois de amanhã" = hoje +2
-
-📌 INTERPRETAÇÃO DE PEDIDO:
-
-- Se o cliente perguntar disponibilidade → responda direto
-- Se quiser reservar → conduza para confirmação
-
-📌 FORMATO DE RESPOSTA:
-
-- Seja direto, humano e claro
-- Nunca invente informação
-- Nunca responda com dúvida se tiver dados
-
-📌 EXEMPLOS:
-
-Cliente: "tem vip hoje às 19h?"
-Resposta:
-"A Sala Paulo Augusto 1 (VIP 1) já está reservada às 19:00.  
-A Sala Paulo Augusto 2 (VIP 2) está disponível nesse horário."
-
-Cliente: "a sacada está livre amanhã?"
-Resposta:
-"A Sacada está disponível amanhã no horário solicitado."
-
-Cliente: "salão principal hoje?"
-Resposta:
-"O Salão Principal já possui reservas nesse horário."
-
-`
-},
-
-
-
-  
 {
 role:"system",
 content: nomeMemoria
@@ -3289,50 +3200,6 @@ REGRAS:
 
 resposta = completion.choices[0].message.content
 
-
-
-  /* ================= CAPTURAR PEDIDO ================= */
-
-if (resposta.includes("PEDIDO_DELIVERY_JSON")) {
-
-  try {
-
-    const jsonStr = resposta.split("PEDIDO_DELIVERY_JSON:")[1].trim()
-
-    const pedido = JSON.parse(jsonStr)
-
-    const valor_total = pedido.itens.reduce(
-      (total, item) => total + (item.preco * item.quantidade),
-      0
-    )
-
-    console.log("🛒 PEDIDO DETECTADO:", pedido)
-
-    await supabase.from("pedidos").insert({
-      cliente_nome: pedido.nome,
-      cliente_telefone: from,
-      cliente_endereco: pedido.endereco,
-      cliente_bairro: pedido.bairro,
-      tipo: "entrega",
-      itens: pedido.itens,
-      valor_total: valor_total,
-      forma_pagamento: pedido.pagamento,
-      observacao: pedido.obs,
-      status: "novo",
-      origem: "whatsapp",
-      whatsapp_message_id: msg.id,
-      pagamento_status: "pendente"
-    })
-
-    console.log("✅ PEDIDO SALVO")
-
-  } catch (err) {
-    console.error("❌ ERRO AO PROCESSAR PEDIDO:", err)
-  }
-
-}
-
-  
 
 // ================= PRE-PEDIDO (ANTES DO ENVIO) =================
 
@@ -4278,7 +4145,7 @@ let jsonTexto = pedidoMatch[1]
 
 console.log("🧾 JSON BRUTO:", jsonTexto)
 
-/* 🔥 LIMPEZA */
+/* 🔥 LIMPEZA FORTE */
 
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
@@ -4288,16 +4155,17 @@ jsonTexto = jsonTexto
 .replace(/\r/g,"")
 .trim()
 
-/* 🔥 GARANTIR FECHAMENTO */
+/* 🔥 GARANTIR FECHAMENTO DO JSON */
 
-if(!jsonTexto.endsWith("}")){
+if(!jsonTexto.endsWith("}}")){
   console.log("⚠️ JSON INCOMPLETO — CORRIGINDO")
-  jsonTexto = jsonTexto + "}"
+  jsonTexto = jsonTexto + "}}"
 }
 
 try {
 
   pedido = JSON.parse(jsonTexto)
+
   console.log("✅ JSON OK:", pedido)
 
 } catch (err) {
@@ -4321,53 +4189,86 @@ try {
 
 }
 
-console.log("📦 PEDIDO FINAL:", pedido)
+console.log("JSON DO PEDIDO OK:", pedido)
 
-/* ================= PROCESSAR ================= */
+}catch(err){
+
+console.log("ERRO AO PARSEAR JSON DO PEDIDO")
+console.log("JSON RECEBIDO:", jsonTexto)
+console.log("ERRO:", err)
+
+}
 
 if(pedido){
 
-  const valorTotal = (pedido.itens || []).reduce((s,i)=>{
-    const preco = Number(i.preco || 0)
-    const qtd = Number(i.quantidade || 1)
-    return s + (preco * qtd)
-  },0)
+console.log("Pedido detectado:",pedido)
 
-  console.log("💰 TOTAL:",valorTotal)
+/* CALCULAR TOTAL */
 
-  await supabase
-  .from("pedidos_pendentes")
-  .delete()
-  .eq("cliente_telefone",cliente)
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
 
-  const {data,error} = await supabase
-  .from("pedidos_pendentes")
-  .insert({
-    cliente_nome: pedido.nome,
-    cliente_telefone: cliente,
-    cliente_endereco: pedido.endereco || "",
-    cliente_bairro: pedido.bairro || "",
-    itens: pedido.itens || [],
-    valor_total: valorTotal,
-    forma_pagamento: pedido.pagamento || "",
-    observacao: pedido.observacao || ""
-  })
-  .select()
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
 
-  if(error){
-    console.log("❌ ERRO AO SALVAR:",error)
-  }else{
-    console.log("✅ SALVO:",data)
-  }
+return s + (preco * qtd)
 
-  await supabase
-  .from("estado_conversa")
-  .upsert({
-    telefone:cliente,
-    tipo:"confirmacao_pedido"
-  })
+},0)
 
-  resposta = `🧾 *Resumo do seu pedido*
+console.log("TOTAL PEDIDO:",valorTotal)
+
+/* SALVAR PEDIDO PENDENTE */
+
+console.log("SALVANDO EM pedidos_pendentes")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {data,error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+
+  
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],
+  
+  
+  
+  
+  
+  valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+.select()
+
+if(error){
+console.log("ERRO AO SALVAR PEDIDO:",error)
+}else{
+console.log("PEDIDO SALVO COM SUCESSO:",data)
+}
+
+/* MARCAR ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
 
 ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
