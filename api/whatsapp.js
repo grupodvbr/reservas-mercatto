@@ -3259,6 +3259,50 @@ REGRAS:
 resposta = completion.choices[0].message.content
 
 
+
+  /* ================= CAPTURAR PEDIDO ================= */
+
+if (resposta.includes("PEDIDO_DELIVERY_JSON")) {
+
+  try {
+
+    const jsonStr = resposta.split("PEDIDO_DELIVERY_JSON:")[1].trim()
+
+    const pedido = JSON.parse(jsonStr)
+
+    const valor_total = pedido.itens.reduce(
+      (total, item) => total + (item.preco * item.quantidade),
+      0
+    )
+
+    console.log("🛒 PEDIDO DETECTADO:", pedido)
+
+    await supabase.from("pedidos").insert({
+      cliente_nome: pedido.nome,
+      cliente_telefone: from,
+      cliente_endereco: pedido.endereco,
+      cliente_bairro: pedido.bairro,
+      tipo: "entrega",
+      itens: pedido.itens,
+      valor_total: valor_total,
+      forma_pagamento: pedido.pagamento,
+      observacao: pedido.obs,
+      status: "novo",
+      origem: "whatsapp",
+      whatsapp_message_id: msg.id,
+      pagamento_status: "pendente"
+    })
+
+    console.log("✅ PEDIDO SALVO")
+
+  } catch (err) {
+    console.error("❌ ERRO AO PROCESSAR PEDIDO:", err)
+  }
+
+}
+
+  
+
 // ================= PRE-PEDIDO (ANTES DO ENVIO) =================
 
 if(
