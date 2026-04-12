@@ -16,7 +16,11 @@ const ADMINS = [
   "557781293963",
   "5577981291635"
 ]
+
+// 🔥 BUFFER DE MENSAGENS (AGRUPAR WHATSAPP)
 const bufferMensagens = {}
+
+
 
 const TEMPLATES_PERMITIDOS = [
 "confirmao_de_reserva",
