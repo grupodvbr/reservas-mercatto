@@ -1183,29 +1183,6 @@ forma_pagamento: dados.forma_pagamento,
 
 
   
-/* ================= CONFIRMAÇÃO DE PEDIDO ================= */
-
-/* 🔥 VERIFICAR SE EXISTE PEDIDO PENDENTE PRIMEIRO */
-const { data: ultimoPedido } = await supabase
-  .from("pedidos_pendentes")
-  .select("*")
-  .eq("cliente_telefone", cliente)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle()
-
-const confirmouPedido =
-  ultimoPedido && (
-    texto === "sim" ||
-    texto.includes("confirmar") ||
-    texto.includes("pode confirmar") ||
-    texto.includes("ok pode pedir") ||
-    texto.includes("fechar pedido")
-  )
-
-if(confirmouPedido){
-
-  console.log("🛒 CONFIRMAÇÃO DE PEDIDO DETECTADA")
 
   /* 🔥 BUSCAR ÚLTIMO PEDIDO GERADO */
   const { data: ultimoPedido } = await supabase
