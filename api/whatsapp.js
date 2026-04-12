@@ -1097,7 +1097,13 @@ const itensTratados = (dados.itens || []).map(item => {
     foto: produto?.foto_url || "https://via.placeholder.com/300"
   }
 })
+const valor_total = itensTratados.reduce((total, item) => {
+  return total + (item.total || 0)
+}, 0)
 
+
+
+  
 await supabase
   .from("pedidos_pendentes")
   .insert({
@@ -1110,6 +1116,7 @@ cliente_endereco:
   dados.cliente_endereco ||
   dados.endereco ||
   dados.entrega ||
+  dados.rua ||
   "",
 
 cliente_bairro:
