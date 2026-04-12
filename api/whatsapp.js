@@ -751,8 +751,16 @@ if(querCancelar){
   console.log("❌ CANCELAMENTO DETECTADO")
 
 const telefoneLimpo = cliente.replace(/\D/g, "")
-const agoraISO = new Date().toISOString()
 
+
+  
+const hojeBahia = new Date().toLocaleString("sv-SE", {
+  timeZone: "America/Bahia"
+}).split(" ")[0]
+
+const inicio = hojeBahia + "T00:00:00"
+
+  
 let { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
