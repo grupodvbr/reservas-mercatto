@@ -4125,14 +4125,19 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
-
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*([\s\S]*)/)
 if(pedidoMatch){
 
 let pedido = null
 
 let jsonTexto = pedidoMatch[1]
 
+// 🔥 CORREÇÃO CRÍTICA — CORTA ATÉ O ÚLTIMO }
+const ultimoFecha = jsonTexto.lastIndexOf("}")
+
+if(ultimoFecha !== -1){
+  jsonTexto = jsonTexto.substring(0, ultimoFecha + 1)
+}
 console.log("JSON EXTRAIDO:", jsonTexto)
 
 /* LIMPAR JSON */
