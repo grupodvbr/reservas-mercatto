@@ -4136,60 +4136,28 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*?})/)
 
 if(pedidoMatch){
 
 let pedido = null
+
 let jsonTexto = pedidoMatch[1]
 
-console.log("🧾 JSON BRUTO:", jsonTexto)
+console.log("JSON EXTRAIDO:", jsonTexto)
 
-/* 🔥 LIMPEZA FORTE */
+/* LIMPAR JSON */
 
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
 .replace(/,\s*]/g,"]")
 .replace(/\n/g,"")
 .replace(/\t/g,"")
-.replace(/\r/g,"")
 .trim()
-
-/* 🔥 GARANTIR FECHAMENTO DO JSON */
-
-if(!jsonTexto.endsWith("}}")){
-  console.log("⚠️ JSON INCOMPLETO — CORRIGINDO")
-  jsonTexto = jsonTexto + "}}"
-}
 
 try{
 
 pedido = JSON.parse(jsonTexto)
-
-console.log("✅ JSON OK:", pedido)
-
-}catch(err){
-
-console.log("❌ ERRO JSON:", err)
-console.log("❌ JSON FINAL:", jsonTexto)
-
-/* 🔥 SEGUNDA TENTATIVA (FORÇA BRUTA) */
-
-try{
-
-  const corrigido = jsonTexto + "}"
-  pedido = JSON.parse(corrigido)
-
-  console.log("✅ JSON RECUPERADO:", pedido)
-
-}catch(e2){
-
-  console.log("❌ FALHA TOTAL JSON")
-
-  return res.status(200).end()
-}
-
-}
 
 console.log("JSON DO PEDIDO OK:", pedido)
 
