@@ -1082,7 +1082,7 @@ cliente_bairro:
 
     
  itens: itensTratados,
-    const valor_total = itensTratados.reduce((acc, item) => acc + item.total, 0),
+    valor_total: valor_total,
     forma_pagamento: dados.forma_pagamento,
     observacao: dados.observacao,
     origem: "whatsapp"
