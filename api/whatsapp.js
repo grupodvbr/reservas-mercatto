@@ -4145,7 +4145,7 @@ let jsonTexto = pedidoMatch[1]
 
 console.log("🧾 JSON BRUTO:", jsonTexto)
 
-/* 🔥 LIMPEZA FORTE */
+/* 🔥 LIMPEZA */
 
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
@@ -4155,17 +4155,16 @@ jsonTexto = jsonTexto
 .replace(/\r/g,"")
 .trim()
 
-/* 🔥 GARANTIR FECHAMENTO DO JSON */
+/* 🔥 GARANTIR FECHAMENTO */
 
-if(!jsonTexto.endsWith("}}")){
+if(!jsonTexto.endsWith("}")){
   console.log("⚠️ JSON INCOMPLETO — CORRIGINDO")
-  jsonTexto = jsonTexto + "}}"
+  jsonTexto = jsonTexto + "}"
 }
 
 try {
 
   pedido = JSON.parse(jsonTexto)
-
   console.log("✅ JSON OK:", pedido)
 
 } catch (err) {
@@ -4189,86 +4188,53 @@ try {
 
 }
 
-console.log("JSON DO PEDIDO OK:", pedido)
+console.log("📦 PEDIDO FINAL:", pedido)
 
-}catch(err){
-
-console.log("ERRO AO PARSEAR JSON DO PEDIDO")
-console.log("JSON RECEBIDO:", jsonTexto)
-console.log("ERRO:", err)
-
-}
+/* ================= PROCESSAR ================= */
 
 if(pedido){
 
-console.log("Pedido detectado:",pedido)
+  const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+    const preco = Number(i.preco || 0)
+    const qtd = Number(i.quantidade || 1)
+    return s + (preco * qtd)
+  },0)
 
-/* CALCULAR TOTAL */
+  console.log("💰 TOTAL:",valorTotal)
 
-const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+  await supabase
+  .from("pedidos_pendentes")
+  .delete()
+  .eq("cliente_telefone",cliente)
 
-const preco = Number(i.preco || 0)
-const qtd = Number(i.quantidade || 1)
+  const {data,error} = await supabase
+  .from("pedidos_pendentes")
+  .insert({
+    cliente_nome: pedido.nome,
+    cliente_telefone: cliente,
+    cliente_endereco: pedido.endereco || "",
+    cliente_bairro: pedido.bairro || "",
+    itens: pedido.itens || [],
+    valor_total: valorTotal,
+    forma_pagamento: pedido.pagamento || "",
+    observacao: pedido.observacao || ""
+  })
+  .select()
 
-return s + (preco * qtd)
+  if(error){
+    console.log("❌ ERRO AO SALVAR:",error)
+  }else{
+    console.log("✅ SALVO:",data)
+  }
 
-},0)
+  await supabase
+  .from("estado_conversa")
+  .upsert({
+    telefone:cliente,
+    tipo:"confirmacao_pedido"
+  })
 
-console.log("TOTAL PEDIDO:",valorTotal)
-
-/* SALVAR PEDIDO PENDENTE */
-
-console.log("SALVANDO EM pedidos_pendentes")
-
-await supabase
-.from("pedidos_pendentes")
-.delete()
-.eq("cliente_telefone",cliente)
-
-const {data,error} = await supabase
-.from("pedidos_pendentes")
-.insert({
-cliente_nome: pedido.nome,
-cliente_telefone: cliente,
-cliente_endereco: pedido.endereco || "",
-cliente_bairro: pedido.bairro || "",
-
-
-  
-itens: (pedido.itens && pedido.itens.length)
-  ? pedido.itens
-  : [{
-      nome: pedido.item,
-      quantidade: pedido.quantidade || 1,
-      preco: pedido.preco || 0
-    }],
-  
-  
-  
-  
-  
-  valor_total: valorTotal,
-forma_pagamento: pedido.pagamento || "",
-observacao: pedido.observacao || ""
-})
-.select()
-
-if(error){
-console.log("ERRO AO SALVAR PEDIDO:",error)
-}else{
-console.log("PEDIDO SALVO COM SUCESSO:",data)
-}
-
-/* MARCAR ESTADO */
-
-await supabase
-.from("estado_conversa")
-.upsert({
-telefone:cliente,
-tipo:"confirmacao_pedido"
-})
-
-resposta = `🧾 *Resumo do seu pedido*
+  resposta = `🧾 *Resumo do seu pedido*
 
 ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
