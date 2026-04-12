@@ -1039,8 +1039,13 @@ const itensTratados = (dados.itens || []).map(item => {
   return {
     nome: produto?.nome || item.nome,
     preco: Number(produto?.preco_venda || item.preco) || 0,
-    quantidade: Math.max(1, Number(item.quantidade) || 1),
-    foto: produto?.foto_url || null
+    quantidade: (() => {
+  const q = parseInt(String(item.quantidade).replace(/\D/g, ""))
+  return q && q > 0 ? q : 1
+})()
+    
+    ,
+foto: produto?.foto_url || "https://via.placeholder.com/300"
   }
 
 })
