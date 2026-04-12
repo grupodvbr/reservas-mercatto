@@ -765,7 +765,15 @@ let { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
   .in("status", ["Pendente","Confirmada"])
-  .gte("datahora", agoraISO)
+const hojeBahia = new Date().toLocaleString("sv-SE", {
+  timeZone: "America/Bahia"
+}).split(" ")[0]
+
+const inicio = hojeBahia + "T00:00:00"
+
+.gte("datahora", inicio)
+  
+  
   .order("datahora",{ ascending:true })
   .limit(50)
 
@@ -782,8 +790,16 @@ if((!reservas || !reservas.length) && nomeMemoria){
     .select("*")
     .ilike("nome", `%${nomeBusca}%`)
     .in("status", ["Pendente","Confirmada"])
-    .gte("datahora", agoraISO)
-    .order("datahora",{ ascending:true })
+const hojeBahia = new Date().toLocaleString("sv-SE", {
+  timeZone: "America/Bahia"
+}).split(" ")[0]
+
+const inicio = hojeBahia + "T00:00:00"
+
+.gte("datahora", inicio)
+  
+  
+  .order("datahora",{ ascending:true })
     .limit(20)
 
   reservas = reservasPorNome
