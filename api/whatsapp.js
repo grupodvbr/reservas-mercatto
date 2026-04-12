@@ -2920,11 +2920,13 @@ try {
 
       const hora = r.datahora?.split("T")[1]?.substring(0,5) || "--:--"
 
-      reservasHojeTexto += `
+reservasHojeTexto += `
 NOME: ${r.nome}
+PESSOAS: ${r.pessoas || 0}
 SALA: ${r.mesa}
 HORA: ${hora}
 STATUS: ${r.status}
+OBSERVACOES: ${r.observacoes || "-"}
 -------------------
 `
 
