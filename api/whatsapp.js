@@ -242,6 +242,52 @@ return unicos
 }
 
 
+
+function buscarRespostaAprendida(textoCliente, aprendizados){
+
+  const textoLimpo = normalizar(textoCliente || "")
+  const palavrasCliente = textoLimpo
+    .split(/\s+/)
+    .filter(p => p.length > 2)
+
+  let melhor = null
+  let melhorScore = 0
+
+  for(const item of aprendizados){
+
+    const perguntaBanco = normalizar(item.pergunta || "")
+    const palavrasBanco = perguntaBanco
+      .split(/\s+/)
+      .filter(p => p.length > 2)
+
+    if(!palavrasBanco.length) continue
+
+    let iguais = 0
+
+    for(const palavra of palavrasCliente){
+      if(palavrasBanco.includes(palavra)){
+        iguais++
+      }
+    }
+
+    const scoreCliente = iguais / Math.max(palavrasCliente.length, 1)
+    const scoreBanco = iguais / Math.max(palavrasBanco.length, 1)
+    const scoreFinal = Math.max(scoreCliente, scoreBanco)
+
+    if(scoreFinal > melhorScore){
+      melhorScore = scoreFinal
+      melhor = item
+    }
+  }
+
+  // ajuste o limite aqui se quiser mais rígido ou mais solto
+  if(melhor && melhorScore >= 0.45){
+    return melhor
+  }
+
+  return null
+}
+
 /* ================= VERIFICAR SE TEM PRODUTO (INTELIGENTE) ================= */
 
 function normalizar(txt){
@@ -781,29 +827,17 @@ let respostaAprendida = null
 
 if(aprendizadoContexto && aprendizadoContexto.length){
 
-  const textoLimpo = normalizar(texto)
+  const melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
 
-  for(const item of aprendizadoContexto){
-
-    const perguntaBanco = normalizar(item.pergunta || "")
-
-    if(
-      textoLimpo.includes(perguntaBanco) ||
-      perguntaBanco.includes(textoLimpo)
-    ){
-      respostaAprendida = item.resposta
-      console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
-      break
-    }
-
+  if(melhorAprendizado){
+    respostaAprendida = melhorAprendizado.resposta
+    console.log("🧠 RESPOSTA VINDO DO APRENDIZADO:", melhorAprendizado.pergunta)
   }
 
-  // 🔥 CONTEXTO PARA IA
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
 RESPOSTA: ${a.resposta}
 `).join("\n")
-
 }
 
 /* ================= USAR RESPOSTA ================= */
