@@ -18,17 +18,11 @@ const ADMINS = [
 ]
 const bufferMensagens = {}
 
-
-
 const TEMPLATES_PERMITIDOS = [
 "confirmao_de_reserva",
 "reserva_especial",
 "hello_world"
 ]
-
-
-
-
 
 
 
@@ -757,23 +751,6 @@ const cliente = mensagensRecebidas[0]?.from
   const isAdmin = ADMINS.includes(cliente)
 const message_id = mensagensRecebidas[0]?.id
 
-
-
-
-
-// 🔥 SALVAR MENSAGEM RECEBIDA (LOCAL EXATO)
-await supabase
-  .from("conversas_whatsapp")
-  .insert({
-    telefone: cliente,
-    mensagem: mensagem,
-    tipo: tipo,
-    media_url: media_url,
-    nome_arquivo: nome_arquivo,
-    role: "user",
-    message_id: message_id,
-    status: "received"
-  })
 
 
 
