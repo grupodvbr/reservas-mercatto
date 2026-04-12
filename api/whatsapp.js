@@ -1082,8 +1082,8 @@ cliente_bairro:
   "",
 
     
-    itens: itensTratados, // ✅ CORRIGIDO
-const valor_total = itensTratados.reduce((s,i)=>s+i.total,0),
+ itens: itensTratados,
+    valor_total: valor_total,
     forma_pagamento: dados.forma_pagamento,
     observacao: dados.observacao,
     origem: "whatsapp"
