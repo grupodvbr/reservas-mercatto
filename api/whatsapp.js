@@ -16,8 +16,6 @@ const ADMINS = [
   "557781293963",
   "5577981291635"
 ]
-
-// 🔥 BUFFER DE MENSAGENS (AGRUPAR WHATSAPP)
 const bufferMensagens = {}
 
 
