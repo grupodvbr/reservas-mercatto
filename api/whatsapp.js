@@ -744,11 +744,28 @@ const { data: aprendizadoContexto } = await supabase
 .limit(50)
 
 let aprendizadoTexto = ""
+let respostaAprendida = null
 
 if(aprendizadoContexto && aprendizadoContexto.length){
 
-  console.log("🧠 USANDO APRENDIZADO COMO CONTEXTO")
+  const textoLimpo = normalizar(texto)
 
+  for(const item of aprendizadoContexto){
+
+    const perguntaBanco = normalizar(item.pergunta || "")
+
+    if(
+      textoLimpo.includes(perguntaBanco) ||
+      perguntaBanco.includes(textoLimpo)
+    ){
+      respostaAprendida = item.resposta
+      console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
+      break
+    }
+
+  }
+
+  // 🔥 CONTEXTO PARA IA
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
 RESPOSTA: ${a.resposta}
@@ -778,7 +795,6 @@ if(respostaAprendida){
 
   return res.status(200).end()
 }
-
 
 
 
