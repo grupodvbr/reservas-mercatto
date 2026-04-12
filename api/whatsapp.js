@@ -1420,12 +1420,13 @@ ${duvida.pergunta}`
       return res.status(200).end()
     }
 
-    await supabase
-      .from("aprendizado_bot")
-      .insert({
-        pergunta: duvida.pergunta,
-        resposta: respostaAdmin
-      })
+await supabase
+  .from("aprendizado_bot")
+  .insert({
+    pergunta: duvida.pergunta,
+    resposta: respostaAdmin,
+    telefone_admin: cliente
+  })
 
     console.log("✅ APRENDIZADO SALVO")
 
