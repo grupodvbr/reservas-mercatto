@@ -1042,19 +1042,8 @@ if(!Array.isArray(dados.itens)){
 
 
   
-// 🔥 AQUI É O LUGAR EXATO (ANTES DO INSERT)
 const cardapio = await buscarCardapio()
 
-const itensTratados = (dados.itens || []).map(item => {
-
-  const produto = cardapio.find(p =>
-    normalizar(p.nome).includes(normalizar(item.nome))
-  )
-
-  return {
-    nome: produto?.nome || item.nome,
-    preco: Number(produto?.preco_venda || item.preco) || 0,
-    quantidade: (() => {
 const itensTratados = (dados.itens || []).map(item => {
 
   const produto = cardapio.find(p =>
@@ -1071,6 +1060,8 @@ const itensTratados = (dados.itens || []).map(item => {
     total: preco * quantidade,
     foto: produto?.foto_url || "https://via.placeholder.com/300"
   }
+
+})
 
 })
 
@@ -1095,7 +1086,7 @@ cliente_bairro:
 
     
     itens: itensTratados, // ✅ CORRIGIDO
-    valor_total: dados.valor_total,
+const valor_total = itensTratados.reduce((s,i)=>s+i.total,0),
     forma_pagamento: dados.forma_pagamento,
     observacao: dados.observacao,
     origem: "whatsapp"
