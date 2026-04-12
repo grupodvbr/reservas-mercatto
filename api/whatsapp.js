@@ -738,30 +738,21 @@ const texto = mensagem.toLowerCase()
 
 /* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
-const { data: aprendizado } = await supabase
-  .from("aprendizado_bot")
-  .select("*")
+const { data: aprendizadoContexto } = await supabase
+.from("aprendizado_bot")
+.select("*")
+.limit(50)
 
-let respostaAprendida = null
+let aprendizadoTexto = ""
 
-if(aprendizado && aprendizado.length){
+if(aprendizadoContexto && aprendizadoContexto.length){
 
-  const textoLimpo = normalizar(texto)
+  console.log("🧠 USANDO APRENDIZADO COMO CONTEXTO")
 
-  for(const item of aprendizado){
-
-    const perguntaBanco = normalizar(item.pergunta || "")
-
-    if(
-      textoLimpo.includes(perguntaBanco) ||
-      perguntaBanco.includes(textoLimpo)
-    ){
-      respostaAprendida = item.resposta
-      console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
-      break
-    }
-
-  }
+  aprendizadoTexto = aprendizadoContexto.map(a => `
+PERGUNTA: ${a.pergunta}
+RESPOSTA: ${a.resposta}
+`).join("\n")
 
 }
 
@@ -2750,26 +2741,7 @@ const mensagens = (historico || [])
 }))
 .slice(-15)
 
-/* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
-const { data: aprendizado } = await supabase
-.from("aprendizado_bot")
-.select("*")
-.ilike("pergunta", `%${mensagem}%`)
-.limit(3)
-
-let aprendizadoTexto = ""
-
-if(aprendizado && aprendizado.length){
-
-  console.log("🧠 USANDO APRENDIZADO COMO CONTEXTO")
-
-  aprendizadoTexto = aprendizado.map(a => `
-PERGUNTA: ${a.pergunta}
-RESPOSTA: ${a.resposta}
-`).join("\n")
-
-}
 
 
 
