@@ -17,7 +17,9 @@ const ADMINS = [
   "5577981291635"
 ]
 
+// 🔥 BUFFER DE MENSAGENS (AGRUPAR WHATSAPP)
 const bufferMensagens = {}
+
 
 
 const TEMPLATES_PERMITIDOS = [
@@ -41,9 +43,11 @@ function agoraBahia(){
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
   )
 }
+
+// Quando precisar da data, use assim:
 const agora = agoraBahia();
 
-/* =============== RELATORIO AUTOMATICO =============== */
+/* ================= RELATORIO AUTOMATICO ================= */
 
 async function enviarRelatorioAutomatico(){
 
@@ -1078,7 +1082,7 @@ cliente_bairro:
 
     
  itens: itensTratados,
-    const valor_total = itensTratados.reduce((acc, item) => acc + item.total, 0),
+    valor_total: valor_total,
     forma_pagamento: dados.forma_pagamento,
     observacao: dados.observacao,
     origem: "whatsapp"
@@ -4141,7 +4145,7 @@ let jsonTexto = pedidoMatch[1]
 
 console.log("🧾 JSON BRUTO:", jsonTexto)
 
-/* 🔥 LIMPEZA */
+/* 🔥 LIMPEZA FORTE */
 
 jsonTexto = jsonTexto
 .replace(/,\s*}/g,"}")
@@ -4151,16 +4155,17 @@ jsonTexto = jsonTexto
 .replace(/\r/g,"")
 .trim()
 
-/* 🔥 GARANTIR FECHAMENTO */
+/* 🔥 GARANTIR FECHAMENTO DO JSON */
 
-if(!jsonTexto.endsWith("}")){
+if(!jsonTexto.endsWith("}}")){
   console.log("⚠️ JSON INCOMPLETO — CORRIGINDO")
-  jsonTexto = jsonTexto + "}"
+  jsonTexto = jsonTexto + "}}"
 }
 
 try {
 
   pedido = JSON.parse(jsonTexto)
+
   console.log("✅ JSON OK:", pedido)
 
 } catch (err) {
@@ -4184,53 +4189,86 @@ try {
 
 }
 
-console.log("📦 PEDIDO FINAL:", pedido)
+console.log("JSON DO PEDIDO OK:", pedido)
 
-/* ================= PROCESSAR ================= */
+}catch(err){
+
+console.log("ERRO AO PARSEAR JSON DO PEDIDO")
+console.log("JSON RECEBIDO:", jsonTexto)
+console.log("ERRO:", err)
+
+}
 
 if(pedido){
 
-  const valorTotal = (pedido.itens || []).reduce((s,i)=>{
-    const preco = Number(i.preco || 0)
-    const qtd = Number(i.quantidade || 1)
-    return s + (preco * qtd)
-  },0)
+console.log("Pedido detectado:",pedido)
 
-  console.log("💰 TOTAL:",valorTotal)
+/* CALCULAR TOTAL */
 
-  await supabase
-  .from("pedidos_pendentes")
-  .delete()
-  .eq("cliente_telefone",cliente)
+const valorTotal = (pedido.itens || []).reduce((s,i)=>{
 
-  const {data,error} = await supabase
-  .from("pedidos_pendentes")
-  .insert({
-    cliente_nome: pedido.nome,
-    cliente_telefone: cliente,
-    cliente_endereco: pedido.endereco || "",
-    cliente_bairro: pedido.bairro || "",
-    itens: pedido.itens || [],
-    valor_total: valorTotal,
-    forma_pagamento: pedido.pagamento || "",
-    observacao: pedido.observacao || ""
-  })
-  .select()
+const preco = Number(i.preco || 0)
+const qtd = Number(i.quantidade || 1)
 
-  if(error){
-    console.log("❌ ERRO AO SALVAR:",error)
-  }else{
-    console.log("✅ SALVO:",data)
-  }
+return s + (preco * qtd)
 
-  await supabase
-  .from("estado_conversa")
-  .upsert({
-    telefone:cliente,
-    tipo:"confirmacao_pedido"
-  })
+},0)
 
-  resposta = `🧾 *Resumo do seu pedido*
+console.log("TOTAL PEDIDO:",valorTotal)
+
+/* SALVAR PEDIDO PENDENTE */
+
+console.log("SALVANDO EM pedidos_pendentes")
+
+await supabase
+.from("pedidos_pendentes")
+.delete()
+.eq("cliente_telefone",cliente)
+
+const {data,error} = await supabase
+.from("pedidos_pendentes")
+.insert({
+cliente_nome: pedido.nome,
+cliente_telefone: cliente,
+cliente_endereco: pedido.endereco || "",
+cliente_bairro: pedido.bairro || "",
+
+
+  
+itens: (pedido.itens && pedido.itens.length)
+  ? pedido.itens
+  : [{
+      nome: pedido.item,
+      quantidade: pedido.quantidade || 1,
+      preco: pedido.preco || 0
+    }],
+  
+  
+  
+  
+  
+  valor_total: valorTotal,
+forma_pagamento: pedido.pagamento || "",
+observacao: pedido.observacao || ""
+})
+.select()
+
+if(error){
+console.log("ERRO AO SALVAR PEDIDO:",error)
+}else{
+console.log("PEDIDO SALVO COM SUCESSO:",data)
+}
+
+/* MARCAR ESTADO */
+
+await supabase
+.from("estado_conversa")
+.upsert({
+telefone:cliente,
+tipo:"confirmacao_pedido"
+})
+
+resposta = `🧾 *Resumo do seu pedido*
 
 ${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
