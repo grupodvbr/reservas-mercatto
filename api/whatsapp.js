@@ -1006,8 +1006,7 @@ if(mensagem.includes("PEDIDO_DELIVERY_JSON:")){
 
   try{
 
-    const match = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*({[\s\S]*})/)
-
+const match = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
     if(match){
       pedidoJSON = JSON.parse(match[1])
     }
