@@ -46,11 +46,16 @@ new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
 )
 
 const hoje = agoraBahia.toISOString().split("T")[0]
+
 const {data:reservas} = await supabase
 .from("reservas_mercatto")
 .select("*")
-.gte("datahora", hoje+"T00:00")
-.lte("datahora", hoje+"T23:59")
+.in("status", ["Pendente","Confirmada"])
+.gte("datahora", hoje+"T00:00") // 🔥 daqui pra frente
+.order("datahora",{ascending:true})
+
+
+  
 .order("datahora",{ascending:true})
 
 let resposta = "📊 *Relatório automático de reservas (Hoje)*\n\n"
@@ -881,7 +886,7 @@ let { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
   .in("status", ["Pendente","Confirmada"])
-  .gte("datahora", agoraISO)
+  .gte("datahora", hoje + "T00:00") // 🔥 CORRETO
   .order("datahora",{ ascending:true })
   .limit(50)
 
