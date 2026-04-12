@@ -829,38 +829,21 @@ if(aprendizadoContexto && aprendizadoContexto.length){
 
   const melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
 
+ let melhorAprendizado = null
+let aprendizadoTexto = ""
+
+if(aprendizadoContexto && aprendizadoContexto.length){
+
+  melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
+
   if(melhorAprendizado){
-    respostaAprendida = melhorAprendizado.resposta
-    console.log("🧠 RESPOSTA VINDO DO APRENDIZADO:", melhorAprendizado.pergunta)
+    console.log("🧠 CONHECIMENTO ENCONTRADO:", melhorAprendizado.pergunta)
   }
 
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
-RESPOSTA: ${a.resposta}
+RESPOSTA_BASE: ${a.resposta}
 `).join("\n")
-}
-
-/* ================= USAR RESPOSTA ================= */
-
-if(respostaAprendida){
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"text",
-      text:{ body: respostaAprendida }
-    })
-  })
-
-  console.log("✅ RESPONDIDO VIA APRENDIZADO")
-
-  return res.status(200).end()
 }
 
 
@@ -3034,7 +3017,35 @@ REGRAS DE PRIORIDADE DO AGENTE
 4. Nunca use respostas antigas como regra se o prompt atual disser algo diferente.
 `
 },
+{
+role:"system",
+content:`
+BASE DE CONHECIMENTO APRENDIDA
 
+Abaixo estão respostas aprendidas anteriormente com o administrador.
+
+Use isso como BASE DE CONHECIMENTO e NÃO como resposta pronta.
+
+REGRAS:
+- Você pode reaproveitar o conteúdo se a pergunta do cliente for igual ou parecida
+- Reescreva de forma natural, clara e adequada ao contexto atual
+- Nunca copie mecanicamente
+- Nunca invente além do que está salvo
+- Se houver um conhecimento mais parecido, priorize ele
+
+MELHOR CONHECIMENTO ENCONTRADO:
+${melhorAprendizado ? `
+PERGUNTA_BASE: ${melhorAprendizado.pergunta}
+RESPOSTA_BASE: ${melhorAprendizado.resposta}
+` : "NENHUM"}
+
+OUTROS CONHECIMENTOS DISPONÍVEIS:
+${aprendizadoTexto || "SEM CONHECIMENTO SALVO"}
+`
+},
+
+
+  
 {
 role:"system",
 content: assuntoMusica 
@@ -3042,6 +3053,11 @@ content: assuntoMusica
 : "A pergunta atual do cliente não é sobre música."
 },
 
+
+
+
+
+  
 {
 role:"system",
 content: nomeMemoria
