@@ -21,6 +21,7 @@ const bufferMensagens = {}
 
 
 
+
 const TEMPLATES_PERMITIDOS = [
 "confirmao_de_reserva",
 "reserva_especial",
@@ -44,7 +45,7 @@ function agoraBahia(){
 }
 const agora = agoraBahia();
 
-/* ================= RELATORIO AUTOMATICO ================= */
+/* =============== RELATORIO AUTOMATICO =============== */
 
 async function enviarRelatorioAutomatico(){
 
