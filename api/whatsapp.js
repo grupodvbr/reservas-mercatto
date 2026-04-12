@@ -404,43 +404,6 @@ return publicUrl
 
 
 
-
-function ehConfirmacaoPositiva(txt){
-  const t = normalizar(txt || "")
-  return (
-    t === "sim" ||
-    t === "s" ||
-    t === "ok" ||
-    t === "pode" ||
-    t === "pode sim" ||
-    t === "claro" ||
-    t === "quero" ||
-    t === "adicionar" ||
-    t === "cadastrar"
-  )
-}
-
-function ehConfirmacaoNegativa(txt){
-  const t = normalizar(txt || "")
-  return (
-    t === "nao" ||
-    t === "não" ||
-    t === "n" ||
-    t === "cancelar" ||
-    t === "ignorar" ||
-    t === "deixa" ||
-    t === "deixa pra la" ||
-    t === "deixa pra lá"
-  )
-}
-
-
-
-
-
-
-
-
 module.exports = async function handler(req,res){
 let resposta = ""
 
@@ -1261,164 +1224,45 @@ cliente_bairro:
 
 
 
-/* ================= ADMIN - FLUXO DE APRENDIZADO ================= */
+  
+/* ================= ADMIN RESPONDENDO CLIENTE ================= */
 
 if(isAdmin){
 
   console.log("👨‍💼 MENSAGEM DO ADMIN DETECTADA")
 
-  const { data: estadoAdmin } = await supabase
-    .from("estado_conversa")
-    .select("*")
-    .eq("telefone", cliente)
-    .maybeSingle()
+const match = mensagem.match(
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\.com)?\s+([\s\S]+)/i
+)
+  // Admin mandou mensagem comum, sem ID
+  if(!match){
+    console.log("⚠️ ADMIN SEM ID → CONTINUANDO FLUXO NORMAL")
+  } else {
 
-  /* ================= ETAPA 1 - CONFIRMAR SE QUER CADASTRAR ================= */
+    const idRaw = match[1]
+    const id = idRaw.replace(".com","").trim()
+    const respostaAdmin = match[2].trim()
 
-  if(estadoAdmin?.tipo === "confirmar_aprendizado"){
+    console.log("🆔 ID RECEBIDO:", id)
+    console.log("💬 RESPOSTA ADMIN:", respostaAdmin)
 
-    console.log("🧠 ETAPA ADMIN: confirmar_aprendizado")
-
-    const textoAdmin = normalizar(mensagem || "")
-
-    const confirmou =
-      textoAdmin === "sim" ||
-      textoAdmin === "s" ||
-      textoAdmin === "ok" ||
-      textoAdmin === "pode" ||
-      textoAdmin === "quero" ||
-      textoAdmin === "adicionar" ||
-      textoAdmin === "cadastrar"
-
-    const recusou =
-      textoAdmin === "nao" ||
-      textoAdmin === "não" ||
-      textoAdmin === "n" ||
-      textoAdmin === "cancelar" ||
-      textoAdmin === "ignorar"
-
-   if(confirmou){
-
-  const { data: duvida } = await supabase
-    .from("duvidas_pendentes")
-    .select("*")
-    .eq("id", estadoAdmin.referencia_id)
-    .maybeSingle()
-
-  if(!duvida){
-    console.log("❌ DÚVIDA NÃO ENCONTRADA PARA CONFIRMAÇÃO")
-
-    await supabase
-      .from("estado_conversa")
-      .delete()
-      .eq("telefone", cliente)
-
-    return res.status(200).end()
-  }
-
-  await supabase
-    .from("estado_conversa")
-    .upsert({
-      telefone: cliente,
-      tipo: "aguardando_resposta_aprendizado",
-      referencia_id: duvida.id
-    }, { onConflict: "telefone" })
-
-  const textoPergunta = `Perfeito 👍
-
-Digite em apenas uma mensagem a resposta para essa pergunta.
-
-Essa resposta será usada com seus clientes.
-
-REGISTRO DE INFRORMAÇÃO:
-${duvida.pergunta}`
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      messaging_product:"whatsapp",
-      to: cliente,
-      type:"text",
-      text:{ body: textoPergunta }
-    })
-  })
-
-  return res.status(200).end()
-}
-
-    if(recusou){
-
-      await supabase
-        .from("estado_conversa")
-        .delete()
-        .eq("telefone", cliente)
-
-      await fetch(url,{
-        method:"POST",
-        headers:{
-          Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-          "Content-Type":"application/json"
-        },
-        body: JSON.stringify({
-          messaging_product:"whatsapp",
-          to: cliente,
-          type:"text",
-          text:{ body:"Tudo bem. Não vou adicionar essa resposta ao conhecimento." }
-        })
-      })
-
-      return res.status(200).end()
-    }
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        messaging_product:"whatsapp",
-        to: cliente,
-        type:"text",
-        text:{ body:"Responda apenas com *SIM* para cadastrar ou *NÃO* para ignorar." }
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  /* ================= ETAPA 2 - ADMIN ENVIA A RESPOSTA ================= */
-
-  if(estadoAdmin?.tipo === "aguardando_resposta_aprendizado"){
-
-    console.log("🧠 ETAPA ADMIN: aguardando_resposta_aprendizado")
-
-    const respostaAdmin = (mensagem || "").trim()
-
-    if(!respostaAdmin){
-      return res.status(200).end()
-    }
-
-    const { data: duvida } = await supabase
+    const { data: duvida, error: erroDuvida } = await supabase
       .from("duvidas_pendentes")
       .select("*")
-      .eq("id", estadoAdmin.referencia_id)
+      .eq("id", id)
       .maybeSingle()
 
-    if(!duvida){
-      console.log("❌ DÚVIDA NÃO ENCONTRADA PARA RESPOSTA FINAL")
-
-      await supabase
-        .from("estado_conversa")
-        .delete()
-        .eq("telefone", cliente)
-
+    if(erroDuvida){
+      console.log("❌ ERRO AO BUSCAR DÚVIDA:", erroDuvida)
       return res.status(200).end()
     }
+
+    if(!duvida){
+      console.log("❌ DÚVIDA NÃO ENCONTRADA:", id)
+      return res.status(200).end()
+    }
+
+    const telefoneCliente = duvida.telefone
 
     await supabase
       .from("aprendizado_bot")
@@ -1427,29 +1271,31 @@ ${duvida.pergunta}`
         resposta: respostaAdmin
       })
 
-    console.log("✅ APRENDIZADO SALVO")
+    console.log("🧠 APRENDIZADO SALVO")
 
-    const envioCliente = await fetch(url,{
+    const envioAdmin = await fetch(url,{
       method:"POST",
       headers:{
         Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
         "Content-Type":"application/json"
       },
-      body: JSON.stringify({
+      body:JSON.stringify({
         messaging_product:"whatsapp",
-        to: duvida.telefone,
+        to: telefoneCliente,
         type:"text",
         text:{ body: respostaAdmin }
       })
     })
 
-    const retornoCliente = await envioCliente.json()
-    const messageIdAdmin = retornoCliente?.messages?.[0]?.id || null
+    const retornoEnvioAdmin = await envioAdmin.json()
+    const messageIdAdmin = retornoEnvioAdmin?.messages?.[0]?.id || null
+
+    console.log("📤 RESPOSTA ENVIADA PARA CLIENTE:", retornoEnvioAdmin)
 
     await supabase
       .from("conversas_whatsapp")
       .insert({
-        telefone: duvida.telefone,
+        telefone: telefoneCliente,
         mensagem: respostaAdmin,
         role: "assistant",
         message_id: messageIdAdmin,
@@ -1459,31 +1305,11 @@ ${duvida.pergunta}`
     await supabase
       .from("duvidas_pendentes")
       .delete()
-      .eq("id", duvida.id)
+      .eq("id", id)
 
-    await supabase
-      .from("estado_conversa")
-      .delete()
-      .eq("telefone", cliente)
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        messaging_product:"whatsapp",
-        to: cliente,
-        type:"text",
-        text:{ body:"Resposta cadastrada no conhecimento e enviada ao cliente com sucesso ✅" }
-      })
-    })
-
+    console.log("✅ DÚVIDA FINALIZADA")
     return res.status(200).end()
   }
-
-  console.log("⚠️ ADMIN SEM FLUXO DE APRENDIZADO ATIVO → CONTINUANDO FLUXO NORMAL")
 }
   
 const textoNormalizado = normalizar(texto)
@@ -3528,43 +3354,44 @@ respostaLower.includes("sem informação") ||
 respostaLower.includes("no momento")
 
 if(precisaEscalar && !ehAcaoDireta){
-  console.log("🚨 ESCALANDO PARA ADM (NOVO FLUXO)")
+  console.log("🚨 ESCALANDO PARA ADM")
 
-  const { data: novaDuvida, error: erroNovaDuvida } = await supabase
-    .from("duvidas_pendentes")
-    .insert({
-      telefone: cliente,
-      pergunta: mensagem
-    })
-    .select()
-    .single()
+  // 🔥 SALVA DÚVIDA
+  const { data: novaDuvida } = await supabase
+  .from("duvidas_pendentes")
+  .insert({
+    telefone: cliente,
+    pergunta: mensagem
+  })
+  .select()
+  .single()
 
-  if(erroNovaDuvida || !novaDuvida){
-    console.log("❌ ERRO AO SALVAR DÚVIDA:", erroNovaDuvida)
-    return res.status(200).end()
-  }
+const resumo = mensagens
+  .slice(-5)
+  .map(m => `${m.role === "user" ? "👤" : "🤖"} ${m.content}`)
+  .join("\n")
 
-  const alerta = `🚨 *Nova dúvida sem resposta cadastrada*
+const alerta = `
+🚨 *DÚVIDA DO CLIENTE*
 
-❓ Pergunta do cliente:
+🆔 *COPIAR ID:*
+${novaDuvida.id}.com
+
+📱 Cliente:
+${cliente}
+
+💬 Pergunta:
 ${mensagem}
 
-Deseja adicionar uma resposta ao conhecimento?
+✍️ *RESPONDA ASSIM:*
+${novaDuvida.id} sua resposta aqui
 
-Responda:
-*SIM* para cadastrar
-ou
-*NÃO* para ignorar`
+📄 Últimas mensagens:
+${resumo}
+`
 
+  // 🔥 ENVIA PARA TODOS ADM
   for(const admin of ADMINS){
-
-    await supabase
-      .from("estado_conversa")
-      .upsert({
-        telefone: admin,
-        tipo: "confirmar_aprendizado",
-        referencia_id: novaDuvida.id
-      }, { onConflict: "telefone" })
 
     const resp = await fetch(url,{
       method:"POST",
@@ -3581,11 +3408,13 @@ ou
     })
 
     const data = await resp.json()
-    console.log("📩 ALERTA NOVO FLUXO ADM:", admin, data)
+    console.log("📩 ENVIO ADM:", admin, data)
   }
 
+  // 🚫 NÃO RESPONDE O CLIENTE
   return res.status(200).end()
 }
+
 
   
 console.log("RESPOSTA IA COMPLETA:", resposta)
