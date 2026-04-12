@@ -756,12 +756,12 @@ const agoraISO = new Date().toISOString()
 let { data: reservas, error } = await supabase
   .from("reservas_mercatto")
   .select("*")
-  .eq("telefone", telefoneLimpo)
   .in("status", ["Pendente","Confirmada"])
   .gte("datahora", agoraISO)
   .order("datahora",{ ascending:true })
-  .limit(20)
+  .limit(50)
 
+  
 // 🔥 FALLBACK POR NOME (SE NÃO ENCONTRAR POR TELEFONE)
 if((!reservas || !reservas.length) && nomeMemoria){
 
