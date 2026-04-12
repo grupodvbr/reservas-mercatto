@@ -42,8 +42,6 @@ function agoraBahia(){
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
   )
 }
-
-// Quando precisar da data, use assim:
 const agora = agoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
