@@ -174,11 +174,12 @@ async function buscarCardapio(){
 
 const { data, error } = await supabase
 .from("buffet")
-.select("id,nome,tipo,descricao,preco_venda,foto_url")
-.eq("ativo",true)
-.eq("cardapio",true)
-.order("tipo",{ascending:true})
-.order("nome",{ascending:true})
+.select("id,nome,tipo,descricao,preco_venda,foto_url,delivery")
+.eq("ativo", true)
+.eq("cardapio", true)
+.eq("delivery", true) // 🔥 OBRIGATÓRIO
+.order("tipo", { ascending: true })
+.order("nome", { ascending: true })
 
 if(error){
 console.log("Erro cardápio:",error)
@@ -289,9 +290,14 @@ function encontrarPratoComFoto(cardapio, texto){
 
     const nome = normalizar(item.nome)
 
-    if(nome.includes(textoLimpo)){
-      return item
-    }
+if(nome.includes(textoLimpo)){
+
+  if(!item.delivery){
+    return { erro: "SEM_DELIVERY" }
+  }
+
+  return item
+}
 
   }
 
@@ -2667,10 +2673,31 @@ if(pediuFotoEspecifica){
 
   const cardapio = await buscarCardapio()
 
-  const prato = encontrarPratoComFoto(cardapio, mensagem)
+const prato = encontrarPratoComFoto(cardapio, mensagem)
 
-  if(prato){
+// 🔥 BLOQUEIO DELIVERY (OBRIGATÓRIO)
+if(prato?.erro === "SEM_DELIVERY"){
 
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body:"Esse item está disponível apenas para consumo no local 😊" }
+    })
+  })
+
+  return res.status(200).end()
+}
+
+// ✅ CONTINUA NORMAL SÓ SE FOR DELIVERY
+if(prato){
+    
     console.log("✅ FOTO ENCONTRADA:", prato.nome)
 
     await fetch(url,{
