@@ -1231,36 +1231,48 @@ if(isAdmin){
 
   console.log("👨‍💼 MENSAGEM DO ADMIN DETECTADA")
 
-  /* 🔥 BUSCAR ÚLTIMA DÚVIDA */
-const match = mensagem.match(/^([a-z0-9\-.]+)\s+([\s\S]+)/i)
-if(!match){
-  console.log("⚠️ ADMIN SEM ID → CONTINUANDO NORMAL")
-}else{
+  const match = mensagem.match(/^([a-z0-9\-.]+)\s+([\s\S]+)/i)
 
-const idRaw = match[1]
+  // Admin mandou mensagem comum, sem ID
+  if(!match){
+    console.log("⚠️ ADMIN SEM ID → CONTINUANDO FLUXO NORMAL")
+  } else {
 
-// 🔥 REMOVE O .com SE EXISTIR
-const id = idRaw.replace(".com","")
-const respostaAdmin = match[2]
+    const idRaw = match[1]
+    const id = idRaw.replace(".com","").trim()
+    const respostaAdmin = match[2].trim()
 
-  const { data: duvida } = await supabase
-  .from("duvidas_pendentes")
-  .select("*")
-  .eq("id", id)
-  .maybeSingle()
+    console.log("🆔 ID RECEBIDO:", id)
+    console.log("💬 RESPOSTA ADMIN:", respostaAdmin)
 
-  if(duvida){
+    const { data: duvida, error: erroDuvida } = await supabase
+      .from("duvidas_pendentes")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+
+    if(erroDuvida){
+      console.log("❌ ERRO AO BUSCAR DÚVIDA:", erroDuvida)
+      return res.status(200).end()
+    }
+
+    if(!duvida){
+      console.log("❌ DÚVIDA NÃO ENCONTRADA:", id)
+      return res.status(200).end()
+    }
 
     const telefoneCliente = duvida.telefone
 
     await supabase
-    .from("aprendizado_bot")
-    .insert({
-      pergunta: duvida.pergunta,
-      resposta: respostaAdmin
-    })
+      .from("aprendizado_bot")
+      .insert({
+        pergunta: duvida.pergunta,
+        resposta: respostaAdmin
+      })
 
-    await fetch(url,{
+    console.log("🧠 APRENDIZADO SALVO")
+
+    const envioAdmin = await fetch(url,{
       method:"POST",
       headers:{
         Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -1274,78 +1286,29 @@ const respostaAdmin = match[2]
       })
     })
 
+    const retornoEnvioAdmin = await envioAdmin.json()
+    const messageIdAdmin = retornoEnvioAdmin?.messages?.[0]?.id || null
 
+    console.log("📤 RESPOSTA ENVIADA PARA CLIENTE:", retornoEnvioAdmin)
 
-
-    
-// ✅ SANVA NAS CONVERSAS A RESPOSTA DOS ADMS
-await supabase
-.from("conversas_whatsapp")
-.insert({
-  telefone: telefoneCliente,
-  mensagem: respostaAdmin,
-  role: "assistant"
-})
     await supabase
-    .from("duvidas_pendentes")
-    .delete()
-    .eq("id", id)
+      .from("conversas_whatsapp")
+      .insert({
+        telefone: telefoneCliente,
+        mensagem: respostaAdmin,
+        role: "assistant",
+        message_id: messageIdAdmin,
+        status: "sent"
+      })
 
+    await supabase
+      .from("duvidas_pendentes")
+      .delete()
+      .eq("id", id)
+
+    console.log("✅ DÚVIDA FINALIZADA")
     return res.status(200).end()
   }
-
-}
-
-const id = match[1]
-const respostaAdmin = match[2]
-
-const { data: duvida } = await supabase
-.from("duvidas_pendentes")
-.select("*")
-.eq("id", id)
-.maybeSingle()
-
-if(!duvida){
-  console.log("❌ DÚVIDA NÃO ENCONTRADA")
-  return res.status(200).end()
-}
-
-const telefoneCliente = duvida.telefone
-
-  /* 🔥 SALVAR APRENDIZADO */
-await supabase
-.from("aprendizado_bot")
-.insert({
-  pergunta: duvida.pergunta,
-  resposta: respostaAdmin
-})
-
-  console.log("🧠 APRENDIZADO SALVO")
-
-  /* 🔥 RESPONDER CLIENTE */
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-body:JSON.stringify({
-  messaging_product:"whatsapp",
-  to: telefoneCliente,
-  type:"text",
-  text:{ body: respostaAdmin }
-})
-  })
-
-  console.log("📤 RESPOSTA ENVIADA PARA CLIENTE")
-
-  /* 🔥 LIMPAR DÚVIDA */
-await supabase
-.from("duvidas_pendentes")
-.delete()
-.eq("id", id)
-
-  return res.status(200).end()
 }
   
 const textoNormalizado = normalizar(texto)
