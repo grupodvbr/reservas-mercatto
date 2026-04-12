@@ -736,7 +736,74 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
+/* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
+const { data: aprendizado } = await supabase
+  .from("aprendizado_bot")
+  .select("*")
+
+let respostaAprendida = null
+
+if(aprendizado && aprendizado.length){
+
+  const textoLimpo = normalizar(texto)
+
+  for(const item of aprendizado){
+
+    const perguntaBanco = normalizar(item.pergunta || "")
+
+    if(
+      textoLimpo.includes(perguntaBanco) ||
+      perguntaBanco.includes(textoLimpo)
+    ){
+      respostaAprendida = item.resposta
+      console.log("🧠 RESPOSTA VINDO DO APRENDIZADO")
+      break
+    }
+
+  }
+
+}
+
+/* ================= USAR RESPOSTA ================= */
+
+if(respostaAprendida){
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: respostaAprendida }
+    })
+  })
+
+  console.log("✅ RESPONDIDO VIA APRENDIZADO")
+
+  return res.status(200).end()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 /* ================= CANCELAMENTO DE RESERVA ================= */
 
