@@ -1685,12 +1685,7 @@ if(match){
   itemEncontrado = p
   break
 }
-    
-    
-    {
-      itemEncontrado = p
-      break
-    }
+
   }
 
   // 🚨 BLOQUEIO SE NÃO ENCONTRAR PRODUTO
