@@ -2897,8 +2897,7 @@ const pertoEncerrando = hora === 14
 
 // 🔥 CONTROLE: já enviou buffet hoje?
 const hojeInicioPromo = getHojeBahia() + "T00:00"
-  const hojeFim = getHojeBahia() + "T23:59"
-
+const hojeFimPromo = getHojeBahia() + "T23:59"
 const { data: buffetJaEnviado } = await supabase
 .from("conversas_whatsapp")
 .select("id")
