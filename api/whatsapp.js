@@ -33,7 +33,7 @@ function agoraBahia(){
 }
 
 // Quando precisar da data, use assim:
-const agora = agoraBahia();
+const agoraSistema = agoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
 
@@ -2939,8 +2939,7 @@ FOTO: ${p.foto_url || "sem"}
 
 // ================= CONTROLE GLOBAL DE BUFFET =================
 
-const agora = agoraBahia()
-
+const agoraSistema = agoraBahia()
 const horaAtual = agora.getHours()
 const minutosAtual = agora.getMinutes()
 
