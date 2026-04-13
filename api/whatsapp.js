@@ -170,9 +170,6 @@ const { data, error } = await supabase
 .select("id,nome,tipo,descricao,preco_venda,foto_url,delivery")
 .eq("ativo", true)
 .eq("cardapio", true)
-.eq("delivery", true) // 🔥 OBRIGATÓRIO
-.order("tipo", { ascending: true })
-.order("nome", { ascending: true })
 
 if(error){
 console.log("Erro cardápio:",error)
@@ -330,11 +327,6 @@ function encontrarPratoComFoto(cardapio, texto){
     const nome = normalizar(item.nome)
 
 if(nome.includes(textoLimpo)){
-
-  if(!item.delivery){
-    return { erro: "SEM_DELIVERY" }
-  }
-
   return item
 }
 
@@ -1776,9 +1768,67 @@ if(temIntencaoPedido){
 
   const textoNormalizado = normalizar(mensagem)
 
-  let itemEncontrado = null
+let itemEncontrado = null
 
-  for(const p of global.cardapioAtual){
+for(const p of global.cardapioAtual){
+
+  const nomeCardapio = normalizar(p.nome)
+  const palavrasCliente = textoNormalizado.split(" ")
+
+  const match = palavrasCliente.some(p => 
+    nomeCardapio.includes(p)
+  )
+
+  if(match){
+    itemEncontrado = p
+    break
+  }
+}
+
+/* 🚨 COLOCA EXATAMENTE AQUI 👇 */
+
+// 🔥 VALIDAÇÃO CORRETA
+if(!itemEncontrado){
+  console.log("❌ PRODUTO NÃO ENCONTRADO")
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body:"Não consegui identificar o item 😕\nPode me informar o nome do prato?" }
+    })
+  })
+
+  return res.status(200).end()
+}
+
+// 🔥 AQUI É O PONTO PERFEITO PRA VALIDAÇÃO DELIVERY
+if(!itemEncontrado.delivery){
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ 
+        body:"Esse prato está disponível apenas para consumo no local 😊" 
+      }
+    })
+  })
+
+  return res.status(200).end()
+}
 
     const nomeCardapio = normalizar(p.nome)
 
@@ -2919,8 +2969,6 @@ if(pediuFotoEspecifica){
 
 const prato = encontrarPratoComFoto(cardapio, mensagem)
 
-// 🔥 BLOQUEIO DELIVERY (OBRIGATÓRIO)
-if(prato?.erro === "SEM_DELIVERY"){
 
   await fetch(url,{
     method:"POST",
