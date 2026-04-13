@@ -26,7 +26,7 @@ const TEMPLATES_PERMITIDOS = [
 
 
 
-function agoraBahia(){
+function getAgoraBahia(){
   return new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
   )
