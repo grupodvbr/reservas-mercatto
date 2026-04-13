@@ -819,6 +819,50 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
+// ================= CONTROLE BUFFET POR HORÁRIO =================
+
+const agora = agoraBahia()
+
+const horaAtual = agora.getHours()
+const minutosAtual = agora.getMinutes()
+
+const depoisDas15 =
+  horaAtual > 15 ||
+  (horaAtual === 15 && minutosAtual >= 0)
+
+const perguntaBuffet =
+  texto.includes("buffet") ||
+  texto.includes("tem o que hoje") ||
+  texto.includes("cardapio") ||
+  texto.includes("comida hoje")
+
+if(perguntaBuffet && depoisDas15){
+
+  const resposta = "Nosso buffet já encerrou por hoje, ele funciona até às 15h."
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
+
+  return res.status(200).end()
+}
+
+
+
+
+
+
+  
 /* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
 const { data: aprendizadoContexto } = await supabase
@@ -2515,6 +2559,25 @@ if(querHoje){
   // 🔥 BUSCAR BUFFET REAL
   const buffetHoje = await buscarBuffetHoje()
 
+let buffetValido = buffetHoje
+
+if(depoisDas15){
+  buffetValido = []
+}
+
+
+  const agora = agoraBahia()
+
+const horaAtual = agora.getHours()
+const minutosAtual = agora.getMinutes()
+
+const depoisDas15 =
+  horaAtual > 15 ||
+  (horaAtual === 15 && minutosAtual >= 0)
+
+
+
+  
   let resposta = "Hoje no Mercatto Delícia temos:\n\n"
 
   /* ================= MUSICA ================= */
@@ -2881,8 +2944,7 @@ FOTO: ${p.foto_url || "sem"}
 
 /* ================= BUSCAR BUFFET ================= */
 
-const buffet = await buscarBuffetHoje()
-
+const buffet = buffetValido
 let buffetTexto = ""
 
 if(!buffet.length){
@@ -3110,8 +3172,7 @@ role:"system",
 content:`
 BUFFET DE HOJE (DADOS REAIS):
 
-${buffetTexto}
-
+${buffetValido.length ? buffetTexto : "BUFFET ENCERRADO HOJE"}
 Regras:
 
 - Esses são os itens reais do buffet de hoje
