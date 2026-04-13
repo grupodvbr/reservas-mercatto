@@ -2972,8 +2972,7 @@ const agoraBuffet = agoraBahia()
 const horaBuffet = agoraBuffet.getHours()
 const minutoBuffet = agoraAtual.getMinutes()
 
-const horaDecimal = horaBuffet + (minutoBuffet / 60)
-
+const horaDecimalBuffet = horaBuffet + (minutoBuffet / 60)
   
 
 const dentroHorario =
