@@ -2908,8 +2908,7 @@ const { data: buffetJaEnviado } = await supabase
 .ilike("mensagem", "%🍛 Buffet%")
 .limit(1)
 
-let buffetTexto = ""
-
+let buffetTextoIA = ""
 /* 🚫 FORA DO HORÁRIO */
 if(!dentroHorario){
 
@@ -2950,7 +2949,7 @@ else{
   buffetTexto = "🍛 Buffet de hoje:\n"
 
   buffet.slice(0,8).forEach(item=>{
-    buffetTexto += `• ${item.produto_nome}\n`
+buffetTextoIA += `ITEM: ${item.produto_nome}`
   })
 
   if(pertoEncerrando){
