@@ -832,14 +832,24 @@ let respostaFicha = null
 
 if(fichasTecnicas && fichasTecnicas.length){
 
-  const termo = normalizar(texto)
+const textoLimpo = normalizar(texto)
 
-  const resultados = fichasTecnicas.filter(item => {
-    const nome = normalizar(item.nome || "")
-    const desc = normalizar(item.descricao || "")
+// 🔥 REMOVE PALAVRAS INÚTEIS
+const ignorar = ["tem", "tem?", "tem", "tem?", "tem,", "tem.", "possui", "temos", "existe", "tem ai"]
+const palavras = textoLimpo
+  .split(" ")
+  .filter(p => p.length > 2 && !ignorar.includes(p))
 
-    return nome.includes(termo) || desc.includes(termo)
-  })
+const resultados = fichasTecnicas.filter(item => {
+
+  const nome = normalizar(item.nome || "")
+  const desc = normalizar(item.descricao || "")
+
+  const textoFicha = `${nome} ${desc}`
+
+  // 🔥 VERDADEIRO MATCH
+  return palavras.some(p => textoFicha.includes(p))
+})
 
   const restaurante = resultados.filter(i => i.cardapio)
   const delivery = resultados.filter(i => i.delivery)
