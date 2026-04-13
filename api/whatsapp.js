@@ -2352,7 +2352,88 @@ textoNormalizado.includes("almoco") ||
 textoNormalizado.includes("comida")
 
 
+const agora = agoraBahia()
+const hora = agora.getHours()
+const minuto = agora.getMinutes()
 
+const horaDecimal = hora + (minuto / 60)
+
+const dentroHorarioBuffet = horaDecimal >= 11 && horaDecimal <= 15
+
+if(querBuffet){
+
+  console.log("🍛 CONSULTA DE BUFFET")
+
+  if(!dentroHorarioBuffet){
+
+    const resposta = "Nosso buffet funciona das 11h às 15h 😊"
+
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"text",
+        text:{body:resposta}
+      })
+    })
+
+    return res.status(200).end()
+  }
+
+  const buffetHoje = await buscarBuffetHoje()
+
+  if(!buffetHoje.length){
+
+    const resposta = "Hoje ainda não temos buffet disponível 😕"
+
+    await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to:cliente,
+        type:"text",
+        text:{body:resposta}
+      })
+    })
+
+    return res.status(200).end()
+  }
+
+  let resposta = "🍛 Buffet de hoje:\n\n"
+
+  buffetHoje.slice(0,10).forEach(item=>{
+    resposta += `• ${item.produto_nome}\n`
+  })
+
+  if(horaDecimal >= 14.3){ // depois de ~14:18
+    resposta += "\n⚠️ Buffet já está finalizando"
+  }
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{body:resposta}
+    })
+  })
+
+  return res.status(200).end()
+}
 
   
 // 🔥 PERGUNTA GENÉRICA (VAI PRA IA)
