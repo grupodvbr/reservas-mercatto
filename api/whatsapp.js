@@ -2352,7 +2352,7 @@ textoNormalizado.includes("almoco") ||
 textoNormalizado.includes("comida")
 
 
-const agora = agoraBahia()
+const agoraAtual = agoraBahia()
 const hora = agora.getHours()
 const minuto = agora.getMinutes()
 
