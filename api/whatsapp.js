@@ -3086,112 +3086,44 @@ hoje, amanhã, ontem, final de semana, etc.
 {
 role:"system",
 content:`
-CARDÁPIO OFICIAL DO MERCATTO DELÍCIA (DADOS REAIS)
+CARDÁPIO DO MERCATTO DELÍCIA
+
+Abaixo está a lista de pratos disponíveis.
 
 ${cardapioTexto}
 
-REGRAS OBRIGATÓRIAS:
+Regras importantes:
 
-- Você DEVE usar esses dados para responder qualquer pergunta sobre comida
-- Nunca diga que não sabe sem antes verificar essa lista
-- Nunca invente pratos
-- Se o cliente perguntar:
-  - "tem X?" → verifique aqui
-  - "cardápio" ou "menu" → liste os principais itens
-  - "preço" → use o valor do campo PRECO
-
-COMPORTAMENTO:
-
-- Responda como um atendente humano
-- Seja natural e direto
-- Sugira itens quando fizer sentido
-- Não diga "não sei" se a resposta estiver aqui
-`
+- Utilize apenas pratos desta lista.
+- Nunca invente pratos.
+- Se o cliente perguntar preço use PRECO.
+- Só ofereça foto se o cliente pedir explicitamente
+- Só ofereça foto de UM prato específico
+- Nunca ofereça foto de vários pratos
+- Nunca invente imagem
+- Se não tiver foto, diga que não possui`
 },
 
-const agora = agoraBahia()
-const hora = agora.getHours()
-const minuto = agora.getMinutes()
 
-const horario = hora * 60 + minuto
-
-const inicioBuffet = 11 * 60
-const avisoFinal = 14 * 60 + 30
-const fimBuffet = 15 * 60
-
-let buffetStatus = "encerrado"
-let buffetMensagem = ""
-
-if(horario >= inicioBuffet && horario < avisoFinal){
-  buffetStatus = "aberto"
-}
-else if(horario >= avisoFinal && horario < fimBuffet){
-  buffetStatus = "finalizando"
-}
-else{
-  buffetStatus = "encerrado"
-}
-
-// 🔥 MONTA TEXTO INTELIGENTE
-if(buffetStatus === "aberto" && buffetValido.length){
-
-  buffetMensagem = `
-BUFFET DISPONÍVEL AGORA (11h às 15h)
-
-${buffetTexto}
-
-Regras:
-- O buffet está funcionando normalmente
-- Pode convidar o cliente para vir
-`
-
-}
-
-else if(buffetStatus === "finalizando" && buffetValido.length){
-
-  buffetMensagem = `
-⚠️ BUFFET EM FINALIZAÇÃO (até 15h)
-
-${buffetTexto}
-
-Regras:
-- Avise que está encerrando
-- Incentive vir rapidamente
-`
-
-}
-
-else{
-
-  buffetMensagem = `
-BUFFET ENCERRADO HOJE
-
-Regras:
-- Não listar itens
-- Informar que funciona das 11h às 15h
-- Sugerir jantar ou cardápio
-`
-
-},
 {
 role:"system",
 content:`
-INFORMAÇÕES DO BUFFET (TEMPO REAL):
+BUFFET DE HOJE (DADOS REAIS):
 
-${buffetMensagem}
+${buffetTexto}
 
-REGRAS OBRIGATÓRIAS:
+Regras:
 
-- Buffet funciona das 11h às 15h
-- Fora desse horário → NÃO listar itens
-- Se estiver finalizando → AVISAR cliente
-- Nunca dizer que tem buffet fora do horário
-- Nunca inventar itens
+- Esses são os itens reais do buffet de hoje
+- Não invente itens
+- Se o cliente perguntar especificamente sobre buffet, liste os itens
+- Nunca responda promoções junto com buffet
+- Perguntas como "o que tem hoje" são gerais e não significam buffet
+- Se perguntar "tem X", verifique nessa lista
+- Organize de forma bonita
 `
 },
 
-
-  
 {
 role:"system",
 content:`
