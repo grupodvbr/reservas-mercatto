@@ -23,7 +23,11 @@ html, body{
   width:100%;
   height:100%;
   font-family:'Inter', sans-serif;
-  background:#e5ddd5;
+  background: url('https://i.imgur.com/2cOaJ.png');
+background-size: 300px;
+background-repeat: repeat;
+
+  
   overflow:hidden;
 }
 
@@ -43,21 +47,18 @@ body::before{
 
 /* ===== HEADER ===== */
 .header{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
   height:60px;
+  background:#075e54;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 16px;
-  background:linear-gradient(135deg,#075e54,#0b7d6c);
-  color:#fff;
-  font-weight:600;
-  font-size:16px;
-  z-index:20;
-  box-shadow:0 4px 20px rgba(0,0,0,.25);
+  padding:0 12px;
+}
+
+.header-right{
+  display:flex;
+  gap:15px;
+  font-size:18px;
 }
 
 .header .title{
@@ -113,7 +114,7 @@ scroll-behavior:smooth;
   line-height:1.4;
   position:relative;
   animation:fadeIn .2s ease;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
+box-shadow:0 1px 2px rgba(0,0,0,.15);
 }
 
 /* RECEBIDA */
@@ -170,31 +171,20 @@ scroll-behavior:smooth;
 
 /* ===== INPUT ===== */
 .inputBox{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-display:flex;
-gap:8px;
-padding:10px;
-background:#f0f0f0;
-align-items:center;
-border-top:1px solid #ddd;
-z-index:10;
+  background:#f0f2f5;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
-/* TEXTAREA */
 textarea{
-  flex:1;
-  border:none;
-  outline:none;
+  background:#fff;
   border-radius:20px;
-  padding:12px 14px;
-  background:#f0f0f0;
-  font-size:15px;
-  resize:none;
-  max-height:120px;
+  padding:10px 15px;
+  box-shadow:0 1px 2px rgba(0,0,0,.2);
 }
+
 
 /* BOTÕES */
 button{
@@ -202,7 +192,9 @@ button{
   height:42px;
   border-radius:50%;
   border:none;
-  background:#25d366;
+background:#25d366;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+  
   color:#fff;
   font-size:18px;
   display:flex;
@@ -277,11 +269,11 @@ button:hover{
 @keyframes fadeIn{
   from{
     opacity:0;
-    transform:translateY(5px);
+    transform:scale(.95) translateY(10px);
   }
   to{
     opacity:1;
-    transform:translateY(0);
+    transform:scale(1) translateY(0);
   }
 }
 
@@ -308,6 +300,36 @@ font-weight:700;
 font-size:14px;
 text-transform:uppercase;
 }
+
+
+
+.msg{
+  position:relative;
+}
+
+/* RECEBIDA */
+.user::before{
+  content:"";
+  position:absolute;
+  left:-6px;
+  top:0;
+  border:6px solid transparent;
+  border-right-color:#fff;
+}
+
+/* ENVIADA */
+.assistant::before{
+  content:"";
+  position:absolute;
+  right:-6px;
+  top:0;
+  border:6px solid transparent;
+  border-left-color:#dcf8c6;
+}
+
+
+
+  
 </style>
 
 </head>
@@ -572,8 +594,8 @@ html += `<div>${m.mensagem}</div>`
 function statusIcon(status){
 if(status === "sent") return "✓"
 if(status === "delivered") return "✓✓"
-if(status === "read") return "<span style='color:#34b7f1'>✓✓</span>"
-return ""
+if(status === "read") return "<span style='color:#4fc3f7'>✓✓</span>"
+  return ""
 }
 
 /* ===== TIME ===== */
