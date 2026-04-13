@@ -3296,7 +3296,7 @@ if (resposta.includes("PEDIDO_DELIVERY_JSON")) {
 
     await supabase.from("pedidos").insert({
       cliente_nome: pedido.nome,
-      cliente_telefone: from,
+      cliente_telefone: cliente,
       cliente_endereco: pedido.endereco,
       cliente_bairro: pedido.bairro,
       tipo: "entrega",
