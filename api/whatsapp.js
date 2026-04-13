@@ -33,7 +33,7 @@ function getAgoraBahia(){
 }
 
 // Quando precisar da data, use assim:
-const agora = agoraBahia();
+const agora = getAgoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
 
