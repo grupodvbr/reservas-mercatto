@@ -1993,11 +1993,7 @@ if(
   break
 }
     
-    
-    {
-      itemEncontrado = p
-      break
-    }
+ 
   }
 
   if(itemEncontrado){
