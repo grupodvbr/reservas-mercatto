@@ -2615,17 +2615,18 @@ if(rodizioTexto){
   resposta += rodizioTexto + "\n"
 }
 
-  /* ================= BUFFET ================= */
+/* ================= BUFFET ================= */
 
 if(buffetValido.length){
-    resposta += "🍛 Buffet disponível das 11h às 15h com opções como:\n"
 
-    buffetHoje.slice(0,5).forEach(item=>{
-      resposta += `• ${item.produto_nome}\n`
-    })
+  resposta += "🍛 Buffet disponível das 11h às 15h com opções como:\n"
 
-    resposta += "\n"
-  }
+  buffetValido.slice(0,5).forEach(item=>{
+    resposta += `• ${item.produto_nome}\n`
+  })
+
+  resposta += "\n"
+}
 
   resposta += "Será um prazer receber você 😊"
 
