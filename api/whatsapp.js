@@ -507,7 +507,23 @@ Você pode responder perguntas sobre:
 Responda sempre de forma clara e direta.
 `
 },
+{
+role:"system",
+content:`
+FICHAS TÉCNICAS COMPLETAS DO MERCATTO:
 
+${fichasTexto}
+
+REGRAS CRÍTICAS:
+
+- Use essas fichas para responder perguntas sobre ingredientes
+- Se o cliente perguntar "tem X", procure nos ingredientes
+- NÃO responda em formato de lista robótica
+- Responda como um atendente humano
+- Se encontrar mais de um prato, pode sugerir
+- Nunca invente prato
+`
+},
 
 {
 role:"system",
@@ -925,29 +941,17 @@ RESPOSTA_BASE: ${a.resposta}
 
 
 
+let fichasTexto = ""
 
+if(fichasTecnicas && fichasTecnicas.length){
 
-if(respostaFicha){
-
-  console.log("🍽️ RESPOSTA VINDO DAS FICHAS")
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to: cliente,
-      type:"text",
-      text:{ body: respostaFicha }
-    })
-  })
-
-  return res.status(200).end()
+  fichasTexto = fichasTecnicas.map(i => `
+PRATO: ${i.nome}
+DESCRICAO: ${i.descricao || ""}
+CARDAPIO: ${i.cardapio}
+DELIVERY: ${i.delivery}
+`).join("\n")
 }
-
 
 
 
