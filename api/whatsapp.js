@@ -1772,18 +1772,7 @@ let itemEncontrado = null
 
 for(const p of global.cardapioAtual){
 
-  const nomeCardapio = normalizar(p.nome)
-  const palavrasCliente = textoNormalizado.split(" ")
 
-  const match = palavrasCliente.some(p => 
-    nomeCardapio.includes(p)
-  )
-
-  if(match){
-    itemEncontrado = p
-    break
-  }
-}
 
 /* 🚨 COLOCA EXATAMENTE AQUI 👇 */
 
@@ -1827,7 +1816,7 @@ if(!itemEncontrado.delivery){
     })
   })
 
-  return res.status(200).end()
+  return res.status(200).end() // ✅ CORRETO
 }
 
     const nomeCardapio = normalizar(p.nome)
