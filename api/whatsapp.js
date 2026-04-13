@@ -54,10 +54,6 @@ const {data:reservas} = await supabase
 .gte("datahora", hoje+"T00:00") // 🔥 daqui pra frente
 .order("datahora",{ascending:true})
 
-
-  
-.order("datahora",{ascending:true})
-
 let resposta = "📊 *Relatório automático de reservas (Hoje)*\n\n"
 
 if(!reservas || !reservas.length){
@@ -4810,9 +4806,14 @@ Nossa equipe entrará em contato para finalizar a reserva da sala VIP.`
 }
 
 }
+
 try{
+
 const alterarMatch = resposta.match(/ALTERAR_RESERVA_JSON:\s*({[\s\S]*?})/)
 
+} catch(e){
+  console.log("Erro alteração:", e)
+}
 if(alterarMatch){
 
 let reserva
