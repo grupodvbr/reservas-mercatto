@@ -819,6 +819,74 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
+
+
+/* ================= 🔥 BUSCAR NAS FICHAS TÉCNICAS ================= */
+
+const { data: fichasTecnicas } = await supabase
+  .from("buffet")
+  .select("*")
+  .eq("ativo", true)
+
+let respostaFicha = null
+
+if(fichasTecnicas && fichasTecnicas.length){
+
+  const termo = normalizar(texto)
+
+  const resultados = fichasTecnicas.filter(item => {
+    const nome = normalizar(item.nome || "")
+    const desc = normalizar(item.descricao || "")
+
+    return nome.includes(termo) || desc.includes(termo)
+  })
+
+  const restaurante = resultados.filter(i => i.cardapio)
+  const delivery = resultados.filter(i => i.delivery)
+
+  if(restaurante.length){
+
+    respostaFicha = `Temos sim! 👇\n\n` + restaurante
+      .slice(0,5)
+      .map(i => `• ${i.nome}`)
+      .join("\n")
+
+  }
+
+  if(delivery.length){
+
+    respostaFicha += `\n\n🚗 Também disponíveis no delivery:\n\n` + delivery
+      .slice(0,5)
+      .map(i => `• ${i.nome}`)
+      .join("\n")
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 /* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
 const { data: aprendizadoContexto } = await supabase
@@ -849,7 +917,26 @@ RESPOSTA_BASE: ${a.resposta}
 
 
 
+if(respostaFicha){
 
+  console.log("🍽️ RESPOSTA VINDO DAS FICHAS")
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to: cliente,
+      type:"text",
+      text:{ body: respostaFicha }
+    })
+  })
+
+  return res.status(200).end()
+}
 
 
 
