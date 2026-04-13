@@ -1335,6 +1335,24 @@ const match = mensagem.match(
   
 const textoNormalizado = normalizar(texto)
 
+/* ================= PERGUNTA SIMPLES (ANTI-ESCALADA) ================= */
+
+const perguntaSimples =
+texto.length < 20 &&
+(
+  texto.includes("preço") ||
+  texto.includes("valor") ||
+  texto.includes("tem") ||
+  texto.includes("cardapio") ||
+  texto.includes("menu")
+)
+
+if(perguntaSimples){
+  console.log("⚡ PERGUNTA SIMPLES — NÃO ESCALAR")
+}
+
+
+  
 /* ================= FORÇAR PROMOÇÕES ================= */
 
 const querPromocao =
@@ -3427,25 +3445,27 @@ texto.includes("pedir")
 
 
 
-  
 const precisaEscalar =
 !resposta ||
-resposta.length < 5 ||
+resposta.length < 8 ||
 
 respostaLower.includes("não sei") ||
 respostaLower.includes("nao sei") ||
-respostaLower.includes("não temos") ||
-respostaLower.includes("nao temos") ||
+respostaLower.includes("não tenho essa informação") ||
+respostaLower.includes("nao tenho essa informação") ||
 respostaLower.includes("não encontrei") ||
 respostaLower.includes("nao encontrei") ||
-respostaLower.includes("não possuo") ||
-respostaLower.includes("nao possuo") ||
-respostaLower.includes("sem informação") ||
-respostaLower.includes("no momento")
+respostaLower.includes("não posso ajudar") ||
+respostaLower.includes("nao posso ajudar") ||
+respostaLower.includes("sem informação")
 
-if(precisaEscalar && !ehAcaoDireta){
+if(precisaEscalar && !ehAcaoDireta && !perguntaSimples){
   console.log("🚨 ESCALANDO PARA ADM")
+}
 
+
+
+  
   // 🔥 SALVA DÚVIDA
   const { data: novaDuvida } = await supabase
   .from("duvidas_pendentes")
