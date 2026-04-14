@@ -26,14 +26,14 @@ const TEMPLATES_PERMITIDOS = [
 
 
 
-function getAgoraBahia(){
+function agoraBahia(){
   return new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
   )
 }
 
 // Quando precisar da data, use assim:
-const agora = getAgoraBahia();
+const agora = agoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
 
@@ -52,6 +52,10 @@ const {data:reservas} = await supabase
 .select("*")
 .in("status", ["Pendente","Confirmada"])
 .gte("datahora", hoje+"T00:00") // 🔥 daqui pra frente
+.order("datahora",{ascending:true})
+
+
+  
 .order("datahora",{ascending:true})
 
 let resposta = "📊 *Relatório automático de reservas (Hoje)*\n\n"
@@ -503,23 +507,7 @@ Você pode responder perguntas sobre:
 Responda sempre de forma clara e direta.
 `
 },
-{
-role:"system",
-content:`
-FICHAS TÉCNICAS COMPLETAS DO MERCATTO:
 
-${fichasTexto}
-
-REGRAS CRÍTICAS:
-
-- Use essas fichas para responder perguntas sobre ingredientes
-- Se o cliente perguntar "tem X", procure nos ingredientes
-- NÃO responda em formato de lista robótica
-- Responda como um atendente humano
-- Se encontrar mais de um prato, pode sugerir
-- Nunca invente prato
-`
-},
 
 {
 role:"system",
@@ -533,11 +521,6 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
-
-
-
-
-  
 {
   role: "system",
   content: `
@@ -836,84 +819,6 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
-
-
-/* ================= 🔥 BUSCAR NAS FICHAS TÉCNICAS ================= */
-
-const { data: fichasTecnicas } = await supabase
-  .from("buffet")
-  .select("*")
-  .eq("ativo", true)
-
-let respostaFicha = null
-
-if(fichasTecnicas && fichasTecnicas.length){
-
-const textoLimpo = normalizar(texto)
-
-// 🔥 REMOVE PALAVRAS INÚTEIS
-const ignorar = ["tem", "tem?", "tem", "tem?", "tem,", "tem.", "possui", "temos", "existe", "tem ai"]
-const palavras = textoLimpo
-  .split(" ")
-  .filter(p => p.length > 2 && !ignorar.includes(p))
-
-const resultados = fichasTecnicas.filter(item => {
-
-  const nome = normalizar(item.nome || "")
-  const desc = normalizar(item.descricao || "")
-
-  const textoFicha = `${nome} ${desc}`
-
-  // 🔥 VERDADEIRO MATCH
-  return palavras.some(p => textoFicha.includes(p))
-})
-
-  const restaurante = resultados.filter(i => i.cardapio)
-  const delivery = resultados.filter(i => i.delivery)
-
-  if(restaurante.length){
-
-    respostaFicha = `Temos sim! 👇\n\n` + restaurante
-      .slice(0,5)
-      .map(i => `• ${i.nome}`)
-      .join("\n")
-
-  }
-
-  if(delivery.length){
-
-    respostaFicha += `\n\n🚗 Também disponíveis no delivery:\n\n` + delivery
-      .slice(0,5)
-      .map(i => `• ${i.nome}`)
-      .join("\n")
-
-  }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 /* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
 const { data: aprendizadoContexto } = await supabase
@@ -942,17 +847,10 @@ RESPOSTA_BASE: ${a.resposta}
 
 
 
-let fichasTexto = ""
 
-if(fichasTecnicas && fichasTecnicas.length){
 
-  fichasTexto = fichasTecnicas.map(i => `
-PRATO: ${i.nome}
-DESCRICAO: ${i.descricao || ""}
-CARDAPIO: ${i.cardapio}
-DELIVERY: ${i.delivery}
-`).join("\n")
-}
+
+
 
 
 
@@ -1169,7 +1067,8 @@ const match = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
 
 if(pedidoJSON){
 
-const dados = pedidoJSON || {}
+const dados = pedidoJSON?.dados || {}
+
 dados.cliente_nome = dados.cliente_nome || "Cliente"
 dados.cliente_telefone = cliente
 dados.cliente_endereco = dados.cliente_endereco || ""
@@ -1443,18 +1342,16 @@ textoNormalizado.includes("promo") ||
 textoNormalizado.includes("oferta") ||
 textoNormalizado.includes("desconto")
 
-
-const hojeInicioPromo = getHojeBahia() + "T00:00"
-const hojeFimPromo = getHojeBahia() + "T23:59"
+const hojeInicio = getHojeBahia() + "T00:00"
+const hojeFim = getHojeBahia() + "T23:59"
 
 const { data: promosHoje } = await supabase
 .from("conversas_whatsapp")
 .select("mensagem")
 .eq("telefone", cliente)
 .eq("role", "assistant")
-.gte("created_at", hojeInicioPromo)
-.lte("created_at", hojeFimPromo)
-  
+.gte("created_at", hojeInicio)
+.lte("created_at", hojeFim)
 .ilike("mensagem", "%PROMO%")
 
 const { data: controlePromo } = await supabase
@@ -1993,7 +1890,11 @@ if(
   break
 }
     
- 
+    
+    {
+      itemEncontrado = p
+      break
+    }
   }
 
   if(itemEncontrado){
@@ -2448,88 +2349,8 @@ textoNormalizado.includes("buffet") ||
 textoNormalizado.includes("almoco") ||
 textoNormalizado.includes("comida")
 
-agora = getAgoraBahia() // ok
-const hora = agora.getHours()
-const minuto = agora.getMinutes()
 
-const horaDecimal = hora + (minuto / 60)
 
-const dentroHorarioBuffet = horaDecimal >= 11 && horaDecimal <= 15
-
-if(querBuffet){
-
-  console.log("🍛 CONSULTA DE BUFFET")
-
-  if(!dentroHorarioBuffet){
-
-    const resposta = "Nosso buffet funciona das 11h às 15h 😊"
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"text",
-        text:{body:resposta}
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  const buffetHoje = await buscarBuffetHoje()
-
-  if(!buffetHoje.length){
-
-    const resposta = "Hoje ainda não temos buffet disponível 😕"
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"text",
-        text:{body:resposta}
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  let resposta = "🍛 Buffet de hoje:\n\n"
-
-  buffetHoje.slice(0,10).forEach(item=>{
-    resposta += `• ${item.produto_nome}\n`
-  })
-
-  if(horaDecimal >= 14.3){ // depois de ~14:18
-    resposta += "\n⚠️ Buffet já está finalizando"
-  }
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"text",
-      text:{body:resposta}
-    })
-  })
-
-  return res.status(200).end()
-}
 
   
 // 🔥 PERGUNTA GENÉRICA (VAI PRA IA)
@@ -2548,10 +2369,10 @@ textoNormalizado.includes("video") ||
 textoNormalizado.includes("vídeo")
 
 const pediuFotoEspecifica =
-  textoNormalizado.includes("foto") &&
-  cardapio.some(p =>
-    textoNormalizado.includes(normalizar(p.nome))
-  )
+textoNormalizado.includes("foto") &&
+(
+  textoNormalizado.length > 10 // evita "tem foto?"
+)
 
 const querEndereco =
 textoNormalizado.includes("onde fica") ||
@@ -3064,80 +2885,15 @@ const buffet = await buscarBuffetHoje()
 
 let buffetTexto = ""
 
-const agoraBuffet = getAgoraBahia()
-const horaBuffet = agoraBuffet.getHours()
-const minutoBuffet = agoraAtual.getMinutes()
-
-const horaDecimalBuffet = horaBuffet + (minutoBuffet / 60)
-  
-
-const dentroHorario =
-  (hora > 11 || (hora === 11 && minutos >= 0)) &&
-  (hora < 15)
-
-const pertoEncerrando = hora === 14
-
-// 🔥 CONTROLE: já enviou buffet hoje?
-const hojeInicio = getHojeBahia() + "T00:00"
-const hojeFim = getHojeBahia() + "T23:59"
-
-const { data: buffetJaEnviado } = await supabase
-.from("conversas_whatsapp")
-.select("id")
-.eq("telefone", cliente)
-.eq("role", "assistant")
-.gte("created_at", hojeInicio)
-.lte("created_at", hojeFim)
-.ilike("mensagem", "%🍛 Buffet%")
-.limit(1)
-
-let buffetTextoIA = ""
-/* 🚫 FORA DO HORÁRIO */
-if(!dentroHorario){
-
-  buffetTexto = `
-BUFFET:
-Não disponível agora.
-Funciona das 11h às 15h.
+if(!buffet.length){
+  buffetTexto = "SEM ITENS NO BUFFET HOJE"
+}else{
+  buffet.forEach(item => {
+    buffetTexto += `
+ITEM: ${item.produto_nome}
+CATEGORIA: ${item.tipo || "geral"}
 `
-
-}
-
-/* ❌ SEM ITENS */
-else if(!buffet.length){
-
-  buffetTexto = `
-BUFFET:
-Hoje não temos buffet disponível.
-`
-
-}
-
-/* 🧠 JÁ ENVIOU → IA ASSUME */
-else if(buffetJaEnviado && buffetJaEnviado.length){
-
-  buffetTexto = `
-BUFFET:
-Disponível agora.
-
-Itens já foram apresentados anteriormente.
-Responda de forma natural sem listar novamente.
-`
-
-}
-
-/* ✅ PRIMEIRA VEZ → LISTA */
-else{
-
-  buffetTexto = "🍛 Buffet de hoje:\n"
-
-  buffet.slice(0,8).forEach(item=>{
-buffetTextoIA += `ITEM: ${item.produto_nome}`
   })
-
-  if(pertoEncerrando){
-    buffetTexto += "\n⏰ Buffet já está finalizando (até 15h)"
-  }
 }
 
 
@@ -3199,10 +2955,10 @@ OBSERVACOES: ${r.observacoes || "-"}
 
 try{
 
-const agoraSistema = new Date()
+const agora = new Date()
 
 const agoraBahia = new Date(
-  agoraSistema.toLocaleString("en-US", { timeZone: "America/Bahia" })
+agora.toLocaleString("en-US", { timeZone: "America/Bahia" })
 )
 
 const dataAtual = agoraBahia.toLocaleDateString("pt-BR")
@@ -3673,16 +3429,19 @@ texto.includes("pedir")
 
   
 const precisaEscalar =
-(
-  !resposta ||
-  resposta.length < 5 ||
+!resposta ||
+resposta.length < 5 ||
 
-  respostaLower.includes("não sei") ||
-  respostaLower.includes("nao sei") ||
-  respostaLower.includes("não possuo") ||
-  respostaLower.includes("nao possuo") ||
-  respostaLower.includes("sem informação")
-)
+respostaLower.includes("não sei") ||
+respostaLower.includes("nao sei") ||
+respostaLower.includes("não temos") ||
+respostaLower.includes("nao temos") ||
+respostaLower.includes("não encontrei") ||
+respostaLower.includes("nao encontrei") ||
+respostaLower.includes("não possuo") ||
+respostaLower.includes("nao possuo") ||
+respostaLower.includes("sem informação") ||
+respostaLower.includes("no momento")
 
 if(precisaEscalar && !ehAcaoDireta){
   console.log("🚨 ESCALANDO PARA ADM")
@@ -4455,7 +4214,7 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-const pedidoMatch = resposta.match(/ PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\}) /)
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
 
 if(pedidoMatch){
 
