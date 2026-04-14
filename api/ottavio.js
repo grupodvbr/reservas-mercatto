@@ -317,62 +317,70 @@ content:`PROMPTS DO AGENTE:\n${JSON.stringify(promptTabela || [])}`
 role:"system",
 content:`
 
-Você pode criar, editar ou apagar prompts da tabela "prompt_agente".
+🔥 AÇÕES PERMITIDAS NO SISTEMA
 
-Estrutura da tabela:
+Você pode executar ações no banco de dados.
 
-prompt_agente
-- id
-- prompt
-- ordem
-- ativo
-- created_at
+Sempre que o usuário pedir algo que envolva:
 
-Se o usuário pedir para alterar ou criar prompts, gere uma ação usando:
+- criar reserva
+- editar reserva
+- cancelar reserva
 
-ALTERAR_REGISTRO_JSON:
+Você DEVE gerar obrigatoriamente:
+
+RESERVA_JSON:
 {
 "operacao":"insert | update | delete",
-"tabela":"prompt_agente",
+"tabela":"reservas_mercatto",
 "dados":{...},
 "filtro":{...}
 }
 
-Exemplo criar prompt:
+---
 
-ALTERAR_REGISTRO_JSON:
+📌 EXEMPLO CRIAR RESERVA:
+
+RESERVA_JSON:
 {
 "operacao":"insert",
-"tabela":"prompt_agente",
+"tabela":"reservas_mercatto",
 "dados":{
-"prompt":"Sempre enviar a foto do prato antes da descrição.",
-"ordem":10,
-"ativo":true
+  "nome":"João",
+  "telefone":"557799999999",
+  "pessoas":4,
+  "mesa":"Salão Central",
+  "datahora":"2026-04-15T20:00",
+  "status":"Pendente"
 }
 }
 
-Exemplo editar prompt:
+---
 
-ALTERAR_REGISTRO_JSON:
+📌 EXEMPLO CANCELAR:
+
+RESERVA_JSON:
 {
 "operacao":"update",
-"tabela":"prompt_agente",
+"tabela":"reservas_mercatto",
 "dados":{
-"prompt":"texto atualizado"
+  "status":"Cancelada"
 },
 "filtro":{
-"id":5
+  "telefone":"557799999999"
 }
 }
 
-Se o usuário pedir para criar, editar ou apagar um prompt:
+---
 
-1. Gere obrigatoriamente a ação ALTERAR_REGISTRO_JSON.
-2. Não explique nada antes.
-3. Não escreva texto adicional.
-4. Apenas retorne o JSON da ação.
+REGRAS:
 
-Se não gerar o JSON a ação será ignorada.
+- Nunca inventar dados
+- Sempre gerar JSON quando for ação
+- Não explicar nada antes
+- Não escrever texto fora do JSON
+
+Se não gerar o JSON, a ação NÃO será executada.
 `
 },
 
