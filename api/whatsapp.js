@@ -2448,9 +2448,9 @@ textoNormalizado.includes("buffet") ||
 textoNormalizado.includes("almoco") ||
 textoNormalizado.includes("comida")
 
+const agora = getAgoraBahia()
 
-const agoraAtual = getAgoraBahia()
-  const hora = agora.getHours()
+const hora = agora.getHours()
 const minuto = agora.getMinutes()
 
 const horaDecimal = hora + (minuto / 60)
