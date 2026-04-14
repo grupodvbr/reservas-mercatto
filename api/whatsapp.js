@@ -2604,8 +2604,7 @@ if(rodizioTexto){
   
 /* ================= MUSICA AO VIVO ================= */
 
-if(querMusica){
-
+if(false && querMusica){
 console.log("RESPONDENDO AUTOMATICO MUSICA")
 
 resposta=""
