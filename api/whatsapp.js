@@ -833,9 +833,36 @@ if(aprendizadoContexto && aprendizadoContexto.length){
 
   melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
 
-  if(melhorAprendizado){
-    console.log("🧠 CONHECIMENTO ENCONTRADO:", melhorAprendizado.pergunta)
-  }
+if(melhorAprendizado){
+
+  console.log("🧠 RESPONDENDO COM APRENDIZADO")
+
+  const resposta = melhorAprendizado.resposta
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
+
+  await supabase
+  .from("conversas_whatsapp")
+  .insert({
+    telefone:cliente,
+    mensagem:resposta,
+    role:"assistant"
+  })
+
+  return res.status(200).end()
+}
 
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
@@ -3018,7 +3045,25 @@ BASE DE CONHECIMENTO APRENDIDA
 
 Abaixo estão respostas aprendidas anteriormente com o administrador.
 
-Use isso como BASE DE CONHECIMENTO e NÃO como resposta pronta.
+BASE DE CONHECIMENTO APRENDIDA (PRIORIDADE ALTA)
+
+Você possui conhecimento previamente aprendido com o administrador.
+
+REGRAS OBRIGATÓRIAS:
+
+- Se existir uma resposta aprendida relevante, USE como base principal da resposta
+- Você pode adaptar o texto, mas deve manter o conteúdo fiel
+- Não ignore o conhecimento salvo
+- Nunca diga "não sei" se existir informação semelhante no aprendizado
+- O aprendizado tem prioridade sobre respostas genéricas
+- Só ignore se for completamente irrelevante
+
+MELHOR CONHECIMENTO:
+${melhorAprendizado ? `
+PERGUNTA_BASE: ${melhorAprendizado.pergunta}
+RESPOSTA_BASE: ${melhorAprendizado.resposta}
+` : "NENHUM"}
+
 
 REGRAS:
 - Você pode reaproveitar o conteúdo se a pergunta do cliente for igual ou parecida
