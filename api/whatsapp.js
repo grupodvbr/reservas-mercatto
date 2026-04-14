@@ -2500,8 +2500,7 @@ return res.status(200).end()
 
 /* ================= O QUE TEM HOJE (COM RODÍZIO ORGANIZADO) ================= */
 
-if(querHoje){
-
+if(false && querHoje){
   console.log("📅 RESPOSTA DIRETA → O QUE TEM HOJE")
 
   const hoje = getHojeBahia()
