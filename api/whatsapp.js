@@ -26,14 +26,14 @@ const TEMPLATES_PERMITIDOS = [
 
 
 
-function getAgoraBahia(){
+function agoraBahia(){
   return new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
   )
 }
 
 // Quando precisar da data, use assim:
-const agora = getAgoraBahia();
+const agora = agoraBahia();
 
 /* ================= RELATORIO AUTOMATICO ================= */
 
@@ -52,6 +52,10 @@ const {data:reservas} = await supabase
 .select("*")
 .in("status", ["Pendente","Confirmada"])
 .gte("datahora", hoje+"T00:00") // 🔥 daqui pra frente
+.order("datahora",{ascending:true})
+
+
+  
 .order("datahora",{ascending:true})
 
 let resposta = "📊 *Relatório automático de reservas (Hoje)*\n\n"
@@ -113,8 +117,7 @@ let maior = 0
 
 musicos.forEach(m => {
 
-const valor = Number(m.valor) || 0
-
+const valor = Number(String(m.valor).replace(",", ".")) || 0
 if(valor > maior){
 maior = valor
 }
@@ -503,23 +506,7 @@ Você pode responder perguntas sobre:
 Responda sempre de forma clara e direta.
 `
 },
-{
-role:"system",
-content:`
-FICHAS TÉCNICAS COMPLETAS DO MERCATTO:
 
-${fichasTexto}
-
-REGRAS CRÍTICAS:
-
-- Use essas fichas para responder perguntas sobre ingredientes
-- Se o cliente perguntar "tem X", procure nos ingredientes
-- NÃO responda em formato de lista robótica
-- Responda como um atendente humano
-- Se encontrar mais de um prato, pode sugerir
-- Nunca invente prato
-`
-},
 
 {
 role:"system",
@@ -533,11 +520,6 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
-
-
-
-
-  
 {
   role: "system",
   content: `
@@ -789,22 +771,22 @@ const { data: pausaBot } = await supabase
 .eq("telefone", cliente)
 .maybeSingle()
 
+let botPausado = false
+
 if(pausaBot?.pausado){
 
-// pausa permanente
-if(!pausaBot.pausado_ate){
-console.log("BOT PAUSADO PERMANENTEMENTE PARA:",cliente)
-return res.status(200).end()
-}
+  if(!pausaBot.pausado_ate){
+    botPausado = true
+  } else {
 
-// pausa temporária
-const agora = new Date()
-const pausaAte = new Date(pausaBot.pausado_ate)
+    const agora = new Date()
+    const pausaAte = new Date(pausaBot.pausado_ate)
 
-if(agora < pausaAte){
-console.log("BOT PAUSADO ATÉ:",pausaBot.pausado_ate)
-return res.status(200).end()
-}
+    if(agora < pausaAte){
+      botPausado = true
+    }
+
+  }
 
 }
 
@@ -836,84 +818,6 @@ return res.status(200).end()
 
 const texto = mensagem.toLowerCase()
 
-
-
-/* ================= 🔥 BUSCAR NAS FICHAS TÉCNICAS ================= */
-
-const { data: fichasTecnicas } = await supabase
-  .from("buffet")
-  .select("*")
-  .eq("ativo", true)
-
-let respostaFicha = null
-
-if(fichasTecnicas && fichasTecnicas.length){
-
-const textoLimpo = normalizar(texto)
-
-// 🔥 REMOVE PALAVRAS INÚTEIS
-const ignorar = ["tem", "tem?", "tem", "tem?", "tem,", "tem.", "possui", "temos", "existe", "tem ai"]
-const palavras = textoLimpo
-  .split(" ")
-  .filter(p => p.length > 2 && !ignorar.includes(p))
-
-const resultados = fichasTecnicas.filter(item => {
-
-  const nome = normalizar(item.nome || "")
-  const desc = normalizar(item.descricao || "")
-
-  const textoFicha = `${nome} ${desc}`
-
-  // 🔥 VERDADEIRO MATCH
-  return palavras.some(p => textoFicha.includes(p))
-})
-
-  const restaurante = resultados.filter(i => i.cardapio)
-  const delivery = resultados.filter(i => i.delivery)
-
-  if(restaurante.length){
-
-    respostaFicha = `Temos sim! 👇\n\n` + restaurante
-      .slice(0,5)
-      .map(i => `• ${i.nome}`)
-      .join("\n")
-
-  }
-
-  if(delivery.length){
-
-    respostaFicha += `\n\n🚗 Também disponíveis no delivery:\n\n` + delivery
-      .slice(0,5)
-      .map(i => `• ${i.nome}`)
-      .join("\n")
-
-  }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 /* ================= 🔥 BUSCAR APRENDIZADO ================= */
 
 const { data: aprendizadoContexto } = await supabase
@@ -928,9 +832,36 @@ if(aprendizadoContexto && aprendizadoContexto.length){
 
   melhorAprendizado = buscarRespostaAprendida(texto, aprendizadoContexto)
 
-  if(melhorAprendizado){
-    console.log("🧠 CONHECIMENTO ENCONTRADO:", melhorAprendizado.pergunta)
-  }
+if(melhorAprendizado){
+
+  console.log("🧠 RESPONDENDO COM APRENDIZADO")
+
+  const resposta = melhorAprendizado.resposta
+
+  await fetch(url,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      messaging_product:"whatsapp",
+      to:cliente,
+      type:"text",
+      text:{ body: resposta }
+    })
+  })
+
+  await supabase
+  .from("conversas_whatsapp")
+  .insert({
+    telefone:cliente,
+    mensagem:resposta,
+    role:"assistant"
+  })
+
+  return res.status(200).end()
+}
 
   aprendizadoTexto = aprendizadoContexto.map(a => `
 PERGUNTA: ${a.pergunta}
@@ -942,17 +873,10 @@ RESPOSTA_BASE: ${a.resposta}
 
 
 
-let fichasTexto = ""
 
-if(fichasTecnicas && fichasTecnicas.length){
 
-  fichasTexto = fichasTecnicas.map(i => `
-PRATO: ${i.nome}
-DESCRICAO: ${i.descricao || ""}
-CARDAPIO: ${i.cardapio}
-DELIVERY: ${i.delivery}
-`).join("\n")
-}
+
+
 
 
 
@@ -1169,7 +1093,8 @@ const match = mensagem.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
 
 if(pedidoJSON){
 
-const dados = pedidoJSON || {}
+const dados = pedidoJSON?.dados || {}
+
 dados.cliente_nome = dados.cliente_nome || "Cliente"
 dados.cliente_telefone = cliente
 dados.cliente_endereco = dados.cliente_endereco || ""
@@ -1443,18 +1368,16 @@ textoNormalizado.includes("promo") ||
 textoNormalizado.includes("oferta") ||
 textoNormalizado.includes("desconto")
 
-
-const hojeInicioPromo = getHojeBahia() + "T00:00"
-const hojeFimPromo = getHojeBahia() + "T23:59"
+const hojeInicio = getHojeBahia() + "T00:00"
+const hojeFim = getHojeBahia() + "T23:59"
 
 const { data: promosHoje } = await supabase
 .from("conversas_whatsapp")
 .select("mensagem")
 .eq("telefone", cliente)
 .eq("role", "assistant")
-.gte("created_at", hojeInicioPromo)
-.lte("created_at", hojeFimPromo)
-  
+.gte("created_at", hojeInicio)
+.lte("created_at", hojeFim)
 .ilike("mensagem", "%PROMO%")
 
 const { data: controlePromo } = await supabase
@@ -1765,7 +1688,7 @@ const palavrasPedido = [
 
 const temIntencaoPedido = palavrasPedido.some(p => textoLower.includes(p))
 
-if(false){
+if(temIntencaoPedido){
 
   console.log("🧾 INTENÇÃO DE PEDIDO DETECTADA")
 
@@ -1795,26 +1718,7 @@ if(match){
 
   }
 
-  // 🚨 BLOQUEIO SE NÃO ENCONTRAR PRODUTO
-  if(!itemEncontrado){
-    console.log("❌ PRODUTO NÃO ENCONTRADO — NÃO SALVA")
 
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"text",
-        text:{ body:"Não consegui identificar o item do pedido 😕\nPode me informar o nome exato do prato?" }
-      })
-    })
-
-    return res.status(200).end()
-  }
 
   // 🔥 QUANTIDADE
   let quantidade = 1
@@ -1993,7 +1897,11 @@ if(
   break
 }
     
- 
+    
+    {
+      itemEncontrado = p
+      break
+    }
   }
 
   if(itemEncontrado){
@@ -2449,88 +2357,7 @@ textoNormalizado.includes("almoco") ||
 textoNormalizado.includes("comida")
 
 
-const agoraAtual = getAgoraBahia()
-  const hora = agora.getHours()
-const minuto = agora.getMinutes()
 
-const horaDecimal = hora + (minuto / 60)
-
-const dentroHorarioBuffet = horaDecimal >= 11 && horaDecimal <= 15
-
-if(querBuffet){
-
-  console.log("🍛 CONSULTA DE BUFFET")
-
-  if(!dentroHorarioBuffet){
-
-    const resposta = "Nosso buffet funciona das 11h às 15h 😊"
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"text",
-        text:{body:resposta}
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  const buffetHoje = await buscarBuffetHoje()
-
-  if(!buffetHoje.length){
-
-    const resposta = "Hoje ainda não temos buffet disponível 😕"
-
-    await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        messaging_product:"whatsapp",
-        to:cliente,
-        type:"text",
-        text:{body:resposta}
-      })
-    })
-
-    return res.status(200).end()
-  }
-
-  let resposta = "🍛 Buffet de hoje:\n\n"
-
-  buffetHoje.slice(0,10).forEach(item=>{
-    resposta += `• ${item.produto_nome}\n`
-  })
-
-  if(horaDecimal >= 14.3){ // depois de ~14:18
-    resposta += "\n⚠️ Buffet já está finalizando"
-  }
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"text",
-      text:{body:resposta}
-    })
-  })
-
-  return res.status(200).end()
-}
 
   
 // 🔥 PERGUNTA GENÉRICA (VAI PRA IA)
@@ -2549,10 +2376,10 @@ textoNormalizado.includes("video") ||
 textoNormalizado.includes("vídeo")
 
 const pediuFotoEspecifica =
-  textoNormalizado.includes("foto") &&
-  cardapio.some(p =>
-    textoNormalizado.includes(normalizar(p.nome))
-  )
+textoNormalizado.includes("foto") &&
+(
+  textoNormalizado.length > 10 // evita "tem foto?"
+)
 
 const querEndereco =
 textoNormalizado.includes("onde fica") ||
@@ -2632,7 +2459,15 @@ await supabase
   message_id: message_id, // 🔥 ESSENCIAL
   status: "received"      // 🔥 ESSENCIAL
 })
+// 🔥 BLOQUEIO DE RESPOSTA AUTOMÁTICA
+if(botPausado){
+  console.log("🤖 BOT DESATIVADO → NÃO RESPONDE")
+  return res.status(200).end()
+}
 
+
+
+  
 if(querEndereco){
 
 const resposta = `📍 Estamos localizados em:
@@ -2680,8 +2515,7 @@ return res.status(200).end()
 
 /* ================= O QUE TEM HOJE (COM RODÍZIO ORGANIZADO) ================= */
 
-if(querHoje){
-
+if(false && querHoje){
   console.log("📅 RESPOSTA DIRETA → O QUE TEM HOJE")
 
   const hoje = getHojeBahia()
@@ -2785,8 +2619,7 @@ if(rodizioTexto){
   
 /* ================= MUSICA AO VIVO ================= */
 
-if(querMusica){
-
+if(false && querMusica){
 console.log("RESPONDENDO AUTOMATICO MUSICA")
 
 resposta=""
@@ -3065,80 +2898,15 @@ const buffet = await buscarBuffetHoje()
 
 let buffetTexto = ""
 
-const agoraBuffet = getAgoraBahia()
-const horaBuffet = agoraBuffet.getHours()
-const minutoBuffet = agoraAtual.getMinutes()
-
-const horaDecimalBuffet = horaBuffet + (minutoBuffet / 60)
-  
-
-const dentroHorario =
-  (hora > 11 || (hora === 11 && minutos >= 0)) &&
-  (hora < 15)
-
-const pertoEncerrando = hora === 14
-
-// 🔥 CONTROLE: já enviou buffet hoje?
-const hojeInicio = getHojeBahia() + "T00:00"
-const hojeFim = getHojeBahia() + "T23:59"
-
-const { data: buffetJaEnviado } = await supabase
-.from("conversas_whatsapp")
-.select("id")
-.eq("telefone", cliente)
-.eq("role", "assistant")
-.gte("created_at", hojeInicio)
-.lte("created_at", hojeFim)
-.ilike("mensagem", "%🍛 Buffet%")
-.limit(1)
-
-let buffetTextoIA = ""
-/* 🚫 FORA DO HORÁRIO */
-if(!dentroHorario){
-
-  buffetTexto = `
-BUFFET:
-Não disponível agora.
-Funciona das 11h às 15h.
+if(!buffet.length){
+  buffetTexto = "SEM ITENS NO BUFFET HOJE"
+}else{
+  buffet.forEach(item => {
+    buffetTexto += `
+ITEM: ${item.produto_nome}
+CATEGORIA: ${item.tipo || "geral"}
 `
-
-}
-
-/* ❌ SEM ITENS */
-else if(!buffet.length){
-
-  buffetTexto = `
-BUFFET:
-Hoje não temos buffet disponível.
-`
-
-}
-
-/* 🧠 JÁ ENVIOU → IA ASSUME */
-else if(buffetJaEnviado && buffetJaEnviado.length){
-
-  buffetTexto = `
-BUFFET:
-Disponível agora.
-
-Itens já foram apresentados anteriormente.
-Responda de forma natural sem listar novamente.
-`
-
-}
-
-/* ✅ PRIMEIRA VEZ → LISTA */
-else{
-
-  buffetTexto = "🍛 Buffet de hoje:\n"
-
-  buffet.slice(0,8).forEach(item=>{
-buffetTextoIA += `ITEM: ${item.produto_nome}`
   })
-
-  if(pertoEncerrando){
-    buffetTexto += "\n⏰ Buffet já está finalizando (até 15h)"
-  }
 }
 
 
@@ -3200,10 +2968,10 @@ OBSERVACOES: ${r.observacoes || "-"}
 
 try{
 
-const agoraSistema = new Date()
+const agora = new Date()
 
 const agoraBahia = new Date(
-  agoraSistema.toLocaleString("en-US", { timeZone: "America/Bahia" })
+agora.toLocaleString("en-US", { timeZone: "America/Bahia" })
 )
 
 const dataAtual = agoraBahia.toLocaleDateString("pt-BR")
@@ -3265,7 +3033,25 @@ BASE DE CONHECIMENTO APRENDIDA
 
 Abaixo estão respostas aprendidas anteriormente com o administrador.
 
-Use isso como BASE DE CONHECIMENTO e NÃO como resposta pronta.
+BASE DE CONHECIMENTO APRENDIDA (PRIORIDADE ALTA)
+
+Você possui conhecimento previamente aprendido com o administrador.
+
+REGRAS OBRIGATÓRIAS:
+
+- Se existir uma resposta aprendida relevante, USE como base principal da resposta
+- Você pode adaptar o texto, mas deve manter o conteúdo fiel
+- Não ignore o conhecimento salvo
+- Nunca diga "não sei" se existir informação semelhante no aprendizado
+- O aprendizado tem prioridade sobre respostas genéricas
+- Só ignore se for completamente irrelevante
+
+MELHOR CONHECIMENTO:
+${melhorAprendizado ? `
+PERGUNTA_BASE: ${melhorAprendizado.pergunta}
+RESPOSTA_BASE: ${melhorAprendizado.resposta}
+` : "NENHUM"}
+
 
 REGRAS:
 - Você pode reaproveitar o conteúdo se a pergunta do cliente for igual ou parecida
@@ -3427,7 +3213,54 @@ Se descumprir isso, a resposta está ERRADA.
 },
 
 
+{
+role:"system",
+content:`
+FORMATAÇÃO OBRIGATÓRIA PARA MÚSICA 🎶
 
+Quando responder sobre música ao vivo:
+
+REGRAS DE FORMATAÇÃO:
+
+- Use emojis organizados:
+  📅 data
+  🎤 artista
+  🕒 horário
+  🎵 estilo
+    couvert
+
+- Cada dia deve ser um bloco separado
+
+- A estrutura deve ser:
+
+📅 *DATA*
+🎤 NOME_DO_ARTISTA
+🕒 HORÁRIO
+🎵 ESTILO
+Couvert: R$ VALOR
+
+- Sempre quebrar linha entre dias
+
+- Ordenar por data crescente
+
+- Se for só hoje:
+  → mostrar apenas um bloco
+
+- Se for vários dias:
+  → mostrar lista organizada por data
+
+- Nunca usar caracteres estranhos (Ø, Ð, etc)
+
+- Nunca repetir título várias vezes
+
+- Linguagem natural, elegante e organizada
+
+- NÃO inventar dados
+- NÃO usar exemplos fixos
+- SEMPRE usar apenas os dados fornecidos no sistema
+
+`
+},
 
   
 {
@@ -3674,16 +3507,9 @@ texto.includes("pedir")
 
   
 const precisaEscalar =
-(
-  !resposta ||
-  resposta.length < 5 ||
-
-  respostaLower.includes("não sei") ||
-  respostaLower.includes("nao sei") ||
-  respostaLower.includes("não possuo") ||
-  respostaLower.includes("nao possuo") ||
-  respostaLower.includes("sem informação")
-)
+!resposta ||
+resposta.length < 5 ||
+resposta.includes("🚨 DÚVIDA DO CLIENTE")
 
 if(precisaEscalar && !ehAcaoDireta){
   console.log("🚨 ESCALANDO PARA ADM")
@@ -4456,7 +4282,7 @@ console.log("Resposta IA:",resposta)
 
 /* ================= PEDIDO DELIVERY ================= */
 
-const pedidoMatch = resposta.match(/ PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\}) /)
+const pedidoMatch = resposta.match(/PEDIDO_DELIVERY_JSON:\s*(\{[\s\S]*\})$/)
 
 if(pedidoMatch){
 
@@ -4512,9 +4338,18 @@ console.log("📦 PEDIDO FINAL:", pedido)
 
 /* ================= PROCESSAR ================= */
 
-if(pedido){
+if(false){
+  // 🔥 VALIDAÇÃO AQUI
+  if(!pedido?.dados?.itens){
+    console.log("❌ PEDIDO SEM ITENS")
+    return res.status(200).end()
+  }
 
-  const valorTotal = (pedido.itens || []).reduce((s,i)=>{
+  const dados = pedido.dados || {}
+
+  const itens = dados.itens || []
+
+  const valorTotal = itens.reduce((s,i)=>{
     const preco = Number(i.preco || 0)
     const qtd = Number(i.quantidade || 1)
     return s + (preco * qtd)
@@ -4530,14 +4365,14 @@ if(pedido){
   const {data,error} = await supabase
   .from("pedidos_pendentes")
   .insert({
-    cliente_nome: pedido.nome,
+    cliente_nome: dados.cliente_nome || "Cliente",
     cliente_telefone: cliente,
-    cliente_endereco: pedido.endereco || "",
-    cliente_bairro: pedido.bairro || "",
-    itens: pedido.itens || [],
+    cliente_endereco: dados.endereco || "",
+    cliente_bairro: dados.bairro || "",
+    itens: itens,
     valor_total: valorTotal,
-    forma_pagamento: pedido.pagamento || "",
-    observacao: pedido.observacao || ""
+    forma_pagamento: dados.forma_pagamento || "",
+    observacao: dados.observacao || ""
   })
   .select()
 
@@ -4556,7 +4391,7 @@ if(pedido){
 
   resposta = `🧾 *Resumo do seu pedido*
 
-${(pedido.itens || []).map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
+${itens.map(i=>`• ${i.quantidade}x ${i.nome}`).join("\n")}
 
 💰 Total: R$ ${valorTotal.toFixed(2)}
 
