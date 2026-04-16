@@ -23,7 +23,7 @@ export default async function handler(req, res){
     =============================== */
 
     const TOKEN = process.env.WHATSAPP_TOKEN
-    const PHONE_ID = process.env.WHATSAPP_PHONE_ID
+    const PHONE_ID = process.env.PHONE_NUMBER_ID
 
     if(!TOKEN || !PHONE_ID){
       return res.status(500).json({
