@@ -163,7 +163,7 @@ const {data:reservas} = await supabase
 const {data:agenda} = await supabase
 .from("agenda_musicos")
 .select("*")
-.limit(100)
+.limit(90)
 
 const {data:clientes} = await supabase
 .from("memoria_clientes")
@@ -178,8 +178,16 @@ const {data:conversas} = await supabase
 const {data:buffet} = await supabase
 .from("buffet")
 .select("*")
-.limit(100)
+.limit(300)
 
+
+const {data:buffetLancamentos} = await supabase
+.from("buffet_lancamentos")
+.select("*")
+.limit(500)
+
+
+  
 /* ================= BUSCAR PROMPTS DO AGENTE ================= */
 
 const {data:promptTabela} = await supabase
@@ -307,12 +315,19 @@ content:`CONVERSAS:\n${JSON.stringify(conversas || [])}`
 role:"system",
 content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
 },
+
+  
 {
 role:"system",
 content:`PROMPTS DO AGENTE:\n${JSON.stringify(promptTabela || [])}`
 },
 
+{
+role:"system",
+content:`LANCAMENTOS BUFFET:\n${JSON.stringify(buffetLancamentos || [])}`
+},
 
+  
 {
 role:"system",
 content:`
