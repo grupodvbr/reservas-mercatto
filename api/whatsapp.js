@@ -1747,8 +1747,9 @@ if(match){
 
 
 // 🔥 EXTRAI DADOS DO TEXTO (LINHA NOVA)
-const dadosExtraidos = extrairDadosPedido(mensagem)
-
+if(temIntencaoPedido){
+  const dadosExtraidos = extrairDadosPedido(mensagem)
+}
 await supabase
 .from("pedidos_pendentes")
 .insert({
