@@ -184,8 +184,9 @@ const {data:buffet} = await supabase
 const {data:buffetLancamentos} = await supabase
 .from("buffet_lancamentos")
 .select("*")
+.gte("data", ontemISO) // 🔥 IMPORTANTE
+.order("data",{ascending:false})
 .limit(500)
-
 
   
 /* ================= BUSCAR PROMPTS DO AGENTE ================= */
@@ -315,7 +316,10 @@ content:`CONVERSAS:\n${JSON.stringify(conversas || [])}`
 role:"system",
 content:`CARDAPIO:\n${JSON.stringify(buffet || [])}`
 },
-
+{
+role:"system",
+content:`LANCAMENTOS BUFFET:\n${JSON.stringify(buffetLancamentos || [])}`
+},
   
 {
 role:"system",
