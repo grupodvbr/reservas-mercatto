@@ -1458,8 +1458,14 @@ if(
 
 }else if(previewEl){
 
-  // ✅ só atualiza sem efeito visual
   previewEl.innerText = c.mensagem
+
+  // 🔥 REMOVE bolinha se NÃO for mensagem do cliente
+  let notif = card.querySelector(".notificacao")
+
+  if(c.role !== "user" && notif){
+    notif.remove()
+  }
 
 }
 
