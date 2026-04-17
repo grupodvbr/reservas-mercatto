@@ -161,12 +161,16 @@ color:#111827;
 }
 
 .preview{
-font-size:13px;
-color:var(--muted);
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
-max-width:200px;
+  font-size:13px;
+  color:var(--muted);
+
+  display:-webkit-box;
+  -webkit-line-clamp:2; /* 🔥 LIMITE DE 2 LINHAS */
+  -webkit-box-orient:vertical;
+
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:normal; /* 🔥 IMPORTANTE */
 }
 
 /* STATUS */
@@ -1389,7 +1393,12 @@ async function atualizarClientesSilencioso(){
 
       /* 🔥 SE NÃO EXISTE → IGNORA (NÃO CRIA) */
       if(!card) continue
+      // 🔥 MOVE PRO TOPO SE FOR NOVA MENSAGEM
+const container = document.getElementById("clientes")
 
+if(container.firstChild !== card){
+  container.prepend(card)
+}
       /* 🔥 ATUALIZA SEM RECRIAR */
       const phoneEl = card.querySelector(".phone")
       const previewEl = card.querySelector(".preview")
@@ -1413,7 +1422,8 @@ if(horaEl){
 
 if(
   previewEl &&
-  previewEl.innerText !== c.mensagem
+  previewEl.innerText !== c.mensagem &&
+  c.role === "user" // 🔥 só pisca se for mensagem recebida
 ){
 
   previewEl.innerText = c.mensagem
@@ -1438,8 +1448,18 @@ if(
 
   // 🔥 PISCAR IGUAL WHATSAPP
   card.style.transition = "0.3s"
-  card.style.background = "#bbf7d0"
 
+  
+  
+  card.style.background = "#86efac"
+
+setTimeout(()=>{
+  card.style.background = "#dcfce7"
+},200)
+
+setTimeout(()=>{
+  card.style.background = ""
+},800)
   setTimeout(()=>{
     card.style.background = "#dcfce7"
   },150)
