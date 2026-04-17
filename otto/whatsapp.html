@@ -782,7 +782,6 @@ const {data} = await db
 .from("conversas_whatsapp")
 .select("*")
 .order("created_at",{ascending:false})
-.limit(20)
 
 const {data:memoria} = await db
 .from("memoria_clientes")
