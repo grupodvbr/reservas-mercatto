@@ -1444,55 +1444,25 @@ if(horaEl){
         phoneEl.innerText = nome
       }
 
-// 🔥 SE CHEGOU NOVA MENSAGEM REAL
-if(
-  previewEl &&
-  previewEl.innerText !== c.mensagem &&
-  c.role === "user"
-){
-
-  // ✅ atualiza mensagem
+// ✅ sempre atualiza mensagem
+if(previewEl){
   previewEl.innerText = c.mensagem
+}
 
-  // 🔴 bolinha
-  let notif = card.querySelector(".notificacao")
+// 🔴 CONTROLE DA BOLINHA (CORRETO)
+let notif = card.querySelector(".notificacao")
+
+if(c.role === "user"){
   if(!notif){
     const dot = document.createElement("div")
     dot.className = "notificacao"
     card.appendChild(dot)
   }
-
-  // 🔥 SOBE PRO TOPO (SÓ AQUI)
-  const container = document.getElementById("clientes")
-  if(container.firstChild !== card){
-    container.prepend(card)
-  }
-
-  // 🔥 PISCAR
-  card.style.transition = "0.3s"
-  card.style.background = "#86efac"
-
-  setTimeout(()=>{
-    card.style.background = "#dcfce7"
-  },200)
-
-  setTimeout(()=>{
-    card.style.background = ""
-  },800)
-
-}else if(previewEl){
-
-  previewEl.innerText = c.mensagem
-
-  // 🔥 REMOVE bolinha se NÃO for mensagem do cliente
-  let notif = card.querySelector(".notificacao")
-
-  if(c.role !== "user" && notif){
+}else{
+  if(notif){
     notif.remove()
   }
-
 }
-
 
 
   
