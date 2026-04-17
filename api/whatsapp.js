@@ -771,22 +771,22 @@ const { data: pausaBot } = await supabase
 .eq("telefone", cliente)
 .maybeSingle()
 
+let botPausado = false
+
 if(pausaBot?.pausado){
 
-// pausa permanente
-if(!pausaBot.pausado_ate){
-console.log("BOT PAUSADO PERMANENTEMENTE PARA:",cliente)
-return res.status(200).end()
-}
+  if(!pausaBot.pausado_ate){
+    botPausado = true
+  } else {
 
-// pausa temporária
-const agora = new Date()
-const pausaAte = new Date(pausaBot.pausado_ate)
+    const agora = new Date()
+    const pausaAte = new Date(pausaBot.pausado_ate)
 
-if(agora < pausaAte){
-console.log("BOT PAUSADO ATÉ:",pausaBot.pausado_ate)
-return res.status(200).end()
-}
+    if(agora < pausaAte){
+      botPausado = true
+    }
+
+  }
 
 }
 
@@ -2459,7 +2459,15 @@ await supabase
   message_id: message_id, // 🔥 ESSENCIAL
   status: "received"      // 🔥 ESSENCIAL
 })
+// 🔥 BLOQUEIO DE RESPOSTA AUTOMÁTICA
+if(botPausado){
+  console.log("🤖 BOT DESATIVADO → NÃO RESPONDE")
+  return res.status(200).end()
+}
 
+
+
+  
 if(querEndereco){
 
 const resposta = `📍 Estamos localizados em:
@@ -4330,7 +4338,7 @@ console.log("📦 PEDIDO FINAL:", pedido)
 
 /* ================= PROCESSAR ================= */
 
-if(pedido){
+if(false){
   // 🔥 VALIDAÇÃO AQUI
   if(!pedido?.dados?.itens){
     console.log("❌ PEDIDO SEM ITENS")
