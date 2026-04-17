@@ -346,6 +346,7 @@ text-transform:uppercase;
 <input type="file" id="fileInput" hidden>
 <button onclick="fileInput.click()">📎</button>
 <button onclick="abrirTemplates()">📩</button>
+<button onclick="abrirGaleria()">🖼️</button>  
 <textarea id="msg" placeholder="Mensagem..."></textarea>
 <button onclick="enviar()">➤</button>
 </div>
@@ -374,7 +375,23 @@ z-index:999;
 <button onclick="abrirDisparoMassa()">📢 Disparo em Massa</button>
 </div>
 
+<div id="galeria" style="
+position:fixed;
+bottom:90px;
+left:10px;
+right:10px;
+max-width:320px;
+background:#fff;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+display:none;
+flex-wrap:wrap;
+gap:6px;
+padding:10px;
+z-index:999;
+">
 
+</div>
 
 
 
@@ -395,6 +412,36 @@ if ("Notification" in window) {
 }
 
 
+
+
+
+
+  
+const imagensGaleria = [
+  {
+    nome: "Pizza Calabresa",
+    url: "https://via.placeholder.com/300x200"
+  },
+  {
+    nome: "Pizza Frango",
+    url: "https://via.placeholder.com/300x201"
+  },
+  {
+    nome: "Ambiente Interno",
+    url: "https://via.placeholder.com/300x202"
+  },
+  {
+    nome: "Rodízio Italiano",
+    url: "https://via.placeholder.com/300x203"
+  }
+]
+
+
+
+
+
+
+  
 /* ===== VARS ===== */
 let telefone = new URLSearchParams(location.search).get("telefone")
 let mensagensIds = new Set()
@@ -1001,7 +1048,139 @@ function abrirDisparoMassa(){
   )
 }
 
+/* ===== GALERIA ===== */
 
+let imagemSelecionada = null
+
+function abrirGaleria(){
+
+  const galeria = document.getElementById("galeria")
+
+  if(galeria.style.display === "flex"){
+    galeria.style.display = "none"
+    return
+  }
+
+  galeria.innerHTML = ""
+
+  imagensGaleria.forEach(item => {
+
+    const box = document.createElement("div")
+
+    box.style.width = "70px"
+    box.style.textAlign = "center"
+    box.style.cursor = "pointer"
+
+    const img = document.createElement("img")
+    img.src = item.url
+
+    img.style.width = "70px"
+    img.style.height = "70px"
+    img.style.objectFit = "cover"
+    img.style.borderRadius = "8px"
+
+    const nome = document.createElement("div")
+    nome.innerText = item.nome
+    nome.style.fontSize = "10px"
+    nome.style.marginTop = "3px"
+    nome.style.color = "#333"
+
+    box.onclick = () => selecionarImagem(item)
+
+    box.appendChild(img)
+    box.appendChild(nome)
+
+    galeria.appendChild(box)
+
+  })
+
+  galeria.style.display = "flex"
+}
+
+
+/* ===== SELEÇÃO ===== */
+
+function selecionarImagem(item){
+
+  imagemSelecionada = item
+
+  preview.style.display = "block"
+
+  preview.innerHTML = `
+    <img src="${item.url}" width="120" style="border-radius:8px"><br>
+
+    <div style="
+      font-size:13px;
+      margin-top:6px;
+      font-weight:500;
+    ">
+      ${item.nome}
+    </div>
+
+    <button onclick="enviarImagemGaleria()" style="
+      margin-top:10px;
+      width:100%;
+      border-radius:8px;
+      background:#25d366;
+      color:#fff;
+      padding:8px;
+      border:none;
+    ">
+      Enviar
+    </button>
+  `
+}
+
+
+/* ===== ENVIO ===== */
+
+async function enviarImagemGaleria(){
+
+  if(!imagemSelecionada || !telefone) return
+
+  const media = imagemSelecionada.url
+  const legenda = imagemSelecionada.nome
+
+  const tempId = "temp-"+Date.now()
+
+  const temp = {
+    id: tempId,
+    tipo:"imagem",
+    media_url:media,
+    mensagem: legenda,
+    created_at:new Date().toLocaleString("sv-SE").replace("T"," "),
+    role:"assistant",
+    status:"sent"
+  }
+
+  render(temp)
+  scrollBottom()
+
+  const send = await fetch("/api/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telefone,
+      mensagem: legenda,
+      media_url: media,
+      tipo:"imagem"
+    })
+  }).then(r=>r.json())
+
+  await db.from("conversas_whatsapp").insert({
+    telefone,
+    mensagem: legenda,
+    tipo:"imagem",
+    media_url: media,
+    role:"assistant",
+    message_id: send?.message_id,
+    status:"sent"
+  })
+
+  imagemSelecionada = null
+  preview.style.display = "none"
+  document.getElementById("galeria").style.display = "none"
+}
   
 </script>
 
