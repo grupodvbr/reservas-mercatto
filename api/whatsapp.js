@@ -3838,6 +3838,10 @@ Math.max(resposta.length * 35, 1500), // mínimo 1.5s
 
 await new Promise(resolve => setTimeout(resolve, tempoDigitando))
 
+}catch(error){
+  console.log("❌ ERRO NO BLOCO OPENAI:", error)
+  return res.status(200).end()
+}
 
 
 }catch(error){
