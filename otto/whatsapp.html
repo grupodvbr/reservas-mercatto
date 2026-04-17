@@ -780,8 +780,9 @@ let clienteSelecionado = null
 async function carregarClientes(){
 const {data} = await db
 .from("conversas_whatsapp")
-.select("*")
+.select("telefone,mensagem,created_at,role")
 .order("created_at",{ascending:false})
+.limit(20)
 
 const {data:memoria} = await db
 .from("memoria_clientes")
