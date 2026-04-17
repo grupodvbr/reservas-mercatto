@@ -183,9 +183,11 @@ scroll-behavior:smooth;
   right:0;
   padding:8px 10px;
   background:#ffffff;
+
   display:flex;
-  align-items:center;
+  align-items:flex-end; /* 🔥 importante */
   gap:8px;
+
   border-top:1px solid #eee;
 }
 
@@ -193,10 +195,10 @@ scroll-behavior:smooth;
 .inputBox .campo{
   flex:1;
   display:flex;
-  align-items:center;
+  align-items:flex-end; /* 🔥 acompanha crescimento */
   background:#f1f3f4;
-  border-radius:25px;
-  padding:6px 8px;
+  border-radius:20px;
+  padding:6px 10px;
   gap:6px;
 }
 
@@ -208,8 +210,13 @@ textarea{
   background:transparent;
   font-size:14px;
   padding:6px;
+
   resize:none;
-  max-height:100px;
+
+  height:20px;          /* altura inicial */
+  max-height:100px;     /* ~5 linhas */
+  overflow-y:auto;      /* scroll depois de 5 linhas */
+  line-height:20px;
 }
 
 /* botões pequenos (ícones) */
@@ -935,7 +942,7 @@ render(temp)
 scrollBottom()
 
 msg.value=""
-
+msg.style.height = "20px"
 /* MIDIA */
 let media=null
 let tipo="texto"
@@ -1208,6 +1215,23 @@ async function enviarImagemGaleria(){
   preview.style.display = "none"
   document.getElementById("galeria").style.display = "none"
 }
+
+
+
+const textarea = document.getElementById("msg")
+
+textarea.addEventListener("input", () => {
+
+  textarea.style.height = "20px" // reset
+
+  const newHeight = Math.min(textarea.scrollHeight, 100) // limite 5 linhas
+
+  textarea.style.height = newHeight + "px"
+
+})
+
+
+
   
 </script>
 
