@@ -871,28 +871,41 @@ if(arquivo){
 }
 
 /* API */
-const resp = await fetch("/api/send",{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    telefone,
-    mensagem:texto,
-    media_url:media,
-    tipo,
-    nome_arquivo:nomeArquivo
-  })
+const send = await fetch("/api/send",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+telefone,
+mensagem:texto,
+media_url:media,
+tipo,
+nome_arquivo:nomeArquivo
 })
-
-const send = await resp.json()
-
-if(!resp.ok){
-  console.error("❌ ERRO ENVIO:", send)
-  alert("Erro ao enviar mensagem")
-  return
-}
+}).then(r => r.json())
 
 const messageId = send?.message_id
 
+/* BANCO */
+await db.from("conversas_whatsapp").insert({
+  telefone,
+  mensagem:texto,
+  tipo,
+  media_url:media,
+  nome_arquivo:nomeArquivo,
+  role:"assistant",
+  message_id: messageId,
+  status:"sent"
+}).select().single().then(({data})=>{
+  
+  // 🔥 substitui temp pelo real
+  const tempEl = document.getElementById(tempId)
+  if(tempEl && data?.id){
+    tempEl.id = data.id
+    mensagensIds.add(data.id)
+  }
+
+})
+  
 
 arquivo=null
 preview.style.display="none"
