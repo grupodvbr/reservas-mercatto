@@ -771,22 +771,22 @@ const { data: pausaBot } = await supabase
 .eq("telefone", cliente)
 .maybeSingle()
 
-let botPausado = false
-
 if(pausaBot?.pausado){
 
-  if(!pausaBot.pausado_ate){
-    botPausado = true
-  } else {
+// pausa permanente
+if(!pausaBot.pausado_ate){
+console.log("BOT PAUSADO PERMANENTEMENTE PARA:",cliente)
+return res.status(200).end()
+}
 
-    const agora = new Date()
-    const pausaAte = new Date(pausaBot.pausado_ate)
+// pausa temporária
+const agora = new Date()
+const pausaAte = new Date(pausaBot.pausado_ate)
 
-    if(agora < pausaAte){
-      botPausado = true
-    }
-
-  }
+if(agora < pausaAte){
+console.log("BOT PAUSADO ATÉ:",pausaBot.pausado_ate)
+return res.status(200).end()
+}
 
 }
 
@@ -1061,51 +1061,9 @@ texto.includes("mesa") ||
 texto.includes("quero reservar")
 
 
-// 🔥 COLE EXATAMENTE AQUI
-if(querReservar){
 
-  console.log("📅 INTENÇÃO DE RESERVA DETECTADA")
 
-  const nome = nomeMemoria || "Cliente"
-  const pessoasMatch = mensagem.match(/\d+/)
-  const pessoas = pessoasMatch ? parseInt(pessoasMatch[0]) : 2
 
-  const dataHora = new Date()
-  dataHora.setHours(20,0,0)
-
-  const { error } = await supabase
-    .from("reservas_mercatto")
-    .insert({
-      nome: nome,
-      telefone: cliente,
-      pessoas: pessoas,
-      mesa: "Salão",
-      status: "Pendente",
-      datahora: dataHora.toISOString()
-    })
-
-  if(error){
-    console.log("❌ ERRO AO SALVAR RESERVA:", error)
-  }else{
-    console.log("✅ RESERVA SALVA")
-  }
-
-  await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to:cliente,
-      type:"text",
-      text:{ body:`✅ Reserva registrada para ${pessoas} pessoas às 20h.` }
-    })
-  })
-
-  return res.status(200).end()
-}
   
 /* ================= PEGAR JSON DO PEDIDO ================= */
 
@@ -2501,15 +2459,7 @@ await supabase
   message_id: message_id, // 🔥 ESSENCIAL
   status: "received"      // 🔥 ESSENCIAL
 })
-// 🔥 BLOQUEIO DE RESPOSTA AUTOMÁTICA
-if(botPausado){
-  console.log("🤖 BOT DESATIVADO → NÃO RESPONDE")
-  return res.status(200).end()
-}
 
-
-
-  
 if(querEndereco){
 
 const resposta = `📍 Estamos localizados em:
@@ -4380,7 +4330,7 @@ console.log("📦 PEDIDO FINAL:", pedido)
 
 /* ================= PROCESSAR ================= */
 
-if(false){
+if(pedido){
   // 🔥 VALIDAÇÃO AQUI
   if(!pedido?.dados?.itens){
     console.log("❌ PEDIDO SEM ITENS")
