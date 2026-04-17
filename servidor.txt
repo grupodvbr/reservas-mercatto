@@ -1,3 +1,147 @@
+NODE.JS
+
+
+rodar no terminal
+node -v
+npm -v
+✅ Node instalado → v24.15.0
+✅ NPM funcionando → v11.12.1
+
+
+
+
+mkdir servidor-mercatto
+cd servidor-mercatto
+
+
+
+
+npm init -y
+
+
+
+
+npm install express sqlite3 cors
+
+
+
+notepad server.js
+
+
+
+
+
+const express = require('express')
+const sqlite3 = require('sqlite3').verbose()
+const cors = require('cors')
+
+const app = express()
+app.use(cors())
+app.use(express.json())
+
+const db = new sqlite3.Database('./dados.db')
+
+// 🔥 CRIA TABELA AUTOMÁTICO
+db.run(`
+  CREATE TABLE IF NOT EXISTS cupons (
+    id TEXT PRIMARY KEY,
+    empresa TEXT,
+    valor REAL,
+    data TEXT
+  )
+`)
+
+// 🔹 ROTA TESTE
+app.get('/', (req,res)=>{
+  res.send("🚀 Servidor Mercatto rodando")
+})
+
+// 🔹 BUSCAR DADOS
+app.get('/cupons', (req,res)=>{
+  db.all("SELECT * FROM cupons ORDER BY data DESC", (err,rows)=>{
+    if(err) return res.json({erro:err})
+    res.json(rows)
+  })
+})
+
+// 🔹 INSERIR DADOS
+app.post('/cupons', (req,res)=>{
+  const { id, empresa, valor, data } = req.body
+
+  db.run(`
+    INSERT OR REPLACE INTO cupons (id,empresa,valor,data)
+    VALUES (?,?,?,?)
+  `,
+  [id,empresa,valor,data])
+
+  res.json({ok:true})
+})
+
+app.listen(3000, ()=>{
+  console.log("🔥 Servidor rodando na porta 3000")
+})
+
+
+
+
+
+node server.js
+
+
+
+
+http://localhost:3000
+
+
+
+
+
+
+
+.ENV
+
+cd servidor-mercatto
+
+
+
+
+
+
+
+criar envs
+notepad .env
+
+
+
+
+npm install dotenv
+
+
+TESTE DE .ENV
+node server.js
+
+
+
+USER: seu_login
+🔥 Servidor rodando na porta 3000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const express = require('express')
 const sqlite3 = require('sqlite3').verbose()
 const cors = require('cors')
