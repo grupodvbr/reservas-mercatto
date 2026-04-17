@@ -177,34 +177,62 @@ scroll-behavior:smooth;
 
 /* ===== INPUT ===== */
 .inputBox{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-display:flex;
-gap:8px;
-padding:10px;
-background:#f0f0f0;
-align-items:center;
-border-top:1px solid #ddd;
-z-index:10;
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:8px 10px;
+  background:#ffffff;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border-top:1px solid #eee;
 }
 
-/* TEXTAREA */
+/* container interno (bolha) */
+.inputBox .campo{
+  flex:1;
+  display:flex;
+  align-items:center;
+  background:#f1f3f4;
+  border-radius:25px;
+  padding:6px 8px;
+  gap:6px;
+}
+
+/* textarea */
 textarea{
   flex:1;
   border:none;
   outline:none;
-  border-radius:20px;
-  padding:12px 14px;
-  background:#f0f0f0;
-  font-size:15px;
+  background:transparent;
+  font-size:14px;
+  padding:6px;
   resize:none;
-  max-height:120px;
+  max-height:100px;
 }
 
-/* BOTÕES */
-button{
+/* botões pequenos (ícones) */
+.iconBtn{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:none;
+  background:transparent;
+  font-size:16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* hover leve */
+.iconBtn:hover{
+  background:#e5e7eb;
+}
+
+/* botão enviar */
+.sendBtn{
   width:42px;
   height:42px;
   border-radius:50%;
@@ -216,10 +244,9 @@ button{
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  transition:.2s;
 }
 
-button:hover{
+.sendBtn:hover{
   transform:scale(1.05);
 }
 
@@ -334,12 +361,21 @@ text-transform:uppercase;
 <div id="scrollBtn" class="scrollBtn" onclick="scrollBottom()">↓</div>
 
 <div class="inputBox">
+
 <input type="file" id="fileInput" hidden>
-<button onclick="fileInput.click()">📎</button>
-<button onclick="abrirTemplates()">📩</button>
-<button onclick="abrirGaleria()">🖼️</button>  
-<textarea id="msg" placeholder="Mensagem..."></textarea>
-<button onclick="enviar()">➤</button>
+
+<div class="campo">
+
+  <button class="iconBtn" onclick="fileInput.click()">📎</button>
+  <button class="iconBtn" onclick="abrirGaleria()">🖼️</button>
+  <button class="iconBtn" onclick="abrirTemplates()">📩</button>
+
+  <textarea id="msg" placeholder="Mensagem..."></textarea>
+
+</div>
+
+<button class="sendBtn" onclick="enviar()">➤</button>
+
 </div>
 
 <div id="preview" class="preview" style="display:none"></div>
