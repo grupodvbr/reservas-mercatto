@@ -116,7 +116,7 @@ padding-bottom:10px;
   max-height:72px;
 
   padding:8px 10px;
-
+  position:relative; /* 🔥 ESSENCIAL */
   background:white;
   margin:4px 8px;
   border-radius:10px;
@@ -642,8 +642,11 @@ margin-top:6px;
 
 .notificacao {
   position:absolute;
-  top:6px;
-  right:6px;
+
+  top:50%;
+  transform:translateY(-50%);
+
+  right:60px; /* 🔥 joga para dentro da conversa */
 
   width:10px;
   height:10px;
@@ -651,7 +654,7 @@ margin-top:6px;
 
   background:#ef4444;
 
-  border:2px solid white; /* 🔥 efeito premium */
+  border:2px solid white;
   z-index:5;
 
   animation:pulse 1s infinite;
