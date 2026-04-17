@@ -453,20 +453,24 @@ if ("Notification" in window) {
   
 const imagensGaleria = [
   {
-    nome: "Pizza Calabresa",
-    url: "https://via.placeholder.com/300x200"
+    nome: "Vídeo restaurante",
+    url: "https://ehxrrpsiksceljmhsfxk.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Video%202026-03-10%20at%2021.08.40.mp4",
+    tipo: "video"
   },
   {
-    nome: "Pizza Frango",
-    url: "https://via.placeholder.com/300x201"
+    nome: "Happy Hour",
+    url: "https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.27.52.jpeg",
+    tipo: "imagem"
   },
   {
-    nome: "Ambiente Interno",
-    url: "https://via.placeholder.com/300x202"
+    nome: "Rodízio Oriental",
+    url: "https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.03.jpeg",
+    tipo: "imagem"
   },
   {
     nome: "Rodízio Italiano",
-    url: "https://via.placeholder.com/300x203"
+    url: "https://dxkszikemntfusfyrzos.supabase.co/storage/v1/object/public/MERCATTO/WhatsApp%20Image%202026-04-02%20at%2010.28.26.jpeg",
+    tipo: "imagem"
   }
 ]
 
@@ -943,6 +947,11 @@ scrollBottom()
 
 msg.value=""
 msg.style.height = "20px"
+
+
+
+
+  
 /* MIDIA */
 let media=null
 let tipo="texto"
@@ -1105,13 +1114,25 @@ function abrirGaleria(){
     box.style.textAlign = "center"
     box.style.cursor = "pointer"
 
-    const img = document.createElement("img")
-    img.src = item.url
+let media
 
-    img.style.width = "70px"
-    img.style.height = "70px"
-    img.style.objectFit = "cover"
-    img.style.borderRadius = "8px"
+if(item.tipo === "video"){
+  media = document.createElement("video")
+  media.src = item.url
+  media.muted = true
+  media.autoplay = true
+  media.loop = true
+}else{
+  media = document.createElement("img")
+  media.src = item.url
+}
+
+media.style.width = "70px"
+media.style.height = "70px"
+media.style.objectFit = "cover"
+media.style.borderRadius = "8px"
+
+box.appendChild(media)
 
     const nome = document.createElement("div")
     nome.innerText = item.nome
@@ -1140,29 +1161,45 @@ function selecionarImagem(item){
 
   preview.style.display = "block"
 
-  preview.innerHTML = `
-    <img src="${item.url}" width="120" style="border-radius:8px"><br>
+ preview.innerHTML = item.tipo === "video" ? `
+  <video src="${item.url}" width="200" controls style="border-radius:8px"></video>
 
-    <div style="
-      font-size:13px;
-      margin-top:6px;
-      font-weight:500;
-    ">
-      ${item.nome}
-    </div>
+  <div style="margin-top:6px;font-size:13px;font-weight:500;">
+    ${item.nome}
+  </div>
 
-    <button onclick="enviarImagemGaleria()" style="
-      margin-top:10px;
-      width:100%;
-      border-radius:8px;
-      background:#25d366;
-      color:#fff;
-      padding:8px;
-      border:none;
-    ">
-      Enviar
-    </button>
-  `
+  <button onclick="enviarImagemGaleria()" style="
+    margin-top:10px;
+    width:100%;
+    border-radius:8px;
+    background:#25d366;
+    color:#fff;
+    padding:8px;
+    border:none;
+  ">
+    Enviar
+  </button>
+`
+:
+`
+  <img src="${item.url}" width="120" style="border-radius:8px">
+
+  <div style="margin-top:6px;font-size:13px;font-weight:500;">
+    ${item.nome}
+  </div>
+
+  <button onclick="enviarImagemGaleria()" style="
+    margin-top:10px;
+    width:100%;
+    border-radius:8px;
+    background:#25d366;
+    color:#fff;
+    padding:8px;
+    border:none;
+  ">
+    Enviar
+  </button>
+`
 }
 
 
@@ -1179,7 +1216,7 @@ async function enviarImagemGaleria(){
 
   const temp = {
     id: tempId,
-    tipo:"imagem",
+    tipo: imagemSelecionada.tipo,
     media_url:media,
     mensagem: legenda,
     created_at:new Date().toLocaleString("sv-SE").replace("T"," "),
@@ -1197,14 +1234,14 @@ async function enviarImagemGaleria(){
       telefone,
       mensagem: legenda,
       media_url: media,
-      tipo:"imagem"
+      tipo: imagemSelecionada.tipo
     })
   }).then(r=>r.json())
 
   await db.from("conversas_whatsapp").insert({
     telefone,
     mensagem: legenda,
-    tipo:"imagem",
+    tipo: imagemSelecionada.tipo,
     media_url: media,
     role:"assistant",
     message_id: send?.message_id,
