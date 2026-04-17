@@ -111,20 +111,18 @@ padding-bottom:10px;
   gap:10px;
   align-items:center;
 
-  background:white;
+  height:72px;          /* 🔥 ALTURA FIXA */
+  min-height:72px;
+  max-height:72px;
 
-  margin:4px 8px;
   padding:8px 10px;
 
+  background:white;
+  margin:4px 8px;
   border-radius:10px;
-
   border-bottom:1px solid #e5e7eb;
 
-  box-shadow:none;
-
-  cursor:pointer;
-  transition:.15s;
-  position:relative;
+  overflow:hidden;      /* 🔥 impede estourar */
 }
 
 .client:hover{
@@ -830,8 +828,7 @@ div.innerHTML = `
     style="width:100%;height:100%;border-radius:50%">
 </div>
 
-<div style="flex:1">
-
+<div style="flex:1; overflow:hidden">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
 <div class="phone">
       ${nomes[c.telefone] || c.telefone}
