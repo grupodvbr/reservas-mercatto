@@ -1422,8 +1422,14 @@ async function atualizarClientesSilencioso(){
       const nome = nomesTemp[c.telefone] || c.telefone
 
       /* 🔥 SE NÃO EXISTE → IGNORA (NÃO CRIA) */
-      if(!card) continue
+if(!card){
 
+  console.log("🆕 NOVO CLIENTE:", c.telefone)
+
+  carregarClientes() // recria lista
+
+  return
+}
 
 
 
@@ -1509,11 +1515,33 @@ window.addEventListener("pageshow", () => {
 
   console.log("⚡ Voltou para a tela")
 
-  // 🔥 NÃO recria tudo
-  // 🔥 só atualiza o que mudou
   atualizarClientesSilencioso()
 
 })
+
+db
+.channel("conversas_realtime")
+
+.on("postgres_changes",{
+  event:"INSERT",
+  schema:"public",
+  table:"conversas_whatsapp"
+}, payload => {
+
+  const nova = payload.new
+
+  console.log("📩 NOVA MENSAGEM:", nova)
+
+  atualizarClientesSilencioso()
+
+})
+
+.subscribe()
+
+
+
+
+
   
 </script>
 <div id="popupRepertorio" class="popupOverlay">
