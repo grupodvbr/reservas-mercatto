@@ -3526,7 +3526,7 @@ acao: "cadastrar",
 status: "Pendente",
 
 nome: reservaVip.nome,
-email: "",
+email: "otto@gmail.com",
 telefone: cliente,
 
 pessoas: parseInt(reservaVip.pessoas) || 1,
@@ -3722,7 +3722,7 @@ const {error} = await supabase
 .insert({
 
 nome:reserva.nome,
-email:"",
+email:"otto@gmail.com",
 telefone:cliente,
 pessoas: parseInt(reserva.pessoas) || 1,
 mesa:mesa,
