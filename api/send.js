@@ -1,11 +1,3 @@
-import fetch from "node-fetch"
-import { createClient } from "@supabase/supabase-js"
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE
-)
-
 export default async function handler(req, res){
 
   if(req.method !== "POST"){
@@ -14,38 +6,24 @@ export default async function handler(req, res){
 
   try{
 
-    /* ================= BODY SEGURO ================= */
-
-    const body = typeof req.body === "string"
-      ? JSON.parse(req.body)
-      : req.body
-
     const {
       telefone,
       mensagem,
       media_url,
       tipo,
       nome_arquivo
-    } = body || {}
-
-    /* ================= VALIDAÇÕES ================= */
+    } = req.body
 
     if(!telefone){
-      return res.status(400).json({
-        error: "Telefone obrigatório"
-      })
+      return res.status(400).json({ error: "Telefone obrigatório" })
     }
 
-    const telefoneFormatado = telefone.replace(/\D/g, "")
-
-    if(!telefoneFormatado){
-      return res.status(400).json({
-        error: "Telefone inválido"
-      })
-    }
+    /* ===============================
+       CONFIG WHATSAPP CLOUD API
+    =============================== */
 
     const TOKEN = process.env.WHATSAPP_TOKEN
-    const PHONE_ID = process.env.PHONE_NUMBER_ID
+    const PHONE_ID = process.env.WHATSAPP_PHONE_ID
 
     if(!TOKEN || !PHONE_ID){
       return res.status(500).json({
@@ -53,39 +31,34 @@ export default async function handler(req, res){
       })
     }
 
-    const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`
-
-    /* ================= MAPEAR TIPO ================= */
+    /* ===============================
+       MAPEAR TIPO
+    =============================== */
 
     const tipoMap = {
-      texto: "text",
       imagem: "image",
       video: "video",
       audio: "audio",
-      documento: "document"
+      documento: "document",
+      texto: "text"
     }
 
     const tipoConvertido = tipoMap[tipo] || "text"
 
-    /* ================= MONTAR PAYLOAD ================= */
+    /* ===============================
+       MONTA PAYLOAD
+    =============================== */
 
     let payload = {
       messaging_product: "whatsapp",
-      to: telefoneFormatado
+      to: telefone
     }
 
     // 📩 TEXTO
     if(!media_url){
-
-      if(!mensagem){
-        return res.status(400).json({
-          error: "Mensagem vazia não permitida"
-        })
-      }
-
       payload.type = "text"
       payload.text = {
-        body: mensagem
+        body: mensagem || ""
       }
     }
 
@@ -120,32 +93,33 @@ export default async function handler(req, res){
           filename: nome_arquivo || "arquivo"
         }
       }
+
     }
 
-    /* ================= LOG ================= */
+    /* ===============================
+       ENVIO PARA META
+    =============================== */
 
-    console.log("📤 PAYLOAD:", JSON.stringify(payload, null, 2))
-
-    /* ================= ENVIO META ================= */
-
-    const response = await fetch(url,{
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify(payload)
-    })
+    const response = await fetch(
+      `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    )
 
     const data = await response.json()
 
-    console.log("📩 META RESPONSE:", data)
-
-    /* ================= ERRO META ================= */
+    /* ===============================
+       TRATAMENTO DE ERRO
+    =============================== */
 
     if(!response.ok){
-
-      console.error("❌ ERRO WHATSAPP:", data)
+      console.error("ERRO WHATSAPP:", data)
 
       return res.status(400).json({
         error: "Erro ao enviar mensagem",
@@ -153,45 +127,25 @@ export default async function handler(req, res){
       })
     }
 
-    const messageId = data?.messages?.[0]?.id || null
+    /* ===============================
+       SUCESSO
+    =============================== */
 
-    /* ================= SALVAR NO BANCO ================= */
-
-    try{
-
-      await supabase
-      .from("conversas_whatsapp")
-      .insert({
-        telefone: telefoneFormatado,
-        mensagem: mensagem || "[MIDIA]",
-        tipo: tipo || "texto",
-        media_url,
-        nome_arquivo,
-        role: "assistant",
-        message_id: messageId,
-        status: "sent"
-      })
-
-    }catch(dbError){
-      console.error("⚠️ ERRO AO SALVAR NO BANCO:", dbError)
-    }
-
-    /* ================= SUCESSO ================= */
+    const messageId = data?.messages?.[0]?.id
 
     return res.status(200).json({
       success: true,
-      message_id: messageId,
-      data
+      message_id: messageId
     })
 
   }catch(e){
 
-    console.error("🔥 ERRO INTERNO COMPLETO:", e)
-    console.error("STACK:", e?.stack)
+    console.error("ERRO INTERNO:", e)
 
     return res.status(500).json({
       error: "Erro interno",
       details: e.message
     })
   }
+
 }
