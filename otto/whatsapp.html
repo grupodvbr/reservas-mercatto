@@ -131,7 +131,7 @@ padding-bottom:10px;
 }
 
 .client:hover{
-transform:scale(1.01);
+transform:none;
 }
 
 /* PAUSADO */
@@ -859,7 +859,7 @@ div.innerHTML = `
 
 </div>
 
-${c.role === "user" ? '<div class="notificacao"></div>' : ''}
+${c.role === "user" && c.mensagem ? '<div class="notificacao"></div>' : ''}
 
 <div class="menuDots"
 onclick="event.stopPropagation(); abrirMenu(event,'${c.telefone}')">
@@ -1455,16 +1455,21 @@ if(previewEl){
 // 🔴 CONTROLE DA BOLINHA (CORRETO)
 let notif = card.querySelector(".notificacao")
 
+// 🔥 só mostra bolinha se última mensagem for do cliente
 if(c.role === "user"){
+
   if(!notif){
     const dot = document.createElement("div")
     dot.className = "notificacao"
     card.appendChild(dot)
   }
+
 }else{
+
   if(notif){
     notif.remove()
   }
+
 }
 
 
