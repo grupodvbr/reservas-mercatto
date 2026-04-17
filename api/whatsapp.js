@@ -520,35 +520,7 @@ REGRAS CRÍTICAS DE CONVERSA
 - Seja natural e direto (como humano)
 `
 },
-{
-  role: "system",
-  content: `
-Você é o atendente do Mercatto Delícia.
 
-Se o cliente fizer um pedido de delivery:
-
-1. Responda normalmente confirmando o pedido
-2. E NO FINAL da resposta, gere EXATAMENTE isso:
-
-PEDIDO_DELIVERY_JSON: {
-  "nome": "",
-  "telefone": "",
-  "endereco": "",
-  "bairro": "",
-  "itens": [
-    { "nome": "", "preco": 0, "quantidade": 0 }
-  ],
-  "valor_total": 0,
-  "pagamento": "",
-  "obs": ""
-}
-
-REGRAS:
-- SEMPRE gerar esse JSON se for pedido
-- NÃO explicar o JSON
-- NÃO alterar o nome PEDIDO_DELIVERY_JSON
-`
-},
 
   
 {
@@ -1057,7 +1029,6 @@ reserva = reservas.find(r => {
 const querReservar =
 texto.includes("reserva") ||
 texto.includes("reservar") ||
-texto.includes("mesa") ||
 texto.includes("quero reservar")
 
 
@@ -2632,14 +2603,10 @@ const respostaLower = (resposta || "").toLowerCase()
 
 
 const ehAcaoDireta =
-querCancelar ||
-confirmouPedido ||
 querReservar ||
-pedidoJSON ||
 texto.includes("confirmar") ||
 texto.includes("cancelar") ||
-texto.includes("reservar") ||
-texto.includes("pedir")
+texto.includes("reservar") 
 
 
 
