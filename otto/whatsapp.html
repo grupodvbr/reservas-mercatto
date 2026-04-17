@@ -49,11 +49,14 @@ body{
   overflow:hidden;
 }
 
-/* 🔥 MOBILE LIBERA SCROLL */
+/* 🔥 MOBILE CORRETO */
 @media (max-width:768px){
+
   body{
+    display:block; /* 🔥 ESSENCIAL */
     overflow:auto;
   }
+
 }
 
 /* ================= SIDEBAR ================= */
@@ -1406,12 +1409,22 @@ async function atualizarClientesSilencioso(){
     })
 
     /* agrupar */
-    const map = {}
-    data.forEach(m=>{
-      if(!map[m.telefone]) map[m.telefone] = m
-    })
+const map = {}
 
-    const clientes = Object.values(map)
+data.forEach(m=>{
+
+  if(
+    !map[m.telefone] ||
+    new Date(m.created_at) > new Date(map[m.telefone].created_at)
+  ){
+    map[m.telefone] = m
+  }
+
+})
+
+const clientes = Object.values(map).sort((a,b)=>{
+  return new Date(b.created_at) - new Date(a.created_at)
+})
 
     /* 🔥 LOOP CORRETO (SEM forEach async) */
     for(const c of clientes){
