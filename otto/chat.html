@@ -1123,8 +1123,7 @@ imagensGaleria.forEach(item => {
   nome.style.marginTop = "3px"
   nome.style.color = "#333"
 
-  box.onclick = () => selecionarImagem(item)
-
+box.onclick = () => enviarDiretoGaleria(item)
   box.appendChild(media)
   box.appendChild(nome)
 
@@ -1136,54 +1135,42 @@ imagensGaleria.forEach(item => {
 
 /* ===== SELEÇÃO ===== */
 
-function selecionarImagem(item){
 
-  imagemSelecionada = item
+async function enviarDiretoGaleria(item){
 
-  preview.style.display = "block"
+  if(!telefone) return
 
- preview.innerHTML = item.tipo === "video" ? `
-  <video src="${item.url}" width="200" controls style="border-radius:8px"></video>
+  const tempId = "temp-"+Date.now()
 
-  <div style="margin-top:6px;font-size:13px;font-weight:500;">
-    ${item.nome}
-  </div>
+  const temp = {
+    id: tempId,
+    tipo: item.tipo,
+    media_url: item.url,
+    mensagem: item.nome,
+    created_at:new Date().toLocaleString("sv-SE").replace("T"," "),
+    role:"assistant",
+    status:"sent"
+  }
 
-  <button onclick="enviarImagemGaleria()" style="
-    margin-top:10px;
-    width:100%;
-    border-radius:8px;
-    background:#25d366;
-    color:#fff;
-    padding:8px;
-    border:none;
-  ">
-    Enviar
-  </button>
-`
-:
-`
-  <img src="${item.url}" width="120" style="border-radius:8px">
+  render(temp)
+  scrollBottom()
 
-  <div style="margin-top:6px;font-size:13px;font-weight:500;">
-    ${item.nome}
-  </div>
+  // fecha galeria
+  document.getElementById("galeria").style.display = "none"
 
-  <button onclick="enviarImagemGaleria()" style="
-    margin-top:10px;
-    width:100%;
-    border-radius:8px;
-    background:#25d366;
-    color:#fff;
-    padding:8px;
-    border:none;
-  ">
-    Enviar
-  </button>
-`
+  // envia API
+  const send = await fetch("/api/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telefone,
+      mensagem: item.nome,
+      media_url: item.url,
+      tipo: item.tipo
+    })
+  }).then(r=>r.json())
+
 }
-
-
 /* ===== ENVIO ===== */
 
 async function enviarImagemGaleria(){
