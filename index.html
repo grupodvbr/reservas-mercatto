@@ -739,37 +739,28 @@ function ativarDuploCliqueIframe(){
 
     let lastTap = 0;
 
-    doc.addEventListener("touchend", function(){
+    function detectar(){
 
       const agora = new Date().getTime();
       const diff = agora - lastTap;
 
       if(diff < 300){
-        mostrarBolinha();
+        toggleMobileMenu(); // 🔥 ABRE MENU DIRETO
       }
 
       lastTap = agora;
+    }
 
-    });
+    // mobile
+    doc.addEventListener("touchend", detectar);
 
-    doc.addEventListener("dblclick", function(){
-      mostrarBolinha();
-    });
+    // desktop
+    doc.addEventListener("dblclick", detectar);
 
   };
 
-}function mostrarBolinha(){
-
-  const btn = document.querySelector(".menu-float-btn");
-
-  btn.style.display = "flex";
-
-  // 🔥 opcional: esconder depois de 3s
-  setTimeout(()=>{
-    btn.style.display = "none";
-  },3000);
-
 }
+
 
 
 
