@@ -1,508 +1,564 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
 
+<meta name="theme-color" content="#020617">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prompts IA">
+
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta charset="UTF-8">
-<title>OTTAVIO SYSTEM • Controle Total da Sua Empresa</title>
-
+<title>GRUPO DV - MERCATTO DELÍCIA</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-
-  
-/* ===== BASE ===== */
 :root{
---bg:#f8fafc;
---card:#ffffff;
---border:#e2e8f0;
+  --bg:#f8fafc;
+  --bg-2:#f1f5f9;
 
---text:#0f172a;
---muted:#64748b;
+  --primary:#2563eb;
+  --primary-soft:#e0e7ff;
 
---primary:#2563eb;
---primary-dark:#1e40af;
---success:#16a34a;
---danger:#dc2626;
+  --text:#0f172a;
+  --text-muted:#64748b;
 
---radius:18px;
+  --border:#e5e7eb;
+
+  --sidebar:#ffffff;
+  --header:#ffffff;
+
+  --shadow:0 8px 25px rgba(0,0,0,.08);
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+}
 
 body{
-font-family:Inter;
-background:var(--bg);
-color:var(--text);
+  min-height:100vh;
+  background:var(--bg);
+  overflow:auto;
 }
 
-/* ===== HEADER ===== */
-.header{
-position:sticky;
-top:0;
-background:#fff;
-border-bottom:1px solid var(--border);
-padding:16px 40px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-z-index:10;
+.app{
+  display:flex;
+  height:100vh;
+  width:100vw;
 }
 
-.logo{
-font-weight:900;
-font-size:20px;
+/* ===================== SIDEBAR ===================== */
+.nav-hover-zone{
+  position:fixed;
+  left:0;
+  top:0;
+  width:14px;
+  height:100vh;
+  z-index:50;
 }
 
-.cta-top{
-background:var(--primary);
-color:#fff;
-padding:10px 16px;
-border-radius:10px;
-font-weight:600;
-cursor:pointer;
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  width:260px;
+  height:100vh;
+
+  background:var(--sidebar);
+
+  border-right:1px solid var(--border);
+
+  display:flex;
+  flex-direction:column;
+
+  transform:translateX(-260px);
+  transition:.25s ease;
+  z-index:60;
 }
 
-/* ===== HERO ===== */
-.hero{
-display:flex;
-gap:40px;
-padding:70px 40px;
-align-items:center;
+
+
+/* MOBILE */
+.sidebar{
+  transform:translateX(-260px);
+  transition:.25s ease;
 }
 
-.hero-left{
-flex:1;
-}
-
-.hero-title{
-font-size:48px;
-font-weight:900;
-line-height:1.1;
-}
-
-.hero-title span{
-color:var(--primary);
-}
-
-.hero-desc{
-margin-top:20px;
-color:var(--muted);
-max-width:520px;
-font-size:16px;
-}
-
-.hero-cta{
-margin-top:30px;
-display:flex;
-gap:10px;
-}
-
-.btn{
-padding:14px 20px;
-border-radius:12px;
-border:none;
-cursor:pointer;
-font-weight:600;
-}
-
-.btn-primary{
-background:var(--primary);
-color:#fff;
-}
-
-.btn-secondary{
-background:#fff;
-border:1px solid var(--border);
-}
-
-/* ===== LOGIN ===== */
-.login{
-width:380px;
-background:#fff;
-border:1px solid var(--border);
-border-radius:18px;
-padding:25px;
-box-shadow:0 20px 60px rgba(0,0,0,.08);
-}
-
-.login h2{
-margin-bottom:15px;
-}
-
-input{
-width:100%;
-padding:12px;
-margin-bottom:10px;
-border-radius:10px;
-border:1px solid var(--border);
-}
-
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:var(--primary);
-color:#fff;
-font-weight:700;
-cursor:pointer;
-}
-
-.error{
-color:var(--danger);
-font-size:13px;
-margin-top:10px;
-}
-
-/* ===== SECTIONS ===== */
-.section{
-padding:70px 40px;
-}
-
-.section h3{
-font-size:30px;
-margin-bottom:30px;
-}
-
-/* ===== GRID ===== */
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-gap:20px;
-}
-
-/* ===== CARD ===== */
-.card{
-background:#fff;
-border:1px solid var(--border);
-border-radius:16px;
-padding:24px;
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-8px);
-box-shadow:0 20px 60px rgba(0,0,0,.08);
-}
-
-.card b{
-display:block;
-font-size:18px;
-margin-bottom:10px;
-}
-
-.card span{
-font-size:14px;
-color:var(--muted);
-line-height:1.5;
-}
-
-/* ===== BENEFITS ===== */
-.benefits{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:20px;
-}
-
-.benefit{
-background:#fff;
-border:1px solid var(--border);
-padding:24px;
-border-radius:16px;
-text-align:center;
-}
-
-/* ===== CTA FINAL ===== */
-.cta{
-background:linear-gradient(135deg,#2563eb,#1e40af);
-color:#fff;
-padding:60px;
-border-radius:20px;
-text-align:center;
-}
-
-.cta h3{
-font-size:32px;
-margin-bottom:15px;
-}
-
-.cta p{
-opacity:.9;
-margin-bottom:20px;
-}
-
-/* ===== FOOTER ===== */
-.footer{
-padding:40px;
-text-align:center;
-font-size:13px;
-color:var(--muted);
+.sidebar.open{
+  transform:translateX(0);
 }
 
 /* MOBILE */
-@media(max-width:900px){
-.hero{
-flex-direction:column;
-}
-.login{
-width:100%;
-}
-.benefits{
-grid-template-columns:1fr;
-}
+@media(max-width:768px){
+  .nav-hover-zone{display:none}
+  .sidebar{transform:translateX(-100%)}
 }
 
+/* ===================== LOGO ===================== */
+.logo-area{
+  padding:20px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+
+.logo-area img{
+  width:150px;
+}
+
+/* ===================== MENU ===================== */
+.menu{
+  padding:12px;
+  overflow-y:auto;
+}
+
+.menu-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  padding:12px 14px;
+  margin:6px 0;
+
+  font-size:14px;
+  color:var(--text);
+
+  border-radius:10px;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.menu-item img{
+  width:18px;
+  opacity:.6;
+}
+
+.menu-item:hover{
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+
+.menu-item.active{
+  background:var(--primary-soft);
+  border-left:4px solid var(--primary);
+  color:var(--primary);
+  font-weight:700;
+}
+
+/* SUBMENU */
+.submenu{
+  display:none;
+  margin:6px 0 12px 48px;
+}
+
+.submenu a{
+  display:block;
+  padding:8px 10px;
+  font-size:13px;
+  color:var(--text-muted);
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.submenu a:hover{
+  background:#f1f5f9;
+  color:var(--primary);
+}
+
+.submenu a.active-sub{
+  background:#eef2ff;
+  color:var(--primary);
+  font-weight:600;
+}
+
+/* ===================== MAIN ===================== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+/* ===================== HEADER ===================== */
+.header{
+  height:60px;
+  background:var(--header);
+  border-bottom:1px solid var(--border);
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:0 20px;
+
+  box-shadow:var(--shadow);
+}
+
+.logo-title{
+  font-size:18px;
+  font-weight:800;
+  color:var(--primary);
+  letter-spacing:1px;
+}
+
+.user-area{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size:13px;
+  color:var(--text-muted);
+}
+
+.logout{
+  cursor:pointer;
+  font-weight:700;
+  color:var(--primary);
+}
+
+.logout:hover{
+  opacity:.8;
+}
+
+/* MOBILE BUTTON */
+.menu-mobile-btn{
+  display:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--primary);
+}
+
+@media(max-width:768px){
+  .menu-mobile-btn{
+    display:block;
+  }
+}
+
+/* ===================== IFRAME ===================== */
+iframe{
+  border:none;
+  width:100%;
+  height:calc(100vh - 60px);
+  background:var(--bg);
+}
+
+/* ===================== SCROLL ===================== */
+.menu::-webkit-scrollbar{
+  width:6px;
+}
+
+.menu::-webkit-scrollbar-thumb{
+  background:#cbd5f5;
+  border-radius:10px;
+}
+
+
+
+
+
+
+.logo-text{
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.5px;
+
+  color:var(--primary);
+
+  text-align:center;
+  line-height:1.2;
+}
+
+.
+.menu-indicator:hover{
+  background:#1d4ed8;
+}
+
+.sidebar.open + .menu-indicator{
+  background: rgba(37, 99, 235, 0.9);
+}
+
+
+
+
+.btn-voltar{
+  width:36px;
+  height:36px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:var(--primary-soft);
+  color:var(--primary);
+
+  font-size:18px;
+  font-weight:800;
+
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btn-voltar:hover{
+  background:var(--primary);
+  color:#fff;
+}
+
+.menu-mobile-btn{
+  width:40px;
+  height:40px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:#ffffff;
+  color:#000;
+
+  font-size:22px;
+
+  cursor:pointer;
+  transition:.2s;
+
+  box-shadow:0 6px 18px rgba(0,0,0,.15);
+}
+
+.menu-mobile-btn:hover{
+  transform:scale(1.05);
+  background:#f1f5f9;
+}
+
+.overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(3px);
+
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+
+  z-index:55;
+}
+
+.overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
 </style>
 </head>
 
 <body>
+<div class="app">
 
-<!-- HEADER -->
+  <div class="nav-hover-zone"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-text">
+        MERCATTO DELÍCIA
+      </div>
+    </div>
+
+<div class="menu">
+
+  <!-- DASHBOARD -->
+  <div class="menu-item" onclick="openPage('inicio/dashboard.html')" data-page="inicio/dashboard.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/dashboard-line.svg">
+    Dashboard
+  </div>
+
+     
+  <!-- Operacional -->
+  <div class="menu-item" onclick="toggleSub('sub_encontrar')">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-3-line.svg">
+    Operacional
+  </div>
+
+  <div class="submenu" id="sub_encontrar">
+    <a onclick="openPage('restaurante/administracao/requisicoesrecebidas.html')" data-page="buscar.html">Requisições de mercadorias</a>
+    <a onclick="openPage('ferramentas/apresentacoes/links.html')" data-page="ferramentas/apresentacoes/links.html">Links</a>
+    <a onclick="openPage('ferramentas/producao/analisedepercas.html')" data-page="ferramentas/apresentacoes/links.html">Trocas</a>
+    <a onclick="openPage('ferramentas/producao/analisebuffet.html')" data-page="ferramentas/producao/analisebuffet.html">Buffet</a>
+  </div>
+
+  <!-- WHATSAPP -->
+  <div class="menu-item" onclick="openPage('otto/whatsapp.html')" data-page="otto/whatsapp.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Logos/whatsapp-line.svg">
+    WhatsApp
+  </div>
+
+  <!-- FICHA TECNICA -->
+  <div class="menu-item" onclick="toggleSub('sub_ficha')">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Document/book-open-line.svg">
+    Ficha técnica
+  </div>
+
+  <div class="submenu" id="sub_ficha">
+    <a onclick="openPage('restaurante/fichas.html')" data-page="restaurante/fichas.html">Fichas</a>
+    <a onclick="openPage('relatórios/caderno.html')" data-page="relatórios/caderno.html">Livro de receitas</a>
+    <a onclick="openPage('relatórios/historico.html')" data-page="relatórios/historico.html">Histórico</a>
+    <a onclick="openPage('restaurante/relatorios/homerelatorios.html')" data-page="restaurante/relatorios/homerelatorios.html">Relatórios</a>
+
+  </div>
+
+
+  <!-- RESTAURANTE -->
+<div class="menu-item" onclick="toggleSub('sub_monitorar')">
+  <i class="ri-restaurant-line"></i>
+  Restaurante
+</div>
+
+  <div class="submenu" id="sub_monitorar">
+    <a onclick="openPage('restaurante/reservas.html')" data-page="restaurante/reservas.html">Reservas de mesas</a>
+    <a onclick="openPage('restaurante/agendacantores.html')" data-page="restaurante/agendacantores.html">Agenda de cantores</a>
+    <a onclick="openPage('restaurante/administracao/cardapiodigital/config.html')" data-page="restaurante/administracao/cardapiodigital/config.html">Mídias do Carápio</a>
+    <a onclick="openPage('restaurante/administracao/aprendizadobot.html')" data-page="restaurante/administracao/aprendizadobot.html">Aprendizado OTTO</a>
+    
+  </div>
+
+  <!-- AGENTE -->
+<div class="menu-item" onclick="openPage('otto/agente.html')" data-page="otto/agente.html">
+  <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Device/cpu-line.svg">
+  Agente de IA
+</div>
+     
+  <!-- APP / SISTEMA -->
+  <div class="menu-item" onclick="openPage('ferramentas/aplicativos.html')" data-page="ferramentas/aplicativos.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/apps-2-line.svg">
+    Aplicativos
+  </div>
+     
+  <!-- CONFIG -->
+  <div class="menu-item" onclick="openPage('sistema/configuracoes.html')" data-page="sistema/configuracoes.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-4-line.svg">
+    Configurações
+  </div>
+
+</div>
+  </div>
+
+<div class="overlay" onclick="toggleMobileMenu()"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+
 <div class="header">
-<div class="logo">OTTAVIO SYSTEM</div>
-<div class="cta-top">Começar agora</div>
+
+  <div style="display:flex;align-items:center;gap:10px">
+
+    <!-- MENU (AGORA PRIMEIRO) -->
+<div class="menu-mobile-btn" onclick="toggleMobileMenu()">
+  <i class="ri-arrow-right-line"></i>
 </div>
 
-<!-- HERO -->
-<div class="hero">
+    <!-- VOLTAR
+    <div class="btn-voltar" onclick="voltarPagina()">
+      ←
+    </div>
+-->
+  </div>
 
-<div class="hero-left">
-
-<div class="hero-title">
-Pare de perder dinheiro na sua operação.<br>
-<span>Tenha controle total.</span>
-</div>
-
-<div class="hero-desc">
-O OTTAVIO SYSTEM integra atendimento, pedidos, delivery e automação em um único sistema.  
-Você vende mais, erra menos e ganha escala.
-</div>
-
-<div class="hero-cta">
-
-<button class="btn btn-primary">
-Ver como funciona
-</button>
-
-<button class="btn btn-secondary">
-Explorar recursos
-</button>
-
-<button class="btn btn-secondary" onclick="scrollToLogin()">
-Login
-</button>
+  <div class="user-area">
+    <span id="userMail"></span>
+    <span class="logout" onclick="logout()">SAIR</span>
+  </div>
 
 </div>
 
-</div>
-
-<!-- LOGIN -->
-<div class="login">
-
-<h2>Acessar sistema</h2>
-
-<input id="email" placeholder="Email">
-<input id="senha" type="password" placeholder="Senha">
-
-<button onclick="login()">Entrar</button>
-
-<div onclick="recuperar()" style="margin-top:10px;font-size:13px;color:#64748b;cursor:pointer">
-Esqueci minha senha
-</div>
-
-<div id="erro" class="error"></div>
-
-</div>
-
-</div>
-
-<!-- PRODUTOS -->
-<div class="section">
-
-<h3>Uma plataforma, todos os sistemas que você precisa</h3>
-
-<div class="grid">
-
-<div class="card">
-<b>🤖 Atendimento Inteligente</b>
-<span>Responda clientes automaticamente no WhatsApp e aumente suas vendas sem precisar de mais funcionários.</span>
-</div>
-
-<div class="card">
-<b>🛵 Delivery Completo</b>
-<span>Receba pedidos, acompanhe status e organize sua operação de delivery sem erros.</span>
-</div>
-
-<div class="card">
-<b>📊 Dashboard em Tempo Real</b>
-<span>Veja exatamente o que está acontecendo na sua empresa agora.</span>
-</div>
-
-<div class="card">
-<b>🛒 Gestão de Pedidos</b>
-<span>Controle todos os pedidos do início ao fim com organização total.</span>
-</div>
-
-<div class="card">
-<b>📲 Integração com WhatsApp</b>
-<span>Centralize toda comunicação com seus clientes.</span>
-</div>
-
-<div class="card">
-<b>⚙️ Automação Total</b>
-<span>Reduza trabalho manual e elimine erros operacionais.</span>
-</div>
-
-</div>
-
-</div>
-
-<!-- BENEFÍCIOS -->
-<div class="section">
-
-<h3>Por que empresas estão migrando para o OTTAVIO SYSTEM?</h3>
-
-<div class="benefits">
-
-<div class="benefit">📈 Aumenta vendas automaticamente</div>
-<div class="benefit">⏱ Economiza tempo operacional</div>
-<div class="benefit">💰 Reduz erros e prejuízos</div>
-<div class="benefit">📊 Controle total da operação</div>
-<div class="benefit">🤖 Automação inteligente</div>
-<div class="benefit">🚀 Escala seu negócio</div>
-
-</div>
-
-</div>
-
-<!-- CTA FINAL -->
-<div class="section">
-<div class="cta">
-
-<h3>Pronto para transformar sua empresa?</h3>
-
-<p>Entre agora e tenha controle total da sua operação.</p>
-
-<button class="btn btn-primary">Começar agora</button>
-
+<iframe id="frame" src="inicio/dashboard.html"></iframe>
 </div>
 </div>
 
-<!-- FOOTER -->
-<div class="footer">
-© OTTAVIO SYSTEM • Plataforma Inteligente
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-
-/* ===== CONFIG ===== */
-const SUPABASE = window.supabase.createClient(
-  "https://fcehmjmtxqmrjkuqlkay.supabase.co",
-  "sb_publishable_iCDWHsq6EguNauQPP49JCg_jUNcz30o"
+const supabaseClient=supabase.createClient(
+"https://mblvyircwsaxaslklzky.supabase.co",
+"sb_publishable_oN2CuBzXHaUF7NHYS_M7aw_tBqVeD-x"
 );
 
-/* ===== LOGIN REAL ===== */
-async function login(){
-
-const email = document.getElementById('email').value.trim();
-const senha = document.getElementById('senha').value.trim();
-const erro = document.getElementById('erro');
-
-erro.innerText = "";
-
-/* validação básica */
-if(!email || !senha){
-erro.innerText = "Preencha email e senha";
-return;
+function toggleSub(id){
+const el=document.getElementById(id);
+el.style.display=el.style.display==="block"?"none":"block";
 }
 
-/* LOGIN SUPABASE */
-const { data, error } = await SUPABASE.auth.signInWithPassword({
-email,
-password: senha
-});
+function toggleMobileMenu(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
 
-if(error){
-erro.innerText = "Email ou senha inválidos";
-return;
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("active");
+
+  localStorage.setItem("menuAberto", sidebar.classList.contains("open"));
 }
 
-/* sessão salva automaticamente pelo Supabase */
 
-/* BUSCAR EMPRESA */
-const { data: empresa, error: erroEmpresa } = await SUPABASE
-.from('empresas')
-.select('*')
-.eq('email', email)
-.single();
+function openPage(page){
+  document.getElementById("frame").src = page;
 
-if(erroEmpresa || !empresa){
-erro.innerText = "Empresa não encontrada";
-return;
+  localStorage.setItem("paginaAtual", page);
+
+  highlightMenu(page);
+
+  // 🔥 FECHA SEMPRE (desktop + mobile)
+  document.querySelector(".sidebar").classList.remove("open");
+  document.querySelector(".overlay").classList.remove("active");
 }
 
-/* STATUS */
-if(empresa.status !== 'ativo'){
-erro.innerText = "Acesso bloqueado";
-return;
+function highlightMenu(page){
+document.querySelectorAll(".menu-item").forEach(i=>i.classList.remove("active"));
+document.querySelectorAll(".submenu a").forEach(i=>i.classList.remove("active-sub"));
+const sub=document.querySelector(`a[data-page="${page}"]`);
+if(sub){
+sub.classList.add("active-sub");
+sub.closest(".submenu").previousElementSibling.classList.add("active");
+sub.closest(".submenu").style.display="block";
+}
 }
 
-/* SALVAR CONFIG DINÂMICA */
-localStorage.setItem("SUPABASE_URL", empresa.supabase_url);
-localStorage.setItem("SUPABASE_KEY", empresa.supabase_anon_key);
-localStorage.setItem("EMPRESA_ID", empresa.id);
-
-/* REDIRECIONA */
-window.location.href = "home.html";
-
+function logout(){
+localStorage.removeItem("usuarioEmail");
+location.href="login.html";
 }
 
-/* ===== RECUPERAR SENHA ===== */
-async function recuperar(){
+window.onload = function(){
 
-const email = document.getElementById('email').value;
+  const paginaSalva = localStorage.getItem("paginaAtual");
 
-if(!email){
-alert("Digite o email");
-return;
-}
-
-const { error } = await SUPABASE.auth.resetPasswordForEmail(email,{
-redirectTo: window.location.origin + "/reset.html"
-});
-
-if(error){
-alert("Erro ao enviar email");
-return;
-}
-
-alert("Email enviado com sucesso");
+  if(paginaSalva){
+    document.getElementById("frame").src = paginaSalva;
+    highlightMenu(paginaSalva);
+  }
 
 }
 
-/* ===== SCROLL LOGIN ===== */
-function scrollToLogin(){
-document.querySelector('.login').scrollIntoView({
-behavior: 'smooth'
-});
+
+function voltarPagina(){
+  const frame = document.getElementById("frame");
+  frame.contentWindow.history.back();
 }
-
-/* ===== AUTO LOGIN (SE JÁ LOGADO) ===== */
-async function checkSession(){
-
-const { data } = await SUPABASE.auth.getSession();
-
-if(data.session){
-window.location.href = "home.html";
-}
-
-}
-
-checkSession();
-
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("SW registrado"))
+    .catch(err => console.log("Erro SW", err));
+}
+</script>
 </body>
 </html>
