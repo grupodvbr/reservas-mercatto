@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>Painel Colaborador</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+/* BASE */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+
+body{
+  background:#f1f5f9;
+  color:#0f172a;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* HEADER */
+.header{
+  height:56px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.title{font-weight:700}
+.status{font-size:12px;color:#22c55e}
+
+/* CONTAINER */
+.container{
+  position:absolute;
+  top:56px;
+  bottom:0;
+  left:0;
+  right:0;
+
+  overflow:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.container::-webkit-scrollbar{display:none}
+
+/* CARD */
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+}
+
+.card-title{
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+/* RESERVA */
+.reserva{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+  margin-bottom:6px;
+  font-size:13px;
+}
+
+.nome{font-weight:600}
+.info{font-size:12px;color:#64748b}
+
+/* STATUS */
+.tag{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:20px;
+  margin-top:4px;
+  display:inline-block;
+}
+
+.confirmado{background:#dcfce7;color:#16a34a}
+.pendente{background:#fef3c7;color:#d97706}
+.cancelado{background:#fee2e2;color:#dc2626}
+
+/* AVISOS */
+.aviso{
+  background:#fef3c7;
+  padding:10px;
+  border-radius:10px;
+  font-size:13px;
+}
+
+/* NORMA */
+.norma{
+  font-size:13px;
+  padding:6px 0;
+  border-bottom:1px solid #f1f5f9;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="title">Painel Colaborador</div>
+  <div class="status">● Atualizando</div>
+</div>
+
+<div class="container">
+
+  <!-- RESERVAS HOJE -->
+  <div class="card">
+    <div class="card-title">📅 Reservas de Hoje</div>
+    <div id="reservasHoje"></div>
+  </div>
+
+  <!-- PROXIMAS -->
+  <div class="card">
+    <div class="card-title">⏳ Próximas Reservas</div>
+    <div id="proximas"></div>
+  </div>
+
+  <!-- AVISOS -->
+  <div class="card">
+    <div class="card-title">📢 Avisos</div>
+    <div class="aviso">Casa cheia hoje no jantar</div>
+    <div class="aviso">Reforçar equipe às 20h</div>
+  </div>
+
+  <!-- NORMAS -->
+  <div class="card">
+    <div class="card-title">📋 Normas</div>
+    <div class="norma">Uso obrigatório de uniforme</div>
+    <div class="norma">Proibido celular no atendimento</div>
+    <div class="norma">Conferir pedidos antes de servir</div>
+  </div>
+
+</div>
+
+<script>
+
+// 🔥 CONEXÃO SUPABASE (USA SUA MESMA)
+const supabase = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+// 🔥 FORMATAR DATA
+function formatarHora(data){
+  const d = new Date(data);
+  return d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+}
+
+// 🔥 STATUS VISUAL
+function statusClass(status){
+  if(status?.toLowerCase().includes("conclu")) return "confirmado";
+  if(status?.toLowerCase().includes("pend")) return "pendente";
+  return "cancelado";
+}
+
+// 🔥 RENDER
+function renderReserva(r){
+
+  return `
+  <div class="reserva">
+    <div class="nome">${r.nome}</div>
+    <div class="info">
+      ${formatarHora(r.datahora)} • ${r.pessoas} pessoas • ${r.mesa || "Sem mesa"}
+    </div>
+    <div class="tag ${statusClass(r.status)}">${r.status}</div>
+  </div>
+  `;
+}
+
+// 🔥 CARREGAR DADOS
+async function carregar(){
+
+  const hoje = new Date();
+  const inicio = new Date(hoje.setHours(0,0,0,0)).toISOString();
+  const fim = new Date(hoje.setHours(23,59,59,999)).toISOString();
+
+  // HOJE
+  const { data: hojeData } = await supabase
+  .from("reservas_mercatto")
+  .select("*")
+  .gte("datahora", inicio)
+  .lte("datahora", fim)
+  .order("datahora",{ascending:true});
+
+  // FUTURO
+  const { data: futuras } = await supabase
+  .from("reservas_mercatto")
+  .select("*")
+  .gt("datahora", new Date().toISOString())
+  .order("datahora",{ascending:true})
+  .limit(10);
+
+  // RENDER
+  document.getElementById("reservasHoje").innerHTML =
+    hojeData?.map(renderReserva).join("") || "Sem reservas";
+
+  document.getElementById("proximas").innerHTML =
+    futuras?.map(renderReserva).join("") || "Sem próximas reservas";
+
+}
+
+// 🔥 AUTO LOAD
+carregar();
+
+// 🔥 AUTO ATUALIZA
+setInterval(carregar, 30000);
+
+</script>
+
+</body>
+</html>
