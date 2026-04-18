@@ -22,7 +22,7 @@ body{
   font-family:Inter;
   background:#e5ddd5;
 
-  height:100dvh;
+  height:var(--vh);
   overflow:hidden;
 
   position:fixed;
@@ -614,7 +614,15 @@ e.preventDefault()
 enviar()
 }
 })
+const input = document.getElementById("msg");
 
+input.addEventListener("focus", () => {
+  document.body.style.position = "fixed";
+});
+
+input.addEventListener("blur", () => {
+  document.body.style.position = "fixed";
+});
 
 
   /* 🔒 BLOQUEIO TOTAL DE ZOOM MOBILE */
@@ -654,6 +662,14 @@ behavior: "smooth"
 }, 50)
 
 }
+
+function travarTela(){
+  const altura = window.innerHeight;
+  document.documentElement.style.setProperty('--vh', altura + 'px');
+}
+
+window.addEventListener('load', travarTela);
+window.addEventListener('resize', travarTela);
 </script>
 
 </body>
