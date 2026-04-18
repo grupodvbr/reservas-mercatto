@@ -7,16 +7,17 @@
 
 <title>Dashboard OTTO</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
 /* RESET */
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 
+/* BASE */
 body{
-  background:#0f172a;
-  color:#fff;
+  background:#f1f5f9;
+  color:#0f172a;
   height:100vh;
   overflow:hidden;
 }
@@ -28,8 +29,8 @@ body{
   align-items:center;
   justify-content:space-between;
   padding:0 16px;
-  background:#020617;
-  border-bottom:1px solid rgba(255,255,255,.05);
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
 }
 
 .title{
@@ -58,15 +59,14 @@ body{
   gap:14px;
 }
 
-/* SCROLL HIDDEN */
 .container::-webkit-scrollbar{display:none}
 
-/* CARDS */
+/* CARD */
 .card{
-  background:#020617;
-  border:1px solid rgba(255,255,255,.05);
+  background:#ffffff;
   border-radius:14px;
   padding:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
 }
 
 /* KPI GRID */
@@ -77,27 +77,20 @@ body{
 }
 
 .kpi{
-  background:linear-gradient(145deg,#020617,#0f172a);
-  border-radius:12px;
   padding:12px;
+  border-radius:12px;
+  background:#f8fafc;
 }
 
 .kpi-title{
   font-size:11px;
-  color:#94a3b8;
+  color:#64748b;
 }
 
 .kpi-value{
   font-size:18px;
   font-weight:700;
   margin-top:4px;
-}
-
-/* ANALISE */
-.analysis{
-  font-size:13px;
-  line-height:1.4;
-  color:#cbd5f5;
 }
 
 /* STATUS */
@@ -109,9 +102,16 @@ body{
   font-weight:600;
 }
 
-.ok{background:#16a34a33;color:#22c55e}
-.warn{background:#f59e0b33;color:#facc15}
-.bad{background:#ef444433;color:#ef4444}
+.ok{background:#dcfce7;color:#16a34a}
+.warn{background:#fef3c7;color:#d97706}
+.bad{background:#fee2e2;color:#dc2626}
+
+/* ANALISE */
+.analysis{
+  font-size:13px;
+  line-height:1.5;
+  color:#334155;
+}
 
 /* LIST */
 .list{
@@ -126,11 +126,11 @@ body{
   font-size:13px;
 }
 
-/* GRÁFICO SIMPLES */
+/* BARRAS */
 .bar{
   height:6px;
   border-radius:10px;
-  background:#1e293b;
+  background:#e2e8f0;
   margin-top:4px;
 }
 
@@ -143,12 +143,21 @@ body{
 /* ALERTAS */
 .alert{
   font-size:12px;
-  color:#f87171;
+  color:#dc2626;
+}
+
+/* TOP PRODUTOS */
+.produto{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  padding:6px 0;
+  border-bottom:1px solid #f1f5f9;
 }
 
 /* RESPONSIVO */
 @media(min-width:700px){
-  .kpis{grid-template-columns:1fr 1fr 1fr 1fr}
+  .kpis{grid-template-columns:repeat(4,1fr)}
 }
 
 </style>
@@ -158,7 +167,7 @@ body{
 
 <div class="header">
   <div class="title">Dashboard Analítico</div>
-  <div class="status">● Online</div>
+  <div class="status">● Atualizado agora</div>
 </div>
 
 <div class="container">
@@ -169,38 +178,39 @@ body{
 
       <div class="kpi">
         <div class="kpi-title">Faturamento</div>
-        <div class="kpi-value">R$ 12.430</div>
+        <div class="kpi-value">R$ 18.420</div>
       </div>
 
       <div class="kpi">
         <div class="kpi-title">Clientes</div>
-        <div class="kpi-value">284</div>
+        <div class="kpi-value">312</div>
       </div>
 
       <div class="kpi">
         <div class="kpi-title">Ticket Médio</div>
-        <div class="kpi-value">R$ 43,70</div>
+        <div class="kpi-value">R$ 59,04</div>
       </div>
 
       <div class="kpi">
         <div class="kpi-title">Reservas</div>
-        <div class="kpi-value">92</div>
+        <div class="kpi-value">104</div>
       </div>
 
     </div>
   </div>
 
-  <!-- STATUS -->
+  <!-- STATUS + ANALISE -->
   <div class="card">
+
     <div class="analysis">
-      Sistema operando dentro do esperado.
+      📊 O sistema apresenta crescimento de <b>+12%</b> no faturamento.
       <br><br>
-      Conversão acima da média e crescimento de vendas em horário noturno.
+      Pico de vendas no período noturno, com maior conversão em reservas.
     </div>
 
     <br>
-
     <span class="badge ok">Saudável</span>
+
   </div>
 
   <!-- DESEMPENHO -->
@@ -208,43 +218,75 @@ body{
 
     <div class="item">
       <span>Almoço</span>
-      <span>68%</span>
+      <span>64%</span>
     </div>
-    <div class="bar"><div class="fill" style="width:68%"></div></div>
+    <div class="bar"><div class="fill" style="width:64%"></div></div>
 
     <div class="item">
       <span>Jantar</span>
-      <span>92%</span>
+      <span>91%</span>
     </div>
-    <div class="bar"><div class="fill" style="width:92%"></div></div>
+    <div class="bar"><div class="fill" style="width:91%"></div></div>
 
     <div class="item">
       <span>Delivery</span>
-      <span>54%</span>
+      <span>58%</span>
     </div>
-    <div class="bar"><div class="fill" style="width:54%"></div></div>
+    <div class="bar"><div class="fill" style="width:58%"></div></div>
+
+  </div>
+
+  <!-- TOP PRODUTOS -->
+  <div class="card">
+
+    <div class="analysis"><b>Produtos mais vendidos</b></div>
+    <br>
+
+    <div class="produto">
+      <span>Pizza Marguerita</span>
+      <span>142</span>
+    </div>
+
+    <div class="produto">
+      <span>Pizza Calabresa</span>
+      <span>118</span>
+    </div>
+
+    <div class="produto">
+      <span>Rodízio Italiano</span>
+      <span>87</span>
+    </div>
 
   </div>
 
   <!-- ALERTAS -->
   <div class="card">
-    <div class="analysis">⚠ Pontos de atenção:</div>
+
+    <div class="analysis"><b>⚠ Pontos de atenção</b></div>
+    <br>
 
     <div class="list">
-      <div class="alert">• Desperdício elevado no buffet</div>
-      <div class="alert">• Estoque alto em bebidas</div>
+      <div class="alert">• Desperdício alto no buffet</div>
+      <div class="alert">• Estoque elevado em bebidas</div>
+      <div class="alert">• Baixa venda no almoço</div>
     </div>
+
   </div>
 
   <!-- RECOMENDAÇÕES -->
   <div class="card">
+
     <div class="analysis">
-      📊 Recomendações:
+      🤖 Recomendações automáticas:
       <br><br>
+
       • Reduzir produção no almoço  
       • Criar promoção para bebidas  
+      • Aumentar divulgação do rodízio  
       • Incentivar reservas antecipadas  
+
     </div>
+
   </div>
 
 </div>
