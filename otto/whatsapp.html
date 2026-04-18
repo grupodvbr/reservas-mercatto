@@ -750,6 +750,22 @@ const db = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
+
+
+
+const audioMsg = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3")
+
+audioMsg.volume = 1
+
+function tocarSom(){
+  audioMsg.currentTime = 0
+  audioMsg.play().catch(()=>{})
+}
+
+let ultimaMensagemId = null
+
+
+  
 let pagina = 0
 const limite = 20
 let carregando = false
@@ -1414,8 +1430,21 @@ async function atualizarClientesSilencioso(){
     const clientes = Object.values(map)
 
     /* 🔥 LOOP CORRETO (SEM forEach async) */
-    for(const c of clientes){
+for(const c of clientes){
 
+  // 🔥 IDENTIFICADOR UNICO
+  const idAtual = c.telefone + "_" + c.created_at
+
+  // 🔊 TOCA SOM SE FOR NOVA MENSAGEM DO CLIENTE
+  if(ultimaMensagemId && ultimaMensagemId !== idAtual && c.role === "user"){
+    tocarSom()
+  }
+
+  // salva ultima
+  ultimaMensagemId = idAtual
+
+
+  
       let card = document.querySelector(`[data-telefone="${c.telefone}"]`)
 
       const pausado = await verificarPausa(c.telefone)
@@ -1514,6 +1543,19 @@ window.addEventListener("pageshow", () => {
   atualizarClientesSilencioso()
 
 })
+document.addEventListener("click", () => {
+  audioMsg.play().then(()=>{
+    audioMsg.pause()
+    audioMsg.currentTime = 0
+  }).catch(()=>{})
+}, { once:true })
+
+
+
+
+
+
+
   
 </script>
 <div id="popupRepertorio" class="popupOverlay">
