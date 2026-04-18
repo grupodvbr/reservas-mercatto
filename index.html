@@ -637,6 +637,7 @@ function openPage(page){
 
   // 🔥 controla botão
   setTimeout(controlarBotao, 100);
+  setTimeout(ativarDuploCliqueIframe, 300);
 }
 
 function highlightMenu(page){
@@ -657,7 +658,6 @@ location.href="login.html";
 
 window.onload = function(){
 
-
   const frame = document.getElementById("frame");
 
   frame.src = "inicio/dashboard.html";
@@ -666,13 +666,11 @@ window.onload = function(){
 
   setTimeout(controlarBotao, 100);
 
-  // 🔥 EVITA FECHAR MENU AO CLICAR DENTRO
   document.querySelector(".sidebar").addEventListener("click", function(e){
     e.stopPropagation();
   });
 
-    ativarDuploCliqueIframe();
-
+  ativarDuploCliqueIframe(); // 🔥 AQUI
 }
 
 function voltarPagina(){
@@ -728,7 +726,6 @@ document.addEventListener("touchend", detectarDuploClique);
 // desktop
 document.addEventListener("dblclick", detectarDuploClique);
 
-
 function ativarDuploCliqueIframe(){
 
   const frame = document.getElementById("frame");
@@ -745,7 +742,7 @@ function ativarDuploCliqueIframe(){
       const diff = agora - lastTap;
 
       if(diff < 300){
-        toggleMobileMenu(); // 🔥 ABRE MENU DIRETO
+        abrirMenu(); // 🔥 ABRE DIRETO (SEM TOGGLE)
       }
 
       lastTap = agora;
@@ -762,9 +759,20 @@ function ativarDuploCliqueIframe(){
 }
 
 
+function abrirMenu(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
 
+  sidebar.classList.add("open");
+  overlay.classList.add("active");
+}
+  function fecharMenu(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
 
-
+  sidebar.classList.remove("open");
+  overlay.classList.remove("active");
+}
   
   
 </script>
