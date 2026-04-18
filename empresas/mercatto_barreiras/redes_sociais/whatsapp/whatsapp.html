@@ -1057,7 +1057,7 @@ const telefone = clienteSelecionado.replace(/\D/g,"").trim()
 
 try {
 
-const res = await fetch("/api/send", {
+const res = await fetch("/api/mercatto/send", {
   method:"POST",
   headers:{
     "Content-Type":"application/json"
