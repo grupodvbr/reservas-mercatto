@@ -378,27 +378,39 @@ iframe{
 <div class="menu">
 
   <!-- DASHBOARD -->
-  <div class="menu-item" onclick="openPage('inicio/dashboard.html')" data-page="inicio/dashboard.html">
+  <div class="menu-item" onclick="openPage('empresas/mercatto_barreiras/inicio/home.html')">
     <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/dashboard-line.svg">
     Dashboard
   </div>
 
-     
-  <!-- Operacional -->
+  <!-- OPERACIONAL -->
   <div class="menu-item" onclick="toggleSub('sub_encontrar')">
     <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-3-line.svg">
     Operacional
   </div>
 
   <div class="submenu" id="sub_encontrar">
-    <a onclick="openPage('restaurante/coleta_de_dados/requisicao_de_mercadorias.html')" data-page="buscar.html">Requisições de mercadorias</a>
-    <a onclick="openPage('administrativo/atalhos/links_uteis.html')" data-page="ferramentas/apresentacoes/links.html">Links</a>
-    <a onclick="openPage('ferramentas/producao/analisedepercas.html')" data-page="ferramentas/apresentacoes/links.html">Trocas</a>
-    <a onclick="openPage('ferramentas/producao/analisebuffet.html')" data-page="ferramentas/producao/analisebuffet.html">Buffet</a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/coleta_de_dados/requisicao_de_mercadorias.html')">
+      Requisições de mercadorias
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/administrativo/atalhos/links_uteis.html')">
+      Links
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/coleta_de_dados/troca_de_produtos.html')">
+      Trocas
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/analise_de_dados/analise_da_montagem_do_buffet.html')">
+      Buffet
+    </a>
+
   </div>
 
   <!-- WHATSAPP -->
-  <div class="menu-item" onclick="openPage('otto/whatsapp.html')" data-page="otto/whatsapp.html">
+  <div class="menu-item" onclick="openPage('empresas/mercatto_barreiras/whatsapp/falta.html')">
     <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Logos/whatsapp-line.svg">
     WhatsApp
   </div>
@@ -410,63 +422,84 @@ iframe{
   </div>
 
   <div class="submenu" id="sub_ficha">
-    <a onclick="openPage('restaurante/fichas.html')" data-page="restaurante/fichas.html">Fichas</a>
-    <a onclick="openPage('relatórios/caderno.html')" data-page="relatórios/caderno.html">Livro de receitas</a>
-    <a onclick="openPage('relatórios/historico.html')" data-page="relatórios/historico.html">Histórico</a>
-    <a onclick="openPage('restaurante/relatorios/homerelatorios.html')" data-page="restaurante/relatorios/homerelatorios.html">Relatórios</a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/ficha_tecnica/ficha.html')">
+      Fichas
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/analise_de_dados/livro_de_receitas.html')">
+      Livro de receitas
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/analise_de_dados/falta.html')">
+      Histórico
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/analise_de_dados/home_relatorios_gerais.html')">
+      Relatórios
+    </a>
 
   </div>
 
-
   <!-- RESTAURANTE -->
-<div class="menu-item" onclick="toggleSub('sub_monitorar')">
-  <i class="ri-restaurant-line"></i>
-  Restaurante
-</div>
+  <div class="menu-item" onclick="toggleSub('sub_monitorar')">
+    <i class="ri-restaurant-line"></i>
+    Restaurante
+  </div>
 
   <div class="submenu" id="sub_monitorar">
-    <a onclick="openPage('restaurante/reservas.html')" data-page="restaurante/reservas.html">Reservas de mesas</a>
-    <a onclick="openPage('restaurante/agendacantores.html')" data-page="restaurante/agendacantores.html">Agenda de cantores</a>
-    <a onclick="openPage('restaurante/administracao/cardapiodigital/config.html')" data-page="restaurante/administracao/cardapiodigital/config.html">Mídias do Carápio</a>
-    <a onclick="openPage('restaurante/administracao/aprendizadobot.html')" data-page="restaurante/administracao/aprendizadobot.html">Aprendizado OTTO</a>
-    
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/agendas/reservas.html')">
+      Reservas de mesas
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/agendas/cantores.html')">
+      Agenda de cantores
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/vendas/cardapio/cardapio_tablet/cardapio_digital_local.html')">
+      Mídias do Cardápio
+    </a>
+
+    <a onclick="openPage('empresas/mercatto_barreiras/restaurante/administrativo/falta.html')">
+      Aprendizado OTTO
+    </a>
+
   </div>
 
   <!-- AGENTE -->
-<div class="menu-item" onclick="openPage('otto/agente.html')" data-page="otto/agente.html">
-  <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Device/cpu-line.svg">
-  Agente de IA
-</div>
-     
+  <div class="menu-item" onclick="openPage('empresas/mercatto_barreiras/otto/falta.html')">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Device/cpu-line.svg">
+    Agente de IA
+  </div>
+
   <!-- APP / SISTEMA -->
-  <div class="menu-item" onclick="openPage('ferramentas/aplicativos.html')" data-page="ferramentas/aplicativos.html">
+  <div class="menu-item" onclick="openPage('empresas/mercatto_barreiras/ferramentas/falta.html')">
     <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/apps-2-line.svg">
     Aplicativos
   </div>
-     
+
   <!-- CONFIG -->
-  <div class="menu-item" onclick="openPage('sistema/configuracoes.html')" data-page="sistema/configuracoes.html">
+  <div class="menu-item" onclick="openPage('empresas/mercatto_barreiras/sistema/falta.html')">
     <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-4-line.svg">
     Configurações
   </div>
 
 </div>
-  </div>
 
 <div class="overlay" onclick="toggleMobileMenu()"></div>
 
-  <!-- MAIN -->
-  <div class="main">
+<!-- MAIN -->
+<div class="main">
 
 <div class="header">
 
-  <div style="display:flex;align-items:center;gap:10px">
+<div style="display:flex;align-items:center;gap:10px">
 
-    <!-- MENU (AGORA PRIMEIRO) -->
+<!-- MENU MOBILE -->
 <div class="menu-mobile-btn" onclick="toggleMobileMenu()">
   <i class="ri-arrow-right-line"></i>
 </div>
-
     <!-- VOLTAR
     <div class="btn-voltar" onclick="voltarPagina()">
       ←
