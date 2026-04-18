@@ -649,23 +649,20 @@ async function carregarAgenda(){
 
 lista.innerHTML=""
 
-let {data}=await sb
+let {data, error} = await sb
 .from("agenda_musicos")
 .select("*")
-.eq("empresa",EMPRESA)
+.eq("empresa", EMPRESA)
 .gte("data", dataInicio.toISOString().split("T")[0])
-.order("data")
+.lte("data", dataFim.toISOString().split("T")[0])
+.order("data", { ascending: true })
 
 const grupos={}
 
 data.forEach(ev=>{
 
-const d = new Date(ev.data + "T00:00")
-  
-if(
-   d >= dataInicio &&
-   (dataFim === null || d <= dataFim)
-){
+const d = ev.data  
+{
 if(!grupos[ev.data])grupos[ev.data]=[]
 
 grupos[ev.data].push(ev)
