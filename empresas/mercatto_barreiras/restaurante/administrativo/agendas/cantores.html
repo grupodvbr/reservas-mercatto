@@ -668,23 +668,34 @@ let dataFim=null
 /* CALENDARIO */
 
 flatpickr("#calendarBtn",{
+  mode:"range",
+  dateFormat:"Y-m-d",
+  locale:"pt",
+  disableMobile:true,
 
-mode:"range",
+  onDayCreate: function(dObj, dStr, fp, dayElem){
 
-dateFormat:"Y-m-d",
+    const data = dayElem.dateObj.toISOString().split("T")[0]
 
-onClose:(dates)=>{
+    // 🔥 VER SE TEM EVENTO NESSE DIA
+    if(window.datasComEventos && window.datasComEventos.includes(data)){
+      dayElem.innerHTML += "<span style='display:block;width:6px;height:6px;background:#facc15;border-radius:50%;margin:2px auto'></span>"
+    }
 
-if(dates.length===2){
+  },
 
-dataInicio=dates[0]
-dataFim=dates[1]
+  onClose:(dates)=>{
 
-carregarAgenda()
+    if(dates.length===2){
 
-}
+      dataInicio=dates[0]
+      dataFim=dates[1]
 
-}
+      carregarAgenda()
+
+    }
+
+  }
 
 })
 
@@ -746,6 +757,8 @@ async function carregarAgenda(){
 
 lista.innerHTML=""
 
+window.datasComEventos = [] // 🔥 AQUI
+
 let {data}=await sb
 .from("agenda_musicos")
 .select("*")
@@ -757,8 +770,13 @@ const grupos={}
 
 data.forEach(ev=>{
 
+// 🔥 MARCAR DIAS COM EVENTO
+if(!window.datasComEventos.includes(ev.data)){
+  window.datasComEventos.push(ev.data)
+}
+
 const d = new Date(ev.data + "T00:00")
-  
+
 if(
    d >= dataInicio &&
    (dataFim === null || d <= dataFim)
@@ -770,53 +788,6 @@ grupos[ev.data].push(ev)
 }
 
 })
-
-Object.keys(grupos).forEach(dataStr=>{
-
-const dataObj = new Date(dataStr + "T00:00")
-
-const itens=grupos[dataStr].map(ev=>`
-<div class="linha" onclick="editar('${ev.id}')">
-
-<div class="evento">
-
-<img class="foto" src="${ev.foto||''}">
-
-<div>
-
-<div class="texto">${ev.cantor}</div>
-<div class="estilo">${ev.estilo||''}</div>
-
-</div>
-
-</div>
-
-<div class="hora">${ev.hora}</div>
-
-</div>
-
-`).join("")
-
-lista.innerHTML+=`
-
-<div class="grupo">
-
-<div class="dia">
-
-${dataObj.getDate()}
-<small>${dataObj.toLocaleString('pt-BR',{month:'short'})}</small>
-
-</div>
-
-<div class="itens">${itens}</div>
-
-</div>
-
-`
-
-})
-
-}
 
 /* EDITAR */
 
