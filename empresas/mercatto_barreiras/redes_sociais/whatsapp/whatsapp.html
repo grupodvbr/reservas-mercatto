@@ -751,7 +751,32 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
+/* ================= REALTIME CONVERSAS ================= */
 
+db
+.channel("conversas_realtime")
+.on(
+  "postgres_changes",
+  {
+    event: "INSERT",
+    schema: "public",
+    table: "conversas_whatsapp"
+  },
+  payload => {
+
+    console.log("📩 NOVA MENSAGEM:", payload.new)
+
+    // 🔥 toca som só se for do cliente
+    if(payload.new.role === "user"){
+      tocarSom()
+    }
+
+    // 🔥 atualiza somente o necessário
+    atualizarClientesSilencioso()
+
+  }
+)
+.subscribe()
 
 const audioMsg = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3")
 
@@ -1523,9 +1548,8 @@ if(c.role === "user"){
 
 /* ================= INTERVALO ================= */
 
-setInterval(() => {
-  atualizarClientesSilencioso()
-}, 2000)
+
+  
 window.addEventListener("popstate", () => {
 
   // 🔥 quando voltar
