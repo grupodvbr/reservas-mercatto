@@ -676,17 +676,21 @@ window.addEventListener('load', travarTela);
 window.addEventListener('resize', travarTela);
 
 
-
-// 🔥 CORREÇÃO TECLADO MOBILE
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => {
-    const altura = window.visualViewport.height;
-    document.body.style.height = altura + "px";
+
+    const teclado = window.innerHeight - window.visualViewport.height;
+
+    const input = document.querySelector(".input-area");
+
+    if (teclado > 0) {
+      input.style.bottom = teclado + "px";
+    } else {
+      input.style.bottom = "0px";
+    }
+
   });
 }
-
-
-
   
 </script>
 
