@@ -290,6 +290,29 @@ body{
   </div>
 
 </div>
+<script>
 
+let lastTap = 0;
+
+function detectarDuploClique(){
+
+  const agora = new Date().getTime();
+  const diff = agora - lastTap;
+
+  if(diff < 300){
+    // 🔥 avisa o sistema principal
+    window.parent.postMessage("duploClique", "*");
+  }
+
+  lastTap = agora;
+}
+
+// mobile
+document.addEventListener("touchend", detectarDuploClique);
+
+// desktop
+document.addEventListener("dblclick", detectarDuploClique);
+
+</script>
 </body>
 </html>
