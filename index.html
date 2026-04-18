@@ -359,6 +359,53 @@ iframe{
   opacity:1;
   pointer-events:auto;
 }
+
+
+/* ================= EMPRESAS ================= */
+
+.empresas{
+  margin-top:auto;
+  padding:16px;
+
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+
+  border-top:1px solid var(--border);
+}
+
+.empresa-item{
+  width:46px;
+  height:46px;
+
+  border-radius:50%;
+  background:#f1f5f9;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+  transition:.2s;
+
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.empresa-item img{
+  width:22px;
+  height:22px;
+  opacity:.8;
+}
+
+.empresa-item:hover{
+  transform:scale(1.1);
+  background:var(--primary);
+}
+
+.empresa-item:hover img{
+  filter:brightness(0) invert(1);
+}
 </style>
 </head>
 
@@ -465,6 +512,46 @@ iframe{
     Configurações
   </div>
 
+
+
+
+
+<!-- ================= EMPRESAS ================= -->
+<div class="empresas">
+
+  <div class="empresa-item" onclick="openPage('padaria.html')" title="Padaria">
+    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+  </div>
+
+  <div class="empresa-item" onclick="openPage('mercatto_emporio.html')" title="Mercatto Empório">
+    <img src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png">
+  </div>
+
+  <div class="empresa-item" onclick="openPage('empresas/mercatto_barreiras/index.html')" title="Mercatto Restaurante">
+    <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png">
+  </div>
+
+  <div class="empresa-item" onclick="openPage('mkids.html')" title="M.KIDS">
+    <img src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png">
+  </div>
+
+  <div class="empresa-item" onclick="openPage('villa_gourmet.html')" title="Villa Gourmet">
+    <img src="https://cdn-icons-png.flaticon.com/512/3595/3595455.png">
+  </div>
+
+  <div class="empresa-item" onclick="openPage('delicia_gourmet.html')" title="Delícia Gourmet">
+    <img src="https://cdn-icons-png.flaticon.com/512/5787/5787016.png">
+  </div>
+
+</div>
+
+
+
+
+
+
+
+  
 </div>
   </div>
 
