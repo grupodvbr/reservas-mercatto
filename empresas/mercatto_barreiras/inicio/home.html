@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Mercatto Delícia • Analytics</title>
+<title>SUA EMPRESA • Analytics</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -400,7 +400,7 @@ background:rgba(255,255,255,0.15);
 
 <div class="sidebar">
 
-<div class="logo">Mercatto Delícia</div>
+<div class="logo">SUA EMPRESA</div>
 
 <div class="menu">
 
@@ -408,21 +408,27 @@ background:rgba(255,255,255,0.15);
 Dashboard
 </div>
 
-
- <div onclick="abrirPagina('restaurante/administracao/requisicoesrecebidas.html','Conversas')">
-Requisições
- 
-</div>
- <div onclick="abrirPagina('ferramentas/producao/analisedepercas.html','Conversas')">
-Trocas
- 
+<div onclick="abrirPagina('restaurante/reservas.html','Reservas')">
+Reservas
 </div>
 
+<div onclick="abrirPagina('otto/whatsapp.html','Conversas')">
+Chatbot com IA
+</div>
+
+<div onclick="abrirPagina('restaurante/fichas.html','Conversas')">
+Fichas Técnicas
+</div>
 
 
+ <div onclick="abrirPagina('ferramentas/aplicativos.html','Conversas')">
+Aplicativos
+</div>
 
 
-
+<div onclick="abrirPagina('relatórios/geral.html','Conversas')">
+Relatórios
+</div>
  
 </div>
 
@@ -588,40 +594,26 @@ async function iniciarSistema(){
   const SUPABASE_URL = localStorage.getItem("SUPABASE_URL")
   const SUPABASE_KEY = localStorage.getItem("SUPABASE_KEY")
 
-// if(!SUPABASE_URL || !SUPABASE_KEY){
-//   window.location.href = "index.html"
-//   return
-// }
+  // 🔒 valida se tem credenciais
+  if(!SUPABASE_URL || !SUPABASE_KEY){
+    window.location.href = "index.html"
+    return
+  }
 
-  // 🔐 cliente do AUTH (banco master)
-  const supabaseAuth = supabase.createClient(
-    "https://fcehmjmtxqmrjkuqlkay.supabase.co",
-    "sb_publishable_iCDWHsq6EguNauQPP49JCg_jUNcz30o"
-  )
+ // 🔥 VALIDA LOGIN VIA LOCALSTORAGE (SEU NOVO PADRÃO)
 
-  // 🔍 verifica sessão real
-  const { data } = await supabaseAuth.auth.getSession()
+const EMPRESA_ID = localStorage.getItem("EMPRESA_ID")
+const USUARIO_ID = localStorage.getItem("USUARIO_ID")
 
-
-const { data: { user } } = await supabaseAuth.auth.getUser()
-
-if(user){
-  localStorage.setItem("USER_EMAIL", user.email)
+if(!EMPRESA_ID || !USUARIO_ID){
+  localStorage.clear()
+  window.location.href = "index.html"
+  return
 }
 
-
- 
-// if(!data.session){
-//   localStorage.clear()
-//   window.location.href = "index.html"
-//   return
-// }
-
   // ✅ cria conexão com banco da empresa
-db = supabase.createClient(
-  "https://ehxrrpsiksceljmhsfxk.supabase.co",
-  "sb_publishable_Jm2ZQKzPS3gNPCKSjFAmYQ_WNMYwF1j"
-)
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
   // 🚀 inicia sistema
   defaultDates()
   carregar()
@@ -1083,19 +1075,27 @@ document.body.appendChild(newScript)
  async function carregarPerfilHeader(){
 
   const supabaseAuth = supabase.createClient(
-    "https://fcehmjmtxqmrjkuqlkay.supabase.co",
-    "sb_publishable_iCDWHsq6EguNauQPP49JCg_jUNcz30o"
+    "https://ehxrrpsiksceljmhsfxk.supabase.co",
+    "sb_publishable_Jm2ZQKzPS3gNPCKSjFAmYQ_WNMYwF1j"
   )
 
-  const { data: { user } } = await supabaseAuth.auth.getUser()
+const usuarioId = localStorage.getItem("USUARIO_ID")
 
-  if(!user) return
+if(!usuarioId) return
 
-  const { data: empresa } = await supabaseAuth
-    .from("empresas")
-    .select("logo_url, nome_fantasia")
-    .eq("email", user.email)
-    .single()
+const { data: usuario } = await db
+.from("usuarios")
+.select("nome,email,empresa_id")
+.eq("id", usuarioId)
+.single()
+
+if(!usuario) return
+
+const { data: empresa } = await db
+.from("empresas")
+.select("logo_url, nome")
+.eq("id", usuario.empresa_id)
+.single()
 
   if(empresa){
 
@@ -1103,7 +1103,7 @@ document.body.appendChild(newScript)
 
 logo.src = empresa.logo_url 
   ? empresa.logo_url 
-  : "https://ui-avatars.com/api/?name=" + encodeURIComponent(empresa.nome_fantasia) + "&background=2563eb&color=fff"
+  : "https://ui-avatars.com/api/?name=" + encodeURIComponent(empresa.nome) + "&background=2563eb&color=fff"
    
   }
 
