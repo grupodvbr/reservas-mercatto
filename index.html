@@ -436,7 +436,11 @@ iframe{
   transform:scale(1.05);
 }
 
-
+@media(max-width:1024px){
+  .menu-float-btn{
+    display:none !important;
+  }
+}
   
 </style>
 </head>
@@ -653,14 +657,20 @@ location.href="login.html";
 
 window.onload = function(){
 
+
   const frame = document.getElementById("frame");
 
-  // 🔥 sempre inicia no dashboard
-  frame.src = "index.html";
+  frame.src = "inicio/dashboard.html";
 
-  highlightMenu("index.html");
+  highlightMenu("inicio/dashboard.html");
 
   setTimeout(controlarBotao, 100);
+
+  // 🔥 EVITA FECHAR MENU AO CLICAR DENTRO
+  document.querySelector(".sidebar").addEventListener("click", function(e){
+    e.stopPropagation();
+  });
+
 }
 
 function voltarPagina(){
@@ -696,6 +706,25 @@ function controlarBotao(){
 
   botao.style.display = mostrar ? "flex" : "none";
 }
+
+let lastTap = 0;
+
+document.addEventListener("click", function(e){
+
+  const agora = new Date().getTime();
+  const diff = agora - lastTap;
+
+  if(diff < 300){
+    toggleMobileMenu(); // abre/fecha menu
+  }
+
+  lastTap = agora;
+});
+
+
+
+
+  
 </script>
 
   <div class="menu-float-btn" onclick="toggleMobileMenu()">
