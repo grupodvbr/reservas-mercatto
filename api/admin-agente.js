@@ -30,6 +30,72 @@ typeof req.body === "string"
 : req.body
 
 const pergunta = body?.pergunta || ""
+
+/* ================= DATAS PRIMEIRO ================= */
+
+const agora = new Date()
+
+const formatter = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Bahia",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit"
+})
+
+const parts = formatter.formatToParts(agora)
+const get = type => parts.find(p => p.type === type)?.value
+
+const hojeISO = `${get("year")}-${get("month")}-${get("day")}`
+const hora = `${get("hour")}:${get("minute")}:${get("second")}`
+
+const ontem = new Date(`${hojeISO}T00:00:00`)
+ontem.setDate(ontem.getDate() - 1)
+
+const ontemISO = ontem.toISOString().split("T")[0]
+const amanha = new Date(`${hojeISO}T00:00:00`)
+amanha.setDate(amanha.getDate() + 1)
+
+const amanhaISO = amanha.toISOString().split("T")[0]
+/* ================= AGORA SIM ================= */
+
+
+
+
+
+
+
+
+
+  
+let dataFiltro = hojeISO
+
+const texto = pergunta.toLowerCase()
+
+if(texto.includes("ontem")){
+  dataFiltro = ontemISO
+}
+
+if(texto.includes("semana passada")){
+const d = new Date(hojeISO + "T00:00:00")
+  d.setDate(d.getDate() - 7)
+  dataFiltro = d.toISOString().split("T")[0]
+}
+
+const matchData = texto.match(/\d{2}\/\d{2}\/\d{4}/)
+
+if(matchData){
+  const [dia, mes, ano] = matchData[0].split("/")
+  dataFiltro = `${ano}-${mes}-${dia}`
+}
+
+
+
+
+
+  
 let confirmar = body?.confirmar || null
 /* ================= CONFIRMAR COM "SIM" ================= */
 
@@ -178,8 +244,8 @@ const {data:historico} = await supabase
 const mensagens = (historico || [])
 .reverse()
 .map(m => ({
-role: m.role,
-content: m.mensagem
+  role: m.role,
+  content: m.mensagem + (m.acao_json ? `\n\nAÇÃO_JSON:\n${JSON.stringify(m.acao_json)}` : "")
 }))
 
 mensagens.push({
@@ -214,6 +280,65 @@ const { data:buffet } = await supabase
 .select("*")
 .limit(500)
 
+
+// 🔥 detectar empresa
+let empresaFiltro = null
+
+if(texto.includes("mercatto")){
+  empresaFiltro = "MERCATTO DELÍCIA"
+}
+
+if(texto.includes("villa")){
+  empresaFiltro = "VILLA GOURMET"
+}
+
+if(texto.includes("padaria")){
+  empresaFiltro = "PADARIA DELÍCIA"
+}
+
+// 🔥 query correta (igual painel)
+let query = supabase
+  .from("buffet_lancamentos")
+  .select("*")
+  .eq("data", dataFiltro)
+
+if(empresaFiltro){
+  query = query.eq("empresa", empresaFiltro)
+}
+
+let { data:buffetLancamentos } = await query
+buffetLancamentos = buffetLancamentos || []
+
+
+
+
+
+
+
+
+
+
+
+  
+// 🔥 fallback automático CORRETO
+if(!buffetLancamentos || buffetLancamentos.length === 0){
+
+  let queryOntem = supabase
+    .from("buffet_lancamentos")
+    .select("*")
+    .eq("data", ontemISO)
+
+  if(empresaFiltro){
+    queryOntem = queryOntem.eq("empresa", empresaFiltro)
+  }
+
+  const { data:ontemData } = await queryOntem
+
+  buffetLancamentos = ontemData || []
+}
+
+  
+  
 const { data:itensBuffet } = await supabase
 .from("itens_buffet")
 .select("*")
@@ -280,10 +405,11 @@ function addContext(label, data){
 const contextos = [
 
 addContext("RESERVAS", reservas),
-addContext("HIST_RESERVAS", histReservas), // 🔥 NOVO
+addContext("HIST_RESERVAS", histReservas),
 addContext("AGENDA", agenda),
 addContext("CLIENTES", clientes),
 addContext("CARDAPIO", buffet),
+addContext("BUFFET_LANCAMENTOS", buffetLancamentos),
 addContext("PEDIDOS", pedidos),
 addContext("PEDIDOS_PENDENTES", pedidosPendentes),
 addContext("ITENS_BUFFET", itensBuffet),
@@ -291,37 +417,7 @@ addContext("PRODUTOS", produtos)
 
 ].filter(Boolean)
 
-/* ================= DATAS SISTEMA ================= */
 
-const agora = new Date()
-
-const formatter = new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Bahia",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit"
-})
-
-const parts = formatter.formatToParts(agora)
-
-const get = type => parts.find(p => p.type === type)?.value
-
-const hojeISO = `${get("year")}-${get("month")}-${get("day")}`
-const hora = `${get("hour")}:${get("minute")}:${get("second")}`
-
-const ontem = new Date(`${hojeISO}T00:00:00`)
-ontem.setDate(ontem.getDate() - 1)
-
-const amanha = new Date(`${hojeISO}T00:00:00`)
-amanha.setDate(amanha.getDate() + 1)
-
-const ontemISO = ontem.toISOString().split("T")[0]
-const amanhaISO = amanha.toISOString().split("T")[0]
-
-const agoraTexto = `${hojeISO} ${hora}`
   
 /* ================= OPENAI ================= */
 
@@ -370,9 +466,44 @@ Sempre substitua:
 "agora" → ${hora}
 `
 },
+{
+role:"system",
+content:`DATA FILTRADA: ${dataFiltro}`
+},
 
+{
+role:"system",
+content:`
 
+📊 REGRA INTELIGENTE — BUFFET_LANCAMENTOS
 
+Sempre que o usuário pedir dados do buffet:
+
+1. Se NÃO informar a empresa:
+→ Pergunte QUAL EMPRESA antes de qualquer resposta
+
+2. Se informar empresa MAS não houver dados no dia:
+→ NÃO pare a resposta
+→ Você DEVE automaticamente:
+
+- buscar dados de ONTEM
+- ou sugerir outras datas disponíveis
+
+3. Se não houver dados nem hoje nem ontem:
+→ informe claramente:
+"Não houve lançamentos recentes"
+
+4. Nunca responda vazio
+5. Sempre sugira próximo passo
+
+Exemplo correto:
+
+"Hoje não houve registros para Mercatto.
+Ontem houve produção de X kg.
+Deseja ver outro período ou outra empresa?"
+
+`
+},
 
 
 
@@ -623,58 +754,50 @@ let resposta = completion.choices[0].message.content
 /* ================= DETECTAR RESERVA ================= */
 
 const matchReserva = resposta.match(/RESERVA_JSON:\s*(\{[\s\S]*?\})/)
-let acaoReserva = null
+
 if(matchReserva){
 
   try{
 
     let jsonTexto = matchReserva[1]
-
-    jsonTexto = jsonTexto
       .replace(/```json/g,"")
       .replace(/```/g,"")
       .trim()
 
-    acaoReserva = JSON.parse(jsonTexto)
+    const acaoReserva = JSON.parse(jsonTexto)
 
-    // 🔥 GARANTE EMAIL (CRÍTICO)
     const dados = {
-      email: "nao_informado@mercatto.com",
-      ...acaoReserva.dados
+
+      nome: acaoReserva.dados.nome || "Cliente",
+      telefone: acaoReserva.dados.telefone || "ADMIN",
+      email: acaoReserva.dados.email || "nao_informado@mercatto.com",
+      pessoas: parseInt(acaoReserva.dados.pessoas) || 1,
+      mesa: acaoReserva.dados.mesa || "Salão",
+      cardapio: acaoReserva.dados.cardapio || "",
+      datahora: acaoReserva.dados.datahora,
+      observacoes: acaoReserva.dados.observacoes || "",
+      status: acaoReserva.dados.status || "Pendente",
+      valorEstimado: 0,
+      pagamentoAntecipado: 0,
+      banco: "",
+      comandaIndividual: acaoReserva.dados.comandaIndividual || "Não"
     }
 
-    if(acaoReserva.operacao === "insert"){
+    delete dados.comandaindividual
 
-      const { error } = await supabase
-        .from("reservas_mercatto")
-        .insert(dados)
+    const { error } = await supabase
+      .from("reservas_mercatto")
+      .insert(dados)
 
-      if(error){
-        console.error("Erro insert reserva:", error)
-      }
-
+    if(error){
+      console.error("❌ ERRO REAL AO SALVAR:", error)
+      throw new Error(error.message)
     }
 
-    if(acaoReserva.operacao === "update"){
-
-      await supabase
-        .from("reservas_mercatto")
-        .update(dados)
-        .match(acaoReserva.filtro)
-
-    }
-
-    if(acaoReserva.operacao === "delete"){
-
-      await supabase
-        .from("reservas_mercatto")
-        .delete()
-        .match(acaoReserva.filtro)
-
-    }
+    resposta = "✅ Reserva criada com sucesso"
 
   }catch(e){
-    console.log("Erro reserva JSON:", e)
+    console.error("❌ ERRO RESERVA:", e)
   }
 }
 
