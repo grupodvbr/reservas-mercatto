@@ -412,53 +412,52 @@ const erro = document.getElementById('erro');
 
 erro.innerText = "";
 
-/* validação básica */
 if(!email || !senha){
-erro.innerText = "Preencha email e senha";
-return;
+  erro.innerText = "Preencha email e senha";
+  return;
 }
 
-/* LOGIN SUPABASE */
-const { data, error } = await SUPABASE.auth.signInWithPassword({
-email,
-password: senha
+/* 🔥 LOGIN VIA TABELA */
+const { data, error } = await SUPABASE.rpc('login_usuario', {
+  p_email: email,
+  p_senha: senha
 });
 
-if(error){
-erro.innerText = "Email ou senha inválidos";
-return;
+if(error || !data || data.length === 0){
+  erro.innerText = "Email ou senha inválidos";
+  return;
 }
 
-/* sessão salva automaticamente pelo Supabase */
+const user = data[0];
 
-/* BUSCAR EMPRESA */
+/* 🔥 BUSCAR EMPRESA CORRETO */
 const { data: empresa, error: erroEmpresa } = await SUPABASE
 .from('empresas')
 .select('*')
-.eq('email', email)
+.eq('id', user.empresa_id)
 .single();
 
 if(erroEmpresa || !empresa){
-erro.innerText = "Empresa não encontrada";
-return;
+  erro.innerText = "Empresa não encontrada";
+  return;
 }
 
 /* STATUS */
 if(empresa.status !== 'ativo'){
-erro.innerText = "Acesso bloqueado";
-return;
+  erro.innerText = "Acesso bloqueado";
+  return;
 }
 
-/* SALVAR CONFIG DINÂMICA */
+/* SALVAR */
+localStorage.setItem("EMPRESA_ID", empresa.id);
 localStorage.setItem("SUPABASE_URL", empresa.supabase_url);
 localStorage.setItem("SUPABASE_KEY", empresa.supabase_anon_key);
-localStorage.setItem("EMPRESA_ID", empresa.id);
+localStorage.setItem("USUARIO_ID", user.id);
+localStorage.setItem("USUARIO_NOME", user.nome);
 
 /* REDIRECIONA */
 window.location.href = "home.html";
-
 }
-
 /* ===== RECUPERAR SENHA ===== */
 async function recuperar(){
 
