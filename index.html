@@ -629,13 +629,14 @@ function openPage(page){
 
   frame.src = page;
 
+  // 🔥 SALVA A PAGINA
+  localStorage.setItem("paginaAtual", page);
+
   highlightMenu(page);
 
-  // fecha menu
   document.querySelector(".sidebar").classList.remove("open");
   document.querySelector(".overlay").classList.remove("active");
 
-  // 🔥 controla botão
   setTimeout(controlarBotao, 100);
   setTimeout(ativarDuploCliqueIframe, 300);
 }
@@ -660,9 +661,12 @@ window.onload = function(){
 
   const frame = document.getElementById("frame");
 
-  frame.src = "inicio/dashboard.html";
+  // 🔥 pega a ultima pagina salva
+  const paginaSalva = localStorage.getItem("paginaAtual") || "inicio/dashboard.html";
 
-  highlightMenu("inicio/dashboard.html");
+  frame.src = paginaSalva;
+
+  highlightMenu(paginaSalva);
 
   setTimeout(controlarBotao, 100);
 
@@ -670,9 +674,8 @@ window.onload = function(){
     e.stopPropagation();
   });
 
-  ativarDuploCliqueIframe(); // 🔥 AQUI
+  ativarDuploCliqueIframe();
 }
-
 function voltarPagina(){
   const frame = document.getElementById("frame");
   frame.contentWindow.history.back();
