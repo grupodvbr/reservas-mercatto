@@ -1,342 +1,564 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Grupo DV • Sistema Inteligente</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#020617">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prompts IA">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta charset="UTF-8">
+<title>GRUPO DV - MERCATTO DELÍCIA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+:root{
+  --bg:#f8fafc;
+  --bg-2:#f1f5f9;
+
+  --primary:#2563eb;
+  --primary-soft:#e0e7ff;
+
+  --text:#0f172a;
+  --text-muted:#64748b;
+
+  --border:#e5e7eb;
+
+  --sidebar:#ffffff;
+  --header:#ffffff;
+
+  --shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+}
 
 body{
-background:#020617;
-color:#fff;
-overflow-x:hidden;
+  min-height:100vh;
+  background:var(--bg);
+  overflow:auto;
 }
 
-/* FUNDO GRADIENTE */
-body::before{
-content:"";
-position:fixed;
-inset:0;
-background:
-radial-gradient(circle at 20% 20%, rgba(20,200,168,.15), transparent),
-radial-gradient(circle at 80% 80%, rgba(59,130,246,.15), transparent);
-z-index:-1;
+.app{
+  display:flex;
+  height:100vh;
+  width:100vw;
 }
 
-/* HEADER */
+/* ===================== SIDEBAR ===================== */
+.nav-hover-zone{
+  position:fixed;
+  left:0;
+  top:0;
+  width:14px;
+  height:100vh;
+  z-index:50;
+}
+
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  width:260px;
+  height:100vh;
+
+  background:var(--sidebar);
+
+  border-right:1px solid var(--border);
+
+  display:flex;
+  flex-direction:column;
+
+  transform:translateX(-260px);
+  transition:.25s ease;
+  z-index:60;
+}
+
+
+
+/* MOBILE */
+.sidebar{
+  transform:translateX(-260px);
+  transition:.25s ease;
+}
+
+.sidebar.open{
+  transform:translateX(0);
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  .nav-hover-zone{display:none}
+  .sidebar{transform:translateX(-100%)}
+}
+
+/* ===================== LOGO ===================== */
+.logo-area{
+  padding:20px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+
+.logo-area img{
+  width:150px;
+}
+
+/* ===================== MENU ===================== */
+.menu{
+  padding:12px;
+  overflow-y:auto;
+}
+
+.menu-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  padding:12px 14px;
+  margin:6px 0;
+
+  font-size:14px;
+  color:var(--text);
+
+  border-radius:10px;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.menu-item img{
+  width:18px;
+  opacity:.6;
+}
+
+.menu-item:hover{
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+
+.menu-item.active{
+  background:var(--primary-soft);
+  border-left:4px solid var(--primary);
+  color:var(--primary);
+  font-weight:700;
+}
+
+/* SUBMENU */
+.submenu{
+  display:none;
+  margin:6px 0 12px 48px;
+}
+
+.submenu a{
+  display:block;
+  padding:8px 10px;
+  font-size:13px;
+  color:var(--text-muted);
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.submenu a:hover{
+  background:#f1f5f9;
+  color:var(--primary);
+}
+
+.submenu a.active-sub{
+  background:#eef2ff;
+  color:var(--primary);
+  font-weight:600;
+}
+
+/* ===================== MAIN ===================== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+/* ===================== HEADER ===================== */
 .header{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:70px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 40px;
-background:rgba(2,6,23,.6);
-backdrop-filter:blur(12px);
-z-index:100;
+  height:60px;
+  background:var(--header);
+  border-bottom:1px solid var(--border);
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  padding:0 20px;
+
+  box-shadow:var(--shadow);
 }
 
-.logo{
-font-size:20px;
-font-weight:800;
-color:#14c8a8;
+.logo-title{
+  font-size:18px;
+  font-weight:800;
+  color:var(--primary);
+  letter-spacing:1px;
 }
 
-/* HERO */
-.hero{
-height:100vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-padding:20px;
+.user-area{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size:13px;
+  color:var(--text-muted);
 }
 
-.hero h1{
-font-size:50px;
-font-weight:800;
-max-width:850px;
-line-height:1.1;
+.logout{
+  cursor:pointer;
+  font-weight:700;
+  color:var(--primary);
 }
 
-.hero span{
-color:#14c8a8;
+.logout:hover{
+  opacity:.8;
 }
 
-.hero p{
-margin-top:18px;
-color:#94a3b8;
-max-width:600px;
-font-size:16px;
-}
-
-.btn{
-margin-top:30px;
-padding:16px 28px;
-border:none;
-border-radius:14px;
-background:linear-gradient(135deg,#14c8a8,#0ea58b);
-color:#fff;
-font-weight:800;
-cursor:pointer;
-font-size:15px;
-box-shadow:0 15px 40px rgba(20,200,168,.35);
-transition:.2s;
-}
-
-.btn:hover{
-transform:translateY(-3px);
-}
-
-/* SECTIONS */
-.section{
-padding:110px 40px;
-text-align:center;
-background:#f8fafc;
-color:#0f172a;
-}
-
-.section.dark{
-background:#020617;
-color:#fff;
-}
-
-.section h2{
-font-size:34px;
-font-weight:800;
-margin-bottom:10px;
-}
-
-.section p{
-color:#64748b;
-margin-bottom:50px;
-}
-
-/* GRID */
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-gap:25px;
-}
-
-/* CARD */
-.card{
-background:#fff;
-border-radius:22px;
-padding:24px;
-border:1px solid #e2e8f0;
-box-shadow:0 15px 50px rgba(0,0,0,.05);
-transition:.25s;
-text-align:left;
-position:relative;
-overflow:hidden;
-}
-
-.dark .card{
-background:#020617;
-border:1px solid #1e293b;
-}
-
-.card::before{
-content:"";
-position:absolute;
-top:-50%;
-left:-50%;
-width:200%;
-height:200%;
-background:radial-gradient(circle, rgba(20,200,168,.08), transparent);
-transform:rotate(25deg);
-}
-
-.card:hover{
-transform:translateY(-6px);
-}
-
-.tag{
-font-size:11px;
-font-weight:700;
-background:#ecfeff;
-color:#0ea58b;
-padding:6px 10px;
-border-radius:8px;
-display:inline-block;
-margin-bottom:12px;
-}
-
-.card h3{
-font-size:17px;
-margin-bottom:6px;
-}
-
-.card p{
-font-size:13px;
-color:#64748b;
-}
-
-/* BENEFITS */
-.benefits{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:25px;
-}
-
-/* CTA */
-.cta{
-padding:120px 20px;
-text-align:center;
-background:linear-gradient(135deg,#14c8a8,#0ea58b);
-}
-
-.cta h2{
-font-size:36px;
-font-weight:800;
-margin-bottom:20px;
-}
-
-/* FOOTER */
-.footer{
-padding:40px;
-text-align:center;
-background:#020617;
-color:#64748b;
-}
-
-/* ANIMAÇÃO */
-.fade{
-opacity:0;
-transform:translateY(30px);
-transition:.6s;
-}
-
-.fade.show{
-opacity:1;
-transform:translateY(0);
+/* MOBILE BUTTON */
+.menu-mobile-btn{
+  display:none;
+  font-size:22px;
+  cursor:pointer;
+  color:var(--primary);
 }
 
 @media(max-width:768px){
-.hero h1{font-size:34px}
+  .menu-mobile-btn{
+    display:block;
+  }
+}
+
+/* ===================== IFRAME ===================== */
+iframe{
+  border:none;
+  width:100%;
+  height:calc(100vh - 60px);
+  background:var(--bg);
+}
+
+/* ===================== SCROLL ===================== */
+.menu::-webkit-scrollbar{
+  width:6px;
+}
+
+.menu::-webkit-scrollbar-thumb{
+  background:#cbd5f5;
+  border-radius:10px;
+}
+
+
+
+
+
+
+.logo-text{
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:.5px;
+
+  color:var(--primary);
+
+  text-align:center;
+  line-height:1.2;
+}
+
+.
+.menu-indicator:hover{
+  background:#1d4ed8;
+}
+
+.sidebar.open + .menu-indicator{
+  background: rgba(37, 99, 235, 0.9);
+}
+
+
+
+
+.btn-voltar{
+  width:36px;
+  height:36px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:var(--primary-soft);
+  color:var(--primary);
+
+  font-size:18px;
+  font-weight:800;
+
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btn-voltar:hover{
+  background:var(--primary);
+  color:#fff;
+}
+
+.menu-mobile-btn{
+  width:40px;
+  height:40px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:10px;
+
+  background:#ffffff;
+  color:#000;
+
+  font-size:22px;
+
+  cursor:pointer;
+  transition:.2s;
+
+  box-shadow:0 6px 18px rgba(0,0,0,.15);
+}
+
+.menu-mobile-btn:hover{
+  transform:scale(1.05);
+  background:#f1f5f9;
+}
+
+.overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(3px);
+
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+
+  z-index:55;
+}
+
+.overlay.active{
+  opacity:1;
+  pointer-events:auto;
 }
 </style>
 </head>
 
 <body>
+<div class="app">
+
+  <div class="nav-hover-zone"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-text">
+        MERCATTO DELÍCIA
+      </div>
+    </div>
+
+<div class="menu">
+
+  <!-- DASHBOARD -->
+  <div class="menu-item" onclick="openPage('inicio/dashboard.html')" data-page="inicio/dashboard.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/dashboard-line.svg">
+    Dashboard
+  </div>
+
+     
+  <!-- Operacional -->
+  <div class="menu-item" onclick="toggleSub('sub_encontrar')">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-3-line.svg">
+    Operacional
+  </div>
+
+  <div class="submenu" id="sub_encontrar">
+    <a onclick="openPage('restaurante/administracao/requisicoesrecebidas.html')" data-page="buscar.html">Requisições de mercadorias</a>
+    <a onclick="openPage('ferramentas/apresentacoes/links.html')" data-page="ferramentas/apresentacoes/links.html">Links</a>
+    <a onclick="openPage('ferramentas/producao/analisedepercas.html')" data-page="ferramentas/apresentacoes/links.html">Trocas</a>
+    <a onclick="openPage('ferramentas/producao/analisebuffet.html')" data-page="ferramentas/producao/analisebuffet.html">Buffet</a>
+  </div>
+
+  <!-- WHATSAPP -->
+  <div class="menu-item" onclick="openPage('otto/whatsapp.html')" data-page="otto/whatsapp.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Logos/whatsapp-line.svg">
+    WhatsApp
+  </div>
+
+  <!-- FICHA TECNICA -->
+  <div class="menu-item" onclick="toggleSub('sub_ficha')">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Document/book-open-line.svg">
+    Ficha técnica
+  </div>
+
+  <div class="submenu" id="sub_ficha">
+    <a onclick="openPage('restaurante/fichas.html')" data-page="restaurante/fichas.html">Fichas</a>
+    <a onclick="openPage('relatórios/caderno.html')" data-page="relatórios/caderno.html">Livro de receitas</a>
+    <a onclick="openPage('relatórios/historico.html')" data-page="relatórios/historico.html">Histórico</a>
+    <a onclick="openPage('restaurante/relatorios/homerelatorios.html')" data-page="restaurante/relatorios/homerelatorios.html">Relatórios</a>
+
+  </div>
+
+
+  <!-- RESTAURANTE -->
+<div class="menu-item" onclick="toggleSub('sub_monitorar')">
+  <i class="ri-restaurant-line"></i>
+  Restaurante
+</div>
+
+  <div class="submenu" id="sub_monitorar">
+    <a onclick="openPage('restaurante/reservas.html')" data-page="restaurante/reservas.html">Reservas de mesas</a>
+    <a onclick="openPage('restaurante/agendacantores.html')" data-page="restaurante/agendacantores.html">Agenda de cantores</a>
+    <a onclick="openPage('restaurante/administracao/cardapiodigital/config.html')" data-page="restaurante/administracao/cardapiodigital/config.html">Mídias do Carápio</a>
+    <a onclick="openPage('restaurante/administracao/aprendizadobot.html')" data-page="restaurante/administracao/aprendizadobot.html">Aprendizado OTTO</a>
+    
+  </div>
+
+  <!-- AGENTE -->
+<div class="menu-item" onclick="openPage('otto/agente.html')" data-page="otto/agente.html">
+  <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/Device/cpu-line.svg">
+  Agente de IA
+</div>
+     
+  <!-- APP / SISTEMA -->
+  <div class="menu-item" onclick="openPage('ferramentas/aplicativos.html')" data-page="ferramentas/aplicativos.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/apps-2-line.svg">
+    Aplicativos
+  </div>
+     
+  <!-- CONFIG -->
+  <div class="menu-item" onclick="openPage('sistema/configuracoes.html')" data-page="sistema/configuracoes.html">
+    <img src="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/icons/System/settings-4-line.svg">
+    Configurações
+  </div>
+
+</div>
+  </div>
+
+<div class="overlay" onclick="toggleMobileMenu()"></div>
+
+  <!-- MAIN -->
+  <div class="main">
 
 <div class="header">
-  <div class="logo">GRUPO DV</div>
+
+  <div style="display:flex;align-items:center;gap:10px">
+
+    <!-- MENU (AGORA PRIMEIRO) -->
+<div class="menu-mobile-btn" onclick="toggleMobileMenu()">
+  <i class="ri-arrow-right-line"></i>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <h1>O sistema completo para <span>controlar e escalar</span> sua operação</h1>
-  <p>Gestão inteligente de restaurante, compras, reservas e atendimento automatizado.</p>
-  <button class="btn" onclick="whats()">Falar no WhatsApp</button>
-</div>
-
-<!-- SISTEMAS -->
-<div class="section">
-  <h2>Todos os módulos integrados</h2>
-  <p>Um único sistema, controle total</p>
-
-  <div class="grid fade">
-
-    <div class="card">
-      <div class="tag">CMV</div>
-      <h3>Ficha Técnica</h3>
-      <p>Controle completo de custo e margem por prato.</p>
+    <!-- VOLTAR
+    <div class="btn-voltar" onclick="voltarPagina()">
+      ←
     </div>
-
-    <div class="card">
-      <div class="tag">COMPRAS</div>
-      <h3>Requisições</h3>
-      <p>Fluxo de pedidos com aprovação e controle total.</p>
-    </div>
-
-    <div class="card">
-      <div class="tag">ATENDIMENTO</div>
-      <h3>Reservas</h3>
-      <p>Organização de mesas e clientes.</p>
-    </div>
-
-    <div class="card">
-      <div class="tag">AUTOMAÇÃO</div>
-      <h3>WhatsApp Inteligente</h3>
-      <p>Atendimento automatizado com histórico completo.</p>
-    </div>
-
-    <div class="card">
-      <div class="tag">FINANCEIRO</div>
-      <h3>Cotações</h3>
-      <p>Compare fornecedores e reduza custos.</p>
-    </div>
-
-    <div class="card">
-      <div class="tag">ANÁLISE</div>
-      <h3>Dashboard</h3>
-      <p>Métricas em tempo real para decisões.</p>
-    </div>
-
+-->
   </div>
-</div>
 
-<!-- BENEFÍCIOS -->
-<div class="section dark">
-  <h2>Por que usar nosso sistema?</h2>
-
-  <div class="benefits fade">
-
-    <div class="card">
-      <h3>Redução de custos</h3>
-      <p>Controle absoluto do CMV e desperdícios.</p>
-    </div>
-
-    <div class="card">
-      <h3>Automação</h3>
-      <p>Menos trabalho manual, mais produtividade.</p>
-    </div>
-
-    <div class="card">
-      <h3>Controle centralizado</h3>
-      <p>Tudo em um único sistema.</p>
-    </div>
-
+  <div class="user-area">
+    <span id="userMail"></span>
+    <span class="logout" onclick="logout()">SAIR</span>
   </div>
+
 </div>
 
-<!-- CTA -->
-<div class="cta">
-  <h2>Pronto para transformar sua operação?</h2>
-  <button class="btn" onclick="whats()">Quero conhecer</button>
+<iframe id="frame" src="inicio/dashboard.html"></iframe>
+</div>
 </div>
 
-<div class="footer">
-  © Grupo DV • Sistema Inteligente
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-function whats(){
-  const msg = encodeURIComponent("Tenho interesse no sistema Grupo DV");
-  window.open("https://wa.me/5577999999999?text="+msg);
+const supabaseClient=supabase.createClient(
+"https://mblvyircwsaxaslklzky.supabase.co",
+"sb_publishable_oN2CuBzXHaUF7NHYS_M7aw_tBqVeD-x"
+);
+
+function toggleSub(id){
+const el=document.getElementById(id);
+el.style.display=el.style.display==="block"?"none":"block";
 }
 
-/* ANIMAÇÃO */
-const obs = new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      e.target.classList.add("show");
-    }
-  });
-});
+function toggleMobileMenu(){
+  const sidebar = document.querySelector(".sidebar");
+  const overlay = document.querySelector(".overlay");
 
-document.querySelectorAll(".fade").forEach(el=>obs.observe(el));
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("active");
+
+  localStorage.setItem("menuAberto", sidebar.classList.contains("open"));
+}
+
+
+function openPage(page){
+  document.getElementById("frame").src = page;
+
+  localStorage.setItem("paginaAtual", page);
+
+  highlightMenu(page);
+
+  // 🔥 FECHA SEMPRE (desktop + mobile)
+  document.querySelector(".sidebar").classList.remove("open");
+  document.querySelector(".overlay").classList.remove("active");
+}
+
+function highlightMenu(page){
+document.querySelectorAll(".menu-item").forEach(i=>i.classList.remove("active"));
+document.querySelectorAll(".submenu a").forEach(i=>i.classList.remove("active-sub"));
+const sub=document.querySelector(`a[data-page="${page}"]`);
+if(sub){
+sub.classList.add("active-sub");
+sub.closest(".submenu").previousElementSibling.classList.add("active");
+sub.closest(".submenu").style.display="block";
+}
+}
+
+function logout(){
+localStorage.removeItem("usuarioEmail");
+location.href="login.html";
+}
+
+window.onload = function(){
+
+  const paginaSalva = localStorage.getItem("paginaAtual");
+
+  if(paginaSalva){
+    document.getElementById("frame").src = paginaSalva;
+    highlightMenu(paginaSalva);
+  }
+
+}
+
+
+function voltarPagina(){
+  const frame = document.getElementById("frame");
+  frame.contentWindow.history.back();
+}
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("SW registrado"))
+    .catch(err => console.log("Erro SW", err));
+}
+</script>
 </body>
 </html>
