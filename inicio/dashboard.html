@@ -12,14 +12,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 
 body{
   background:#f1f5f9;
-  height:100vh;
   overflow:hidden;
 }
 
+/* HEADER */
 .header{
   height:56px;
   background:#fff;
@@ -30,6 +31,7 @@ body{
   border-bottom:1px solid #e5e7eb;
 }
 
+/* CONTAINER */
 .container{
   position:absolute;
   top:56px;
@@ -45,11 +47,17 @@ body{
 
 .card{
   background:#fff;
-  border-radius:14px;
-  padding:14px;
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.05);
 }
 
+.title{
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -58,19 +66,52 @@ body{
 
 .kpi{
   background:#f8fafc;
-  padding:12px;
+  padding:14px;
   border-radius:12px;
 }
 
 .kpi-title{font-size:11px;color:#64748b}
-.kpi-value{font-size:18px;font-weight:700}
+.kpi-value{font-size:20px;font-weight:800}
 
-.linha{
+/* LINHA */
+.row{
   display:flex;
   justify-content:space-between;
   padding:8px 0;
   font-size:13px;
   border-bottom:1px solid #f1f5f9;
+}
+
+/* TIMELINE */
+.timeline{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.evento{
+  background:#f8fafc;
+  padding:10px;
+  border-radius:10px;
+  font-size:13px;
+}
+
+.hora{
+  font-size:11px;
+  color:#64748b;
+}
+
+/* BARRA */
+.bar{
+  height:6px;
+  background:#e2e8f0;
+  border-radius:10px;
+}
+
+.fill{
+  height:6px;
+  background:#2563eb;
+  border-radius:10px;
 }
 
 </style>
@@ -80,159 +121,180 @@ body{
 
 <div class="header">
   <b>Dashboard Operacional</b>
-  <span id="status">● Carregando...</span>
+  <span id="status">● carregando</span>
 </div>
 
 <div class="container">
 
+  <!-- KPIS -->
   <div class="card">
     <div class="grid">
-      <div class="kpi">
-        <div class="kpi-title">Reservas Hoje</div>
-        <div class="kpi-value" id="totalHoje">0</div>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-title">Reservas Mês</div>
-        <div class="kpi-value" id="totalMes">0</div>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-title">Buffet Hoje</div>
-        <div class="kpi-value" id="buffetHoje">0</div>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-title">Empresas</div>
-        <div class="kpi-value">3</div>
-      </div>
+      <div class="kpi"><div class="kpi-title">Hoje</div><div class="kpi-value" id="hoje">0</div></div>
+      <div class="kpi"><div class="kpi-title">Mês</div><div class="kpi-value" id="mes">0</div></div>
+      <div class="kpi"><div class="kpi-title">Buffet Hoje</div><div class="kpi-value" id="buffet">0</div></div>
+      <div class="kpi"><div class="kpi-title">Pico Hora</div><div class="kpi-value" id="pico">--</div></div>
     </div>
   </div>
 
+  <!-- EMPRESAS -->
   <div class="card">
-    <b>🏢 Por Empresa</b>
+    <div class="title">Empresas</div>
     <div id="empresas"></div>
   </div>
 
+  <!-- STATUS -->
   <div class="card">
-    <b>📊 Status</b>
-    <div id="statusReservas"></div>
+    <div class="title">Status</div>
+    <div id="statusBox"></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="card">
+    <div class="title">Fluxo do Dia</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <!-- MESAS -->
+  <div class="card">
+    <div class="title">Mesas mais usadas</div>
+    <div id="mesas"></div>
   </div>
 
 </div>
 
 <script>
 
-// 🔥 CONEXÃO REAL
 const supabase = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-// 🔥 DATA LOCAL (SEM BUG DE FUSO)
-function hojeString(){
-  const d = new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const tabelas = [
+  {nome:"Mercatto", tabela:"reservas_mercatto"},
+  {nome:"Villa", tabela:"reservas_villa"},
+  {nome:"Delícia", tabela:"reservas_delicia"}
+];
+
+function hoje(){
+  const d=new Date();
+  return d.toISOString().slice(0,10);
 }
 
 function mesInicio(){
-  const d = new Date();
+  const d=new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-01";
 }
 
-// 🔥 TABELAS
-const tabelas = [
-  {nome:"MERCATTO", tabela:"reservas_mercatto"},
-  {nome:"VILLA", tabela:"reservas_villa"},
-  {nome:"DELÍCIA", tabela:"reservas_delicia"}
-];
-
-// 🔥 FUNÇÃO PRINCIPAL
 async function carregar(){
 
-  console.log("🔄 carregando...");
-
-  let totalHoje = 0;
-  let totalMes = 0;
-  let htmlEmpresas = "";
-  let statusMap = {};
-
-  const hoje = hojeString();
-  const inicioMes = mesInicio();
+  let totalHoje=0,totalMes=0;
+  let empresasHTML="";
+  let statusMap={}, horas={}, mesas={};
+  let timeline=[];
 
   for(const t of tabelas){
 
-    // 🔥 HOJE
-    const { data: hojeData, error: erroHoje } = await supabase
-    .from(t.tabela)
-    .select("status, datahora");
+    const {data} = await supabase.from(t.tabela).select("*");
 
-    if(erroHoje){
-      console.error("Erro hoje", t.tabela, erroHoje);
-      continue;
-    }
+    const hojeData = data.filter(r=>r.datahora?.startsWith(hoje()));
+    const mesData = data.filter(r=>r.datahora>=mesInicio());
 
-    const hojeFiltrado = hojeData.filter(r => r.datahora?.startsWith(hoje));
+    totalHoje += hojeData.length;
+    totalMes += mesData.length;
 
-    // 🔥 MÊS
-    const mesFiltrado = hojeData.filter(r => r.datahora >= inicioMes);
-
-    totalHoje += hojeFiltrado.length;
-    totalMes += mesFiltrado.length;
-
-    // STATUS
-    hojeFiltrado.forEach(r=>{
-      const s = r.status || "Sem status";
-      statusMap[s] = (statusMap[s] || 0) + 1;
-    });
-
-    htmlEmpresas += `
-      <div class="linha">
+    empresasHTML += `
+      <div class="row">
         <span>${t.nome}</span>
-        <span>${hojeFiltrado.length} hoje</span>
+        <span>${hojeData.length} hoje</span>
       </div>
     `;
+
+    hojeData.forEach(r=>{
+      // STATUS
+      statusMap[r.status]=(statusMap[r.status]||0)+1;
+
+      // HORA
+      const h=r.datahora?.substring(11,13);
+      horas[h]=(horas[h]||0)+1;
+
+      // MESA
+      if(r.mesa){
+        mesas[r.mesa]=(mesas[r.mesa]||0)+1;
+      }
+
+      // TIMELINE
+      timeline.push({
+        nome:r.nome,
+        hora:r.datahora?.substring(11,16),
+        pessoas:r.pessoas
+      });
+    });
   }
 
-  // 🔥 BUFFET
-  const { data: buffetData, error: erroBuffet } = await supabase
-    .from("buffet_lancamentos")
-    .select("data");
+  // BUFFET
+  const {data:buffet} = await supabase
+  .from("buffet_lancamentos")
+  .select("data");
 
-  if(erroBuffet){
-    console.error("Erro buffet", erroBuffet);
-  }
+  const buffetHoje = buffet.filter(b=>b.data===hoje());
 
-  const buffetHoje = buffetData.filter(b => b.data === hoje);
+  // PICO
+  let picoHora="--",max=0;
+  Object.keys(horas).forEach(h=>{
+    if(horas[h]>max){
+      max=horas[h];
+      picoHora=h+":00";
+    }
+  });
 
-  // 🔥 ATUALIZA UI
-  document.getElementById("totalHoje").innerText = totalHoje;
-  document.getElementById("totalMes").innerText = totalMes;
-  document.getElementById("buffetHoje").innerText = buffetHoje.length;
-
-  document.getElementById("empresas").innerHTML = htmlEmpresas;
-
-  // STATUS
-  let htmlStatus = "";
+  // STATUS HTML
+  let statusHTML="";
   Object.keys(statusMap).forEach(s=>{
-    htmlStatus += `
-      <div class="linha">
-        <span>${s}</span>
-        <span>${statusMap[s]}</span>
+    statusHTML+=`<div class="row"><span>${s}</span><span>${statusMap[s]}</span></div>`;
+  });
+
+  // MESAS HTML
+  let mesasHTML="";
+  Object.keys(mesas).sort((a,b)=>mesas[b]-mesas[a]).slice(0,5)
+  .forEach(m=>{
+    mesasHTML+=`
+      <div class="row">
+        <span>${m}</span>
+        <span>${mesas[m]}</span>
       </div>
     `;
   });
 
-  document.getElementById("statusReservas").innerHTML = htmlStatus;
+  // TIMELINE HTML
+  timeline.sort((a,b)=>a.hora.localeCompare(b.hora));
 
-  document.getElementById("status").innerText = "● Atualizado";
+  let timelineHTML="";
+  timeline.slice(0,10).forEach(e=>{
+    timelineHTML+=`
+      <div class="evento">
+        <b>${e.nome}</b> - ${e.pessoas} pessoas
+        <div class="hora">${e.hora}</div>
+      </div>
+    `;
+  });
+
+  // UI
+  document.getElementById("hoje").innerText=totalHoje;
+  document.getElementById("mes").innerText=totalMes;
+  document.getElementById("buffet").innerText=buffetHoje.length;
+  document.getElementById("pico").innerText=picoHora;
+
+  document.getElementById("empresas").innerHTML=empresasHTML;
+  document.getElementById("statusBox").innerHTML=statusHTML;
+  document.getElementById("mesas").innerHTML=mesasHTML;
+  document.getElementById("timeline").innerHTML=timelineHTML;
+
+  document.getElementById("status").innerText="● atualizado";
+
 }
 
-// 🔥 LOAD
 carregar();
-
-// 🔥 AUTO UPDATE
-setInterval(carregar, 20000);
+setInterval(carregar,20000);
 
 </script>
 
