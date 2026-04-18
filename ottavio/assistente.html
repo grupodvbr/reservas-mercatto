@@ -306,7 +306,6 @@ box-shadow:0 10px 30px rgba(0,0,0,0.4);
 
 <input type="file" id="file" hidden>
 
-<button class="btn-sec" onclick="abrirFile()">+</button>
 <button class="btn" onclick="enviar()">Enviar</button>
 
 </div>
@@ -557,7 +556,7 @@ const chat = document.getElementById("chat")
 
 const typing = document.createElement("div")
 typing.className="msg assistant"
-typing.innerHTML = "Gerando relatório..."
+typing.innerHTML = "Processando..."
 document.querySelector(".avatar").classList.add("neon");
 chat.appendChild(typing)
 
