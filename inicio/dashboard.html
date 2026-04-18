@@ -8,15 +8,14 @@
 <title>Dashboard Operacional</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 
 body{
   background:#f1f5f9;
-  color:#0f172a;
   height:100vh;
   overflow:hidden;
 }
@@ -51,11 +50,6 @@ body{
   box-shadow:0 6px 18px rgba(0,0,0,.05);
 }
 
-.card-title{
-  font-weight:700;
-  margin-bottom:10px;
-}
-
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -68,26 +62,8 @@ body{
   border-radius:12px;
 }
 
-.kpi-title{
-  font-size:11px;
-  color:#64748b;
-}
-
-.kpi-value{
-  font-size:18px;
-  font-weight:700;
-}
-
-/* STATUS */
-.tag{
-  font-size:11px;
-  padding:4px 8px;
-  border-radius:20px;
-}
-
-.ok{background:#dcfce7;color:#16a34a}
-.warn{background:#fef3c7;color:#d97706}
-.bad{background:#fee2e2;color:#dc2626}
+.kpi-title{font-size:11px;color:#64748b}
+.kpi-value{font-size:18px;font-weight:700}
 
 .linha{
   display:flex;
@@ -103,16 +79,13 @@ body{
 <body>
 
 <div class="header">
-  <div><b>Dashboard Operacional</b></div>
-  <div style="font-size:12px;color:#22c55e">● Atualizando</div>
+  <b>Dashboard Operacional</b>
+  <span id="status">● Carregando...</span>
 </div>
 
 <div class="container">
 
-  <!-- RESUMO GERAL -->
   <div class="card">
-    <div class="card-title">📊 Resumo Geral</div>
-
     <div class="grid">
       <div class="kpi">
         <div class="kpi-title">Reservas Hoje</div>
@@ -130,112 +103,116 @@ body{
       </div>
 
       <div class="kpi">
-        <div class="kpi-title">Empresas Ativas</div>
+        <div class="kpi-title">Empresas</div>
         <div class="kpi-value">3</div>
       </div>
     </div>
   </div>
 
-  <!-- POR EMPRESA -->
   <div class="card">
-    <div class="card-title">🏢 Por Empresa</div>
-
+    <b>🏢 Por Empresa</b>
     <div id="empresas"></div>
-
   </div>
 
-  <!-- STATUS -->
   <div class="card">
-    <div class="card-title">📌 Status das Reservas</div>
-
-    <div id="status"></div>
-
+    <b>📊 Status</b>
+    <div id="statusReservas"></div>
   </div>
 
 </div>
 
 <script>
 
+// 🔥 CONEXÃO REAL
 const supabase = supabase.createClient(
 "https://dxkszikemntfusfyrzos.supabase.co",
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-function hojeRange(){
+// 🔥 DATA LOCAL (SEM BUG DE FUSO)
+function hojeString(){
   const d = new Date();
-  const inicio = new Date(d.setHours(0,0,0,0)).toISOString();
-  const fim = new Date(d.setHours(23,59,59,999)).toISOString();
-  return {inicio,fim};
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 
-function mesRange(){
+function mesInicio(){
   const d = new Date();
-  const inicio = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
-  const fim = new Date().toISOString();
-  return {inicio,fim};
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-01";
 }
 
+// 🔥 TABELAS
+const tabelas = [
+  {nome:"MERCATTO", tabela:"reservas_mercatto"},
+  {nome:"VILLA", tabela:"reservas_villa"},
+  {nome:"DELÍCIA", tabela:"reservas_delicia"}
+];
+
+// 🔥 FUNÇÃO PRINCIPAL
 async function carregar(){
 
-  const hoje = hojeRange();
-  const mes = mesRange();
-
-  const tabelas = [
-    {nome:"MERCATTO", tabela:"reservas_mercatto"},
-    {nome:"VILLA", tabela:"reservas_villa"},
-    {nome:"DELÍCIA", tabela:"reservas_delicia"}
-  ];
+  console.log("🔄 carregando...");
 
   let totalHoje = 0;
   let totalMes = 0;
   let htmlEmpresas = "";
   let statusMap = {};
 
+  const hoje = hojeString();
+  const inicioMes = mesInicio();
+
   for(const t of tabelas){
 
-    // HOJE
-    const {data: hojeData} = await supabase
+    // 🔥 HOJE
+    const { data: hojeData, error: erroHoje } = await supabase
     .from(t.tabela)
-    .select("status")
-    .gte("datahora", hoje.inicio)
-    .lte("datahora", hoje.fim);
+    .select("status, datahora");
 
-    // MES
-    const {data: mesData} = await supabase
-    .from(t.tabela)
-    .select("status")
-    .gte("datahora", mes.inicio)
-    .lte("datahora", mes.fim);
+    if(erroHoje){
+      console.error("Erro hoje", t.tabela, erroHoje);
+      continue;
+    }
 
-    totalHoje += hojeData?.length || 0;
-    totalMes += mesData?.length || 0;
+    const hojeFiltrado = hojeData.filter(r => r.datahora?.startsWith(hoje));
+
+    // 🔥 MÊS
+    const mesFiltrado = hojeData.filter(r => r.datahora >= inicioMes);
+
+    totalHoje += hojeFiltrado.length;
+    totalMes += mesFiltrado.length;
 
     // STATUS
-    hojeData?.forEach(r=>{
-      statusMap[r.status] = (statusMap[r.status] || 0) + 1;
+    hojeFiltrado.forEach(r=>{
+      const s = r.status || "Sem status";
+      statusMap[s] = (statusMap[s] || 0) + 1;
     });
 
     htmlEmpresas += `
       <div class="linha">
         <span>${t.nome}</span>
-        <span>${hojeData?.length || 0} hoje</span>
+        <span>${hojeFiltrado.length} hoje</span>
       </div>
     `;
   }
 
-  // BUFFET
-  const {data: buffet} = await supabase
-  .from("buffet_lancamentos")
-  .select("id")
-  .eq("data", new Date().toISOString().slice(0,10));
+  // 🔥 BUFFET
+  const { data: buffetData, error: erroBuffet } = await supabase
+    .from("buffet_lancamentos")
+    .select("data");
 
+  if(erroBuffet){
+    console.error("Erro buffet", erroBuffet);
+  }
+
+  const buffetHoje = buffetData.filter(b => b.data === hoje);
+
+  // 🔥 ATUALIZA UI
   document.getElementById("totalHoje").innerText = totalHoje;
   document.getElementById("totalMes").innerText = totalMes;
-  document.getElementById("buffetHoje").innerText = buffet?.length || 0;
+  document.getElementById("buffetHoje").innerText = buffetHoje.length;
 
   document.getElementById("empresas").innerHTML = htmlEmpresas;
 
-  // STATUS RENDER
+  // STATUS
   let htmlStatus = "";
   Object.keys(statusMap).forEach(s=>{
     htmlStatus += `
@@ -246,15 +223,16 @@ async function carregar(){
     `;
   });
 
-  document.getElementById("status").innerHTML = htmlStatus;
+  document.getElementById("statusReservas").innerHTML = htmlStatus;
 
+  document.getElementById("status").innerText = "● Atualizado";
 }
 
-// LOAD
+// 🔥 LOAD
 carregar();
 
-// AUTO UPDATE
-setInterval(carregar, 30000);
+// 🔥 AUTO UPDATE
+setInterval(carregar, 20000);
 
 </script>
 
