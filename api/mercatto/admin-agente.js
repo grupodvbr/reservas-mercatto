@@ -287,6 +287,34 @@ const { data:reservas } = await supabase
 .order("created_at",{ ascending:false })
 .limit(1000)
 
+/* ================= 🔥 COLE AQUI ================= */
+
+const reservasHoje = reservas.filter(r =>
+  r.datahora?.startsWith(dataFiltro)
+)
+
+const reservasOntem = reservas.filter(r =>
+  r.datahora?.startsWith(ontemISO)
+)
+
+const totalHoje = reservasHoje.length
+const totalOntem = reservasOntem.length
+
+const clientesHoje = new Set(reservasHoje.map(r => r.telefone)).size
+
+const faturamentoHoje = reservasHoje.reduce((acc,r)=>
+  acc + (r.valorFinalPago || r.valorEstimado || 0)
+,0)
+
+const ticketHoje = totalHoje > 0 ? faturamentoHoje / totalHoje : 0
+
+let variacao = 0
+if(totalOntem > 0){
+  variacao = ((totalHoje - totalOntem) / totalOntem) * 100
+}
+
+/* ================= 🔥 FIM ================= */
+
 const { data:agenda } = await supabase
 .from("agenda_musicos")
 .select("*")
@@ -421,6 +449,22 @@ function addContext(label, data){
   const limite = Array.isArray(data) ? data.slice(0, 200) : data
 
   return {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     role:"system",
     content:`${label}:\n${JSON.stringify(limite)}`
   }
@@ -453,6 +497,47 @@ temperature:0,
   
 messages:[
 
+
+
+{
+role:"system",
+content:`
+📊 DADOS REAIS DE RESERVAS:
+
+reservas_hoje: ${totalHoje}
+reservas_ontem: ${totalOntem}
+
+clientes_hoje: ${clientesHoje}
+
+faturamento_hoje: ${faturamentoHoje}
+
+ticket_medio_hoje: ${ticketHoje}
+
+variacao_percentual: ${variacao.toFixed(2)}
+
+⚠️ REGRA:
+Use apenas esses dados. Não inventar.
+`
+},
+
+{
+role:"system",
+content:`
+🚨 RELATÓRIO DE RESERVAS
+
+Use os dados fornecidos.
+
+reservas = reservas_hoje  
+clientes = clientes_hoje  
+faturamento = faturamento_hoje  
+ticket_medio = ticket_medio_hoje  
+
+Se variacao < 0 → CAINDO  
+Se variacao > 0 → SUBINDO  
+`
+},
+
+  
 
 
 {
