@@ -546,7 +546,6 @@ function toggleMobileMenu(){
 function openPage(page){
   document.getElementById("frame").src = page;
 
-  localStorage.setItem("paginaAtual", page);
   highlightMenu(page);
 
   document.querySelector(".sidebar").classList.remove("open");
@@ -573,13 +572,17 @@ location.href="login.html";
 
 window.onload = function(){
 
-  const paginaSalva = localStorage.getItem("paginaAtual");
+  const frame = document.getElementById("frame");
 
-  if(paginaSalva){
-    document.getElementById("frame").src = paginaSalva;
-    highlightMenu(paginaSalva);
-  }
+  // 🔥 SEMPRE começa no dashboard
+  const paginaInicial = "inicio/dashboard.html";
 
+  frame.src = paginaInicial;
+
+  highlightMenu(paginaInicial);
+
+  // 🔥 controla botão
+  setTimeout(controlarBotao, 100);
 }
 
 
