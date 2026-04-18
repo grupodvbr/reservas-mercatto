@@ -144,9 +144,13 @@ const db = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-const telefoneFake = "SIMULADOR"
+let pagina = 0
+const limite = 20
+let carregando = false
+let acabou = false
 
-/* ENTER ENVIA */
+
+const telefoneFake = localStorage.getItem("user") || "ADMIN"/* ENTER ENVIA */
 
 document.getElementById("input").addEventListener("keydown", function(e){
   if(e.key === "Enter" && !e.shiftKey){
@@ -183,6 +187,71 @@ function addMsg(text,role,loading=false){
   return div
 }
 
+
+
+
+
+async function carregarMais(){
+
+  if(carregando || acabou) return
+
+  carregando = true
+
+  const from = pagina * limite
+  const to = from + limite - 1
+
+  const { data, error } = await db
+    .from("conversas_whatsapp")
+    .select("*")
+    .eq("telefone", telefoneFake)
+    .order("created_at",{ ascending:false })
+    .range(from, to)
+
+  if(error){
+    console.error(error)
+    carregando = false
+    return
+  }
+
+  if(!data || data.length === 0){
+    acabou = true
+    carregando = false
+    return
+  }
+
+  const container = document.getElementById("messages")
+
+  const scrollAtual = container.scrollHeight
+
+data.reverse().forEach(msg => {
+  const div = document.createElement("div")
+  div.className = "msg " + msg.role
+  div.innerText = msg.mensagem
+
+  container.prepend(div)
+})
+
+// 🔥 PRIMEIRA CARGA → vai pro final
+if(pagina === 0){
+  scrollBottom()
+}else{
+  // mantém posição ao carregar mais
+  container.scrollTop = container.scrollHeight - scrollAtual
+}
+
+pagina++
+carregando = false
+}
+
+
+
+
+
+
+
+
+
+  
 /* ENVIAR */
 
 async function enviar(){
@@ -258,7 +327,16 @@ async function enviar(){
 
   btn.disabled = false
 }
+carregarMais()
+scrollBottom()
 
+document.getElementById("messages").addEventListener("scroll", function(){
+
+  if(this.scrollTop === 0){
+    carregarMais()
+  }
+
+})
 </script>
 
 </body>
