@@ -1088,13 +1088,14 @@ const { data: usuario } = await db
 .select("nome,email,empresa_id")
 .eq("id", usuarioId)
 .single()
-  if(!user) return
 
-  const { data: empresa } = await supabaseAuth
-    .from("empresas")
-    .select("logo_url, nome_fantasia")
-    .eq("email", user.email)
-    .single()
+if(!usuario) return
+
+const { data: empresa } = await db
+.from("empresas")
+.select("logo_url, nome")
+.eq("id", usuario.empresa_id)
+.single()
 
   if(empresa){
 
@@ -1102,7 +1103,7 @@ const { data: usuario } = await db
 
 logo.src = empresa.logo_url 
   ? empresa.logo_url 
-  : "https://ui-avatars.com/api/?name=" + encodeURIComponent(empresa.nome_fantasia) + "&background=2563eb&color=fff"
+  : "https://ui-avatars.com/api/?name=" + encodeURIComponent(empresa.nome) + "&background=2563eb&color=fff"
    
   }
 
