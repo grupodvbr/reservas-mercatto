@@ -851,7 +851,23 @@ body{
 
   font-size:16px; /* 🔥 evita zoom */
 }
+.badge{
+  position:absolute;
+  top:6px;
+  right:6px;
 
+  background:#ef4444;
+  color:white;
+
+  font-size:10px;
+  font-weight:700;
+
+  padding:2px 6px;
+  border-radius:999px;
+
+  min-width:18px;
+  text-align:center;
+}
 
   
 </style>
@@ -1178,7 +1194,7 @@ if(card){
 }
 }
 
-document.getElementById("buscar").addEventListener("input",function(){
+document.getElementById("buscarTopo").addEventListener("input",function(){
 
 const filtro=this.value.toLowerCase()
 
@@ -1186,12 +1202,11 @@ document.querySelectorAll(".client").forEach(c=>{
 
 const texto=c.innerText.toLowerCase()
 
-c.style.display=texto.includes(filtro)?"flex":"none"
+c.style.display = texto.includes(filtro) ? "flex" : "none"
 
 })
 
 })
-
 
 carregarClientes()
 function abrirRepertorio(){
@@ -1793,21 +1808,18 @@ function abrirBusca(){
 }
 
 function fecharBusca(){
-  document.getElementById("buscaOverlay").style.display = "none"
+
+  const overlay = document.getElementById("buscaOverlay")
+  overlay.style.display = "none"
+
+  const input = document.getElementById("buscarTopo")
+  input.value = ""
+
+  document.querySelectorAll(".client").forEach(c=>{
+    c.style.display = "flex"
+  })
+
 }
-
-
-
-
-
-document.getElementById("buscaOverlay").addEventListener("click", function(e){
-  if(e.target.id === "buscaOverlay"){
-    fecharBusca()
-  }
-})
-
-
-
 
 
   
