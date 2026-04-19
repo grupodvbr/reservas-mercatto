@@ -476,20 +476,21 @@ function fecharCadastro(){ cadastro.style.display="none" }
 
 async function salvarFuncionario(){
 
-  if(
-    !nome.value ||
-    !nascimento.value ||
-    !contratacao.value ||
-    !setor.value ||
-    !funcao.value ||
-    !folga.value ||
-    !numero.value ||
-    !sexo.value
-  ){
-    alert("Preencha todos os campos obrigatórios")
-    return
-  }
-
+if(
+  !nome.value ||
+  !nascimento.value ||
+  !contratacao.value ||
+  !setor.value ||
+  !funcao.value ||
+  folgasSelecionadas.length === 0 ||
+  !numero.value ||
+  !sexo.value
+){
+  alert("Preencha todos os campos obrigatórios")
+  return
+}
+  
+  |
   await sb.from("funcionarios_mercatto").insert({
     nome:nome.value,
 numero: numero.value.replace(/\D/g, ""),
@@ -498,9 +499,22 @@ numero: numero.value.replace(/\D/g, ""),
     data_contratacao:contratacao.value,
     setor:setor.value,
     funcao:funcao.value,
-    folga:folga.value
+folga: folgasSelecionadas.join(",")
   })
-// MASCARA WHATSAPP
+  
+
+  fecharCadastro()
+  loadFuncionarios()
+}
+
+/* NAV */
+function mesAnterior(){ dataAtual.setMonth(dataAtual.getMonth()-1); render() }
+function mesProximo(){ dataAtual.setMonth(dataAtual.getMonth()+1); render() }
+
+const mesEl=document.getElementById("mes")
+const dataEl=document.getElementById("data")
+
+  // MASCARA WHATSAPP
 setTimeout(() => {
   const numeroInput = document.getElementById("numero")
 
@@ -523,19 +537,8 @@ setTimeout(() => {
 }, 500)
 
 
+
   
-
-  fecharCadastro()
-  loadFuncionarios()
-}
-
-/* NAV */
-function mesAnterior(){ dataAtual.setMonth(dataAtual.getMonth()-1); render() }
-function mesProximo(){ dataAtual.setMonth(dataAtual.getMonth()+1); render() }
-
-const mesEl=document.getElementById("mes")
-const dataEl=document.getElementById("data")
-
 loadFuncionarios()
 render()
 
