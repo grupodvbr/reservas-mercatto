@@ -1111,7 +1111,38 @@ return
 
 
 }
+document.addEventListener("DOMContentLoaded", () => {
 
+  const input = document.getElementById("buscarTopo")
+  const resultado = document.getElementById("resultadoBusca")
+
+  input.addEventListener("input", function(){
+
+    const filtro = this.value.toLowerCase()
+    resultado.innerHTML = ""
+
+    if(!filtro) return
+
+    document.querySelectorAll(".client").forEach(c=>{
+
+      const texto = c.innerText.toLowerCase()
+
+      if(texto.includes(filtro)){
+        const clone = c.cloneNode(true)
+
+        clone.onclick = () => {
+          fecharBusca()
+          abrirChatIframe(c.getAttribute("data-telefone"))
+        }
+
+        resultado.appendChild(clone)
+      }
+
+    })
+
+  })
+
+})
 /* ================= ABRIR CHAT ================= */
 
 
@@ -1919,9 +1950,15 @@ document.addEventListener('wheel', e => {
 </script>
 <div class="buscaOverlay" id="buscaOverlay">
 
-  <div class="buscaBox">
-    <input id="buscarTopo" placeholder="Buscar conversa..." autofocus>
-  </div>
+<div class="buscaBox">
+  <input id="buscarTopo" placeholder="Buscar conversa..." autofocus>
+
+  <div id="resultadoBusca" style="
+    margin-top:16px;
+    max-height:60vh;
+    overflow:auto;
+  "></div>
+</div>
 
 </div>
   
