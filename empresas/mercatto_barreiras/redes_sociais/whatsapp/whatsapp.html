@@ -746,7 +746,56 @@ body{
   }
 }
 
+.headerTop{
+  display:flex;
+  align-items:center;
+  gap:12px;
 
+  padding:12px 16px;
+  background:#0b141a;
+
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+/* LOGO */
+
+.logo{
+  font-size:20px;
+  font-weight:800;
+  color:#e9edef;
+  letter-spacing:0.5px;
+}
+
+/* SEARCH */
+
+.searchTop{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  background:#202c33;
+  border-radius:999px;
+  padding:8px 12px;
+}
+
+.searchTop i{
+  color:#8696a0;
+  font-size:16px;
+}
+
+.searchTop input{
+  flex:1;
+  background:transparent;
+  border:none;
+  outline:none;
+
+  color:#e9edef;
+  font-size:14px;
+
+  /* 🔥 REMOVE ZOOM IOS */
+  font-size:16px;
+}
   
 </style>
 </head>
@@ -755,12 +804,15 @@ body{
 
 <div class="sidebar">
 
-<div class="header">
-Conversas
-</div>
+<div class="headerTop">
 
-<div class="search">
-<input id="buscar" placeholder="Buscar telefone...">
+  <div class="logo">Otto</div>
+
+  <div class="searchTop">
+    <i class="ri-search-line"></i>
+    <input id="buscar" placeholder="Buscar conversa...">
+  </div>
+
 </div>
 
 <div class="clients" id="clientes"></div>
@@ -1762,7 +1814,17 @@ Fechar
 
 </div>
 
+<script>
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
 
+document.addEventListener('wheel', e => {
+  if(e.ctrlKey){
+    e.preventDefault();
+  }
+}, { passive:false });
+</script>
 
   
 </body>
