@@ -1081,59 +1081,34 @@ const match = mensagem.match(
 
     console.log("🧠 APRENDIZADO SALVO")
 
-    let sucessoEnvio = false
-let messageIdAdmin = null
-let retornoEnvioAdmin = null
-
-try{
-
-  const envioAdmin = await fetch(url,{
-    method:"POST",
-    headers:{
-      Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      messaging_product:"whatsapp",
-      to: telefoneCliente,
-      type:"text",
-      text:{ body: respostaAdmin }
+    const envioAdmin = await fetch(url,{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        messaging_product:"whatsapp",
+        to: telefoneCliente,
+        type:"text",
+        text:{ body: respostaAdmin }
+      })
     })
-  })
 
-  retornoEnvioAdmin = await envioAdmin.json()
+    const retornoEnvioAdmin = await envioAdmin.json()
+    const messageIdAdmin = retornoEnvioAdmin?.messages?.[0]?.id || null
 
-  console.log("📤 ENVIO MANUAL:", retornoEnvioAdmin)
+    console.log("📤 RESPOSTA ENVIADA PARA CLIENTE:", retornoEnvioAdmin)
 
-  messageIdAdmin = retornoEnvioAdmin?.messages?.[0]?.id || null
-
-  sucessoEnvio = !!messageIdAdmin
-
-}catch(err){
-
-  console.log("❌ ERRO ENVIO MANUAL:", err)
-
-  sucessoEnvio = false
-}
-
-
-/* ================= SALVAR LOG COMPLETO ================= */
-
-await supabase
-.from("conversas_whatsapp")
-.insert({
-  telefone: telefoneCliente,
-  mensagem: respostaAdmin,
-  role: "assistant",
-
-  message_id: messageIdAdmin,
-
-  status: sucessoEnvio ? "sent" : "erro",
-
-  origem_resposta: "manual",   // 🔥 IDENTIFICA MANUAL
-  enviado_por: cliente,        // 🔥 QUAL ADMIN ENVIOU
-  sucesso_envio: sucessoEnvio  // 🔥 SE REALMENTE FOI
-})
+    await supabase
+      .from("conversas_whatsapp")
+      .insert({
+        telefone: telefoneCliente,
+        mensagem: respostaAdmin,
+        role: "assistant",
+        message_id: messageIdAdmin,
+        status: "sent"
+      })
 
     await supabase
       .from("duvidas_pendentes")
