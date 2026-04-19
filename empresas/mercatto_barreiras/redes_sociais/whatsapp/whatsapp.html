@@ -796,6 +796,71 @@ body{
   /* 🔥 REMOVE ZOOM IOS */
   font-size:16px;
 }
+
+.btnFiltro{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#202c33;
+  color:#8696a0;
+
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btnFiltro:active{
+  transform:scale(0.95);
+}
+
+/* MODAL FILTRO */
+
+.filtroOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(6px);
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.filtroBox{
+  width:85%;
+  max-width:300px;
+  background:#020617;
+  border-radius:16px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.filtroBtn{
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+
+  background:#1e293b;
+  color:#e9edef;
+}
+
+.filtroBtn.active{
+  background:#22c55e;
+  color:white;
+}
+
+
+
+
   
 </style>
 </head>
@@ -813,6 +878,14 @@ body{
     <input id="buscar" placeholder="Buscar conversa...">
   </div>
 
+
+  <div class="btnFiltro" onclick="abrirFiltro()">
+    <i class="ri-filter-3-line"></i>
+  </div>
+
+
+
+  
 </div>
 
 <div class="clients" id="clientes"></div>
@@ -1565,6 +1638,18 @@ async function atualizarClientesSilencioso(){
     /* 🔥 LOOP CORRETO (SEM forEach async) */
 for(const c of clientes){
 
+  const pausado = await verificarPausa(c.telefone)
+
+  /* 🔥 FILTROS */
+
+  if(filtroAtual === "ativo" && pausado) continue
+
+  if(filtroAtual === "pausado" && !pausado) continue
+
+  if(filtroAtual === "nao_lidas" && c.role !== "user") continue
+
+
+  
   // 🔥 IDENTIFICADOR UNICO
   const idAtual = c.telefone + "_" + c.created_at
 
@@ -1724,7 +1809,21 @@ function trocarAba(aba){
 
 
 
+let filtroAtual = "todos"
 
+function abrirFiltro(){
+  document.getElementById("filtroOverlay").style.display = "flex"
+}
+
+function fecharFiltro(){
+  document.getElementById("filtroOverlay").style.display = "none"
+}
+
+function aplicarFiltro(tipo){
+  filtroAtual = tipo
+  fecharFiltro()
+  atualizarClientesSilencioso()
+}
 
 
 
@@ -1826,6 +1925,30 @@ document.addEventListener('wheel', e => {
 }, { passive:false });
 </script>
 
-  
+<div class="filtroOverlay" id="filtroOverlay">
+  <div class="filtroBox">
+
+    <button class="filtroBtn" onclick="aplicarFiltro('todos')">
+      Todos
+    </button>
+
+    <button class="filtroBtn" onclick="aplicarFiltro('ativo')">
+      BOT Ativo
+    </button>
+
+    <button class="filtroBtn" onclick="aplicarFiltro('pausado')">
+      BOT Pausado
+    </button>
+
+    <button class="filtroBtn" onclick="aplicarFiltro('nao_lidas')">
+      Não lidas
+    </button>
+
+    <button class="filtroBtn" onclick="fecharFiltro()">
+      Cancelar
+    </button>
+
+  </div>
+</div>
 </body>
 </html>
