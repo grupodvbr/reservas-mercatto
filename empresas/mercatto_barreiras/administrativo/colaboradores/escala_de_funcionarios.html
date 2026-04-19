@@ -2,200 +2,135 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Escala de funcionarios</title>
+<title>Escala Profissional • Mercatto</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 
-/* ================= BASE ================= */
+:root{
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --muted:#6b7280;
+  --primary:#2563eb;
+}
+
 *{box-sizing:border-box;}
 
 body{
   margin:0;
   font-family:Inter;
-  background:#020617;
-  color:#e2e8f0;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* ================= HEADER ================= */
+/* HEADER */
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:16px 20px;
-  background:#020617;
-  border-bottom:1px solid #1e293b;
-}
-
-header b{
-  font-size:16px;
-  font-weight:800;
-  color:#f8fafc;
+  padding:16px;
+  background:#fff;
+  border-bottom:1px solid var(--border);
 }
 
 button{
-  background:#2563eb;
-  border:none;
+  background:var(--primary);
   color:white;
+  border:none;
   padding:10px 14px;
   border-radius:10px;
   cursor:pointer;
   font-weight:600;
-  transition:0.2s;
 }
 
-button:hover{
-  background:#1d4ed8;
-}
-
-/* ================= CALENDARIO ================= */
+/* CALENDARIO */
 .calendar{
   display:grid;
-  grid-template-columns: repeat(7,1fr);
+  grid-template-columns:repeat(7,1fr);
   gap:10px;
   padding:15px;
 }
 
 .day{
-  background:#0f172a;
-  border-radius:14px;
+  background:var(--card);
+  border-radius:12px;
   padding:10px;
   min-height:130px;
+  border:1px solid var(--border);
   cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  transition:0.2s;
-  border:1px solid transparent;
-}
-
-.day:hover{
-  background:#1e293b;
-  border:1px solid #334155;
 }
 
 .day-number{
   font-size:12px;
-  opacity:0.6;
-  margin-bottom:5px;
+  color:var(--muted);
 }
 
-.func{
-  font-size:11px;
-  padding:3px 6px;
+.item-escala{
+  margin-top:5px;
+  padding:4px 6px;
   border-radius:6px;
-  margin-top:3px;
-  font-weight:600;
+  font-size:11px;
+  background:#dbeafe;
 }
 
-.manha{background:#22c55e;}
-.tarde{background:#f59e0b;}
-.noite{background:#3b82f6;}
-
-/* ================= MODAL ================= */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
+  background:rgba(0,0,0,0.5);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
 
-/* ================= BOX ================= */
 .box{
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:16px;
-  width:420px;
+  background:white;
   padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  animation:fade .2s ease;
+  border-radius:14px;
+  width:480px;
 }
 
-@keyframes fade{
-  from{transform:scale(.95);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-
-/* ================= TITULO ================= */
-.box h3{
-  margin:0 0 10px 0;
-  font-size:16px;
-  font-weight:800;
-  color:#f8fafc;
-}
-
-/* ================= FORM GRID ================= */
 .form{
   display:grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:1fr 1fr;
   gap:10px;
-  margin-top:10px;
 }
 
-.form-full{
-  grid-column:1 / -1;
-}
+.form-full{grid-column:1/-1;}
 
-/* ================= INPUT ================= */
 input,select{
-  width:100%;
   padding:10px;
-  border-radius:10px;
-  border:1px solid #1e293b;
-  background:#0f172a;
-  color:#e2e8f0;
-  font-size:13px;
+  border-radius:8px;
+  border:1px solid var(--border);
 }
 
-input:focus,select:focus{
-  outline:none;
-  border:1px solid #2563eb;
-}
-
-/* ================= LISTA ================= */
+/* LISTA */
 .lista{
-  max-height:180px;
-  overflow:auto;
   margin-top:10px;
+  max-height:200px;
+  overflow:auto;
 }
 
 .item{
-  background:#0f172a;
-  border:1px solid #1e293b;
+  background:#f9fafb;
   padding:8px;
   border-radius:8px;
   margin-top:5px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  font-size:12px;
 }
 
-/* ================= PREVIEW ================= */
+/* PREVIEW */
 .preview{
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:10px;
-  padding:8px;
-  font-size:12px;
   margin-top:10px;
-  color:#94a3b8;
-}
-
-/* ================= BOTÕES MODAL ================= */
-.actions{
-  display:flex;
-  gap:10px;
-  margin-top:15px;
-}
-
-.actions button{
-  flex:1;
+  font-size:12px;
+  color:var(--muted);
 }
 
 </style>
@@ -217,17 +152,15 @@ input:focus,select:focus{
 <!-- MODAL ESCALA -->
 <div id="modal" class="modal">
   <div class="box">
+
     <h3 id="data"></h3>
 
     <select id="funcionario"></select>
 
-    <select id="turno">
-      <option value="manha">MANHÃ</option>
-      <option value="tarde">TARDE</option>
-      <option value="noite">NOITE</option>
-    </select>
+    <input type="time" id="entrada">
+    <input type="time" id="saida">
 
-    <button onclick="add()">Adicionar</button>
+    <button onclick="add()">Adicionar horário</button>
 
     <div id="lista" class="lista"></div>
 
@@ -255,14 +188,15 @@ input:focus,select:focus{
       <input type="date" id="nascimento">
       <input type="date" id="contratacao">
 
+      <input id="funcao" placeholder="Função">
+      <input id="folga" placeholder="Dia de folga">
+
     </div>
 
     <div id="preview" class="preview"></div>
 
-    <div class="actions">
-      <button onclick="salvarFuncionario()">Salvar</button>
-      <button onclick="fecharCadastro()">Fechar</button>
-    </div>
+    <button onclick="salvarFuncionario()">Salvar</button>
+    <button onclick="fecharCadastro()">Fechar</button>
 
   </div>
 </div>
@@ -274,47 +208,42 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-let dataAtual = new Date()
+let dataAtual=new Date()
 let funcionarios=[]
 let escalas=[]
 let dataSelecionada=null
 
-// ================= FUNCIONARIOS =================
+/* FUNCIONARIOS */
 async function loadFuncionarios(){
-  const {data} = await sb.from("funcionarios_mercatto").select("*")
-  funcionarios=data
+  const {data}=await sb.from("funcionarios_mercatto").select("*")
+  funcionarios=data||[]
 
-  const sel=document.getElementById("funcionario")
-  sel.innerHTML=""
-  data.forEach(f=>{
-    sel.innerHTML+=`<option value="${f.id}">${f.nome}</option>`
+  funcionario.innerHTML=""
+  funcionarios.forEach(f=>{
+    funcionario.innerHTML+=`<option value="${f.id}">${f.nome}</option>`
   })
 }
 
-// ================= ESCALA =================
+/* ESCALA */
 async function loadEscala(){
   const {data}=await sb.from("escala_funcionarios").select("*")
-  escalas=data
+  escalas=data||[]
 }
 
-// ================= CALENDARIO =================
+/* CALENDARIO */
 async function render(){
-
   await loadEscala()
 
-  const cal=document.getElementById("calendar")
-  cal.innerHTML=""
+  calendar.innerHTML=""
 
   const ano=dataAtual.getFullYear()
   const mes=dataAtual.getMonth()
 
-  document.getElementById("mes").innerText=
-    dataAtual.toLocaleString("pt-BR",{month:"long",year:"numeric"})
+  mesEl.innerText=dataAtual.toLocaleString("pt-BR",{month:"long",year:"numeric"})
 
   const dias=new Date(ano,mes+1,0).getDate()
 
   for(let i=1;i<=dias;i++){
-
     const dataStr=`${ano}-${String(mes+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`
 
     const d=document.createElement("div")
@@ -322,36 +251,39 @@ async function render(){
     d.innerHTML=`<div class="day-number">${i}</div>`
 
     escalas.filter(e=>e.data===dataStr).forEach(e=>{
-      d.innerHTML+=`<div class="func ${e.turno}">${e.nome}</div>`
+      d.innerHTML+=`
+      <div class="item-escala">
+        ${e.nome}<br>
+        ${e.entrada} - ${e.saida}
+      </div>`
     })
 
     d.onclick=()=>abrir(dataStr)
 
-    cal.appendChild(d)
+    calendar.appendChild(d)
   }
 }
 
-// ================= ESCALA =================
+/* ESCALA */
 function abrir(data){
   dataSelecionada=data
   modal.style.display="flex"
-  document.getElementById("data").innerText=data
+  dataEl.innerText=data
   renderLista()
 }
 
 function fechar(){ modal.style.display="none" }
 
 async function add(){
-  const id=funcionario.value
-  const turno=document.getElementById("turno").value
-  const f=funcionarios.find(x=>x.id===id)
+
+  const f=funcionarios.find(x=>x.id==funcionario.value)
 
   await sb.from("escala_funcionarios").insert({
     funcionario_id:f.id,
     nome:f.nome,
-    numero:f.numero,
     data:dataSelecionada,
-    turno
+    entrada:entrada.value,
+    saida:saida.value
   })
 
   render()
@@ -362,10 +294,10 @@ function renderLista(){
   lista.innerHTML=""
   escalas.filter(e=>e.data===dataSelecionada).forEach(e=>{
     lista.innerHTML+=`
-      <div class="item">
-        ${e.nome} (${e.turno})
-        <span onclick="remover('${e.id}')">❌</span>
-      </div>`
+    <div class="item">
+      ${e.nome} (${e.entrada}-${e.saida})
+      <span onclick="remover('${e.id}')">❌</span>
+    </div>`
   })
 }
 
@@ -375,7 +307,7 @@ async function remover(id){
   renderLista()
 }
 
-// ================= CADASTRO =================
+/* CADASTRO */
 function abrirCadastro(){ cadastro.style.display="flex" }
 function fecharCadastro(){ cadastro.style.display="none" }
 
@@ -386,37 +318,38 @@ async function salvarFuncionario(){
     numero:numero.value,
     sexo:sexo.value,
     data_nascimento:nascimento.value,
-    data_contratacao:contratacao.value
+    data_contratacao:contratacao.value,
+    funcao:funcao.value,
+    folga:folga.value
   })
 
   fecharCadastro()
   loadFuncionarios()
 }
 
-// ================= PREVIEW =================
+/* PREVIEW */
 [nascimento,contratacao].forEach(el=>{
   el.onchange=()=>{
     if(!nascimento.value||!contratacao.value) return
 
-    const nasc=new Date(nascimento.value)
-    const cont=new Date(contratacao.value)
+    const idade=new Date().getFullYear()-new Date(nascimento.value).getFullYear()
+    const dias=(new Date()-new Date(contratacao.value))/(1000*60*60*24)
 
-    const idade=new Date().getFullYear()-nasc.getFullYear()
-    const dias=(new Date()-cont)/(1000*60*60*24)
-
-    preview.innerText=
-      `Idade: ${idade} anos | Experiência: ${Math.floor(dias)} dias`
+    preview.innerText=`Idade: ${idade} | Empresa: ${Math.floor(dias)} dias`
   }
 })
 
-// ================= NAV =================
+/* NAV */
 function mesAnterior(){ dataAtual.setMonth(dataAtual.getMonth()-1); render() }
 function mesProximo(){ dataAtual.setMonth(dataAtual.getMonth()+1); render() }
 
-// INIT
+const mesEl=document.getElementById("mes")
+const dataEl=document.getElementById("data")
+
 loadFuncionarios()
 render()
 
 </script>
+
 </body>
 </html>
