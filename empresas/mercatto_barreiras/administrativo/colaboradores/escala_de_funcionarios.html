@@ -491,7 +491,7 @@ async function salvarFuncionario(){
 
   await sb.from("funcionarios_mercatto").insert({
     nome:nome.value,
-    numero:numero.value,
+numero: numero.value.replace(/\D/g, ""),
     sexo:sexo.value,
     data_nascimento:nascimento.value,
     data_contratacao:contratacao.value,
@@ -499,7 +499,25 @@ async function salvarFuncionario(){
     funcao:funcao.value,
     folga:folga.value
   })
+// MASCARA WHATSAPP
+const numeroInput = document.getElementById("numero")
 
+numeroInput.addEventListener("input", (e) => {
+
+  let v = e.target.value.replace(/\D/g, "")
+
+  if(v.length > 11) v = v.slice(0,11)
+
+  if(v.length <= 10){
+    v = v.replace(/(\d{2})(\d)/, "($1) $2")
+    v = v.replace(/(\d{4})(\d)/, "$1-$2")
+  } else {
+    v = v.replace(/(\d{2})(\d)/, "($1) $2")
+    v = v.replace(/(\d{5})(\d)/, "$1-$2")
+  }
+
+  e.target.value = v
+})
   fecharCadastro()
   loadFuncionarios()
 }
