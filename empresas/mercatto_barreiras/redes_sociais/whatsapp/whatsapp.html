@@ -212,7 +212,7 @@ color:#dc2626;
 
 
 .menuDots:hover{
-  background:#202c33;
+  background:#f3f4f6;
   opacity:1;
 }
 
@@ -851,23 +851,7 @@ body{
 
   font-size:16px; /* 🔥 evita zoom */
 }
-.badge{
-  position:absolute;
-  top:6px;
-  right:6px;
 
-  background:#ef4444;
-  color:white;
-
-  font-size:10px;
-  font-weight:700;
-
-  padding:2px 6px;
-  border-radius:999px;
-
-  min-width:18px;
-  text-align:center;
-}
 
   
 </style>
@@ -1111,38 +1095,7 @@ return
 
 
 }
-document.addEventListener("DOMContentLoaded", () => {
 
-  const input = document.getElementById("buscarTopo")
-  const resultado = document.getElementById("resultadoBusca")
-
-  input.addEventListener("input", function(){
-
-    const filtro = this.value.toLowerCase()
-    resultado.innerHTML = ""
-
-    if(!filtro) return
-
-    document.querySelectorAll(".client").forEach(c=>{
-
-      const texto = c.innerText.toLowerCase()
-
-      if(texto.includes(filtro)){
-        const clone = c.cloneNode(true)
-
-        clone.onclick = () => {
-          fecharBusca()
-          abrirChatIframe(c.getAttribute("data-telefone"))
-        }
-
-        resultado.appendChild(clone)
-      }
-
-    })
-
-  })
-
-})
 /* ================= ABRIR CHAT ================= */
 
 
@@ -1225,26 +1178,19 @@ if(card){
 }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.getElementById("buscar").addEventListener("input",function(){
 
-  const input = document.getElementById("buscarTopo")
+const filtro=this.value.toLowerCase()
 
-  input.addEventListener("input", function(){
+document.querySelectorAll(".client").forEach(c=>{
 
-    const filtro = this.value.toLowerCase()
+const texto=c.innerText.toLowerCase()
 
-    document.querySelectorAll(".client").forEach(c=>{
-
-      const texto = c.innerText.toLowerCase()
-
-      c.style.display = texto.includes(filtro) ? "flex" : "none"
-
-    })
-
-  })
+c.style.display=texto.includes(filtro)?"flex":"none"
 
 })
 
+})
 
 
 carregarClientes()
@@ -1847,18 +1793,21 @@ function abrirBusca(){
 }
 
 function fecharBusca(){
-
-  const overlay = document.getElementById("buscaOverlay")
-  overlay.style.display = "none"
-
-  const input = document.getElementById("buscarTopo")
-  input.value = ""
-
-  document.querySelectorAll(".client").forEach(c=>{
-    c.style.display = "flex"
-  })
-
+  document.getElementById("buscaOverlay").style.display = "none"
 }
+
+
+
+
+
+document.getElementById("buscaOverlay").addEventListener("click", function(e){
+  if(e.target.id === "buscaOverlay"){
+    fecharBusca()
+  }
+})
+
+
+
 
 
   
@@ -1950,15 +1899,9 @@ document.addEventListener('wheel', e => {
 </script>
 <div class="buscaOverlay" id="buscaOverlay">
 
-<div class="buscaBox">
-  <input id="buscarTopo" placeholder="Buscar conversa..." autofocus>
-
-  <div id="resultadoBusca" style="
-    margin-top:16px;
-    max-height:60vh;
-    overflow:auto;
-  "></div>
-</div>
+  <div class="buscaBox">
+    <input id="buscarTopo" placeholder="Buscar conversa..." autofocus>
+  </div>
 
 </div>
   
