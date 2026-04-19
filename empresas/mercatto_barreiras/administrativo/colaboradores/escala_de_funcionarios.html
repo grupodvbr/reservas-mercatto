@@ -340,15 +340,31 @@ button:hover{
 <!-- MODAL ESCALA -->
 <div id="modal" class="modal">
   <div class="box">
-    <h3 id="data"></h3>
 
-    <select id="funcionario"></select>
-    <input type="time" id="entrada">
-    <input type="time" id="saida">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 id="data"></h3>
+      <input type="date" id="dataManual">
+    </div>
 
-    <button onclick="add()">Adicionar</button>
-    <div id="lista"></div>
-    <button onclick="fechar()">Fechar</button>
+    <div class="field">
+      <label>Funcionário</label>
+      <select id="funcionario"></select>
+    </div>
+
+    <!-- LISTA DE HORÁRIOS -->
+    <div id="blocos"></div>
+
+    <button onclick="addBloco()" style="margin-top:10px">
+      + Adicionar Horário
+    </button>
+
+    <div class="lista" id="preview"></div>
+
+    <div class="actions">
+      <button class="btn cancel" onclick="fechar()">Cancelar</button>
+      <button class="btn save" onclick="salvarEscala()">Salvar</button>
+    </div>
+
   </div>
 </div>
 
@@ -575,6 +591,133 @@ const dataEl=document.getElementById("data")
 loadFuncionarios()
 render()
 
+
+
+
+
+let horarios = []
+
+function addBloco(){
+  const id = Date.now()
+
+  const html = `
+    <div class="item" id="bloco-${id}">
+      <input type="time" id="inicio-${id}">
+      <input type="time" id="fim-${id}">
+      <button onclick="remover(${id})">✕</button>
+    </div>
+  `
+
+  blocos.innerHTML += html
+}
+
+function remover(id){
+  document.getElementById(`bloco-${id}`).remove()
+}
+
+function validarConflito(lista){
+  const ordenado = lista.sort((a,b)=>a.inicio.localeCompare(b.inicio))
+
+  for(let i=0;i<ordenado.length-1;i++){
+    if(ordenado[i].fim > ordenado[i+1].inicio){
+      return true
+    }
+  }
+  return false
+}
+
+function coletarHorarios(){
+  const blocos = document.querySelectorAll("[id^='bloco-']")
+  let lista = []
+
+  blocos.forEach(b=>{
+    const id = b.id.split("-")[1]
+    const inicio = document.getElementById(`inicio-${id}`).value
+    const fim = document.getElementById(`fim-${id}`).value
+
+    if(inicio && fim){
+      lista.push({inicio,fim})
+    }
+  })
+
+  return lista
+}
+
+async function salvarEscala(){
+
+  const f = funcionarios.find(x=>x.id == funcionario.value)
+  const lista = coletarHorarios()
+
+  if(lista.length === 0){
+    alert("Adicione pelo menos um horário")
+    return
+  }
+
+  if(validarConflito(lista)){
+    alert("Existe conflito de horários!")
+    return
+  }
+
+  const dataBase = dataManual.value || dataSelecionada
+
+  for(const h of lista){
+
+    let dataFinal = dataBase
+
+    // VIRADA DE DIA (ex: 23:00 -> 02:00)
+    if(h.fim < h.inicio){
+      // continua sendo o mesmo "dia lógico"
+      // mas salva corretamente no banco
+      dataFinal = dataBase
+    }
+
+    await sb.from("escala_funcionarios").insert({
+      funcionario_id: f.id,
+      nome: f.nome,
+      data: dataBase,
+      entrada: h.inicio,
+      saida: h.fim
+    })
+  }
+
+  fechar()
+  render()
+}
+
+
+  function abrir(data){
+  dataSelecionada = data
+
+  const lista = escalas.filter(e=>e.data === data)
+
+  let agrupado = {}
+
+  lista.forEach(e=>{
+    if(!agrupado[e.setor]) agrupado[e.setor] = []
+    agrupado[e.setor].push(e)
+  })
+
+  let html = ""
+
+  for(const setor in agrupado){
+    html += `<h4 style="margin-top:10px">${setor}</h4>`
+
+    agrupado[setor].forEach(e=>{
+      html += `
+        <div class="item">
+          ${e.nome} • ${e.entrada} - ${e.saida}
+        </div>
+      `
+    })
+  }
+
+  preview.innerHTML = html
+
+  modal.style.display="flex"
+  dataEl.innerText = data
+}
+
+  
 </script>
 
 </body>
