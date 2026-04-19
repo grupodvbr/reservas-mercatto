@@ -234,18 +234,19 @@ button:hover{
 }
 
 .item{
-  background:#f9fafb;
-  padding:8px;
-  border-radius:10px;
-  margin-top:6px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  transition:.2s;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-weight:600;
 }
 
-.item:hover{
-  background:#eef2ff;
+.item span{
+  font-size:12px;
+  color:var(--muted);
 }
 
 /* ACTIONS */
@@ -346,17 +347,24 @@ button:hover{
       <input type="date" id="dataManual">
     </div>
 
-    <div class="field">
-      <label>Funcionário</label>
-      <select id="funcionario"></select>
-    </div>
+<button onclick="abrirEdicao()" style="margin-bottom:10px">
+  + Adicionar Escala
+</button>
 
-    <!-- LISTA DE HORÁRIOS -->
-    <div id="blocos"></div>
+<div id="formEscala" style="display:none">
 
-    <button onclick="addBloco()" style="margin-top:10px">
-      + Adicionar Horário
-    </button>
+  <div class="field">
+    <label>Funcionário</label>
+    <select id="funcionario"></select>
+  </div>
+
+  <div id="blocos"></div>
+
+  <button onclick="addBloco()" style="margin-top:10px">
+    + Adicionar Horário
+  </button>
+
+</div>
 
     <div class="lista" id="preview"></div>
 
@@ -494,17 +502,47 @@ async function render(){
       d.innerHTML+=`<div class="item-escala">${e.nome}</div>`
     })
 
-    d.onclick=()=>abrir(dataStr)
+    d.onclick=()=>abrirVisual(dataStr)
     calendar.appendChild(d)
   }
 }
 
-function abrir(data){
-  dataSelecionada=data
-  modal.style.display="flex"
-  dataEl.innerText=data
-}
+function abrirVisual(data){
+  dataSelecionada = data
 
+  // LIMPA EDIÇÃO
+  blocos.innerHTML = ""
+  document.getElementById("formEscala").style.display = "none"
+
+  const lista = escalas.filter(e=>e.data === data)
+
+  let agrupado = {}
+
+  lista.forEach(e=>{
+    if(!agrupado[e.setor]) agrupado[e.setor] = []
+    agrupado[e.setor].push(e)
+  })
+
+  let html = ""
+
+  for(const setor in agrupado){
+    html += `<h4 style="margin-top:10px">${setor}</h4>`
+
+    agrupado[setor].forEach(e=>{
+      html += `
+        <div class="item">
+          <div>${e.nome}</div>
+          <span>${e.entrada} - ${e.saida}</span>
+        </div>
+      `
+    })
+  }
+
+  preview.innerHTML = html
+
+  modal.style.display="flex"
+  dataEl.innerText = data
+}
 function fechar(){ modal.style.display="none" }
 
 async function add(){
@@ -600,13 +638,16 @@ let horarios = []
 function addBloco(){
   const id = Date.now()
 
-  const html = `
-    <div class="item" id="bloco-${id}">
-      <input type="time" id="inicio-${id}">
-      <input type="time" id="fim-${id}">
-      <button onclick="remover(${id})">✕</button>
-    </div>
-  `
+const html = `
+  <div class="item" id="bloco-${id}">
+    <span>Entrada</span>
+    <input type="time" id="inicio-${id}">
+    <span>Saída</span>
+    <input type="time" id="fim-${id}">
+    <button onclick="remover(${id})">✕</button>
+  </div>
+`
+
 
   blocos.innerHTML += html
 }
@@ -671,13 +712,14 @@ async function salvarEscala(){
       dataFinal = dataBase
     }
 
-    await sb.from("escala_funcionarios").insert({
-      funcionario_id: f.id,
-      nome: f.nome,
-      data: dataBase,
-      entrada: h.inicio,
-      saida: h.fim
-    })
+await sb.from("escala_funcionarios").insert({
+  funcionario_id: f.id,
+  nome: f.nome,
+  data: dataBase,
+  entrada: h.inicio,
+  saida: h.fim,
+  setor: f.setor // 🔥 ESSENCIAL
+})
   }
 
   fechar()
@@ -717,7 +759,10 @@ async function salvarEscala(){
   dataEl.innerText = data
 }
 
-  
+  function abrirEdicao(){
+  document.getElementById("formEscala").style.display = "block"
+  blocos.innerHTML = ""
+}
 </script>
 
 </body>
