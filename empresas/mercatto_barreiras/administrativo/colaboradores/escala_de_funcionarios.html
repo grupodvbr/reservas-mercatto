@@ -336,17 +336,18 @@ input,select{
         </div>
 
         <div class="field">
-          <label>Dia de Folga *</label>
-          <select id="folga" required>
-            <option value="">Selecionar</option>
-            <option>DOMINGO</option>
-            <option>SEGUNDA</option>
-            <option>TERÇA</option>
-            <option>QUARTA</option>
-            <option>QUINTA</option>
-            <option>SEXTA</option>
-            <option>SÁBADO</option>
-          </select>
+  <label>Dias de Folga *</label>
+
+  <div class="checkbox-group" id="folga">
+    <label><input type="checkbox" value="DOMINGO"> Domingo</label>
+    <label><input type="checkbox" value="SEGUNDA"> Segunda</label>
+    <label><input type="checkbox" value="TERÇA"> Terça</label>
+    <label><input type="checkbox" value="QUARTA"> Quarta</label>
+    <label><input type="checkbox" value="QUINTA"> Quinta</label>
+    <label><input type="checkbox" value="SEXTA"> Sexta</label>
+    <label><input type="checkbox" value="SÁBADO"> Sábado</label>
+  </div>
+</div>
         </div>
       </div>
     </div>
