@@ -526,7 +526,9 @@ async function salvarFuncionario(){
     return
   }
 
-  await sb.from("funcionarios_mercatto").insert({
+const { data, error } = await sb
+  .from("funcionarios_mercatto")
+  .insert({
     nome:nome.value,
     numero:numero.value.replace(/\D/g,""),
     sexo:sexo.value,
@@ -536,6 +538,12 @@ async function salvarFuncionario(){
     funcao:funcao.value,
     folga:folgasSelecionadas.join(",")
   })
+
+if(error){
+  console.error("ERRO SUPABASE:", error)
+  alert(error.message)
+  return
+}
 
   fecharCadastro()
   loadFuncionarios()
