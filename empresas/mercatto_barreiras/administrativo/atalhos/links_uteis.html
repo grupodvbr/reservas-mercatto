@@ -5,30 +5,22 @@
 <title>Central de Links</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 
 body{
-background:#f1f5f9;
-padding:15px;
+background:#f8fafc;
+padding:18px;
+color:#0f172a;
 }
 
 /* HEADER */
 .header{
-position:sticky;
-top:0;
-z-index:10;
-
-background:#f1f5f9;
-padding:10px 0;
-
-font-size:22px;
+font-size:24px;
 font-weight:800;
-color:#0f172a;
-
-border-bottom:1px solid #e2e8f0;
+margin-bottom:12px;
 }
 
 /* SEARCH */
@@ -37,111 +29,93 @@ width:100%;
 padding:14px 16px;
 border-radius:14px;
 border:1px solid #e2e8f0;
-margin:15px 0;
 font-size:14px;
-
 background:#fff;
-box-shadow:0 4px 15px rgba(0,0,0,.04);
-
+margin-bottom:18px;
 outline:none;
 transition:.2s;
 }
 
 .search:focus{
-border-color:#14c8a8;
-box-shadow:0 0 0 3px rgba(20,200,168,.15);
+border-color:#3b82f6;
+box-shadow:0 0 0 3px rgba(59,130,246,.15);
 }
 
 /* GRID */
 .grid{
 display:grid;
-gap:12px;
+gap:14px;
 grid-template-columns:repeat(3,1fr);
 }
 
 /* TABLET */
 @media(min-width:768px){
-  .grid{
-    grid-template-columns:repeat(5,1fr);
-  }
+.grid{
+grid-template-columns:repeat(5,1fr);
 }
-
-/* DESKTOP */
-@media(min-width:1200px){
-  .grid{
-    grid-template-columns:repeat(6,1fr);
-  }
 }
 
 /* CARD */
 .card{
 background:#fff;
 border-radius:16px;
-padding:14px;
-border:1px solid #e2e8f0;
-
-box-shadow:0 8px 20px rgba(0,0,0,.05);
-
+padding:16px;
+border:1px solid #e5e7eb;
 display:flex;
 flex-direction:column;
-gap:8px;
-
-transition:.25s;
-animation:fadeUp .3s ease;
+justify-content:space-between;
+gap:10px;
+transition:.2s;
 }
 
 .card:hover{
-transform:translateY(-3px);
-box-shadow:0 15px 30px rgba(0,0,0,.08);
+transform:translateY(-2px);
+box-shadow:0 10px 25px rgba(0,0,0,.06);
 }
 
 /* TITLE */
 .title{
+font-size:14px;
 font-weight:800;
-color:#0f172a;
-font-size:13px;
-text-align:center;
 }
 
-/* ESCONDER LINK */
-.link{
-display:none;
+/* DESC */
+.desc{
+font-size:12px;
+color:#64748b;
+line-height:1.4;
 }
 
-/* BUTTONS */
+/* ACTIONS */
 .actions{
 display:flex;
-gap:6px;
-margin-top:6px;
+gap:8px;
+margin-top:10px;
 }
 
 button{
 flex:1;
 padding:10px;
-border:none;
 border-radius:10px;
+border:none;
 cursor:pointer;
 font-weight:700;
 font-size:12px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
 transition:.2s;
 }
 
 .copy{
-background:#14c8a8;
+background:#10b981;
 color:#fff;
+}
+
+.copy:hover{
+background:#059669;
 }
 
 .open{
 background:#e2e8f0;
-}
-
-.copy:hover{
-background:#0ea58b;
+color:#0f172a;
 }
 
 .open:hover{
@@ -157,26 +131,14 @@ background:#22c55e;
 color:#fff;
 padding:10px 14px;
 border-radius:10px;
-font-weight:800;
+font-weight:700;
+font-size:12px;
 opacity:0;
 transition:.2s;
-font-size:12px;
 }
 
 .toast.show{
 opacity:1;
-}
-
-/* ANIMAÇÃO */
-@keyframes fadeUp{
-from{
-opacity:0;
-transform:translateY(10px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
 }
 </style>
 </head>
@@ -185,23 +147,57 @@ transform:translateY(0);
 
 <div class="header">Central de Links</div>
 
-<input class="search" placeholder="Buscar link..." oninput="filtrar(this.value)">
+<input class="search" placeholder="Buscar..." oninput="filtrar(this.value)">
 
 <div class="grid" id="grid"></div>
 
-<div class="toast" id="toast">COPIADO</div>
+<div class="toast" id="toast">Link copiado</div>
 
 <script>
 
 const links = [
 
-  {nome:"Requisições", url:"https://otavio-seven.vercel.app/restaurante/requisicoesdemercadorias.html"},
-  {nome:"Cardápio", url:"https://otavio-seven.vercel.app/mercatto/cardapio.html"},
-  {nome:"Buffet", url:"https://reservas-mercatto.vercel.app/empresas/mercatto_barreiras/restaurante/coleta_de_dados/registro_do_buffet.html"},
-  {nome:"Empresas", url:"https://seusite.com/empresas"},
-  {nome:"Licitações", url:"https://seusite.com/licitacoes"},
-  {nome:"Cotações", url:"https://seusite.com/cotacoes"},
-  {nome:"Análises", url:"https://seusite.com/analises"}
+  {
+    nome:"Requisições",
+    desc:"Solicitação de produtos e controle de consumo",
+    url:"https://otavio-seven.vercel.app/restaurante/requisicoesdemercadorias.html"
+  },
+
+  {
+    nome:"Cardápio",
+    desc:"Gerenciamento completo dos itens do cardápio",
+    url:"https://otavio-seven.vercel.app/mercatto/cardapio.html"
+  },
+
+  {
+    nome:"Buffet",
+    desc:"Lançamento e controle de produção do buffet",
+    url:"https://reservas-mercatto.vercel.app/empresas/mercatto_barreiras/restaurante/coleta_de_dados/registro_do_buffet.html"
+  },
+
+  {
+    nome:"Empresas",
+    desc:"Cadastro e gestão de empresas",
+    url:"https://seusite.com/empresas"
+  },
+
+  {
+    nome:"Licitações",
+    desc:"Controle de processos licitatórios",
+    url:"https://seusite.com/licitacoes"
+  },
+
+  {
+    nome:"Cotações",
+    desc:"Gestão de orçamentos e fornecedores",
+    url:"https://seusite.com/cotacoes"
+  },
+
+  {
+    nome:"Análises",
+    desc:"Relatórios e indicadores do sistema",
+    url:"https://seusite.com/analises"
+  }
 
 ];
 
@@ -210,11 +206,14 @@ const grid = document.getElementById("grid");
 function render(lista){
   grid.innerHTML = lista.map(l=>`
     <div class="card">
-      <div class="title">${l.nome}</div>
+      <div>
+        <div class="title">${l.nome}</div>
+        <div class="desc">${l.desc}</div>
+      </div>
 
       <div class="actions">
-        <button class="copy" onclick="copiar('${l.url}')">📋</button>
-        <button class="open" onclick="window.open('${l.url}', '_blank')">🚀</button>
+        <button class="copy" onclick="copiar('${l.url}')">Copiar</button>
+        <button class="open" onclick="window.open('${l.url}','_blank')">Abrir</button>
       </div>
     </div>
   `).join("");
@@ -233,9 +232,12 @@ function copiar(texto){
 
 function filtrar(valor){
   const v = valor.toLowerCase();
+
   const filtrado = links.filter(l =>
-    l.nome.toLowerCase().includes(v)
+    l.nome.toLowerCase().includes(v) ||
+    l.desc.toLowerCase().includes(v)
   );
+
   render(filtrado);
 }
 
