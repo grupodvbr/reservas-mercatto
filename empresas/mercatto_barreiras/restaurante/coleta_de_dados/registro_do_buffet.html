@@ -341,12 +341,18 @@ button.ghost{
   </div>
 
   <!-- Seleção de empresa -->
-  <div class="card company-row">
-    <b>Empresa:</b>
-    <select id="empresaSelect">
-      <option value="MERCATTO DELÍCIA">Mercatto Delícia</option>
-    </select>
-  </div>
+<div class="card company-row">
+  <b>Empresa:</b>
+
+  <select id="empresaSelect">
+    <option value="MERCATTO DELÍCIA">Mercatto Delícia</option>
+  </select>
+
+  <!-- 🔥 BOTÃO AUTOMÁTICO -->
+  <button class="primary" onclick="abrirModalSemana()" style="height:42px">
+    ⚡ Lançamento Automático
+  </button>
+</div>
 
   <div class="card">
 <div class="form-grid tablet-row">
@@ -1109,6 +1115,90 @@ async function confirmarConsumo(){
   fecharConsumo();
   salvar(nome);
 }
+
+
+// ================== MODAL SEMANA ==================
+function abrirModalSemana(){
+  document.getElementById("modalSemana").style.display = "flex";
+}
+
+function fecharSemana(){
+  document.getElementById("modalSemana").style.display = "none";
+}
+
+// ================== CARDÁPIO ==================
+let cardapioSelecionado = [];
+
+async function abrirCardapio(dia){
+
+  fecharSemana();
+
+  const empresa = empresaSelect.value;
+
+  const { data } = await sb
+    .from("buffet_produtos")
+    .select("*")
+    .eq("empresa", empresa)
+    .eq("dia_semana", dia);
+
+  const container = document.getElementById("listaCardapio");
+  container.innerHTML = "";
+
+  cardapioSelecionado = data || [];
+
+  data?.forEach(item=>{
+    container.innerHTML += `
+      <label style="display:flex;gap:10px;margin-bottom:6px">
+        <input type="checkbox" checked data-id="${item.id}">
+        <span>${item.nome}</span>
+      </label>
+    `;
+  });
+
+  document.getElementById("tituloCardapio").innerText = "Cardápio - " + dia;
+  document.getElementById("modalCardapio").style.display = "flex";
+}
+
+function fecharCardapio(){
+  document.getElementById("modalCardapio").style.display = "none";
+}
+
+// ================== LANÇAMENTO AUTOMÁTICO ==================
+async function lancarCardapio(){
+
+  showSaving();
+
+  const empresa = empresaSelect.value;
+  const checkboxes = document.querySelectorAll("#listaCardapio input:checked");
+
+  for(const checkbox of checkboxes){
+
+    const item = cardapioSelecionado.find(p => p.id == checkbox.dataset.id);
+
+    if(!item) continue;
+
+    const tara = Number(item.tara_padrao || 0);
+
+    await sb.from("buffet_lancamentos").insert({
+      empresa: empresa,
+      produto_id: item.id,
+      produto_nome: item.nome,
+      tipo: "MONTAGEM",
+      quantidade: 0.001, // 🔥 1g
+      unidade: "KG",
+      data: dataISO,
+      hora: new Date().toTimeString().slice(0,8),
+      tara: tara
+    });
+  }
+
+  fecharCardapio();
+  hideSaving();
+  carregarLancamentos();
+}
+
+
+  
 </script>
 <!-- OVERLAY DE SALVAMENTO -->
 <div id="savingOverlay" style="
@@ -1129,4 +1219,42 @@ async function confirmarConsumo(){
   </div>
 </div>
 </body>
+
+
+<!-- 🔥 MODAL SEMANA -->
+<div class="modal-backdrop" id="modalSemana">
+  <div class="modal">
+    <h3>Selecionar dia</h3>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <button onclick="abrirCardapio('SEGUNDA')">Segunda</button>
+      <button onclick="abrirCardapio('TERCA')">Terça</button>
+      <button onclick="abrirCardapio('QUARTA')">Quarta</button>
+      <button onclick="abrirCardapio('QUINTA')">Quinta</button>
+      <button onclick="abrirCardapio('SEXTA')">Sexta</button>
+      <button onclick="abrirCardapio('SABADO')">Sábado</button>
+      <button onclick="abrirCardapio('DOMINGO')">Domingo</button>
+    </div>
+
+    <div class="actions">
+      <button class="ghost" onclick="fecharSemana()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- 🔥 MODAL CARDÁPIO -->
+<div class="modal-backdrop" id="modalCardapio">
+  <div class="modal" style="width:600px">
+    <h3 id="tituloCardapio">Cardápio</h3>
+
+    <div id="listaCardapio" style="max-height:300px;overflow:auto"></div>
+
+    <div class="actions">
+      <button class="ghost" onclick="fecharCardapio()">Cancelar</button>
+      <button class="primary" onclick="lancarCardapio()">Lançar</button>
+    </div>
+  </div>
+</div>
 </html>
