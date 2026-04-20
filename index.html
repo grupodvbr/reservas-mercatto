@@ -656,12 +656,12 @@ function logout(){
 localStorage.removeItem("usuarioEmail");
 location.href="login.html";
 }
-
 window.onload = function(){
 
   const frame = document.getElementById("frame");
 
   const paginaSalva = localStorage.getItem("paginaAtual") || "inicio/dashboard.html";
+
   frame.src = paginaSalva;
 
   highlightMenu(paginaSalva);
@@ -672,9 +672,12 @@ window.onload = function(){
     e.stopPropagation();
   });
 
+  ativarDuploCliqueIframe();
 
-
-  
+  // 🔥🔥🔥 ADICIONA AQUI 🔥🔥🔥
+  document.addEventListener("dblclick", abrirMenu);
+  document.addEventListener("touchend", detectarDuploClique);
+}
 function voltarPagina(){
   const frame = document.getElementById("frame");
   frame.contentWindow.history.back();
@@ -735,9 +738,9 @@ function detectarDuploClique(){
   const agora = new Date().getTime();
   const diff = agora - lastTap;
 
-  if(diff < 300){
-    abrirMenu(); // 🔥 abre direto
-  }
+if(diff < 300){
+  abrirMenu();
+}
 
   lastTap = agora;
 }
