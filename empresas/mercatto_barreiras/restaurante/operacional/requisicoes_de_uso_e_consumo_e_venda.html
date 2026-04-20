@@ -358,7 +358,90 @@ body.dark .card-status span {
   border:1px solid #dc3545 !important;
   box-shadow:0 0 0 2px rgba(220,53,69,.2);
 }
-  
+
+
+
+
+/* ================= TABLET (768 até 1200) ================= */
+@media (min-width:768px) and (max-width:1200px){
+
+  body{
+    font-size:15px;
+  }
+
+  header{
+    padding:16px 20px;
+  }
+
+  header h1{
+    font-size:1.4em;
+  }
+
+  /* 🔥 filtros em grid bonito */
+  .filtros{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap:10px;
+    padding:14px;
+  }
+
+  .filtros input,
+  .filtros select,
+  .filtros button{
+    width:100%;
+    font-size:14px;
+    padding:10px;
+  }
+
+  /* 🔥 resumo mais organizado */
+  .resumo{
+    justify-content:space-between;
+    padding:14px;
+  }
+
+  .card-status{
+    flex:1 1 30%;
+    justify-content:center;
+    font-size:15px;
+  }
+
+  /* 🔥 tabela mais legível */
+  table{
+    font-size:14px;
+  }
+
+  th, td{
+    padding:10px;
+  }
+
+  /* 🔥 botões flutuantes maiores */
+  #menu-solicitantes,
+  #relatorio{
+    padding:16px 20px;
+    font-size:16px;
+  }
+
+  /* 🔥 popup maior */
+  .popup-box{
+    max-width:600px;
+  }
+}
+
+
+
+
+
+  @media (min-width:768px){
+
+  table{
+    display:block;
+    overflow-x:auto;
+  }
+
+  thead, tbody{
+    width:100%;
+  }
+}
 </style>
 </head>
 <body>
