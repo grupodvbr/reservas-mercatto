@@ -2,332 +2,277 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Buffet • Mercatto Delícia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Buffet • Painel de analise de lançamentos</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <style>
 :root{
   --primary:#ff6a00;
-  --primary-dark:#ea580c;
-  --bg:#f3f4f6;
+  --bg:#f6f7fb;
   --card:#ffffff;
   --border:#e5e7eb;
   --muted:#6b7280;
-  --radius:14px;
-  --shadow:0 8px 24px rgba(0,0,0,.08);
+  --radius:18px;
+  --shadow:0 12px 34px rgba(0,0,0,.10);
 }
-
-*{
-  box-sizing:border-box;
-  font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  min-height:100%;
-  background:var(--bg);
-  overflow-y:auto;
-  overflow-x:hidden;
-}
-
-/* ================= APP ================= */
-
+*{box-sizing:border-box;font-family:Inter}
+html,body{margin:0;background:var(--bg)}
 .app{
-  max-width:1500px;
-  margin:0 auto;
-  padding:20px;
-  min-height:100dvh;
-  display:flex;
-  flex-direction:column;
+  width:100%;
+  max-width:1600px; /* limite maior (opcional) */
+  margin:auto;
+  padding:20px 32px 80px;
 }
-
-/* ================= HEADER ================= */
-
 .header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:18px;
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,#fff, #fff0);
+  backdrop-filter: blur(6px);
+  padding:10px 0 8px;
+  margin-bottom:8px;
 }
-
-.title{
-  font-size:24px;
-  font-weight:900;
-  letter-spacing:-0.5px;
-}
-
-.badge{
-  background:#111827;
-  color:#fff;
-  padding:7px 14px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:700;
-}
-
-/* ================= CARD ================= */
+.title{font-size:20px;font-weight:900}
+.sub{font-size:12px;color:var(--muted)}
 
 .card{
   background:var(--card);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
-  padding:18px;
-  margin-bottom:16px;
+  padding:12px;
+  margin-bottom:10px;
 }
 
-/* ================= EMPRESA ================= */
+/* ===== FILTROS RESPONSIVOS PROFISSIONAIS ===== */
 
-.company-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.company-row select{
-  width:300px;
-}
-
-/* ================= FORM GRID ================= */
-
-.form-grid{
+.filters{
   display:grid;
-  grid-template-columns: 2.8fr 1.8fr 1.4fr 1.4fr;
-  gap:16px;
-  align-items:end;
+  grid-template-columns:repeat(6, minmax(0,1fr));
+  gap:8px;
+  align-items:stretch;
 }
 
-/* ================= FIELD ================= */
-
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.field label{
-  font-size:11px;
-  font-weight:800;
-  color:#374151;
-  text-transform:uppercase;
-  letter-spacing:.6px;
-}
-
-/* ================= INPUTS ================= */
-
-input, select{
-  height:44px;
-  padding:8px 12px;
-  border-radius:10px;
+.filters input,
+.filters select{
+  grid-column:span 2;
+  padding:10px 12px;
+  border-radius:12px;
   border:1px solid var(--border);
   font-size:14px;
-  background:#fff;
-  transition:all .2s ease;
 }
 
-input:focus, select:focus{
-  border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(255,106,0,.12);
-  outline:none;
-}
-
-/* ================= INLINE QUANTIDADE + UNIDADE ================= */
-
-.inline-group .inline-input{
-  display:flex;
-  width:100%;
-}
-
-.inline-group input{
-  flex:1;
-  border-top-right-radius:0;
-  border-bottom-right-radius:0;
-}
-
-.inline-group select{
-  width:85px;
-  border-left:none;
-  border-top-left-radius:0;
-  border-bottom-left-radius:0;
-  background:#f9fafb;
-  font-weight:700;
-}
-
-/* ================= PREVIEW LIQUIDO ================= */
-
-.net-preview{
-  font-size:12px;
-  margin-top:4px;
-  color:#6b7280;
-}
-
-/* ================= BOTÕES ================= */
-
-button{
-  height:44px;
-  padding:0 18px;
-  border-radius:10px;
+.filters button{
+  grid-column:span 1;
+  padding:10px 12px;
+  border-radius:12px;
+  border:none;
+  font-size:13px;
   font-weight:800;
-  font-size:14px;
-  cursor:pointer;
-  transition:.2s;
-}
-
-button.primary{
   background:var(--primary);
   color:#fff;
-  border:none;
-}
-
-button.primary:hover{
-  background:var(--primary-dark);
-}
-
-button.ghost{
-  background:#fff;
-  border:1px solid var(--border);
-}
-
-/* ================= LISTA ================= */
-
-.list{
-  flex:1;
-  overflow:auto;
-  display:grid;
-  gap:12px;
-  padding-right:4px;
-}
-
-.item{
-  display:grid;
-  grid-template-columns: 1fr auto;
-  gap:14px;
-  padding:16px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background:#fff;
+  display:flex;
   align-items:center;
-  transition:.15s;
-}
-
-.item:hover{
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
-}
-
-.item .name{
-  font-weight:900;
-  font-size:15px;
-}
-
-.meta{
-  font-size:13px;
-  color:var(--muted);
-}
-
-.tag{
-  padding:7px 14px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-}
-
-/* ================= TAG CORES ================= */
-
-.MONTAGEM{background:#dcfce7;color:#166534}
-.REPOSICAO{background:#e0f2fe;color:#075985}
-.RETIRADA{background:#fee2e2;color:#991b1b}
-.DEVOLUCAO{background:#fef3c7;color:#92400e}
-.CONSUMO{background:#ede9fe;color:#5b21b6}
-
-/* ================= ICON BUTTON ================= */
-
-.icon-btn{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:10px;
-  padding:6px 9px;
+  justify-content:center;
+  gap:6px;
   transition:.2s;
 }
 
-.icon-btn:hover{
-  background:#f9fafb;
+.filters button:active{
+  transform:scale(.97);
+}
+.filters input,.filters select,.filters button{
+  padding:10px 12px;border-radius:12px;border:1px solid var(--border);font-size:14px
+}
+.filters button{background:var(--primary);color:#fff;border:none;font-weight:800}
+
+.chart-wrap{height:180px}
+
+/* Remover layout em cards (mobile) */
+.list{display:none}
+
+/* Tabela sempre visível (desktop + mobile) */
+.table{display:block}
+
+/* Wrapper SEM rolagem lateral */
+.table-wrap{
+  width:100%;
+  overflow-x:hidden;
+  border-radius:12px;
 }
 
-.icon-btn.danger{
-  border-color:#fecaca;
-  color:#b91c1c;
+/* Tabela fluida, sem largura mínima */
+table{
+  width:100%;
+  min-width:0;            /* remove largura mínima */
+  table-layout:fixed;    /* força colunas a caberem */
+  border-collapse:collapse;
 }
 
-/* ================= MODAL ================= */
+/* Colunas compactadas */
+th,td{
+  padding:6px 6px;       /* menos padding no mobile */
+  border-bottom:1px solid var(--border);
+  text-align:left;
+  font-size:12px;       /* fonte menor no celular */
+  white-space:normal;  /* permite quebrar texto */
+  word-break:break-word;
+}
 
+@media(max-width: 899px){
+
+  th:nth-child(1), td:nth-child(1){ width:30% }
+  th:nth-child(2), td:nth-child(2){ width:10% }
+  th:nth-child(3), td:nth-child(3){ width:10% }
+  th:nth-child(4), td:nth-child(4){ width:12% }
+  th:nth-child(5), td:nth-child(5){ width:10% }
+  th:nth-child(6), td:nth-child(6){ width:8% }
+  th:nth-child(7), td:nth-child(7){ width:10% }
+
+  .title{font-size:18px}
+  .sub{font-size:12px}
+  .chart-wrap{height:200px}
+
+}
+
+/* ===== MODAL ===== */
 .modal-backdrop{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.45);
+  background:rgba(0,0,0,.55);
   display:none;
   align-items:center;
   justify-content:center;
   z-index:999;
+  padding:16px;
 }
-
 .modal{
-  width:480px;
+  width:100%;
+  max-width:420px;
   background:#fff;
-  border-radius:18px;
-  padding:22px;
-  box-shadow:0 25px 60px rgba(0,0,0,.25);
+  border-radius:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+  padding:16px;
 }
-
-.modal .grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+.modal h3{
+  margin:0 0 10px;
+  font-size:16px;
+  font-weight:900;
 }
-
-.modal .actions{
+.actions{
   display:flex;
   gap:10px;
-  margin-top:14px;
+  margin-top:12px;
+  justify-content:flex-end;
+}
+.actions button{
+  padding:10px 14px;
+  border-radius:10px;
+  border:none;
+  font-weight:800;
+  cursor:pointer;
+}
+.actions .ghost{
+  background:#f1f5f9;
+  color:#0f172a;
 }
 
-/* ================= RESPONSIVO TABLET ================= */
+/* 🔒 Garante que nada estoure a largura da tela no celular */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
 
-@media(max-width:1200px){
-  .form-grid{
-    grid-template-columns: 2fr 1.5fr 1fr 1fr;
+/* 🧩 Tabela sempre se adapta ao tamanho da tela */
+.table-wrap, table {
+  max-width: 100%;
+}
+
+/* ===== MOBILE LIMPO E PROFISSIONAL ===== */
+
+@media(max-width:899px){
+
+  /* 3 colunas no mobile */
+  .filters{
+    grid-template-columns:repeat(3, 1fr);
+    gap:8px;
+  }
+
+  /* Inputs ocupam linha inteira */
+  .filters select,
+  .filters input{
+    grid-column:1 / -1;
+  }
+
+  /* Botões ocupam 1 coluna cada */
+  .filters button{
+    grid-column:span 1;
+    font-size:12px;
+    padding:9px;
+  }
+
+}
+
+/* ===== CORREÇÃO CARDS RESUMO ===== */
+
+.card h3{
+  margin:6px 0 0;
+  font-weight:900;
+
+  /* tamanho fluido automático */
+  font-size:clamp(16px, 3vw, 22px);
+
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+@media(max-width: 899px){
+  .card h3{
+    font-size:18px;
   }
 }
 
-/* ================= RESPONSIVO CELULAR ================= */
+/* 🔥 Permite o grid encolher corretamente */
+.card > div[style*="grid"] > .card{
+  min-width:0;
+}
 
-@media(max-width:768px){
+/* 🔥 Garante que o grid nunca estoure */
+.card > div[style*="grid"]{
+  overflow:hidden;
+}
 
-  .form-grid{
-    grid-template-columns:1fr;
+/* ===== BLOCO COMPARAÇÃO GRANDE ===== */
+
+.comparacao-box{
+  margin-top:12px;
+  padding:14px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#f8fafc,#eef2ff);
+  border:1px solid #e5e7eb;
+  font-weight:800;
+  font-size:18px;
+  line-height:1.5;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.comparacao-box b{
+  font-size:20px;
+}
+
+@media(max-width:899px){
+  .comparacao-box{
+    font-size:16px;
   }
-
-  .company-row{
-    flex-direction:column;
-    align-items:flex-start;
+  .comparacao-box b{
+    font-size:18px;
   }
-
-  .company-row select{
-    width:100%;
-  }
-
-  button{
-    width:100%;
-  }
-
-  .item{
-    grid-template-columns:1fr;
-  }
-
 }
 </style>
 </head>
@@ -336,925 +281,1226 @@ button.ghost{
 <div class="app">
 
   <div class="header">
-    <div class="title">🍽️ Buffet • Mercatto Delícia</div>
-    <span class="badge">Hoje: <b id="dataHoje"></b></span>
+    <div class="title">Análise de Buffet</div>
+    <div class="sub">Montagem • Reposição • Retirada • Desperdício</div>
   </div>
 
-  <!-- Seleção de empresa -->
-<div class="card company-row">
-  <b>Empresa:</b>
+  <div class="card">
+<div class="filters">
 
-  <select id="empresaSelect">
-    <option value="MERCATTO DELÍCIA">Mercatto Delícia</option>
-  </select>
+<select id="empresaSelect">
+  <option value="MERCATTO DELÍCIA">Mercatto Delícia</option>
+</select>
 
-  <!-- 🔥 BOTÃO AUTOMÁTICO -->
-  <button class="primary" onclick="abrirModalSemana()" style="height:42px">
-    ⚡ Lançamento Automático
+<input type="text" id="rangeDatas" placeholder="Selecione o período">
+
+<input
+  type="text"
+  id="searchPrato"
+  placeholder="Buscar prato..."
+>
+
+<button type="button" onclick="exportarExcel()">
+  <i class="ri-file-excel-2-line"></i> Excel
+</button>
+
+<button type="button" onclick="baixarImagem()">
+  <i class="ri-image-line"></i> Imagem
+</button>
+
+<button type="button" id="btnRetirada40">
+  🔥 > 40% Ret.
+</button>
+
+</div>
+  </div>
+
+<div class="card" id="cardGrafico">
+  <b>Total produzido por dia (Montagem + Reposição)</b>
+  <div class="chart-wrap">
+    <canvas id="chart"></canvas>
+  </div>
+</div>
+<div class="card">
+  <b>Resumo do período selecionado</b>
+  <hr style="margin:14px 0">
+
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+
+  <input type="date" id="dataVarejo"
+         style="padding:10px;border-radius:10px;border:1px solid #e5e7eb">
+
+  <input type="number"
+         id="kgVarejo"
+         step="0.001"
+         placeholder="KG vendido no Varejo"
+         style="padding:10px;border-radius:10px;border:1px solid #e5e7eb;flex:1">
+
+  <button onclick="salvarVendaVarejo()"
+          style="background:#16a34a;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:800">
+    Salvar
   </button>
+
 </div>
 
+<div id="infoComparacao" class="comparacao-box"></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">
+    <div class="card" style="padding:10px">
+      <small>Produz.</small>
+      <h3 id="totalProduzido">0</h3>
+    </div>
+<div class="card" style="padding:10px;cursor:pointer" onclick="abrirResumoTotalRetirada()">
+  <small>Retirado</small>
+  <h3 id="totalRetirado">0</h3>
+</div>
+<div class="card" style="padding:10px;cursor:pointer"
+     onclick="abrirResumoTotalDesperdicio()">
+  <small>Descart.</small>
+  <h3 id="totalDesperdicio">0</h3>
+</div>
+    <div class="card" style="padding:10px;background:#ecfeff">
+      <small>Vendido</small>
+      <h3 id="totalVendido">0</h3>
+    </div>
+  </div>
+</div>
   <div class="card">
-<div class="form-grid tablet-row">
-  <div class="field">
-    <label>Prato</label>
-    <input id="produto" placeholder="Digite o prato (busca + cadastra + consumo)" list="produtosList">
-  </div>
+    <b>Resumo por prato (Empresa selecionada)</b>
 
-<!-- QUANTIDADE + UNIDADE JUNTOS -->
-<div class="field inline-group">
-  <label id="labelPeso">Peso bruto (kg)</label>
-  <div class="inline-input">
-    <input id="quantidade" class="input-weight" inputmode="decimal" placeholder="0,000">
-    <select id="unidade">
-      <option value="KG">KG</option>
-      <option value="UN">UN</option>
-    </select>
-  </div>
-</div>
+    <!-- MOBILE -->
+    <div class="list" id="list"></div>
 
-<!-- TARA -->
-<div class="field">
-  <label id="labelTara">Tara (kg)</label>
-  <input id="tara" class="input-tara" inputmode="decimal" placeholder="0,000">
-  <div class="net-preview" id="pesoLiquidoPreview">
-    Líquido: <b>0,000 kg</b>
+<!-- TABELA (desktop + mobile) -->
+<div class="table">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Prato</th>
+          <th>Montado</th>
+          <th>Reposto</th>
+          <th>Total</th>
+<th>Retirado</th>
+<th>% Ret.</th>
+<th>Desperdício</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
 </div>
 
-<!-- TIPO -->
-<div class="field">
-  <label>Tipo</label>
-  <select id="tipo">
-    <option value="MONTAGEM">Montagem</option>
-    <option value="REPOSICAO">Reposição</option>
-    <option value="RETIRADA">Retirada</option>
-    <option value="DEVOLUCAO">Desperdício</option>
-    <option value="MONTAGEM">Consumo Funcionários</option>
-  </select>
-</div>
-
-<div class="field" style="display:none">
-  <label style="display:flex;gap:8px;align-items:center">
-    <input type="checkbox" id="consumoAutorizado" hidden>
-    Consumo autorizado
-  </label>
-</div>
-</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <button class="primary" id="btnSalvar"><i class="ri-save-3-line"></i> Salvar</button>
-      <button class="ghost" id="btnLimpar"><i class="ri-eraser-line"></i> Limpar</button>
-    </div>
-    <small>Data é travada no dia atual e hora é automática.</small>
-  </div>
-
-  <div class="card">
-    <b>Lançamentos de Hoje</b>
-    <div class="list" id="lista"></div>
-  </div>
-
-</div>
-
-<datalist id="produtosList"></datalist>
-
-<!-- MODAL DE EDIÇÃO -->
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-   <h3 id="tituloEdicao">Editar lançamento</h3>
-
-
-    
-<div class="grid">
-  <input id="editQuantidade" type="number" step="0.001" placeholder="Quantidade">
-
-  <input id="editTara" type="number" step="0.001" placeholder="Tara">
-
-  <select id="editUnidade">
-    <option value="KG">KG</option>
-    <option value="UN">UN</option>
-  </select>
-
-  <select id="editTipo" style="grid-column:1/-1">
-
-
-
-
-        
-        <option value="MONTAGEM">Montagem</option>
-        <option value="REPOSICAO">Reposição</option>
-        <option value="RETIRADA">Retirada</option>
-        <option value="DEVOLUCAO">Desperdício</option>
-      </select>
-    </div>
-    <div class="actions">
-      <button class="ghost" onclick="fecharModal()">Cancelar</button>
-      <button class="primary" onclick="confirmarEdicao()">Salvar alterações</button>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- MODAL CONSUMO AUTORIZADO -->
-<div class="modal-backdrop" id="modalConsumo">
-  <div class="modal">
-<h3 id="tituloModalConsumo">Para quem é o consumo?</h3>
-    <input id="consumoNome" list="consumidoresList" placeholder="Digite o nome">
-    <datalist id="consumidoresList"></datalist>
-
-    <div class="actions">
-      <button class="ghost" onclick="fecharConsumo()">Cancelar</button>
-      <button class="primary" onclick="confirmarConsumo()">Confirmar</button>
-    </div>
-  </div>
 </div>
 
 <script>
-  const sb = window.supabase.createClient(
-    "https://dxkszikemntfusfyrzos.supabase.co",
-    "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-  );
+const sb = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-  const produtoInput = document.getElementById("produto");
-  const quantidadeInput = document.getElementById("quantidade");
-  const taraInput = document.getElementById("tara");
-  const unidadeSelect = document.getElementById("unidade");
-  /* ================= AJUSTE VISUAL POR UNIDADE ================= */
-
-unidadeSelect.addEventListener("change", () => {
-
-  const unidade = unidadeSelect.value;
-
-  const labelPeso = document.getElementById("labelPeso");
-  const labelTara = document.getElementById("labelTara");
-
-  if(unidade === "UN"){
-
-    labelPeso.innerText = "Quantidade (un)";
-    labelTara.innerText = "Tara (un)";
-
-    quantidadeInput.value = "";
-    taraInput.value = "";
-
-  } else {
-
-    labelPeso.innerText = "Peso bruto (kg)";
-    labelTara.innerText = "Tara (kg)";
-
-    quantidadeInput.value = "";
-    taraInput.value = "";
-  }
-
-  atualizarLiquidoPreview();
-});
-  const tipoSelect = document.getElementById("tipo");
-  const lista = document.getElementById("lista");
-  const btnSalvar = document.getElementById("btnSalvar");
-  const btnLimpar = document.getElementById("btnLimpar");
 const empresaSelect = document.getElementById("empresaSelect");
-  let salvandoAgora = false;
-const consumoAutorizado = document.getElementById("consumoAutorizado");
 
-// 🔒 nunca mostrar a flag na tela
-consumoAutorizado.closest(".field").style.display = "none";
+const searchPrato = document.getElementById("searchPrato");
+const hoje = new Date();
+const seteDiasAtras = new Date(hoje.getTime() - 6*24*60*60*1000);
 
-produtoInput.addEventListener("input", () => {
-  const nome = produtoInput.value.trim().toUpperCase();
+let rangeSelecionado = [
+  seteDiasAtras.toISOString().slice(0,10),
+  hoje.toISOString().slice(0,10)
+];
 
-  if (nome === "CONSUMO AUTORIZADO") {
-    consumoAutorizado.checked = true;   // marca internamente
-  } else {
-    consumoAutorizado.checked = false;  // limpa quando não for consumo autorizado
+flatpickr("#rangeDatas", {
+  mode: "range",
+  dateFormat: "Y-m-d",
+  altInput: true,
+  altFormat: "d/m/Y",
+  locale: "pt",
+  defaultDate: rangeSelecionado,
+  onChange: (datas) => {
+    if (datas.length === 2) {
+      rangeSelecionado = datas.map(d => d.toISOString().slice(0,10));
+      carregar(); // 🔥 atualiza aqui
+    }
   }
 });
-btnSalvar.onclick = () => {
-  if (salvandoAgora) return;
-  salvandoAgora = true;
-
-  const nomePrato = produtoInput.value.trim().toUpperCase();
-// 🔥 NOVO: se for RETIRADA, perguntar destino antes de salvar
-if (tipoSelect.value === "RETIRADA") {
-  modoModal = "RETIRADA";     // 👈 marca que é retirada para setor/local
-  abrirConsumo();
-  salvandoAgora = false;
-  return;
-}
-if (nomePrato === "CONSUMO AUTORIZADO") {
-  modoModal = "CONSUMO";      // 👈 marca que é consumo de alguém
-  abrirConsumo();
-  consumoAutorizado.checked = true;
-  salvandoAgora = false;
-  return;
+let chart;
+let filtroRetirada40 = false;
+let cacheDesperdicio = {};
+function formatBR(iso){
+  const [y,m,d]=iso.split("-");
+  return `${d}/${m}/${y}`;
 }
 
-if (consumoAutorizado.checked) {
-  modoModal = "CONSUMO";
-  abrirConsumo();
-  salvandoAgora = false;
-}
-else {
-    salvar(null).finally(() => salvandoAgora = false);
-  }
-};
-btnLimpar.onclick = limpar;
-// ================== CONFIGURAÇÕES DE TARA POR TIPO ==================
-const TARA_REPOSICAO = 0.280;
-
-// restaura último tipo selecionado
-const tipoSalvo = localStorage.getItem("buffet_tipo_selecionado");
-if (tipoSalvo) {
-  tipoSelect.value = tipoSalvo;
-}
-// aplica tara 0,280 ao abrir se último tipo foi reposição
-if (tipoSelect.value === "REPOSICAO") {
-  taraInput.value = formatPeso(0.280);
-  atualizarLiquidoPreview();
-}
-// aplica tara automática quando muda o tipo
-tipoSelect.addEventListener("change", () => {
-  const tipo = tipoSelect.value;
-
-  // salva o tipo no navegador
-  localStorage.setItem("buffet_tipo_selecionado", tipo);
-
-  // se for reposição, força tara 0,280 (mas deixa editar)
-  if (tipo === "REPOSICAO") {
-    taraInput.value = formatPeso(TARA_REPOSICAO);
-    atualizarLiquidoPreview();
-  }
-});
-
-
-  
-// ================== TARA PADRÃO POR PRODUTO ==================
-produtoInput.addEventListener("input", onProdutoInput);
-produtoInput.addEventListener("change", onProdutoChange);
-produtoInput.addEventListener("blur", onProdutoChange);
-
-async function aplicarTaraPadraoPorProduto(){
+async function carregar(){
   const empresa = empresaSelect.value;
-  const nome = produtoInput.value.trim().toUpperCase();
-  const tipo = tipoSelect.value;
 
-  if(!nome) return;
-
-  // 👉 se for REPOSIÇÃO, NÃO altera a tara do produto
-  if (tipo === "REPOSICAO") {
-    return;
-  }
-
-  // 1️⃣ tenta buscar a ÚLTIMA tara usada nos lançamentos
-  const { data:ultimoLanc } = await sb
-    .from("buffet_lancamentos")
-    .select("tara")
-    .eq("empresa", empresa)
-    .eq("produto_nome", nome)
-    .not("tara", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (ultimoLanc?.tara != null && Number(ultimoLanc.tara) > 0) {
-    taraInput.value = formatPeso(ultimoLanc.tara);
-    atualizarLiquidoPreview();
-    return;
-  }
-
-  // 2️⃣ fallback: busca tara padrão do produto
-  const { data:prod } = await sb
-    .from("buffet_produtos")
-    .select("tara_padrao")
-    .eq("empresa", empresa)
-    .eq("nome", nome)
-    .maybeSingle();
-
-  if(prod?.tara_padrao != null && Number(prod.tara_padrao) > 0){
-    taraInput.value = formatPeso(prod.tara_padrao);
-    atualizarLiquidoPreview();
-  }
-}
-  const hoje = new Date();
-  const dataISO = hoje.toISOString().slice(0,10);
-  const dataBR = hoje.toLocaleDateString("pt-BR");
-  document.getElementById("dataHoje").innerText = dataBR;
-
-  let editId = null;
-
-
-function onProdutoInput(){
-  const nome = produtoInput.value.trim();
-
-  // se apagar o nome do prato, limpa tara
-  if(!nome){
-    taraInput.value = "";
-    atualizarLiquidoPreview();
-    return;
-  }
-}
-
-function onProdutoChange(){
-  const nome = produtoInput.value.trim();
-
-  if(!nome){
-    taraInput.value = "";
-    atualizarLiquidoPreview();
-    return;
-  }
-
-  aplicarTaraPadraoPorProduto();
-}
-
-
-
-
-
-  
-  async function carregarProdutos(){
-    const empresa = empresaSelect.value;
-    const { data } = await sb
-      .from("buffet_produtos")
-      .select("nome")
-      .eq("empresa", empresa)
-      .order("nome");
-
-    const list = document.getElementById("produtosList");
-    list.innerHTML = "";
-    data?.forEach(p=>{
-      const o = document.createElement("option");
-      o.value = p.nome;
-      list.appendChild(o);
-    });
-  }
-
-async function carregarLancamentos(){
-  const empresa = empresaSelect.value;
-  const { data, error } = await sb
-    .from("buffet_lancamentos")
+  let q = sb.from("buffet_lancamentos")
     .select("*")
-    .eq("empresa", empresa)
-    .eq("data", dataISO)
-    .order("created_at", { ascending:false });
+    .eq("empresa", empresa);
 
-  if(error){
-    console.error("Erro ao carregar lançamentos:", error);
+if(rangeSelecionado.length === 2){
+  q = q.gte("data", rangeSelecionado[0]);
+  q = q.lte("data", rangeSelecionado[1]);
+}
+
+const { data, error } = await q.order("data",{ascending:true});
+if(error){
+  console.error("Erro ao carregar buffet_lancamentos:", error);
+}
+
+const porPrato = {};
+const porDia = {};
+let totalMontado = 0;
+let totalReposto = 0;
+let totalRetirado = 0;
+let totalDesperdicio = 0;
+  
+(data || []).forEach(r=>{
+  porPrato[r.produto_nome] ||= {MONTAGEM:0,REPOSICAO:0,RETIRADA:0,DEVOLUCAO:0, UNIDADE:r.unidade};
+  porPrato[r.produto_nome][r.tipo] += Number(r.quantidade||0);
+
+  const q = Number(r.quantidade || 0);
+
+  if(r.tipo === "MONTAGEM") totalMontado += q;
+  if(r.tipo === "REPOSICAO") totalReposto += q;
+  if(r.tipo === "RETIRADA") totalRetirado += q;
+  if(r.tipo === "DEVOLUCAO") totalDesperdicio += q;
+
+  if(r.tipo==='MONTAGEM' || r.tipo==='REPOSICAO'){
+    porDia[r.data] = (porDia[r.data]||0) + q;
+  }
+});
+const termo = (searchPrato.value || "").toLowerCase();
+
+const pratosFiltrados = Object.entries(porPrato)
+  .filter(([nome,v]) => {
+
+    // filtro por busca
+    if(!(nome || "").toLowerCase().includes(termo)){
+      return false;
+    }
+
+    // filtro retirada > 40%
+    if(filtroRetirada40){
+
+      const total = v.MONTAGEM + v.REPOSICAO;
+
+      const percentual =
+        total > 0
+          ? (v.RETIRADA / total * 100)
+          : 0;
+
+      return percentual > 40;
+    }
+
+    return true;
+  })
+  .sort((a,b)=> (a[0] || "").localeCompare(b[0] || "", 'pt-BR'));
+
+list.innerHTML = pratosFiltrados.map(([nome,v])=>{
+  const total = v.MONTAGEM + v.REPOSICAO;
+  return `
+    <div class="item">
+      <div class="name">${nome}</div>
+      <div class="row"><span class="badge mont">Montado</span><b>${v.MONTAGEM.toFixed(2)} ${v.UNIDADE}</b></div>
+      <div class="row"><span class="badge rep">Reposto</span><b>${v.REPOSICAO.toFixed(2)} ${v.UNIDADE}</b></div>
+      <div class="row"><span class="badge tot">Total</span><b>${total.toFixed(2)} ${v.UNIDADE}</b></div>
+      <div class="row"><span class="badge ret">Retirado</span><b>${v.RETIRADA.toFixed(2)} ${v.UNIDADE}</b></div>
+      <div class="row"><span class="badge dev">desperdício</span><b>${v.DEVOLUCAO.toFixed(2)} ${v.UNIDADE}</b></div>
+    </div>
+  `;
+}).join("");
+
+tbody.innerHTML = pratosFiltrados.map(([nome,v])=>{
+
+  const total = v.MONTAGEM + v.REPOSICAO;
+
+  // 🔥 cálculo percentual retirada
+  const percentualRetirada =
+    total > 0
+      ? (v.RETIRADA / total * 100)
+      : 0;
+
+  // 🎨 cor dinâmica
+  const corPercentual =
+    percentualRetirada >= 50
+      ? "#dc2626"     // vermelho crítico
+      : percentualRetirada >= 30
+      ? "#f59e0b"     // amarelo alerta
+      : "#16a34a";    // verde saudável
+
+  return `
+    <tr>
+      <td>
+        ${
+          nome === "CONSUMO AUTORIZADO"
+            ? `<b style="cursor:pointer;color:#ff6a00;text-decoration:underline"
+                 onclick="abrirResumoConsumo('${nome}')">
+                 ${nome}
+               </b>`
+            : `<b>${nome}</b>`
+        }
+      </td>
+
+      <td>${v.MONTAGEM.toFixed(2)} ${v.UNIDADE}</td>
+
+      <td>${v.REPOSICAO.toFixed(2)} ${v.UNIDADE}</td>
+
+      <td><b>${total.toFixed(2)} ${v.UNIDADE}</b></td>
+
+      <td>
+        ${
+          v.RETIRADA > 0
+            ? `<b style="cursor:pointer;color:#ef4444;text-decoration:underline"
+                 onclick="abrirResumoRetirada('${nome}')">
+                 ${v.RETIRADA.toFixed(2)} ${v.UNIDADE}
+               </b>`
+            : `0`
+        }
+      </td>
+
+      <!-- 🔥 NOVA COLUNA -->
+      <td style="font-weight:900;color:${corPercentual}">
+        ${percentualRetirada.toFixed(1)}%
+      </td>
+
+      <td>${v.DEVOLUCAO.toFixed(2)} ${v.UNIDADE}</td>
+
+    </tr>
+  `;
+}).join("");
+
+  const dias = Object.keys(porDia).sort();
+  const valores = dias.map(d=>porDia[d]);
+
+  if(chart) chart.destroy();
+// ===== RESUMO DO PERÍODO (REGRA CORRETA) =====
+const totalProduzido = totalMontado + totalReposto;
+
+// Vendido real do buffet
+let totalVendido = totalProduzido - totalRetirado - totalDesperdicio;
+// 🔥 Buscar vendas do varejo no período
+let totalVarejo = 0;
+
+let queryVarejo = sb
+  .from("vendas_varejo")
+  .select("quantidade")
+  .eq("empresa", empresa);
+
+if(rangeSelecionado.length === 2){
+  queryVarejo = queryVarejo
+    .gte("data", rangeSelecionado[0])
+    .lte("data", rangeSelecionado[1]);
+}
+
+const { data: vendasVarejo } = await queryVarejo;
+
+(vendasVarejo || []).forEach(v=>{
+  totalVarejo += Number(v.quantidade || 0);
+});
+
+// Atualiza card Vendido com comparação
+document.getElementById("totalVendido").innerText =
+  totalVendido.toFixed(2);
+
+// Mostra diferença
+const diferenca = totalVendido - totalVarejo;
+
+const percentualDiferenca =
+  totalVendido > 0
+    ? (diferenca / totalVendido * 100)
+    : 0;
+
+document.getElementById("infoComparacao").innerHTML = `
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+
+  <div>
+    Sistema:
+    <b>${totalVendido.toFixed(2)} KG</b>
+  </div>
+
+  <div>
+    Varejo:
+    <b>${totalVarejo.toFixed(2)} KG</b>
+  </div>
+
+  <div>
+    Diferença:
+    <div style="display:flex;flex-direction:column">
+
+      <b style="
+        color:${diferenca === 0 ? '#16a34a' : '#dc2626'};
+        font-size:22px;
+      ">
+        ${diferenca.toFixed(2)} KG
+      </b>
+
+      <small style="
+        font-weight:900;
+        color:${diferenca === 0 ? '#16a34a' : '#dc2626'};
+      ">
+        ${percentualDiferenca.toFixed(1)}% do sistema
+      </small>
+
+    </div>
+  </div>
+
+</div>
+`;
+// nunca deixa negativo
+if (totalVendido < 0) totalVendido = 0;
+
+document.getElementById("totalProduzido").innerText =
+  totalProduzido.toFixed(2);
+
+document.getElementById("totalRetirado").innerText =
+  totalRetirado.toFixed(2);
+
+document.getElementById("totalDesperdicio").innerText =
+  totalDesperdicio.toFixed(2);
+
+document.getElementById("totalVendido").innerText =
+  totalVendido.toFixed(2);
+chart = new Chart(document.getElementById("chart"), {
+  type: 'line',
+  data: {
+    labels: dias.map(formatBR),
+    datasets: [{
+      label: 'Total produzido',
+      data: valores,
+      tension: .35,
+
+      // 🔥 tamanho VISUAL da bolinha
+      pointRadius: 4,
+      pointHoverRadius: 6,
+
+      // 🔥 área de TOQUE (invisível) – isso que facilita clicar no celular
+      pointHitRadius: 20
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+
+    // melhora a detecção de toque no mobile
+    interaction: {
+      mode: 'nearest',
+      intersect: false
+    }
+  }
+});
+}
+
+
+
+// 🔁 Atualiza automaticamente quando mudar empresa
+empresaSelect.onchange = () => {
+  searchPrato.value = "";
+  carregar();
+};
+
+// 🔎 Atualiza enquanto digita o prato
+searchPrato.oninput = carregar;
+
+// 🔥 BOTÃO FILTRO > 40%
+document.getElementById("btnRetirada40").onclick = function(){
+
+  filtroRetirada40 = !filtroRetirada40;
+
+  this.style.background = filtroRetirada40
+    ? "#dc2626"
+    : "var(--primary)";
+
+  carregar();
+};
+
+carregar();
+let modalAberto = false;
+
+
+async function exportarExcel(){
+
+  const empresa = empresaSelect.value;
+  const termo = (searchPrato.value || "").toLowerCase();
+
+  let q = sb.from("buffet_lancamentos")
+    .select("*")
+    .eq("empresa", empresa);
+
+  if(rangeSelecionado.length === 2){
+    q = q.gte("data", rangeSelecionado[0]);
+    q = q.lte("data", rangeSelecionado[1]);
   }
 
-  lista.innerHTML = "";
-  (data || []).forEach(l=>{
-lista.innerHTML += `
-  <div class="item" style="padding:14px 14px 16px">
-    <div>
+  const { data } = await q;
 
-      <!-- TÍTULO -->
-      <div class="name" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
-        <span>${l.produto_nome}</span>
+  const porPrato = {};
+
+  (data || []).forEach(r=>{
+    porPrato[r.produto_nome] ||= {
+      MONTAGEM:0,
+      REPOSICAO:0,
+      RETIRADA:0,
+      DEVOLUCAO:0,
+      UNIDADE:r.unidade
+    };
+
+    porPrato[r.produto_nome][r.tipo] += Number(r.quantidade || 0);
+  });
+
+  const linhas = Object.entries(porPrato)
+    .filter(([nome]) => (nome || "").toLowerCase().includes(termo))
+    .sort((a,b)=> a[0].localeCompare(b[0],'pt-BR'))
+    .map(([nome,v])=>{
+
+      const total = v.MONTAGEM + v.REPOSICAO;
+
+      const percentualRetirada =
+        total > 0
+          ? (v.RETIRADA / total * 100)
+          : 0;
+
+      return {
+        Empresa: empresa,
+        "Data Inicial": rangeSelecionado[0],
+        "Data Final": rangeSelecionado[1],
+        Prato: nome,
+        Montado: v.MONTAGEM,
+        Reposto: v.REPOSICAO,
+        Total: total,
+        Retirado: v.RETIRADA,
+        "% Retirada": Number(percentualRetirada.toFixed(1)),
+        Desperdicio: v.DEVOLUCAO,
+        Unidade: v.UNIDADE
+      };
+    });
+
+  if(!linhas.length){
+    alert("Nenhum dado para exportar.");
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(linhas);
+
+  XLSX.utils.book_append_sheet(wb, ws, "Relatorio Buffet");
+
+  const nomeArquivo =
+    `Buffet_${empresa}_${rangeSelecionado[0]}_${rangeSelecionado[1]}.xlsx`;
+
+  XLSX.writeFile(wb, nomeArquivo);
+}
+
+  
+async function abrirResumoConsumo(nome){
+  if(nome !== "CONSUMO AUTORIZADO" || modalAberto) return;
+  modalAberto = true;
+
+  const empresa = empresaSelect.value;
+
+  const PRECO_KG = 104.90;
+
+  let q = sb.from("buffet_lancamentos")
+    .select("consumo_para_nome, quantidade")
+    .eq("empresa", empresa)
+    .eq("consumo_autorizado", true);
+
+  if(rangeSelecionado.length === 2){
+    q = q.gte("data", rangeSelecionado[0]);
+    q = q.lte("data", rangeSelecionado[1]);
+  }
+
+  const { data } = await q;
+
+  const porPessoa = {};
+  data?.forEach(r=>{
+    const nome = r.consumo_para_nome || "SEM NOME";
+    porPessoa[nome] = (porPessoa[nome] || 0) + Number(r.quantidade || 0);
+  });
+
+  let totalKg = 0;
+
+  const html = Object.entries(porPessoa)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([nome,kg])=>{
+
+      totalKg += kg;
+
+      const valor = kg * PRECO_KG;
+
+      const valorFormatado = valor.toLocaleString("pt-BR",{
+        style:"currency",
+        currency:"BRL"
+      });
+
+      return `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          padding:8px 0;
+          border-bottom:1px solid #eee
+        ">
+          <div>
+            <b>${nome}</b>
+            <div style="font-size:11px;color:#64748b">
+              ${kg.toFixed(3)} KG
+            </div>
+          </div>
+
+          <span style="font-weight:800">
+            ${valorFormatado}
+          </span>
+        </div>
+      `;
+    }).join("");
+
+  const totalValor = totalKg * PRECO_KG;
+
+  const totalFormatado = totalValor.toLocaleString("pt-BR",{
+    style:"currency",
+    currency:"BRL"
+  });
+
+  document.getElementById("listaResumoConsumo").innerHTML =
+    html +
+    `
+    <div style="
+      margin-top:12px;
+      padding-top:10px;
+      border-top:2px solid #111;
+      display:flex;
+      justify-content:space-between;
+      font-weight:900;
+      font-size:16px
+    ">
+      <span>Total</span>
+      <span>${totalFormatado}</span>
+    </div>
+    `;
+
+  document.getElementById("modalResumoConsumo").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+async function abrirResumoRetirada(nomePrato){
+  if(modalAberto) return;
+  modalAberto = true;
+
+  const empresa = empresaSelect.value;
+
+  let q = sb.from("buffet_lancamentos")
+    .select("consumo_para_nome, quantidade")
+    .eq("empresa", empresa)
+    .eq("produto_nome", nomePrato)
+    .eq("tipo", "RETIRADA");
+
+  if(rangeSelecionado.length === 2){
+    q = q.gte("data", rangeSelecionado[0]);
+    q = q.lte("data", rangeSelecionado[1]);
+  }
+
+  const { data } = await q;
+
+  const porDestino = {};
+
+  data?.forEach(r=>{
+    const destino = r.consumo_para_nome || "SEM DESTINO";
+    porDestino[destino] = (porDestino[destino] || 0) + Number(r.quantidade || 0);
+  });
+
+  const html = Object.entries(porDestino)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([destino,kg])=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
+        <b>${destino}</b>
+        <span>${kg.toFixed(3)} KG</span>
+      </div>
+    `).join("");
+
+  document.getElementById("tituloResumoRetirada").innerText =
+    `📦 Retirada • ${nomePrato}`;
+
+  document.getElementById("listaResumoRetirada").innerHTML =
+    html || "<small>Nenhuma retirada no período.</small>";
+
+  document.getElementById("modalResumoRetirada").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+async function abrirResumoTotalRetirada(){
+
+  if(modalAberto) return;
+  modalAberto = true;
+
+  const empresa = empresaSelect.value;
+
+  let query = sb
+    .from("buffet_lancamentos")
+    .select("produto_nome, consumo_para_nome, quantidade, tipo")
+    .eq("empresa", empresa);
+
+  if(rangeSelecionado.length === 2){
+    query = query.gte("data", rangeSelecionado[0]);
+    query = query.lte("data", rangeSelecionado[1]);
+  }
+
+  const { data } = await query;
+
+  const pratosQueForamPIA = new Set();
+  const pia = { total: 0, itens: {} };
+  const porDestino = {};
+
+  // 🔎 1️⃣ Descobre quais pratos tiveram retirada para PIA
+  (data || []).forEach(r=>{
+    if(r.tipo === "RETIRADA" && r.consumo_para_nome === "PIA"){
+      pratosQueForamPIA.add(r.produto_nome);
+    }
+  });
+
+  // 🔎 2️⃣ Soma MONTAGEM + REPOSIÇÃO APENAS desses pratos
+  (data || []).forEach(r => {
+
+    const qtd = Number(r.quantidade || 0);
+
+    // 🟢 PIA = Montagem + Reposição dos pratos que foram para PIA
+    if(
+      (r.tipo === "MONTAGEM" || r.tipo === "REPOSICAO") &&
+      pratosQueForamPIA.has(r.produto_nome)
+    ){
+      if(!pia.itens[r.produto_nome]){
+        pia.itens[r.produto_nome] = 0;
+      }
+
+      pia.itens[r.produto_nome] += qtd;
+      pia.total += qtd;
+    }
+
+    // 🔵 OUTRAS RETIRADAS (exceto PIA)
+    if(r.tipo === "RETIRADA" && r.consumo_para_nome !== "PIA"){
+
+      const destino = r.consumo_para_nome || "SEM DESTINO";
+
+      if(!porDestino[destino]){
+        porDestino[destino] = { total: 0, itens: {} };
+      }
+
+      porDestino[destino].total += qtd;
+
+      if(!porDestino[destino].itens[r.produto_nome]){
+        porDestino[destino].itens[r.produto_nome] = 0;
+      }
+
+      porDestino[destino].itens[r.produto_nome] += qtd;
+    }
+
+  });
+
+  let html = "";
+
+  // 🟢 MOSTRA PIA apenas se realmente existiu
+  if(pratosQueForamPIA.size > 0 && pia.total > 0){
+
+    html += `
+      <div style="
+        border:2px solid #16a34a;
+        background:#ecfdf5;
+        border-radius:14px;
+        padding:14px;
+        margin-bottom:14px
+      ">
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          font-weight:900;
+          margin-bottom:8px
+        ">
+          <span>(VENDIDOS INTEGRALMENTE)</span>
+          <span>${pia.total.toFixed(3)} KG</span>
+        </div>
 
         ${
-(l.consumo_para_nome && l.tipo === "RETIRADA") ||
-(l.consumo_autorizado && l.consumo_para_nome)
-          ? `<span style="
-                background:#ede9fe;
-                color:#5b21b6;
-                padding:6px 12px;
-                border-radius:999px;
+          Object.entries(pia.itens)
+            .sort((a,b)=> b[1] - a[1])
+            .map(([prato,kg])=>`
+              <div style="
+                display:flex;
+                justify-content:space-between;
                 font-size:12px;
-                font-weight:800;
-                display:inline-flex;
-                align-items:center;
-                gap:6px;
-                line-height:1;
+                padding:4px 0;
+                border-bottom:1px dashed #bbf7d0
               ">
-                👤 ${l.consumo_para_nome}
-              </span>`
-            : ``
+                <span>${prato}</span>
+                <span>${kg.toFixed(3)} KG</span>
+              </div>
+            `).join("")
         }
       </div>
+    `;
+  }
 
-      <!-- META -->
-      <div class="meta" style="line-height:1.5; margin-bottom:8px">
-        Bruto: <b>${formatPeso((Number(l.quantidade) + Number(l.tara || 0)))} kg</b>
-        • Tara: <b>${formatPeso(l.tara || 0)} kg</b>
-        • Líquido: <b>${formatPeso(l.quantidade)} kg</b><br>
-        <span style="color:#6b7280">⏱ ${l.hora}</span>
+  // 🔵 OUTROS DESTINOS
+  html += Object.entries(porDestino)
+    .sort((a,b)=> b[1].total - a[1].total)
+    .map(([destino,info])=>`
+      <div style="
+        border:1px solid #e5e7eb;
+        border-radius:12px;
+        padding:12px;
+        margin-bottom:12px;
+        background:#fff
+      ">
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          font-weight:900;
+          margin-bottom:6px
+        ">
+          <span>📍 ${destino}</span>
+          <span>${info.total.toFixed(3)} KG</span>
+        </div>
+
+        ${
+          Object.entries(info.itens)
+            .sort((a,b)=> b[1] - a[1])
+            .map(([prato,kg])=>`
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                font-size:12px;
+                padding:4px 0;
+                border-bottom:1px dashed #f1f5f9
+              ">
+                <span>${prato}</span>
+                <span>${kg.toFixed(3)} KG</span>
+              </div>
+            `).join("")
+        }
       </div>
+    `).join("");
 
-      <!-- TAG -->
-      ${
-        l.consumo_autorizado
-          ? `<span class="tag RETIRADA" style="padding:8px 14px;font-size:12px">CONSUMO AUTORIZADO</span>`
-          : `<span class="tag ${l.tipo}" style="padding:8px 14px;font-size:12px">
-  ${l.tipo === "DEVOLUCAO" ? "DESPERDÍCIO" : l.tipo}
-</span>`
-      }
+  document.getElementById("tituloResumoTotalRetirada").innerText =
+    "Resumo do período selecionado";
+
+  document.getElementById("listaResumoTotalRetirada").innerHTML =
+    html || "<small>Nenhum movimento no período.</small>";
+
+  document.getElementById("modalResumoTotalRetirada").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+
+async function abrirResumoTotalDesperdicio(){
+
+  if(modalAberto) return;
+  modalAberto = true;
+
+  cacheDesperdicio = {};   // limpa cache sempre
+
+  const empresa = empresaSelect.value;
+
+  let query = sb
+    .from("buffet_lancamentos")
+    .select("produto_nome, quantidade, tipo, data, unidade")
+    .eq("empresa", empresa);
+
+  if(rangeSelecionado.length === 2){
+    query = query.gte("data", rangeSelecionado[0]);
+    query = query.lte("data", rangeSelecionado[1]);
+  }
+
+const { data } = await query;
+
+const porPrato = {};
+
+// 🔎 pega o termo digitado na busca
+const termoBusca = (searchPrato.value || "").toLowerCase();
+
+(data || []).forEach(r => {
+
+  // 🔎 FILTRO POR PRATO (AGORA RESPEITA O CAMPO BUSCAR)
+  if(
+    termoBusca &&
+    !(r.produto_nome || "").toLowerCase().includes(termoBusca)
+  ){
+    return;
+  }
+
+  const nome = r.produto_nome;
+  const qtd = Number(r.quantidade || 0);
+  const dia = r.data;
+
+    if(!porPrato[nome]){
+      porPrato[nome] = {
+        unidade: r.unidade || "KG",
+        dias: {}
+      };
+    }
+
+    if(!porPrato[nome].dias[dia]){
+      porPrato[nome].dias[dia] = {
+        produzido: 0,
+        desperdicio: 0
+      };
+    }
+
+    if(r.tipo === "MONTAGEM" || r.tipo === "REPOSICAO"){
+      porPrato[nome].dias[dia].produzido += qtd;
+    }
+
+    if(r.tipo === "DEVOLUCAO"){
+      porPrato[nome].dias[dia].desperdicio += qtd;
+    }
+
+  });
+
+  const recorrentes = Object.entries(porPrato)
+    .filter(([_,info]) =>
+      Object.values(info.dias)
+        .some(d => d.desperdicio > 0)
+    )
+    .sort((a,b)=>{
+      const totalA = Object.values(a[1].dias)
+        .reduce((s,d)=>s+d.desperdicio,0);
+      const totalB = Object.values(b[1].dias)
+        .reduce((s,d)=>s+d.desperdicio,0);
+      return totalB - totalA;
+    });
+
+  let html = recorrentes.map(([nome,info])=>{
+
+    const totalProduzido =
+      Object.values(info.dias)
+        .reduce((s,d)=>s+d.produzido,0);
+
+    const totalDesperdicioPrato =
+      Object.values(info.dias)
+        .reduce((s,d)=>s+d.desperdicio,0);
+
+    const percentual =
+      totalProduzido > 0
+        ? (totalDesperdicioPrato / totalProduzido * 100)
+        : 0;
+
+    cacheDesperdicio[nome] = {
+      dias: info.dias,
+      unidade: info.unidade,
+      totalProduzido,
+      totalDesperdicio: totalDesperdicioPrato
+    };
+
+    return `
+      <div style="
+        border:1px solid #e5e7eb;
+        border-radius:12px;
+        padding:12px;
+        margin-bottom:12px;
+        background:#fff;
+        cursor:pointer
+      "
+      onclick='abrirDetalheDesperdicio(${JSON.stringify(nome)})'
+      >
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          font-weight:900;
+          margin-bottom:6px
+        ">
+          <span>${nome}</span>
+          <span style="color:#dc2626">
+            ${totalDesperdicioPrato.toFixed(3)} ${info.unidade}
+          </span>
+        </div>
+
+        <div style="font-size:12px;color:#64748b">
+          Produzido: <b>${totalProduzido.toFixed(3)} ${info.unidade}</b>
+        </div>
+
+        <div style="font-size:12px;color:#64748b">
+          ${percentual.toFixed(1)}% do total produzido
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("tituloResumoTotalDesperdicio").innerText =
+    "♻️ Desperdício no Período";
+
+  document.getElementById("listaResumoTotalDesperdicio").innerHTML =
+    html || "<small>Nenhum desperdício no período.</small>";
+
+  document.getElementById("modalResumoTotalDesperdicio").style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+                           
+function abrirDetalheDesperdicio(nomePrato){
+
+  const info = cacheDesperdicio[nomePrato];
+  if(!info) return;
+
+  const diasObj = info.dias;
+  const unidade = info.unidade;
+
+  const totalProduzidoPeriodo = info.totalProduzido;
+  const totalDesperdicioPeriodo = info.totalDesperdicio;
+
+  let linhas = Object.entries(diasObj)
+.filter(([_,d]) => d.produzido > 0 || d.desperdicio > 0)
+    .sort((a,b)=> a[0].localeCompare(b[0]))
+    .map(([dia,d])=>`
+      <tr>
+        <td>${formatBR(dia)}</td>
+        <td>${d.produzido.toFixed(3)} ${unidade}</td>
+        <td style="color:#dc2626;font-weight:800">
+          ${d.desperdicio.toFixed(3)} ${unidade}
+        </td>
+      </tr>
+    `).join("");
+
+  document.getElementById("tituloResumoTotalDesperdicio").innerHTML =
+    `
+    <span style="cursor:pointer;margin-right:8px;color:#2563eb;font-weight:900"
+          onclick="voltarListaDesperdicio()">
+      ← Voltar
+    </span>
+    ${nomePrato}
+    `;
+
+  document.getElementById("listaResumoTotalDesperdicio").innerHTML = `
+
+    <div style="margin-bottom:12px;padding:10px;background:#f8fafc;border-radius:10px">
+      <div><b>Total Produzido:</b> ${totalProduzidoPeriodo.toFixed(3)} ${unidade}</div>
+      <div style="color:#dc2626">
+        <b>Total Descartado:</b> ${totalDesperdicioPeriodo.toFixed(3)} ${unidade}
+      </div>
     </div>
 
-    <div style="display:flex;gap:10px;align-items:flex-start">
-      <button class="icon-btn" onclick="abrirModal('${l.id}', ${l.quantidade}, '${l.unidade}', '${l.tipo}', ${l.tara || 0}, '${l.produto_nome}')">
-        <i class="ri-edit-2-line"></i>
-      </button>
-      <button class="icon-btn danger" onclick="excluir('${l.id}')">
-        <i class="ri-delete-bin-6-line"></i>
+    <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#f8fafc">
+            <th style="padding:6px;border-bottom:1px solid #e5e7eb">Dia</th>
+            <th style="padding:6px;border-bottom:1px solid #e5e7eb">Produzido</th>
+            <th style="padding:6px;border-bottom:1px solid #e5e7eb">Desperdício</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${linhas}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+  
+  function fecharResumoTotalDesperdicio(){
+  document.getElementById("modalResumoTotalDesperdicio").style.display = "none";
+  document.body.style.overflow = "auto";
+  modalAberto = false;
+}
+function fecharResumoTotalRetirada(){
+  document.getElementById("modalResumoTotalRetirada").style.display = "none";
+  document.body.style.overflow = "auto";
+  modalAberto = false;
+}
+
+
+
+  
+function fecharResumoConsumo(){
+  document.getElementById("modalResumoConsumo").style.display = "none";
+  document.body.style.overflow = "auto";
+  modalAberto = false;
+}
+
+function fecharResumoRetirada(){
+  document.getElementById("modalResumoRetirada").style.display = "none";
+  document.body.style.overflow = "auto";
+  modalAberto = false;
+}
+
+function voltarListaDesperdicio(){
+
+  const htmlLista = Object.entries(cacheDesperdicio)
+    .sort((a,b)=> b[1].totalDesperdicio - a[1].totalDesperdicio)
+    .map(([nome,info])=>{
+
+      const percentual =
+        info.totalProduzido > 0
+          ? (info.totalDesperdicio / info.totalProduzido * 100)
+          : 0;
+
+      return `
+        <div style="
+          border:1px solid #e5e7eb;
+          border-radius:12px;
+          padding:12px;
+          margin-bottom:12px;
+          background:#fff;
+          cursor:pointer
+        "
+        onclick='abrirDetalheDesperdicio(${JSON.stringify(nome)})'
+        >
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            font-weight:900;
+            margin-bottom:6px
+          ">
+            <span>${nome}</span>
+            <span style="color:#dc2626">
+              ${info.totalDesperdicio.toFixed(3)} ${info.unidade}
+            </span>
+          </div>
+
+          <div style="font-size:12px;color:#64748b">
+            Produzido: <b>${info.totalProduzido.toFixed(3)} ${info.unidade}</b>
+          </div>
+
+          <div style="font-size:12px;color:#64748b">
+            ${percentual.toFixed(1)}% do total produzido
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  document.getElementById("tituloResumoTotalDesperdicio").innerText =
+    "♻️ Desperdício no Período";
+
+  document.getElementById("listaResumoTotalDesperdicio").innerHTML =
+    htmlLista;
+}
+
+async function salvarVendaVarejo(){
+
+  const empresa = empresaSelect.value;
+  const data = document.getElementById("dataVarejo").value;
+  const kg = parseFloat(document.getElementById("kgVarejo").value || 0);
+
+  if(!data || !kg){
+    alert("Informe data e quantidade.");
+    return;
+  }
+
+  const { error } = await sb
+    .from("vendas_varejo")
+    .upsert({
+      empresa,
+      data,
+      quantidade: kg
+    }, { onConflict: "empresa,data" });
+
+  if(error){
+    alert("Erro ao salvar.");
+    console.error(error);
+    return;
+  }
+
+  document.getElementById("kgVarejo").value = "";
+
+  alert("Venda registrada com sucesso!");
+
+  carregar(); // atualiza tudo
+}
+
+async function baixarImagem(){
+
+  const empresa = empresaSelect.value;
+  const periodo = `${rangeSelecionado[0]}_${rangeSelecionado[1]}`;
+
+  const elemento = document.querySelector(".app");
+  const grafico = document.getElementById("cardGrafico");
+
+  // 🔒 Esconde gráfico temporariamente
+  grafico.style.display = "none";
+
+  window.scrollTo(0,0);
+
+  const canvas = await html2canvas(elemento, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#f6f7fb"
+  });
+
+  // 🔓 Mostra gráfico novamente
+  grafico.style.display = "";
+
+  const link = document.createElement("a");
+  link.download = `Relatorio_${empresa}_${periodo}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+<!-- MODAL RESUMO CONSUMO AUTORIZADO -->
+<div class="modal-backdrop" id="modalResumoConsumo" onclick="if(event.target===this) fecharResumoConsumo()">  <div class="modal">
+    <h3>📊 Consumo autorizado (KG)</h3>
+    <div id="listaResumoConsumo" style="max-height:60vh;overflow:auto"></div>
+    <div class="actions">
+      <button class="ghost" onclick="fecharResumoConsumo()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
+  <!-- MODAL RESUMO RETIRADA -->
+<div class="modal-backdrop"
+     id="modalResumoRetirada"
+     onclick="if(event.target===this) fecharResumoRetirada()">
+
+  <div class="modal">
+    <h3 id="tituloResumoRetirada">📦 Retirada</h3>
+
+    <div id="listaResumoRetirada"
+         style="max-height:60vh;overflow:auto"></div>
+
+    <div class="actions">
+      <button class="ghost" onclick="fecharResumoRetirada()">
+        Fechar
       </button>
     </div>
   </div>
-`;
-    });
-  }
-
-async function salvar(consumoPara){
-  try{
-    showSaving(); // 👈 abre overlay
-
-    const empresa = empresaSelect.value;
-    const produtoNome = produtoInput.value.trim().toUpperCase();
-const pesoBruto = unidadeSelect.value === "UN"
-  ? parseInt(quantidadeInput.value || 0)
-  : parsePeso(quantidadeInput.value);
-const tara = unidadeSelect.value === "UN"
-  ? parseInt(taraInput.value || 0)
-  : parsePeso(taraInput.value || 0);
-    const unidade = unidadeSelect.value;
-let tipo = tipoSelect.value;
-
-// 🔒 se for consumo autorizado, salva como RETIRADA e marca flag
-if (produtoNome === "CONSUMO AUTORIZADO") {
-  tipo = "RETIRADA";
-}
-
-// ⛔ bloqueia qualquer tentativa de salvar CONSUMO fora do fluxo correto
-if (tipo === "CONSUMO" && produtoNome !== "CONSUMO AUTORIZADO") {
-  alert("Tipo CONSUMO é reservado apenas para CONSUMO AUTORIZADO.");
-  hideSaving();
-  return;
-}
-    if(!produtoNome || pesoBruto <= 0){
-      alert("Preencha tudo");
-      hideSaving();
-      return;
-    }
-    if(tara > pesoBruto){
-      alert("Tara não pode ser maior que o peso bruto");
-      hideSaving();
-      return;
-    }
-
-    const quantidadeLiquida = Number((pesoBruto - tara).toFixed(3));
-
-    let { data:prod } = await sb
-      .from("buffet_produtos")
-      .select("*")
-      .eq("empresa", empresa)
-      .eq("nome", produtoNome)
-      .maybeSingle();
-
-    if(!prod){
-      const { data:nova } = await sb
-        .from("buffet_produtos")
-        .insert({ empresa, nome: produtoNome, unidade_padrao: unidade, tara_padrao: tara })
-        .select().single();
-      prod = nova;
-      carregarProdutos();
-    }
-
-    const hora = new Date().toTimeString().slice(0,8);
-
-const payload = {
-  empresa: String(empresaSelect.value),
-  produto_id: String(prod.id),
-  produto_nome: String(produtoNome),
-  tipo: String(tipo),
-  quantidade: Number(quantidadeLiquida),
-  unidade: String(unidade),
-  data: String(dataISO),
-  hora: String(hora),
-  tara: tara != null ? Number(tara) : 0,
-consumo_autorizado:
-  produtoNome === "CONSUMO AUTORIZADO",
-consumo_para_nome:
-  produtoNome === "CONSUMO AUTORIZADO"
-    ? String(consumoPara)
-    : tipo === "RETIRADA"
-      ? String(consumoPara)
-      : null
-};
-
-const { error: insertError } = await sb
-  .from("buffet_lancamentos")
-  .insert(payload);
-
-if (insertError) {
-  console.error("ERRO INSERT buffet_lancamentos:", insertError);
-  alert("Erro ao salvar: " + insertError.message);
-  hideSaving();
-  return;
-}
-
-    const { data:ultimas } = await sb
-      .from("buffet_lancamentos")
-      .select("tara")
-      .eq("produto_id", prod.id)
-      .not("tara", "is", null)
-      .order("created_at", { ascending:false })
-      .limit(3);
-
-// só atualiza tara padrão se NÃO for reposição
-if(ultimas?.length && tipo !== "REPOSICAO" && tipo !== "CONSUMO"){
-  const maisUsada = ultimas
-    .map(x => Number(x.tara || 0))
-    .sort((a,b) =>
-      ultimas.filter(u=>u.tara===a).length -
-      ultimas.filter(u=>u.tara===b).length
-    )
-    .pop();
-
-  await sb.from("buffet_produtos")
-    .update({ tara_padrao: maisUsada })
-    .eq("id", prod.id);
-}
-
-    limpar();
-    carregarLancamentos();
-
-  } catch(err){
-    console.error(err);
-    alert("Erro ao salvar. Verifique a internet.");
-  } finally {
-    hideSaving(); // 👈 fecha overlay sempre
-  }
-}
-
-
-function showSaving(){
-  document.getElementById("savingOverlay").style.display = "flex";
-}
-function hideSaving(){
-  document.getElementById("savingOverlay").style.display = "none";
-}
-function abrirModal(id, qtd, un, tipo, tara, nome){ 
-  
-  editId = id;
-
-  document.getElementById("editQuantidade").value = qtd;
-  document.getElementById("editUnidade").value = un;
-  document.getElementById("editTara").value = tara || 0;
-
-  // ✅ AQUI É O LUGAR CERTO
-  document.getElementById("tituloEdicao").innerHTML =
-    `✏️ Editando: <b>${nome}</b>`;
-
-
-  
-  const editTipo = document.getElementById("editTipo");
-
-
-
-
-  
-if (tipo === "CONSUMO") {
-  editTipo.value = "MONTAGEM";     
-  editTipo.disabled = true;       
-
-  document.getElementById("editUnidade").disabled = true; // 🔒 trava unidade
-} else {
-  editTipo.value = tipo;
-  editTipo.disabled = false;
-  document.getElementById("editUnidade").disabled = false;
-}
-
-  document.getElementById("modalBackdrop").style.display = "flex";
-}
-function fecharModal(){
-  document.getElementById("modalBackdrop").style.display = "none";
-  document.getElementById("editTipo").disabled = false;    // 🔓 destrava tipo
-  document.getElementById("editUnidade").disabled = false; // 🔓 destrava unidade
-  editId = null;
-}
-async function confirmarEdicao(){
-  const qtd = parseFloat(document.getElementById("editQuantidade").value);
-  const un = document.getElementById("editUnidade").value;
-  const tipo = document.getElementById("editTipo").value;
-  const tara = parseFloat(document.getElementById("editTara").value || 0);
-
-  if(!qtd){ alert("Quantidade inválida"); return; }
-
-  // 🔒 não permite alterar tipo de um CONSUMO
-  const { data:atual } = await sb
-    .from("buffet_lancamentos")
-    .select("tipo, produto_nome")
-    .eq("id", editId)
-    .maybeSingle();
-
-  if (atual?.tipo === "CONSUMO" && tipo !== "CONSUMO") {
-    alert("Lançamentos de CONSUMO não podem ter o tipo alterado.");
-    return;
-  }
-
-  await sb.from("buffet_lancamentos")
-.update({ 
-  quantidade: qtd,
-  unidade: un,
-  tipo,
-  tara: tara
-})
-    
-.eq("id", editId);
-
-  fecharModal(); 
-  carregarLancamentos();
-}
-
-  async function excluir(id){
-    if(!confirm("Excluir esse lançamento?")) return;
-    await sb.from("buffet_lancamentos").delete().eq("id", id);
-    carregarLancamentos();
-  }
-
-function limpar(){
-  produtoInput.value = "";
-  quantidadeInput.value = "";
-  taraInput.value = "";
-  unidadeSelect.value = "KG";
-  consumoAutorizado.checked = false; // 🔒 limpa flag interna de consumo
-
-  // mantém o último tipo selecionado
-  const tipoSalvo = localStorage.getItem("buffet_tipo_selecionado");
-  tipoSelect.value = tipoSalvo || "MONTAGEM";
-
-  // se for reposição, reaplica tara 0,280
-  if (tipoSelect.value === "REPOSICAO") {
-    taraInput.value = formatPeso(0.280);
-  }
-
-  atualizarLiquidoPreview();
-}
-  carregarProdutos();
-  carregarLancamentos();
-
-
-function parsePeso(v){
-  if(!v) return 0;
-  return Number(String(v).replace(",", ".").replace(/[^\d.]/g, ""));
-}
-
-function formatPeso(v){
-  return (Number(v || 0).toFixed(3)).replace(".", ",");
-}
-
-function atualizarLiquidoPreview(){
-
-  const unidade = unidadeSelect.value;
-
-  if(unidade === "UN"){
-    const bruto = parseInt(quantidadeInput.value || 0);
-    const tara = parseInt(taraInput.value || 0);
-    const liquido = Math.max(0, bruto - tara);
-
-    document.getElementById("pesoLiquidoPreview").innerHTML =
-      `Líquido: <b>${liquido} un</b>`;
-  }
-  else{
-    const bruto = parsePeso(quantidadeInput.value);
-    const tara = parsePeso(taraInput.value);
-    const liquido = Math.max(0, bruto - tara);
-
-    document.getElementById("pesoLiquidoPreview").innerHTML =
-      `Líquido: <b>${formatPeso(liquido)} kg</b>`;
-  }
-}
-
-function aplicarMascaraKg(input){
-  let v = input.value || "";
-
-  // mantém só números
-  v = v.replace(/\D/g, "");
-
-  // garante 3 casas decimais
-  if(v.length === 0) v = "000";
-  if(v.length === 1) v = "00" + v;
-  if(v.length === 2) v = "0" + v;
-
-  const inteiro = v.slice(0, -3);
-  const dec = v.slice(-3);
-
-  input.value = (Number(inteiro) || 0) + "," + dec;
-}
-
-quantidadeInput.addEventListener("input", () => {
-
-  if(unidadeSelect.value === "KG"){
-    aplicarMascaraKg(quantidadeInput);
-  }
-
-  atualizarLiquidoPreview();
-});
-
-taraInput.addEventListener("input", () => {
-
-  if(unidadeSelect.value === "KG"){
-    aplicarMascaraKg(taraInput);
-  }
-
-  atualizarLiquidoPreview();
-});
-
-
-function abrirConsumo(){
-  const titulo = document.getElementById("tituloModalConsumo");
-
-  if (modoModal === "RETIRADA") {
-    titulo.innerText = "Para onde vai a retirada?";
-  } else {
-    titulo.innerText = "Para quem é o consumo?";
-  }
-
-  document.getElementById("modalConsumo").style.display = "flex";
-  document.body.style.overflow = "hidden";
-  carregarConsumidores();
-}
-
-function fecharConsumo(){
-  document.getElementById("modalConsumo").style.display = "none";
-  document.body.style.overflow = "auto";
-  document.getElementById("consumoNome").value = ""; // limpa campo
-}
-
-async function carregarConsumidores(){
-  const empresa = empresaSelect.value;
-
-  const { data } = await sb
-    .from("buffet_consumidores")
-    .select("nome")
-    .eq("empresa", empresa)
-    .order("nome");
-
-  const list = document.getElementById("consumidoresList");
-  list.innerHTML = "";
-  data?.forEach(p=>{
-    const o = document.createElement("option");
-    o.value = p.nome;
-    list.appendChild(o);
-  });
-}
-
-async function confirmarConsumo(){
-  const nome = document.getElementById("consumoNome").value.trim().toUpperCase();
-  if(!nome) return alert("Informe o nome");
-
-  const empresa = empresaSelect.value;
-
-  const { data:exist } = await sb
-    .from("buffet_consumidores")
-    .select("*")
-    .eq("empresa", empresa)
-    .eq("nome", nome)
-    .maybeSingle();
-
-  if(!exist){
-    await sb.from("buffet_consumidores").insert({ empresa, nome });
-  }
-
-  fecharConsumo();
-  salvar(nome);
-}
-
-
-// ================== MODAL SEMANA ==================
-function abrirModalSemana(){
-  document.getElementById("modalSemana").style.display = "flex";
-}
-
-function fecharSemana(){
-  document.getElementById("modalSemana").style.display = "none";
-}
-
-// ================== CARDÁPIO ==================
-let cardapioSelecionado = [];
-
-async function abrirCardapio(dia){
-
-  fecharSemana();
-
-  const empresa = empresaSelect.value;
-
-  const { data } = await sb
-    .from("buffet_produtos")
-    .select("*")
-    .eq("empresa", empresa)
-    .eq("dia_semana", dia);
-
-  const container = document.getElementById("listaCardapio");
-  container.innerHTML = "";
-
-  cardapioSelecionado = data || [];
-
-  data?.forEach(item=>{
-    container.innerHTML += `
-      <label style="display:flex;gap:10px;margin-bottom:6px">
-        <input type="checkbox" checked data-id="${item.id}">
-        <span>${item.nome}</span>
-      </label>
-    `;
-  });
-
-  document.getElementById("tituloCardapio").innerText = "Cardápio - " + dia;
-  document.getElementById("modalCardapio").style.display = "flex";
-}
-
-function fecharCardapio(){
-  document.getElementById("modalCardapio").style.display = "none";
-}
-
-// ================== LANÇAMENTO AUTOMÁTICO ==================
-async function lancarCardapio(){
-
-  showSaving();
-
-  const empresa = empresaSelect.value;
-  const checkboxes = document.querySelectorAll("#listaCardapio input:checked");
-
-  for(const checkbox of checkboxes){
-
-    const item = cardapioSelecionado.find(p => p.id == checkbox.dataset.id);
-
-    if(!item) continue;
-
-    const tara = Number(item.tara_padrao || 0);
-
-    await sb.from("buffet_lancamentos").insert({
-      empresa: empresa,
-      produto_id: item.id,
-      produto_nome: item.nome,
-      tipo: "MONTAGEM",
-      quantidade: 0.001, // 🔥 1g
-      unidade: "KG",
-      data: dataISO,
-      hora: new Date().toTimeString().slice(0,8),
-      tara: tara
-    });
-  }
-
-  fecharCardapio();
-  hideSaving();
-  carregarLancamentos();
-}
-
-
-  
-</script>
-<!-- OVERLAY DE SALVAMENTO -->
-<div id="savingOverlay" style="
-  position:fixed; inset:0; z-index:9999;
-  background:rgba(15,23,42,.55);
-  display:none; align-items:center; justify-content:center;
-  backdrop-filter: blur(2px);
-">
-  <div style="
-    background:#fff; padding:22px 26px; border-radius:16px;
-    display:flex; align-items:center; gap:12px;
-    box-shadow:0 12px 30px rgba(0,0,0,.25)
-  ">
-    <i class="ri-loader-4-line" style="
-      font-size:26px; color:#ff6a00; animation:spin 1s linear infinite
-    "></i>
-    <b>Salvando...</b>
+</div>
+
+<!-- MODAL RESUMO TOTAL RETIRADO -->
+<div class="modal-backdrop"
+     id="modalResumoTotalRetirada"
+     onclick="if(event.target===this) fecharResumoTotalRetirada()">
+
+  <div class="modal">
+    <h3 id="tituloResumoTotalRetirada">📦 Total Retirado por Destino</h3>
+
+    <div id="listaResumoTotalRetirada"
+         style="max-height:60vh;overflow:auto"></div>
+
+    <div class="actions">
+      <button class="ghost" onclick="fecharResumoTotalRetirada()">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- MODAL RESUMO TOTAL DESPERDÍCIO -->
+<div class="modal-backdrop"
+     id="modalResumoTotalDesperdicio">
+
+  <div class="modal"
+       onclick="event.stopPropagation()">
+    <h3 id="tituloResumoTotalDesperdicio">
+      ♻️ Desperdício por Item
+    </h3>
+
+    <div id="listaResumoTotalDesperdicio"
+         style="max-height:60vh;overflow:auto"></div>
+
+    <div class="actions">
+      <button class="ghost"
+              onclick="fecharResumoTotalDesperdicio()">
+        Fechar
+      </button>
+    </div>
   </div>
 </div>
 </body>
-
-
-<!-- 🔥 MODAL SEMANA -->
-<div class="modal-backdrop" id="modalSemana">
-  <div class="modal">
-    <h3>Selecionar dia</h3>
-
-    <div class="grid" style="grid-template-columns:1fr 1fr">
-      <button onclick="abrirCardapio('SEGUNDA')">Segunda</button>
-      <button onclick="abrirCardapio('TERCA')">Terça</button>
-      <button onclick="abrirCardapio('QUARTA')">Quarta</button>
-      <button onclick="abrirCardapio('QUINTA')">Quinta</button>
-      <button onclick="abrirCardapio('SEXTA')">Sexta</button>
-      <button onclick="abrirCardapio('SABADO')">Sábado</button>
-      <button onclick="abrirCardapio('DOMINGO')">Domingo</button>
-    </div>
-
-    <div class="actions">
-      <button class="ghost" onclick="fecharSemana()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- 🔥 MODAL CARDÁPIO -->
-<div class="modal-backdrop" id="modalCardapio">
-  <div class="modal" style="width:600px">
-    <h3 id="tituloCardapio">Cardápio</h3>
-
-    <div id="listaCardapio" style="max-height:300px;overflow:auto"></div>
-
-    <div class="actions">
-      <button class="ghost" onclick="fecharCardapio()">Cancelar</button>
-      <button class="primary" onclick="lancarCardapio()">Lançar</button>
-    </div>
-  </div>
-</div>
 </html>
