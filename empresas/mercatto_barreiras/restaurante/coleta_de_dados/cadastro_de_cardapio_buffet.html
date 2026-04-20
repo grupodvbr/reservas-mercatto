@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cadastro de Cardápio</title>
+<title>Cardápio Buffet</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
@@ -18,8 +18,8 @@ padding:20px;
 
 /* HEADER */
 .header{
-font-size:24px;
-font-weight:800;
+font-size:26px;
+font-weight:900;
 margin-bottom:15px;
 }
 
@@ -39,26 +39,12 @@ grid-template-columns:2fr 1fr;
 gap:12px;
 }
 
-/* FIELD */
-.field{
-display:flex;
-flex-direction:column;
-gap:5px;
-}
-
-label{
-font-size:11px;
-font-weight:800;
-color:#374151;
-}
-
 /* INPUT */
 input{
 height:42px;
 padding:10px;
 border-radius:10px;
 border:1px solid #e5e7eb;
-font-size:14px;
 }
 
 input:focus{
@@ -78,15 +64,13 @@ margin-top:10px;
 background:#f1f5f9;
 padding:10px;
 border-radius:10px;
-font-size:12px;
 text-align:center;
 cursor:pointer;
 font-weight:700;
+font-size:12px;
 }
 
-.dias input{
-display:none;
-}
+.dias input{display:none;}
 
 .dias input:checked + span{
 background:#ff6a00;
@@ -107,15 +91,10 @@ background:#ff6a00;
 color:#fff;
 }
 
-.primary:hover{
-background:#ea580c;
-}
-
 /* LISTA */
 .lista{
 display:grid;
 gap:10px;
-margin-top:10px;
 }
 
 .item{
@@ -128,9 +107,7 @@ align-items:center;
 border:1px solid #e5e7eb;
 }
 
-.nome{
-font-weight:800;
-}
+.nome{font-weight:900;}
 
 .meta{
 font-size:12px;
@@ -145,51 +122,39 @@ border-radius:8px;
 cursor:pointer;
 font-weight:800;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="header">📅 Cadastro de Cardápio</div>
+<div class="header">📅 Cardápio do Buffet</div>
 
 <div class="card">
 
-  <div class="grid">
-    <div class="field">
-      <label>Produto</label>
-      <input id="nome" placeholder="Digite o nome do prato">
-    </div>
+<div class="grid">
+  <input id="nome" placeholder="Nome do prato">
+  <input id="tara" placeholder="Tara (kg)">
+</div>
 
-    <div class="field">
-      <label>Tara padrão (kg)</label>
-      <input id="tara" placeholder="0,000">
-    </div>
-  </div>
+<div class="dias" id="dias">
+  <label><input type="checkbox" value="SEGUNDA"><span>SEG</span></label>
+  <label><input type="checkbox" value="TERCA"><span>TER</span></label>
+  <label><input type="checkbox" value="QUARTA"><span>QUA</span></label>
+  <label><input type="checkbox" value="QUINTA"><span>QUI</span></label>
+  <label><input type="checkbox" value="SEXTA"><span>SEX</span></label>
+  <label><input type="checkbox" value="SABADO"><span>SAB</span></label>
+  <label><input type="checkbox" value="DOMINGO"><span>DOM</span></label>
+</div>
 
-  <label style="margin-top:12px">Dias da semana</label>
-
-  <div class="dias" id="dias">
-
-    <label><input type="checkbox" value="SEGUNDA"><span>SEG</span></label>
-    <label><input type="checkbox" value="TERCA"><span>TER</span></label>
-    <label><input type="checkbox" value="QUARTA"><span>QUA</span></label>
-    <label><input type="checkbox" value="QUINTA"><span>QUI</span></label>
-    <label><input type="checkbox" value="SEXTA"><span>SEX</span></label>
-    <label><input type="checkbox" value="SABADO"><span>SAB</span></label>
-    <label><input type="checkbox" value="DOMINGO"><span>DOM</span></label>
-
-  </div>
-
-  <button class="primary" style="margin-top:12px;width:100%" onclick="salvar()">
-    Salvar no Cardápio
-  </button>
+<button class="primary" style="margin-top:12px;width:100%" onclick="salvar()">
+Salvar Cardápio
+</button>
 
 </div>
 
 <div class="card">
-  <b>Produtos cadastrados</b>
-  <div class="lista" id="lista"></div>
+<b>Cardápio Atual</b>
+<div class="lista" id="lista"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -202,7 +167,6 @@ const sb = window.supabase.createClient(
 
 const empresa = "MERCATTO DELÍCIA";
 
-// 🔥 FORÇAR MAIÚSCULO
 document.getElementById("nome").addEventListener("input", e=>{
   e.target.value = e.target.value.toUpperCase();
 });
@@ -211,7 +175,6 @@ function parsePeso(v){
   return Number(String(v || "0").replace(",", "."));
 }
 
-// SALVAR
 async function salvar(){
 
   const nome = document.getElementById("nome").value.trim();
@@ -221,57 +184,80 @@ async function salvar(){
                 .map(i=>i.value);
 
   if(!nome || dias.length === 0){
-    return alert("Preencha produto e dias");
+    return alert("Preencha tudo");
   }
 
+  // remove antigo
+  await sb.from("cardapio_dia_buffet")
+    .delete()
+    .eq("empresa", empresa)
+    .eq("produto_nome", nome);
+
+  // insere novo
   for(const dia of dias){
-
-    await sb.from("buffet_produtos").insert({
-      empresa: empresa,
-      nome: nome,
-      tara_padrao: tara,
-      dia_semana: dia
+    await sb.from("cardapio_dia_buffet").insert({
+      empresa,
+      produto_nome: nome,
+      dia_semana: dia,
+      tara_padrao: tara
     });
-
   }
 
-  document.getElementById("nome").value = "";
-  document.getElementById("tara").value = "";
-  document.querySelectorAll("#dias input").forEach(i=>i.checked=false);
-
+  limpar();
   carregar();
 }
 
-// LISTAR
+function limpar(){
+  document.getElementById("nome").value="";
+  document.getElementById("tara").value="";
+  document.querySelectorAll("#dias input").forEach(i=>i.checked=false);
+}
+
 async function carregar(){
 
   const { data } = await sb
-    .from("buffet_produtos")
+    .from("cardapio_dia_buffet")
     .select("*")
-    .eq("empresa", empresa)
-    .order("nome");
+    .eq("empresa", empresa);
+
+  const agrupado = {};
+
+  data?.forEach(i=>{
+    if(!agrupado[i.produto_nome]){
+      agrupado[i.produto_nome] = {
+        dias: [],
+        tara: i.tara_padrao
+      };
+    }
+    agrupado[i.produto_nome].dias.push(i.dia_semana);
+  });
 
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  data?.forEach(item=>{
+  Object.keys(agrupado).forEach(nome=>{
+    const item = agrupado[nome];
+
     lista.innerHTML += `
       <div class="item">
         <div>
-          <div class="nome">${item.nome}</div>
-          <div class="meta">${item.dia_semana} • Tara: ${item.tara_padrao || 0}</div>
+          <div class="nome">${nome}</div>
+          <div class="meta">${item.dias.join(" • ")} | Tara: ${item.tara}</div>
         </div>
-        <div class="excluir" onclick="excluir('${item.id}')">Excluir</div>
+        <div class="excluir" onclick="excluir('${nome}')">Excluir</div>
       </div>
     `;
   });
 }
 
-// EXCLUIR
-async function excluir(id){
-  if(!confirm("Excluir produto?")) return;
+async function excluir(nome){
+  if(!confirm("Excluir?")) return;
 
-  await sb.from("buffet_produtos").delete().eq("id", id);
+  await sb.from("cardapio_dia_buffet")
+    .delete()
+    .eq("empresa", empresa)
+    .eq("produto_nome", nome);
+
   carregar();
 }
 
