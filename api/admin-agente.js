@@ -577,8 +577,23 @@ if(tipoConsulta === "pedidos"){
   pedidos = data || []
 }
 
+const METAS = {
+  "DELÍCIA GOURMET": { prata: 545000 },
+  "MERCATTO EMPORIO": { prata: 650000 },
+  "MERCATTO RESTAURANTE": { prata: 850000 },
+  "PADARIA DELÍCIA": { prata: 720000 },
+  "VILLA GOURMET": { prata: 746600 }
+}
 
+function calcularMeta(empresa, valor){
+  const meta = METAS[empresa]
+  if(!meta) return { meta:0, percentual:0 }
 
+  return {
+    meta: meta.prata,
+    percentual: (valor / meta.prata) * 100
+  }
+}
 
 function formatar(v){
   return Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2})
@@ -590,65 +605,219 @@ function formatarData(dataISO){
 }
 
   
+
 if(isCupom){
 
   try{
 
-    console.log("🌐 CHAMANDO API INTERNA DE VENDAS...")
+    console.log("🔥 CONSULTANDO API DE VENDAS...")
 
-const MAPA_INTERNO = {
-  "MERCATTO DELÍCIA": "MERCATTO RESTAURANTE",
-  "MERCATTO EMPORIO": "MERCATTO EMPORIO",
-  "PADARIA DELÍCIA": "PADARIA DELÍCIA",
-  "VILLA GOURMET": "VILLA GOURMET",
-  "DELÍCIA GOURMET": "DELÍCIA GOURMET"
+    let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
+
+  const MAPA_EMPRESAS = {
+  "MERCATTO EMPORIO": "VAREJO_URL_MERCATTO_EMPORIO",
+  "MERCATTO RESTAURANTE": "VAREJO_URL_MERCATTO_RESTAURANTE",
+  "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
+  "VILLA GOURMET": "VAREJO_URL_VILLA",
+  "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
 }
 
-const empresaCorrigida = MAPA_INTERNO[empresaFiltro] || null
+if(empresaFiltro){
 
-const url = empresaCorrigida
-  ? `${process.env.API_URL}/vendas/resumo?empresa=${empresaCorrigida}`
-  : `${process.env.API_URL}/vendas/resumo`
-    
-console.log("📡 URL FINAL:", url)
+  const chave = MAPA_EMPRESAS[empresaFiltro]
 
-const resApi = await fetch(url)
+  if(chave){
+    url += `?empresa=${chave}`
+    console.log("🏢 FILTRO APLICADO:", empresaFiltro, "→", chave)
+  }else{
+    console.log("⚠️ EMPRESA SEM MAPA:", empresaFiltro)
+  }
 
-if(!resApi.ok){
-  console.log("❌ ERRO HTTP:", resApi.status)
-  throw new Error("Erro na API de vendas")
+}else{
+  console.log("🌎 SEM FILTRO (GERAL)")
 }
 
-const data = await resApi.json()
+    const resApi = await fetch(url)
+    const data = await resApi.json()
+
+    console.log("📊 RESPOSTA API:", JSON.stringify(data, null, 2))
+
+ function normalizar(txt){
+  return txt
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+}
+
+// 🔥 CORREÇÃO DEFINITIVA
+if(empresaFiltro){
+
+  console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
+
+  // 👉 API já está filtrada
+function normalizar(txt){
+  return txt
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+}
+
+// 🔥 BUSCAR EMPRESA CORRETA DENTRO DO ARRAY
+const empresaData = (data.empresas || []).find(e =>
+  normalizar(e.empresa) === normalizar(empresaFiltro)
+)
+
+if(!empresaData){
+  console.log("❌ EMPRESA NÃO ENCONTRADA:", empresaFiltro)
+  return res.json({ resposta: "Empresa não encontrada na API" })
+}
+
+// 🔥 CALCULAR TICKET REAL DA EMPRESA
+const ticket = empresaData.vendas > 0
+  ? empresaData.faturamento / empresaData.vendas
+  : 0
+
+resumoDia = {
+  data: data.data,
+  faturamento: empresaData.faturamento,
+  vendas: empresaData.vendas,
+  ticket_medio: ticket,
+  tipo: "EMPRESA",
+  empresa: empresaFiltro
+}
+
   
-  
-    console.log("📊 RESPOSTA API INTERNA:", data)
 
-    if(data.erro){
-      return res.json({ resposta: "Erro ao buscar vendas" })
-    }
+}else{
 
-    resumoDia = {
-      data: data.data,
-      empresa: data.empresa,
-      faturamento: data.faturamento,
-      vendas: data.vendas,
-      ticket_medio: data.ticket_medio,
-      meta: data.meta,
-      percentual: data.percentual
-    }
+  console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
 
-  }catch(e){
-
-    console.log("❌ ERRO:", e)
-    return res.json({ resposta: "Erro ao buscar vendas" })
-
+  // 👉 Aqui sim usa total
+  resumoDia = {
+    data: data.data,
+    faturamento: data.faturamento,
+    vendas: data.vendas,
+    ticket_medio: data.ticket_medio,
+    tipo: "GERAL"
   }
 
 }
 
 
-  
+
+ // ✅ CORRETO — BASE + GPT ANALISANDO
+
+if(resumoDia){
+
+  console.log("🧠 SOMENTE IA")
+
+  const analise = await openai.chat.completions.create({
+    model:"gpt-4.1-mini",
+    temperature:0.3,
+   messages: [
+  {
+    role: "system",
+    content: `
+Você é um CONSULTOR EXECUTIVO de restaurantes.
+
+Sua resposta DEVE seguir exatamente essa estrutura:
+
+---
+
+📊 RESUMO DO DIA (OBRIGATÓRIO PRIMEIRO)
+
+Formato obrigatório:
+
+🏢 Empresa: NOME
+💰 Faturamento: R$ VALOR
+🧾 Vendas: NUMERO
+💳 Ticket médio: R$ VALOR
+🎯 Meta: XX%
+
+---
+
+📈 DIAGNÓSTICO
+
+- Avalie desempenho (forte, médio ou fraco)
+- Identifique problemas claros
+- Compare com meta
+
+---
+
+🚀 AÇÕES PARA AUMENTAR FATURAMENTO
+
+- Sugestões PRÁTICAS
+- Diretas para operação
+- Foco em aumento de receita
+
+---
+⚠️ REGRA DE FORMATAÇÃO:
+
+- Cada linha deve conter "NOME: VALOR"
+- NÃO quebrar linha
+- NÃO separar nome e valor
+- NÃO usar linha dupla
+
+
+
+⚠️ REGRAS:
+
+- NÃO inventar números
+- NÃO alterar valores
+- NÃO recalcular dados
+- NÃO fugir da estrutura
+- NÃO escrever texto fora do padrão
+
+Seja direto, profissional e estratégico.
+`
+  },
+  {
+    role: "user",
+    content: `
+DADOS REAIS:
+
+Empresa: ${resumoDia.empresa || "GERAL"}
+Faturamento: ${resumoDia.faturamento}
+Vendas: ${resumoDia.vendas}
+Ticket médio: ${resumoDia.ticket_medio}
+Meta: ${calcularMeta(resumoDia.empresa, resumoDia.faturamento).meta}
+Percentual da meta: ${calcularMeta(resumoDia.empresa, resumoDia.faturamento).percentual}
+`
+  }
+]
+  })
+
+const respostaIA = analise.choices[0].message.content
+
+function criarBox(texto){
+
+  const linhas = texto.split("\n")
+
+  const largura = Math.max(...linhas.map(l => l.length))
+
+  const topo = "┌" + "─".repeat(largura + 2) + "┐"
+  const base = "└" + "─".repeat(largura + 2) + "┘"
+
+  const meio = linhas.map(l =>
+    "│ " + l.padEnd(largura, " ") + " │"
+  )
+
+  return [topo, ...meio, base].join("\n")
+}
+
+const respostaFormatada = criarBox(respostaIA)
+
+return res.json({
+  resposta: respostaFormatada
+})
+}
+    
+
+  }catch(e){
+    console.log("❌ ERRO:", e)
+    return res.json({ resposta: "Erro ao buscar vendas" })
+  }
+}
 /* ================= CLIENTES ================= */
 
 
@@ -857,6 +1026,10 @@ if(musicos.length){
 }
 if(resumoDia){
 
+  const metaInfo = resumoDia.empresa
+    ? calcularMeta(resumoDia.empresa, resumoDia.faturamento)
+    : null
+
   contextos.push({
     role:"system",
     content: `
@@ -867,8 +1040,8 @@ ${JSON.stringify({
   faturamento: resumoDia.faturamento,
   vendas: resumoDia.vendas,
   ticket_medio: resumoDia.ticket_medio,
-  meta: resumoDia.meta,
-  percentual: resumoDia.percentual
+  meta: metaInfo?.meta || 0,
+  percentual_meta: metaInfo?.percentual || 0
 })}
 `
   })
