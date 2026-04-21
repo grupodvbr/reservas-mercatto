@@ -596,11 +596,19 @@ if(isCupom){
 
     console.log("🌐 CHAMANDO API INTERNA DE VENDAS...")
 
-const url = empresaFiltro
-  ? `${process.env.API_URL}/vendas/resumo?empresa=${empresaFiltro}`
+const MAPA_INTERNO = {
+  "MERCATTO DELÍCIA": "MERCATTO RESTAURANTE",
+  "MERCATTO EMPORIO": "MERCATTO EMPORIO",
+  "PADARIA DELÍCIA": "PADARIA DELÍCIA",
+  "VILLA GOURMET": "VILLA GOURMET",
+  "DELÍCIA GOURMET": "DELÍCIA GOURMET"
+}
+
+const empresaCorrigida = MAPA_INTERNO[empresaFiltro] || null
+
+const url = empresaCorrigida
+  ? `${process.env.API_URL}/vendas/resumo?empresa=${empresaCorrigida}`
   : `${process.env.API_URL}/vendas/resumo`
-
-
     
 console.log("📡 URL FINAL:", url)
 
