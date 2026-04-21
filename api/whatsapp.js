@@ -3,7 +3,7 @@ const OpenAI = require("openai")
 
 /* ================= ENV ================= */
 
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN
+const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
 const OTTO_WHATSAPP_TOKEN = process.env.OTTO_WHATSAPP_TOKEN
 const OTTO_PHONE_NUMBER_ID = process.env.OTTO_PHONE_NUMBER_ID
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -14,20 +14,54 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY
 })
 
-/* ================= ADMINS ================= */
+/* ================= CONFIG ================= */
 
 const OTTO_ADMINS = [
   "557798253249"
 ]
 
-const OTTO_NUMERO_RESTAURANTE = "5577999229807"
+// evita loop (se vier do próprio número)
+const OTTO_IGNORAR_NUMERO = process.env.OTTO_PHONE_NUMBER_ID
+
+/* ================= FUNÇÃO ENVIO ================= */
+
+async function enviarWhatsApp(para, mensagem, tentativas = 0){
+  try{
+
+    await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
+      method:"POST",
+      headers:{
+        "Authorization":`Bearer ${OTTO_WHATSAPP_TOKEN}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        messaging_product:"whatsapp",
+        to: para,
+        text:{ body: mensagem }
+      })
+    })
+
+    console.log("📤 ENVIADO:", mensagem)
+
+  }catch(e){
+
+    console.error("❌ ERRO ENVIO:", e)
+
+    // retry automático
+    if(tentativas < 2){
+      console.log("🔁 REENVIANDO...")
+      await enviarWhatsApp(para, mensagem, tentativas + 1)
+    }
+
+  }
+}
 
 /* ================= HANDLER ================= */
 
 module.exports = async function handler(req, res){
 
 /* ======================================================
-   🔐 VERIFY META
+   🔐 VERIFICAÇÃO META
 ====================================================== */
 
 if(req.method === "GET"){
@@ -36,11 +70,11 @@ if(req.method === "GET"){
   const challenge = req.query["hub.challenge"]
 
   if(mode === "subscribe" && token === VERIFY_TOKEN){
-    console.log("✅ WEBHOOK OK")
+    console.log("✅ WEBHOOK VALIDADO")
     return res.status(200).send(challenge)
   }
 
-  return res.sendStatus(403)
+  return res.status(403).end()
 }
 
 /* ======================================================
@@ -54,36 +88,43 @@ if(req.method === "POST"){
     const body = req.body
     const change = body?.entry?.[0]?.changes?.[0]?.value
 
-    if(!change) return res.sendStatus(200)
+    if(!change) return res.status(200).end()
 
     /* ================= STATUS ================= */
 
     if(change.statuses){
       console.log("📩 STATUS:", change.statuses[0].status)
-      return res.sendStatus(200)
+      return res.status(200).end()
     }
 
     /* ================= MSG ================= */
 
     const msg = change.messages?.[0]
-    if(!msg) return res.sendStatus(200)
+    if(!msg) return res.status(200).end()
 
     const OTTO_NUMERO = msg.from
     const OTTO_TIPO = msg.type
+
+    // 🔥 ANTI LOOP
+    if(OTTO_NUMERO === OTTO_IGNORAR_NUMERO){
+      console.log("♻️ IGNORADO (loop)")
+      return res.status(200).end()
+    }
 
     let OTTO_TEXTO = ""
 
     if(OTTO_TIPO === "text"){
       OTTO_TEXTO = msg.text.body
     } else if(OTTO_TIPO === "image"){
-      OTTO_TEXTO = "Cliente enviou imagem"
+      OTTO_TEXTO = "Cliente enviou uma imagem"
     } else if(OTTO_TIPO === "audio"){
-      OTTO_TEXTO = "Cliente enviou áudio"
+      OTTO_TEXTO = "Cliente enviou um áudio"
     } else {
       OTTO_TEXTO = "Mensagem não suportada"
     }
 
     console.log("🤖 RECEBEU:", OTTO_TEXTO)
+    console.log("📱 DE:", OTTO_NUMERO)
 
     /* ======================================================
        🔐 BLOQUEIO NÃO ADMIN
@@ -93,31 +134,20 @@ if(req.method === "POST"){
 
     if(!OTTO_EH_ADMIN){
 
-      await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
-        method:"POST",
-        headers:{
-          "Authorization":`Bearer ${OTTO_WHATSAPP_TOKEN}`,
-          "Content-Type":"application/json"
-        },
-        body: JSON.stringify({
-          messaging_product:"whatsapp",
-          to: OTTO_NUMERO,
-          text:{
-            body:
+      await enviarWhatsApp(
+        OTTO_NUMERO,
 `Olá! 👋
 
 Para atendimento, fale com o Mercatto Delícia:
 
 📞 (77) 99922-9807`
-          }
-        })
-      })
+      )
 
-      return res.sendStatus(200)
+      return res.status(200).end()
     }
 
     /* ======================================================
-       🧠 OPENAI
+       🧠 AGENTE OTTO
     ====================================================== */
 
     const completion = await openai.chat.completions.create({
@@ -129,7 +159,10 @@ Para atendimento, fale com o Mercatto Delícia:
           content: `
 Você é OTTO, administrador do Mercatto Delícia.
 
-Responda de forma profissional, direta e objetiva.
+Regras:
+- Responda direto
+- Não invente dados
+- Seja profissional
 `
         },
         {
@@ -144,37 +177,22 @@ Responda de forma profissional, direta e objetiva.
     console.log("🧠 RESPOSTA:", resposta)
 
     /* ======================================================
-       📤 ENVIO WHATSAPP
+       📤 ENVIO
     ====================================================== */
 
-    await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
-      method:"POST",
-      headers:{
-        "Authorization":`Bearer ${OTTO_WHATSAPP_TOKEN}`,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        messaging_product:"whatsapp",
-        to: OTTO_NUMERO,
-        text:{
-          body: resposta
-        }
-      })
-    })
+    await enviarWhatsApp(OTTO_NUMERO, resposta)
 
-    console.log("📤 ENVIADO")
-
-    return res.sendStatus(200)
+    return res.status(200).end()
 
   }catch(e){
 
-    console.error("❌ ERRO:", e)
-    return res.sendStatus(500)
+    console.error("❌ ERRO GERAL:", e)
+    return res.status(500).end()
 
   }
 
 }
 
-return res.sendStatus(405)
+return res.status(405).end()
 
 }
