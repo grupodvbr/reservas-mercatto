@@ -168,7 +168,7 @@ else if(normal.includes("kids")){
   empresaFiltro = "M.KIDS"
 }
 else if(
-  normal.includes("delicia gourmet") ||
+  normal.includes("delicia") ||
   normal.includes("gourmet")
 ){
   empresaFiltro = "DELÍCIA GOURMET"
@@ -520,8 +520,9 @@ if(isCupom){
 
       const chave = mapa[empresaFiltro]
 
-      const empresaData = data.empresas.find(e => e.empresa === chave)
-
+const empresaData = data.empresas.find(e =>
+  String(e.empresa).trim().toUpperCase() === String(chave).trim().toUpperCase()
+)
       if(empresaData){
         resultado = {
           data: data.data,
