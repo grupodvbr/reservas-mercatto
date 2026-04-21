@@ -500,55 +500,39 @@ if(tipoConsulta === "pedidos"){
 }
 
   /* ================= CUPONS (VENDAS EXTERNAS) ================= */
+const API = "https://goals-continental-examinations-carrier.trycloudflare.com/cupons"
 
-if(isCupom && [0,1].includes(NIVEL)){
+try{
 
-  console.log("🔥 ENTROU NO BLOCO DE CUPONS")
-  console.log("📅 DATA FILTRO:", dataFiltro)
-  console.log("🏢 EMPRESA FILTRO:", empresaFiltro)
-    try{
+  const res = await fetch(API)
+  const data = await res.json()
 
-    const urls = [
-      process.env.VAREJO_URL_MERCATTO,
-      process.env.VAREJO_URL_VILLA,
-      process.env.VAREJO_URL_PADARIA,
-      process.env.VAREJO_URL_DELICIA
-    ].filter(Boolean)
+  console.log("📊 TOTAL RECEBIDO:", data.length)
+  console.log("📦 EXEMPLO CUPOM:", data[0])
 
-    let todos = []
+  const todos = Array.isArray(data) ? data : []
 
-    for(const url of urls){
+  // 🔥 FILTRO CORRETO POR DATA
+  cupons = todos.filter(c => {
+    if(!c.data) return false
+    return c.data === dataFiltro
+  })
 
-      try{
+  // 🔥 REMOVE CANCELADOS
+  cupons = cupons.filter(c => Number(c.cancelado) === 0)
 
-        const res = await fetch(url)
-        const data = await res.json()
+  // 🔥 FILTRO POR EMPRESA (SE EXISTIR)
+  if(empresaFiltro){
+    cupons = cupons.filter(c =>
+      (c.empresa || "").includes(empresaFiltro)
+    )
+  }
 
-        console.log("📊 CUPONS RECEBIDOS:", url, data?.length || 0)
+  console.log("📊 TOTAL FILTRADO:", cupons.length)
 
-        if(Array.isArray(data)){
-          todos.push(...data)
-        }
-
-      }catch(e){
-        console.log("❌ ERRO CUPOM URL:", url, e.message)
-      }
-
-    }
-
-// 🔥 FILTRO POR DATA (CORRIGIDO)
-cupons = todos.filter(c =>
-  (c.data || "").startsWith(dataFiltro)
-)
-
-// 🔥 FILTRO POR EMPRESA (EXATO AQUI)
-if(empresaFiltro){
-  cupons = cupons.filter(c =>
-    (c.empresa || "").includes(empresaFiltro)
-  )
+}catch(e){
+  console.log("❌ ERRO CUPONS:", e)
 }
-
-console.log("📊 TOTAL CUPONS FILTRADOS:", cupons.length)
 
   }catch(e){
     console.log("❌ ERRO GERAL CUPONS:", e)
