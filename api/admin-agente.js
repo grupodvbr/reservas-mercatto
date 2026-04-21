@@ -570,8 +570,33 @@ if(isCupom){
 
     console.log("📊 RESPOSTA API:", JSON.stringify(data, null, 2))
 
-    // 🔥 AQUI É A CHAVE
-if(!empresaFiltro){
+ function normalizar(txt){
+  return txt
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+}
+
+// 🔥 CORREÇÃO DEFINITIVA
+if(empresaFiltro){
+
+  console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
+
+  // 👉 API já está filtrada
+  resumoDia = {
+    data: data.data,
+    faturamento: data.faturamento,
+    vendas: data.vendas,
+    ticket_medio: data.ticket_medio,
+    tipo: "EMPRESA",
+    empresa: empresaFiltro
+  }
+
+}else{
+
+  console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
+
+  // 👉 Aqui sim usa total
   resumoDia = {
     data: data.data,
     faturamento: data.faturamento,
@@ -579,44 +604,8 @@ if(!empresaFiltro){
     ticket_medio: data.ticket_medio,
     tipo: "GERAL"
   }
-}else{
 
-  const empresaData = data.empresas?.find(e =>
-    e.empresa.toUpperCase().includes(
-      empresaFiltro
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase()
-    )
-  )
-
-  if(!empresaData){
-    console.log("❌ EMPRESA NÃO ENCONTRADA NA API:", empresaFiltro)
-    
-    resumoDia = {
-      data: data.data,
-      faturamento: 0,
-      vendas: 0,
-      ticket_medio: 0,
-      tipo: "ERRO"
-    }
-
-  }else{
-
-    resumoDia = {
-      data: data.data,
-      faturamento: empresaData.faturamento,
-      vendas: empresaData.vendas,
-      ticket_medio: empresaData.vendas > 0
-        ? empresaData.faturamento / empresaData.vendas
-        : 0,
-      tipo: "EMPRESA",
-      empresa: empresaData.empresa
-    }
-
-  }
 }
-
 
     
 
