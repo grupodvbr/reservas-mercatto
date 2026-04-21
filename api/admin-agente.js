@@ -31,7 +31,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 /* ================= NÍVEIS DE ACESSO ================= */
 
 const USUARIOS = {
-  "779999999999": { nivel: 0 }, // ADMIN TOTAL
+  "77998253249": { nivel: 0 }, // ADMIN TOTAL
   "778888888888": { nivel: 1 }, // TODAS EMPRESAS
   "777777777777": { nivel: 2, empresa: "MERCATTO DELÍCIA" }, // 1 empresa
   "776666666666": { nivel: 3 } // só relatórios
