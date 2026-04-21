@@ -966,16 +966,29 @@ if(matchRelatorio){
 
 /* ================= DETECTAR RESERVA ================= */
 
-const matchReserva = resposta.match(/RESERVA_JSON:\s*(\{[\s\S]*?\})/)
+const matchReserva = resposta.match(/RESERVA_JSON:\s*([\s\S]*)/)
 
 if(matchReserva){
 
   try{
 
     let jsonTexto = matchReserva[1]
+
+    // 🔥 LIMPA LIXO DO GPT
+    jsonTexto = jsonTexto
       .replace(/```json/g,"")
       .replace(/```/g,"")
       .trim()
+
+    // 🔥 GARANTE JSON COMPLETO
+    const inicio = jsonTexto.indexOf("{")
+    const fim = jsonTexto.lastIndexOf("}")
+
+    if(inicio !== -1 && fim !== -1){
+      jsonTexto = jsonTexto.substring(inicio, fim + 1)
+    }
+
+    console.log("📦 JSON LIMPO:", jsonTexto)
 
     const acaoReserva = JSON.parse(jsonTexto)
 
@@ -1009,9 +1022,10 @@ if(matchReserva){
 
     resposta = "✅ Reserva criada com sucesso"
 
-  }catch(e){
-    console.error("❌ ERRO RESERVA:", e)
-  }
+}catch(e){
+  console.error("❌ ERRO RESERVA:", e)
+  resposta = "❌ Erro ao interpretar a reserva. Tente novamente."
+}
 }
 
 
