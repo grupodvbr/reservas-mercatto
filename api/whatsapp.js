@@ -138,9 +138,10 @@ if(req.method === "POST"){
       headers: {
         authorization: "Bearer " + ADMIN_TOKEN
       },
-      body: {
-        pergunta: texto
-      }
+body: {
+  pergunta: texto,
+  numero: numero // 🔥 ESSENCIAL
+}
     }
 
     const fakeRes = {
