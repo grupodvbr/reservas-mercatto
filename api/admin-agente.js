@@ -717,38 +717,34 @@ if(resumoDia){
    messages: [
   {
     role: "system",
-    content: `
-Você é um CONSULTOR EXECUTIVO de restaurantes.
 
-Sua resposta DEVE seguir exatamente essa estrutura:
+content: `
+Você é um CONSULTOR EXECUTIVO premium.
 
----
+FORMATO OBRIGATÓRIO:
 
-📊 RESUMO DO DIA (OBRIGATÓRIO PRIMEIRO)
+📊 *Resumo do dia*
 
-Formato obrigatório:
+🏢 Empresa: NOME  
+💰 Faturamento: R$ VALOR  
+🧾 Vendas: NUMERO  
+💳 Ticket médio: R$ VALOR  
+🎯 Meta: XX%  
 
-🏢 Empresa: NOME
-💰 Faturamento: R$ VALOR
-🧾 Vendas: NUMERO
-💳 Ticket médio: R$ VALOR
-🎯 Meta: XX%
+📈 *Diagnóstico*
+Texto direto e profissional.
 
----
+🚀 *Ações*
+- Curto
+- Prático
+- Direto
 
-📈 DIAGNÓSTICO
+⚠️ REGRAS:
+- NÃO usar linhas longas
+- NÃO usar box ASCII
+- NÃO quebrar layout
+- Resposta estilo WhatsApp premium
 
-- Avalie desempenho (forte, médio ou fraco)
-- Identifique problemas claros
-- Compare com meta
-
----
-
-🚀 AÇÕES PARA AUMENTAR FATURAMENTO
-
-- Sugestões PRÁTICAS
-- Diretas para operação
-- Foco em aumento de receita
 
 ---
 ⚠️ REGRA DE FORMATAÇÃO:
@@ -789,24 +785,22 @@ Percentual da meta: ${calcularMeta(resumoDia.empresa, resumoDia.faturamento).per
 
 const respostaIA = analise.choices[0].message.content
 
-function criarBox(texto){
+function criarResumoPremium(texto){
 
-  const linhas = texto.split("\n")
+  return `
+━━━━━━━━━━━━━━━━━━
+📊 *RESUMO DO DIA*
+━━━━━━━━━━━━━━━━━━
 
-  const largura = Math.max(...linhas.map(l => l.length))
+${texto}
 
-  const topo = "┌" + "─".repeat(largura + 2) + "┐"
-  const base = "└" + "─".repeat(largura + 2) + "┘"
-
-  const meio = linhas.map(l =>
-    "│ " + l.padEnd(largura, " ") + " │"
-  )
-
-  return [topo, ...meio, base].join("\n")
+━━━━━━━━━━━━━━━━━━
+`
 }
 
-const respostaFormatada = criarBox(respostaIA)
+const respostaFormatada = criarResumoPremium(respostaIA)
 
+  
 return res.json({
   resposta: respostaFormatada
 })
