@@ -1,4 +1,6 @@
 const OpenAI = require("openai")
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args))
 const { createClient } = require("@supabase/supabase-js")
 
 const openai = new OpenAI({
@@ -170,7 +172,16 @@ let tipoConsulta = "geral"
 
 
 
-
+const isCupom =
+  texto.includes("cupom") ||
+  texto.includes("venda") ||
+  texto.includes("vendas") ||
+  texto.includes("faturamento") ||
+  texto.includes("quanto vendeu") ||
+  texto.includes("resumo de vendas") ||
+  texto.includes("resumo das vendas") ||
+  texto.includes("resumo vendas") ||
+  texto.includes("vendas de hoje")
 
 
 
@@ -198,28 +209,8 @@ if(texto.includes("buffet")){
 if(texto.includes("cliente")){
   tipoConsulta = "clientes"
 }
-
-if(texto.includes("faturamento") && !isCupom){
+if(texto.includes("relatorio")){
   tipoConsulta = "relatorio"
-}
-
-/* ================= DETECTAR CUPONS ================= */
-
-const isCupom =
-  texto.includes("cupom") ||
-  texto.includes("venda") ||
-  texto.includes("vendas") ||
-  texto.includes("faturamento") ||
-  texto.includes("quanto vendeu") ||
-  texto.includes("resumo de vendas") ||
-  texto.includes("resumo das vendas") ||
-  texto.includes("resumo vendas") ||
-  texto.includes("vendas de hoje")
-
-
-// 🔥 FORÇA CONSULTA DE CUPOM
-if(isCupom){
-  tipoConsulta = "cupons"
 }
 
 /* ================= BLOQUEIO CUPONS ================= */
@@ -499,7 +490,6 @@ if(tipoConsulta === "pedidos"){
   pedidos = data || []
 }
 
-  /* ================= CUPONS (VENDAS EXTERNAS) ================= */
 /* ================= CUPONS (VENDAS EXTERNAS) ================= */
 
 if(isCupom && [0,1].includes(NIVEL)){
@@ -526,11 +516,19 @@ if(isCupom && [0,1].includes(NIVEL)){
     // 🔥 REMOVE CANCELADOS
     cupons = cupons.filter(c => Number(c.cancelado) === 0)
 
-    // 🔥 FILTRO POR EMPRESA
+    // 🔥 FILTRO POR EMPRESA (CORRIGIDO)
     if(empresaFiltro){
-      cupons = cupons.filter(c =>
-        (c.empresa || "").includes(empresaFiltro)
-      )
+
+      const mapa = {
+        "MERCATTO DELÍCIA": "VAREJO_URL_MERCATTO",
+        "VILLA GOURMET": "VAREJO_URL_VILLA",
+        "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
+        "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
+      }
+
+      const chave = mapa[empresaFiltro]
+
+      cupons = cupons.filter(c => c.empresa === chave)
     }
 
     console.log("📊 TOTAL FILTRADO:", cupons.length)
@@ -540,7 +538,6 @@ if(isCupom && [0,1].includes(NIVEL)){
   }
 
 }
-
 
   
 /* ================= CLIENTES ================= */
