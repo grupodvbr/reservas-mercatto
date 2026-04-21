@@ -148,21 +148,25 @@ if(NIVEL === 2){
   empresaFiltro = usuario.empresa
 }else{
 
-  if(texto.includes("mercatto")){
-    empresaFiltro = "MERCATTO DELÍCIA"
-  }
+if(texto.includes("mercatto")){
+  empresaFiltro = "MERCATTO DELÍCIA"
+}
 
-  if(texto.includes("villa")){
-    empresaFiltro = "VILLA GOURMET"
-  }
+if(texto.includes("villa")){
+  empresaFiltro = "VILLA GOURMET"
+}
 
-  if(texto.includes("padaria")){
-    empresaFiltro = "PADARIA DELÍCIA"
-  }
+if(texto.includes("padaria")){
+  empresaFiltro = "PADARIA DELÍCIA"
+}
 
-  if(texto.includes("kids")){
-    empresaFiltro = "M.KIDS"
-  }
+if(texto.includes("kids")){
+  empresaFiltro = "M.KIDS"
+}
+
+if(texto.includes("delicia") || texto.includes("delícia")){
+  empresaFiltro = "DELÍCIA GOURMET"
+}
 
 }
 
@@ -457,6 +461,7 @@ let produtos = []
 let buffetLancamentos = []
 let musicos = []
 let cupons = []
+  let resumoDia = null
 /* ================= RESERVAS ================= */
 
 if(tipoConsulta === "reservas" || tipoConsulta === "relatorio"){
@@ -490,33 +495,13 @@ if(tipoConsulta === "pedidos"){
   pedidos = data || []
 }
 
-/* ================= CUPONS (VENDAS EXTERNAS) ================= */
-
-if(isCupom && [0,1].includes(NIVEL)){
-
-  console.log("🔥 ENTROU NO BLOCO DE CUPONS")
-  console.log("📅 DATA FILTRO:", dataFiltro)
-  console.log("🏢 EMPRESA FILTRO:", empresaFiltro)
-
-  const API = "https://goals-continental-examinations-carrier.trycloudflare.com/cupons"
+if(isCupom){
 
   try{
 
-    const res = await fetch(API)
-    const data = await res.json()
+    let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
 
-    console.log("📊 TOTAL RECEBIDO:", data.length)
-    console.log("📦 EXEMPLO CUPOM:", data[0])
-
-    const todos = Array.isArray(data) ? data : []
-
-    // 🔥 FILTRO POR DATA
-    cupons = todos.filter(c => c.data === dataFiltro)
-
-    // 🔥 REMOVE CANCELADOS
-    cupons = cupons.filter(c => Number(c.cancelado) === 0)
-
-    // 🔥 FILTRO POR EMPRESA (CORRIGIDO)
+    // 🔥 filtro por empresa
     if(empresaFiltro){
 
       const mapa = {
@@ -528,17 +513,21 @@ if(isCupom && [0,1].includes(NIVEL)){
 
       const chave = mapa[empresaFiltro]
 
-      cupons = cupons.filter(c => c.empresa === chave)
+      if(chave){
+        url += `?empresa=${chave}`
+      }
     }
 
-    console.log("📊 TOTAL FILTRADO:", cupons.length)
+    const res = await fetch(url)
+    resumoDia = await res.json()
+
+    console.log("📊 RESUMO DIA:", resumoDia)
 
   }catch(e){
-    console.log("❌ ERRO CUPONS:", e.message)
+    console.log("❌ ERRO RESUMO:", e.message)
   }
 
 }
-
   
 /* ================= CLIENTES ================= */
 
@@ -746,11 +735,13 @@ if(musicos.length){
     content: "AGENDA_MUSICOS:\n" + JSON.stringify(musicos)
   })
 }
-if(cupons.length){
+if(resumoDia){
+
   contextos.push({
     role:"system",
-    content: "CUPONS_VENDAS:\n" + JSON.stringify(cupons.slice(0,200))
+    content: "CUPONS_VENDAS:\n" + JSON.stringify(resumoDia)
   })
+
 }
   
 /* ================= OPENAI ================= */
@@ -903,15 +894,20 @@ Você recebeu dados reais de vendas em:
 CUPONS_VENDAS
 
 Campos:
-- empresa
-- valor
 - data
-- hora
-- cancelado
+- faturamento
+- vendas
+- ticket_medio
+- empresas[]
 
 REGRAS:
 
-1. Somar apenas registros onde cancelado = 0
+Use diretamente os valores já calculados:
+- faturamento
+- vendas
+- ticket_medio
+
+
 
 2. Calcular:
 - faturamento total
@@ -934,8 +930,7 @@ Ticket médio: R$ XXX"
 "Não há vendas registradas para essa data"
 
 ⚠️ NUNCA inventar valores
-⚠️ USAR apenas CUPONS_VENDAS
-`
+USAR apenas os dados de CUPONS_VENDAS (já resumidos)`
 },
 
 {
