@@ -203,17 +203,23 @@ if(texto.includes("relatorio") || texto.includes("faturamento")){
   tipoConsulta = "relatorio"
 }
 
-
+// 🔥 FORÇA CONSULTA DE CUPOM
+if(isCupom){
+  tipoConsulta = "cupons"
+}
 
 /* ================= DETECTAR CUPONS ================= */
 
 const isCupom =
   texto.includes("cupom") ||
   texto.includes("venda") ||
+  texto.includes("vendas") ||
   texto.includes("faturamento") ||
   texto.includes("quanto vendeu") ||
-  texto.includes("vendas")
-
+  texto.includes("resumo de vendas") ||
+  texto.includes("resumo das vendas") ||
+  texto.includes("resumo vendas") ||
+  texto.includes("vendas de hoje")
 /* ================= BLOQUEIO CUPONS ================= */
 
 if(isCupom && ![0,1].includes(NIVEL)){
@@ -494,7 +500,11 @@ if(tipoConsulta === "pedidos"){
   /* ================= CUPONS (VENDAS EXTERNAS) ================= */
 
 if(isCupom && [0,1].includes(NIVEL)){
-  try{
+
+  console.log("🔥 ENTROU NO BLOCO DE CUPONS")
+  console.log("📅 DATA FILTRO:", dataFiltro)
+  console.log("🏢 EMPRESA FILTRO:", empresaFiltro)
+    try{
 
     const urls = [
       process.env.VAREJO_URL_MERCATTO,
@@ -524,10 +534,19 @@ if(isCupom && [0,1].includes(NIVEL)){
 
     }
 
-    // 🔥 FILTRO POR DATA
-    cupons = todos.filter(c => c.data === dataFiltro)
+// 🔥 FILTRO POR DATA (CORRIGIDO)
+cupons = todos.filter(c =>
+  (c.data || "").startsWith(dataFiltro)
+)
 
-    console.log("📊 TOTAL CUPONS FILTRADOS:", cupons.length)
+// 🔥 FILTRO POR EMPRESA (EXATO AQUI)
+if(empresaFiltro){
+  cupons = cupons.filter(c =>
+    (c.empresa || "").includes(empresaFiltro)
+  )
+}
+
+console.log("📊 TOTAL CUPONS FILTRADOS:", cupons.length)
 
   }catch(e){
     console.log("❌ ERRO GERAL CUPONS:", e)
@@ -893,7 +912,51 @@ ALTERAR_REGISTRO_JSON:
 
 `
 },
+{
+role:"system",
+content:`
 
+💰 REGRA CRÍTICA — CUPONS DE VENDAS
+
+Você recebeu dados reais de vendas em:
+
+CUPONS_VENDAS
+
+Campos:
+- empresa
+- valor
+- data
+- hora
+- cancelado
+
+REGRAS:
+
+1. Somar apenas registros onde cancelado = 0
+
+2. Calcular:
+- faturamento total
+- quantidade de vendas
+- ticket médio
+
+3. Se houver empresaFiltro:
+→ filtrar apenas aquela empresa
+
+4. Responder assim:
+
+"Resumo de vendas do dia ${dataFiltro}:
+
+Faturamento: R$ XXXX
+Vendas: XXX
+Ticket médio: R$ XXX"
+
+5. Se não houver dados:
+
+"Não há vendas registradas para essa data"
+
+⚠️ NUNCA inventar valores
+⚠️ USAR apenas CUPONS_VENDAS
+`
+},
 
 {
 role:"system",
