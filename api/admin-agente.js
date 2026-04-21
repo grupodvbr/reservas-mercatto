@@ -199,7 +199,7 @@ if(texto.includes("cliente")){
   tipoConsulta = "clientes"
 }
 
-if(texto.includes("relatorio") || texto.includes("faturamento")){
+if(texto.includes("faturamento") && !isCupom){
   tipoConsulta = "relatorio"
 }
 
