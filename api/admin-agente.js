@@ -709,28 +709,8 @@ resumoDia = {
 
 if(resumoDia){
 
-  console.log("🧾 BASE + GPT")
+  console.log("🧠 SOMENTE IA")
 
-  // 🔥 1. BASE FIXA (NUNCA ERRA)
-  let respostaBase = ""
-
-  if(resumoDia.tipo === "EMPRESA"){
-    respostaBase = `Resumo de vendas do dia ${resumoDia.data}:
-
-🏢 ${resumoDia.empresa}
-
-Faturamento: R$ ${formatar(resumoDia.faturamento)}
-Vendas: ${resumoDia.vendas}
-Ticket médio: R$ ${formatar(resumoDia.ticket_medio)}`
-  }else{
-    respostaBase = `Resumo geral de vendas do dia ${resumoDia.data}:
-
-Faturamento total: R$ ${formatar(resumoDia.faturamento)}
-Total de vendas: ${resumoDia.vendas}
-Ticket médio: R$ ${formatar(resumoDia.ticket_medio)}`
-  }
-
-  // 🔥 2. GPT ANALISA (SEM ALTERAR NÚMEROS)
   const analise = await openai.chat.completions.create({
     model:"gpt-4.1-mini",
     temperature:0.3,
@@ -741,32 +721,34 @@ Ticket médio: R$ ${formatar(resumoDia.ticket_medio)}`
 Você é um analista de vendas.
 
 REGRAS:
-- NÃO alterar números
+- NÃO inventar números
+- NÃO alterar valores
 - NÃO recalcular
-- NÃO inventar valores
-- Seja direto e profissional
+- Seja direto, profissional e objetivo
+- Pode interpretar desempenho
 `
       },
       {
         role:"user",
         content:`
-Analise esse resultado:
+Dados do dia:
 
+Empresa: ${resumoDia.empresa || "GERAL"}
 Faturamento: ${resumoDia.faturamento}
 Vendas: ${resumoDia.vendas}
 Ticket médio: ${resumoDia.ticket_medio}
+
+Explique o resultado de forma executiva.
 `
       }
     ]
   })
 
-  const comentario = analise.choices[0].message.content
+  const respostaIA = analise.choices[0].message.content
 
-  // 🔥 3. MANDA TUDO JUNTO
   return res.json({
-    resposta: respostaBase + "\n\n📊 Análise:\n" + comentario
+    resposta: respostaIA
   })
-
 }
     
 
