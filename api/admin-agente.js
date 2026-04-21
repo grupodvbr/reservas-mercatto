@@ -216,9 +216,9 @@ const isCupom =
 
 /* ================= BLOQUEIO CUPONS ================= */
 
-if(isCupom && NIVEL !== 1){
+if(isCupom && ![0,1].includes(NIVEL)){
   return res.json({
-    resposta: "⛔ Apenas usuários nível 1 podem acessar dados de vendas"
+    resposta: "⛔ Apenas usuários nível 0 e 1 podem acessar dados de vendas"
   })
 }
 
