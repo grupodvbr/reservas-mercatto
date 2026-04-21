@@ -259,33 +259,6 @@ if(NIVEL === 3 && tipoConsulta !== "relatorio"){
   
 
   
-const isRelatorio =
-  texto.includes("relatorio") ||
-  texto.includes("análise") ||
-  texto.includes("analise") ||
-  texto.includes("desempenho") ||
-  texto.includes("resumo")
-
-
-  
-if(texto.includes("ontem")){
-  dataFiltro = ontemISO
-}
-
-if(texto.includes("semana passada")){
-const d = new Date(hojeISO + "T00:00:00")
-  d.setDate(d.getDate() - 7)
-  dataFiltro = d.toISOString().split("T")[0]
-}
-
-const matchData = texto.match(/\d{2}\/\d{2}\/\d{4}/)
-
-if(matchData){
-  const [dia, mes, ano] = matchData[0].split("/")
-  dataFiltro = `${ano}-${mes}-${dia}`
-}
-
-
 
 
 
@@ -507,6 +480,8 @@ if(isCupom){
 
   try{
 
+    console.log("🔥 CONSULTANDO API DE VENDAS...")
+
     let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
 
     if(empresaFiltro){
@@ -525,18 +500,14 @@ if(isCupom){
       }
     }
 
-    const res = await fetch(url)
-const data = await res.json()
+    console.log("🌐 URL:", url)
 
-let resultado = data
+    const resApi = await fetch(url)
+    const data = await resApi.json()
 
-// 🔥 SALVA PARA USO GLOBAL
-resumoDia = {
-  data: resultado.data,
-  faturamento: resultado.faturamento,
-  vendas: resultado.vendas,
-  ticket_medio: resultado.ticket_medio
-}
+    console.log("📊 RESPOSTA API:", JSON.stringify(data, null, 2))
+
+    let resultado = data
 
     if(empresaFiltro && data.empresas){
 
@@ -568,7 +539,9 @@ resumoDia = {
         minimumFractionDigits: 2
       })
 
-    // 🔥 RESPOSTA DIRETA (SEM GPT)
+    console.log("✅ RESULTADO FINAL:", resultado)
+
+    // 🔥 RETORNO IMEDIATO (GPT NUNCA RODA)
     return res.json({
       resposta:
 `Resumo de vendas do dia ${resultado.data}:
@@ -580,10 +553,13 @@ Ticket médio: R$ ${formatar(resultado.ticket_medio)}`
 
   }catch(e){
     console.log("❌ ERRO RESUMO:", e.message)
+
+    return res.json({
+      resposta: "❌ Erro ao buscar dados de vendas"
+    })
   }
 
 }
-  
 /* ================= CLIENTES ================= */
 
 
@@ -983,49 +959,7 @@ Ticket médio: R$ XXX"
 ⚠️ Se modificar qualquer valor → resposta inválida`
 },
 
-{
-role:"system",
-content:`
 
-📊 MODO RELATÓRIO PROFISSIONAL ATIVADO
-
-Sempre que o usuário pedir:
-
-- relatório
-- análise
-- desempenho
-- resumo
-- faturamento
-- resultado
-
-Você DEVE responder obrigatoriamente em JSON:
-
-RELATORIO_JSON:
-{
-  "empresa": "",
-  "logo": "",
-  "data": "",
-  "resumo": "",
-  "kpis": {
-    "faturamento": 0,
-    "clientes": 0,
-    "ticket_medio": 0,
-    "reservas": 0
-  },
-  "analise": "",
-  "alertas": [],
-  "recomendacoes": [],
-  "status": "SAUDÁVEL | ATENÇÃO | CRÍTICO",
-  "score": 0,
-  "tendencia": "SUBINDO | CAINDO | ESTÁVEL"
-}
-
-⚠️ Nunca responder apenas texto quando for relatório
-⚠️ Sempre preencher todos os campos
-⚠️ Sempre usar dados reais do sistema
-
-`
-},
 {
 role:"system",
 content:`LOGOS DISPONÍVEIS: ${JSON.stringify(LOGOS)}`
@@ -1442,28 +1376,6 @@ Ticket médio: R$ ${formatar(resumoDia.ticket_medio)}`
 
 
   
-const matchRelatorio = resposta.match(/RELATORIO_JSON:\s*(\{[\s\S]*\})/)
-
-if(matchRelatorio){
-  try{
-
-    const relatorio = JSON.parse(
-      matchRelatorio[1]
-      .replace(/```json/g,"")
-      .replace(/```/g,"")
-      .trim()
-    )
-
-    return res.json({
-      tipo:"relatorio",
-      relatorio
-    })
-
-  }catch(e){
-    console.log("Erro parse relatorio:", e)
-  }
-}
-
 
 
 
