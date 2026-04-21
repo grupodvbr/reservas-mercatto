@@ -524,10 +524,19 @@ if(!buffetLancamentos || buffetLancamentos.length === 0){
 
 if(texto.includes("cantor") || texto.includes("musico") || texto.includes("agenda")){
 
+  const inicioMes = hojeISO.slice(0,7) + "-01"
+
+  const fimMesDate = new Date(inicioMes)
+  fimMesDate.setMonth(fimMesDate.getMonth() + 1)
+  fimMesDate.setDate(0)
+
+  const fimMes = fimMesDate.toISOString().split("T")[0]
+
   let query = supabase
     .from("agenda_musicos")
     .select("*")
-    .eq("data", dataFiltro)
+    .gte("data", inicioMes)
+    .lte("data", fimMes)
 
   if(empresaFiltro){
     query = query.eq("empresa", empresaFiltro)
@@ -537,7 +546,6 @@ if(texto.includes("cantor") || texto.includes("musico") || texto.includes("agend
 
   musicos = data || []
 }
-  
   
 /* ================= BUSCAR PROMPTS DO AGENTE ================= */
 
