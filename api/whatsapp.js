@@ -96,15 +96,15 @@ if(req.method === "POST"){
     const msg = change.messages?.[0]
     if(!msg) return res.status(200).end()
 
-    const numero = normalizar(msg.from)
-    const texto = msg.text?.body || "[mensagem não textual]"
+const numero = normalizar(msg.from).slice(-13)
+  const texto = msg.text?.body || "[mensagem não textual]"
 
     console.log("📩 RECEBIDO:", texto)
     console.log("📱 NUMERO:", numero)
 
     /* ================= VALIDA ADMIN ================= */
 
-    const ehAdmin = ADMINS.some(a => numero.endsWith(a))
+    const ehAdmin = ADMINS.includes(numero)
 
     console.log("🔐 EH ADMIN:", ehAdmin)
 
