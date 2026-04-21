@@ -1,10 +1,32 @@
 const fetch = (...args) => import("node-fetch").then(({default: fetch}) => fetch(...args))
 
-/* ================= IMPORTA SEU AGENTE ================= */
+/* ================= IMPORTA AGENTE ================= */
 
-const ADMIN_ALERTA = "5577998253249"
+const adminAgente = require("./admin-agente")
 
-/* ================= ENVIO ================= */
+/* ================= ENV ================= */
+
+const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
+const TOKEN = process.env.OTTO_WHATSAPP_TOKEN
+const PHONE_ID = process.env.OTTO_PHONE_NUMBER_ID
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN
+
+/* ================= ADMINS ================= */
+
+const ADMINS = [
+  "557798253249"
+]
+
+// 🔥 ALERTA SEMPRE VAI PRAQUI
+const ADMIN_ALERTA = "557798253249"
+
+/* ================= NORMALIZA NUMERO ================= */
+
+function normalizar(numero){
+  return (numero || "").replace(/\D/g, "")
+}
+
+/* ================= ENVIO WHATSAPP ================= */
 
 async function enviarMensagem(para, texto){
   try{
@@ -50,8 +72,11 @@ if(req.method === "GET"){
     req.query["hub.mode"] === "subscribe" &&
     req.query["hub.verify_token"] === VERIFY_TOKEN
   ){
+    console.log("✅ WEBHOOK VALIDADO")
     return res.status(200).send(req.query["hub.challenge"])
   }
+
+  console.log("❌ VERIFY TOKEN INVALIDO")
   return res.status(403).end()
 }
 
@@ -71,17 +96,23 @@ if(req.method === "POST"){
     const msg = change.messages?.[0]
     if(!msg) return res.status(200).end()
 
-    const numero = msg.from
+    const numero = normalizar(msg.from)
     const texto = msg.text?.body || "[mensagem não textual]"
 
     console.log("📩 RECEBIDO:", texto)
     console.log("📱 NUMERO:", numero)
 
+    /* ================= VALIDA ADMIN ================= */
+
+    const ehAdmin = ADMINS.some(a => numero.endsWith(a))
+
+    console.log("🔐 EH ADMIN:", ehAdmin)
+
     /* ======================================================
        ❌ NÃO ADMIN → ALERTA E IGNORA
     ====================================================== */
 
-    if(!ADMINS.includes(numero)){
+    if(!ehAdmin){
 
       console.log("⛔ NÃO ADMIN - ALERTANDO")
 
@@ -97,7 +128,7 @@ if(req.method === "POST"){
     }
 
     /* ======================================================
-       🧠 CHAMA SEU AGENTE DIRETO (SEM FETCH)
+       🧠 CHAMA SEU AGENTE (LOCAL)
     ====================================================== */
 
     let resposta = "Erro ao processar"
@@ -126,10 +157,12 @@ if(req.method === "POST"){
     console.log("🧠 RESPOSTA:", resposta)
 
     /* ======================================================
-       📤 ENVIA RESPOSTA
+       📤 ENVIA RESPOSTA WHATSAPP
     ====================================================== */
 
     await enviarMensagem(numero, resposta)
+
+    console.log("✅ RESPONDIDO COM SUCESSO")
 
     return res.status(200).end()
 
