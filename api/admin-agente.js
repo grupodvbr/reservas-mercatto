@@ -783,7 +783,15 @@ if(resumoDia){
 
   contextos.push({
     role:"system",
-    content: "CUPONS_VENDAS:\n" + JSON.stringify(resumoDia)
+    content: `
+RESUMO_CUPONS_DIA:
+${JSON.stringify({
+  data: resumoDia.data,
+  faturamento: resumoDia.faturamento,
+  vendas: resumoDia.vendas,
+  ticket_medio: resumoDia.ticket_medio
+})}
+`
   })
 
 }
@@ -933,35 +941,27 @@ content:`
 
 💰 REGRA CRÍTICA — CUPONS DE VENDAS
 
-Você recebeu dados reais de vendas em:
+Você recebeu dados PRONTOS em:
 
-CUPONS_VENDAS
+RESUMO_CUPONS_DIA
 
-Campos:
-- data
+🚨 REGRA ABSOLUTA:
+
+1. NÃO recalcular
+2. NÃO somar
+3. NÃO filtrar
+4. NÃO acessar lista de empresas
+5. NÃO interpretar nada
+
+👉 Apenas responder com os valores EXATOS
+
+Campos disponíveis:
+
 - faturamento
 - vendas
 - ticket_medio
-- empresas[]
 
-REGRAS:
-
-Use diretamente os valores já calculados:
-- faturamento
-- vendas
-- ticket_medio
-
-
-
-2. Calcular:
-- faturamento total
-- quantidade de vendas
-- ticket médio
-
-3. Se houver empresaFiltro:
-→ filtrar apenas aquela empresa
-
-4. Responder assim:
+Resposta obrigatória:
 
 "Resumo de vendas do dia ${dataFiltro}:
 
@@ -969,12 +969,7 @@ Faturamento: R$ XXXX
 Vendas: XXX
 Ticket médio: R$ XXX"
 
-5. Se não houver dados:
-
-"Não há vendas registradas para essa data"
-
-⚠️ NUNCA inventar valores
-USAR apenas os dados de CUPONS_VENDAS (já resumidos)`
+⚠️ Se modificar qualquer valor → resposta inválida`
 },
 
 {
