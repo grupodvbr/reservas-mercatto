@@ -1408,7 +1408,29 @@ Se não gerar o JSON a ação será ignorada.
 })
 
 let resposta = completion.choices[0].message.content
+// 🔥 BLOQUEIO TOTAL DE INVENÇÃO
+if(isCupom && resumoDia){
 
+  const formatar = v =>
+    Number(v).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2
+    })
+
+  return res.json({
+    resposta:
+`Resumo de vendas do dia ${resumoDia.data}:
+
+Faturamento: R$ ${formatar(resumoDia.faturamento)}
+Vendas: ${resumoDia.vendas}
+Ticket médio: R$ ${formatar(resumoDia.ticket_medio)}`
+  })
+
+}
+
+
+
+
+  
 const matchRelatorio = resposta.match(/RELATORIO_JSON:\s*(\{[\s\S]*\})/)
 
 if(matchRelatorio){
