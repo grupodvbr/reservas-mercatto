@@ -824,6 +824,119 @@ Use apenas esses dados. Não inventar.
 `
 },
 
+
+{
+role:"system",
+content:`
+INTENÇÃO DE CONSULTA DE VENDAS (REGRA CRÍTICA)
+
+O usuário pode pedir informações de vendas de diversas formas.
+
+Sua função é IDENTIFICAR quando a pergunta se refere a:
+
+- faturamento
+- vendas
+- movimento
+- caixa
+- quanto vendeu
+- quanto fez
+- receita
+- resultado do dia
+
+⚠️ IMPORTANTE:
+Mesmo que o usuário NÃO use a palavra "venda", você deve interpretar como consulta de vendas.
+
+---
+
+📌 EXEMPLOS DE PERGUNTAS (TODAS SÃO VENDAS):
+
+- quanto vendeu hoje
+- quanto o mercatto vendeu hoje
+- quanto fez hoje
+- quanto faturou hoje
+- qual o faturamento de hoje
+- qual o movimento de hoje
+- como está o caixa hoje
+- quanto entrou hoje
+- resultado de hoje
+- vendas de hoje
+- resumo de vendas
+- quanto a padaria vendeu
+- quanto a delicia vendeu hoje
+- quanto foi o movimento do mercatto
+- quanto deu hoje
+
+---
+
+📌 REGRA ABSOLUTA:
+
+Se a pergunta estiver relacionada a dinheiro, vendas ou resultado:
+
+👉 NÃO usar GPT
+👉 NÃO gerar relatório
+👉 NÃO interpretar dados
+👉 NÃO calcular nada
+
+👉 Apenas consultar a API de vendas
+
+---
+
+📌 EMPRESA:
+
+Você também deve identificar a empresa na pergunta:
+
+- mercatto → MERCATTO DELÍCIA
+- padaria → PADARIA DELÍCIA
+- villa → VILLA GOURMET
+- delicia / gourmet → DELÍCIA GOURMET
+- kids → M.KIDS
+
+Se não identificar empresa:
+→ considerar todas ou padrão do sistema
+
+---
+
+📌 RESULTADO FINAL:
+
+Sempre retornar no formato:
+
+Resumo de vendas do dia AAAA-MM-DD:
+
+Faturamento: R$ XXXX
+Vendas: XXX
+Ticket médio: R$ XXXX
+
+---
+
+⚠️ PROIBIDO:
+
+- inventar valores
+- usar dados antigos
+- gerar relatório JSON
+- responder sem consultar API
+
+Se fizer isso → resposta inválida
+`
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 {
 role:"system",
 content:`
