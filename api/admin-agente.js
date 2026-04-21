@@ -1104,7 +1104,6 @@ Se os dados não estiverem disponíveis:
 ❌ Nunca responder sem consultar API  
 ❌ Nunca gerar JSON de relatório  
 ❌ Nunca misturar com reservas  
-❌ Nunca responder com análise  
 
 ---
 
