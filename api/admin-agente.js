@@ -500,49 +500,46 @@ if(tipoConsulta === "pedidos"){
 }
 
   /* ================= CUPONS (VENDAS EXTERNAS) ================= */
-const API = "https://goals-continental-examinations-carrier.trycloudflare.com/cupons"
+/* ================= CUPONS (VENDAS EXTERNAS) ================= */
 
-try{
+if(isCupom && [0,1].includes(NIVEL)){
 
-  const res = await fetch(API)
-  const data = await res.json()
+  console.log("🔥 ENTROU NO BLOCO DE CUPONS")
+  console.log("📅 DATA FILTRO:", dataFiltro)
+  console.log("🏢 EMPRESA FILTRO:", empresaFiltro)
 
-  console.log("📊 TOTAL RECEBIDO:", data.length)
-  console.log("📦 EXEMPLO CUPOM:", data[0])
+  const API = "https://goals-continental-examinations-carrier.trycloudflare.com/cupons"
 
-  const todos = Array.isArray(data) ? data : []
+  try{
 
-  // 🔥 FILTRO CORRETO POR DATA
-  cupons = todos.filter(c => {
-    if(!c.data) return false
-    return c.data === dataFiltro
-  })
+    const res = await fetch(API)
+    const data = await res.json()
 
-  // 🔥 REMOVE CANCELADOS
-  cupons = cupons.filter(c => Number(c.cancelado) === 0)
+    console.log("📊 TOTAL RECEBIDO:", data.length)
+    console.log("📦 EXEMPLO CUPOM:", data[0])
 
-  // 🔥 FILTRO POR EMPRESA (SE EXISTIR)
-  if(empresaFiltro){
-    cupons = cupons.filter(c =>
-      (c.empresa || "").includes(empresaFiltro)
-    )
-  }
+    const todos = Array.isArray(data) ? data : []
 
-  console.log("📊 TOTAL FILTRADO:", cupons.length)
+    // 🔥 FILTRO POR DATA
+    cupons = todos.filter(c => c.data === dataFiltro)
 
-}catch(e){
-  console.log("❌ ERRO CUPONS:", e)
-}
+    // 🔥 REMOVE CANCELADOS
+    cupons = cupons.filter(c => Number(c.cancelado) === 0)
+
+    // 🔥 FILTRO POR EMPRESA
+    if(empresaFiltro){
+      cupons = cupons.filter(c =>
+        (c.empresa || "").includes(empresaFiltro)
+      )
+    }
+
+    console.log("📊 TOTAL FILTRADO:", cupons.length)
 
   }catch(e){
-    console.log("❌ ERRO GERAL CUPONS:", e)
+    console.log("❌ ERRO CUPONS:", e.message)
   }
 
 }
-
-
-
-
 
 
   
