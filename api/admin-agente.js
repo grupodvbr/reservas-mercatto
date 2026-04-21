@@ -139,9 +139,74 @@ let dataFiltro = hojeISO
 
 const texto = pergunta.toLowerCase()
 
+// ================= INTELIGÊNCIA GLOBAL =================
 
-let empresaFiltro = null
+const interpretacao = await openai.chat.completions.create({
+  model: "gpt-4.1-mini",
+  temperature: 0,
+  messages: [
+    {
+      role: "system",
+      content: `
+Você é o cérebro de um assistente administrativo.
 
+Retorne apenas JSON:
+
+{
+  "tipo": "vendas | reservas | pedidos | buffet | clientes | relatorio | acao | desconhecido",
+  "empresa": "MERCATTO EMPORIO | MERCATTO RESTAURANTE | PADARIA DELÍCIA | VILLA GOURMET | DELÍCIA GOURMET | null",
+  "geral": true/false,
+  "intencao": "consulta | criacao | edicao | exclusao"
+}
+
+REGRAS:
+
+🔥 INTERPRETAÇÃO NATURAL:
+- "como foi hoje" → vendas
+- "movimento" → vendas
+- "agenda de hoje" → musicos
+- "tem reserva hoje?" → reservas
+- "quem comprou" → pedidos
+- "buffet de hoje" → buffet
+
+🔥 AÇÕES:
+- "criar", "registrar" → criacao
+- "editar", "alterar" → edicao
+- "excluir", "apagar" → exclusao
+
+🔥 EMPRESA:
+- "mercatto" sozinho → null
+- "emporio" → MERCATTO EMPORIO
+- "restaurante" → MERCATTO RESTAURANTE
+
+🔥 GERAL:
+- "todas", "geral", "total" → geral = true
+
+⚠️ NÃO EXPLICAR
+⚠️ RESPONDER APENAS JSON
+`
+    },
+    {
+      role: "user",
+      content: pergunta
+    }
+  ]
+})
+
+let classificacao = {}
+
+try {
+  classificacao = JSON.parse(interpretacao.choices[0].message.content)
+} catch (e) {
+  console.log("❌ ERRO CLASSIFICAÇÃO")
+}
+
+console.log("🧠 CLASSIFICAÇÃO:", classificacao)
+let empresaFiltro = classificacao.empresa || null
+
+if(classificacao.geral){
+  empresaFiltro = null
+}
 
 
 // NIVEL 2 → BLOQUEIA EMPRESA
@@ -214,10 +279,13 @@ else if(
 
 
   
-let tipoConsulta = "geral"
+let tipoConsulta = classificacao.tipo || "geral"
+const tipoAcao = classificacao.intencao || "consulta"
+if(tipoAcao !== "consulta"){
+  console.log("🛠️ AÇÃO DETECTADA:", tipoAcao)
+}
 
-
-
+  
 const isCupom =
   texto.includes("cupom") ||
   texto.includes("venda") ||
@@ -261,13 +329,11 @@ if(texto.includes("relatorio")){
 
 /* ================= BLOQUEIO CUPONS ================= */
 
-if(isCupom && ![0,1].includes(NIVEL)){
+if(tipoConsulta === "vendas" && ![0,1].includes(NIVEL)){
   return res.json({
     resposta: "⛔ Apenas usuários nível 0 e 1 podem acessar dados de vendas"
   })
 }
-
-
 
 
   
@@ -276,12 +342,13 @@ if(isCupom && ![0,1].includes(NIVEL)){
 
   
 
-if(NIVEL === 3 && tipoConsulta !== "relatorio"){
-  return res.json({
-    resposta: "⛔ Seu acesso permite apenas relatórios"
-  })
+if(NIVEL === 3){
+  if(tipoConsulta !== "relatorio"){
+    return res.json({
+      resposta: "⛔ Seu acesso permite apenas relatórios"
+    })
+  }
 }
-
 
 
 
@@ -588,14 +655,38 @@ if(empresaFiltro){
   console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
 
   // 👉 API já está filtrada
-  resumoDia = {
-    data: data.data,
-    faturamento: data.faturamento,
-    vendas: data.vendas,
-    ticket_medio: data.ticket_medio,
-    tipo: "EMPRESA",
-    empresa: empresaFiltro
-  }
+function normalizar(txt){
+  return txt
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+}
+
+// 🔥 BUSCAR EMPRESA CORRETA DENTRO DO ARRAY
+const empresaData = (data.empresas || []).find(e =>
+  normalizar(e.empresa) === normalizar(empresaFiltro)
+)
+
+if(!empresaData){
+  console.log("❌ EMPRESA NÃO ENCONTRADA:", empresaFiltro)
+  return res.json({ resposta: "Empresa não encontrada na API" })
+}
+
+// 🔥 CALCULAR TICKET REAL DA EMPRESA
+const ticket = empresaData.vendas > 0
+  ? empresaData.faturamento / empresaData.vendas
+  : 0
+
+resumoDia = {
+  data: data.data,
+  faturamento: empresaData.faturamento,
+  vendas: empresaData.vendas,
+  ticket_medio: ticket,
+  tipo: "EMPRESA",
+  empresa: empresaFiltro
+}
+
+  
 
 }else{
 
