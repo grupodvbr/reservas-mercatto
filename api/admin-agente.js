@@ -149,14 +149,49 @@ if(NIVEL === 2){
 }else{
 
 // 🔥 NORMALIZA TEXTO
-// 🔥 NORMALIZA TEXTO
 const normal = texto
   .normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "")
 
-// 🔥 PRIORIDADE (ordem IMPORTA)
-if(normal.includes("mercatto")){
-  empresaFiltro = "MERCATTO DELÍCIA"
+// 🔥 DETECÇÃO INTELIGENTE MERCATTO
+const isMercatto = normal.includes("mercatto")
+const isEmporio = normal.includes("emporio")
+const isRestaurante = normal.includes("restaurante")
+
+// 🔥 ESCOLHA DO USUÁRIO (caso ele responda depois)
+let escolhaMercatto = null
+
+if(normal.includes("1") || normal.includes("emporio")){
+  escolhaMercatto = "EMPORIO"
+}
+
+if(normal.includes("2") || normal.includes("restaurante")){
+  escolhaMercatto = "RESTAURANTE"
+}
+
+if(
+  normal.includes("3") ||
+  normal.includes("total") ||
+  normal.includes("geral")
+){
+  escolhaMercatto = "TOTAL"
+}
+
+// 🔥 DECISÃO DE EMPRESA
+if(isMercatto){
+
+  if(isEmporio){
+    empresaFiltro = "MERCATTO EMPORIO"
+  }
+
+  else if(isRestaurante){
+    empresaFiltro = "MERCATTO RESTAURANTE"
+  }
+
+  else{
+    empresaFiltro = "MERCATTO" // genérico (vai perguntar depois)
+  }
+
 }
 else if(normal.includes("padaria")){
   empresaFiltro = "PADARIA DELÍCIA"
@@ -173,8 +208,6 @@ else if(
 ){
   empresaFiltro = "DELÍCIA GOURMET"
 }
-
-// ⚠️ NÃO usar "delicia" sozinho
 
 }
 
@@ -476,6 +509,10 @@ if(tipoConsulta === "pedidos"){
   pedidos = data || []
 }
 
+
+
+  
+
 if(isCupom){
 
   try{
@@ -484,22 +521,39 @@ if(isCupom){
 
     let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
 
-    if(empresaFiltro){
+// 🔥 FILTRO INTELIGENTE DE EMPRESA
 
-      const mapa = {
-        "MERCATTO DELÍCIA": "VAREJO_URL_MERCATTO",
-        "VILLA GOURMET": "VAREJO_URL_VILLA",
-        "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
-        "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
-      }
+if(empresaFiltro === "MERCATTO EMPORIO"){
+  url += `?empresa=VAREJO_URL_MERCATTO_EMPORIO`
+}
 
-      const chave = mapa[empresaFiltro]
+else if(empresaFiltro === "MERCATTO RESTAURANTE"){
+  url += `?empresa=VAREJO_URL_MERCATTO_RESTAURANTE`
+}
 
-      if(chave){
-        url += `?empresa=${chave}`
-      }
-    }
+else if(empresaFiltro === "MERCATTO"){
+  // 🔥 TOTAL → não filtra (pega tudo)
+}
 
+else if(empresaFiltro){
+
+  const mapa = {
+    "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
+    "VILLA GOURMET": "VAREJO_URL_VILLA",
+    "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
+  }
+
+  const chave = mapa[empresaFiltro]
+
+  if(chave){
+    url += `?empresa=${chave}`
+  }
+}
+
+
+
+
+    
     console.log("🌐 URL:", url)
 
     const resApi = await fetch(url)
@@ -509,20 +563,28 @@ if(isCupom){
 
     let resultado = data
 
-    if(empresaFiltro && data.empresas){
+   if(empresaFiltro && data.empresas){
 
-      const mapa = {
-        "MERCATTO DELÍCIA": "VAREJO_URL_MERCATTO",
-        "VILLA GOURMET": "VAREJO_URL_VILLA",
-        "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
-        "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
-      }
+  const empresaData = data.empresas.find(e =>
+    String(e.empresa).trim().toUpperCase() === String(empresaFiltro).trim().toUpperCase()
+  )
 
-      const chave = mapa[empresaFiltro]
+  if(empresaData){
+    resultado = {
+      data: data.data,
+      faturamento: empresaData.faturamento,
+      vendas: empresaData.vendas,
+      ticket_medio: empresaData.vendas > 0
+        ? empresaData.faturamento / empresaData.vendas
+        : 0
+    }
+  }
+}
 
-const empresaData = data.empresas.find(e =>
-  String(e.empresa).trim().toUpperCase() === String(chave).trim().toUpperCase()
-)
+
+
+
+    
       if(empresaData){
         resultado = {
           data: data.data,
