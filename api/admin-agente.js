@@ -833,15 +833,22 @@ if(musicos.length){
 }
 if(resumoDia){
 
+  const metaInfo = resumoDia.empresa
+    ? calcularMeta(resumoDia.empresa, resumoDia.faturamento)
+    : null
+
   contextos.push({
     role:"system",
     content: `
 RESUMO_CUPONS_DIA:
 ${JSON.stringify({
   data: resumoDia.data,
+  empresa: resumoDia.empresa || "GERAL",
   faturamento: resumoDia.faturamento,
   vendas: resumoDia.vendas,
-  ticket_medio: resumoDia.ticket_medio
+  ticket_medio: resumoDia.ticket_medio,
+  meta: metaInfo?.meta || 0,
+  percentual_meta: metaInfo?.percentual || 0
 })}
 `
   })
