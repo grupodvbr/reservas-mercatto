@@ -844,7 +844,7 @@ RESERVA_JSON:
 "dados":{
   "nome":"",
   "telefone":"",
-  "email":"nao_informado@mercatto.com",
+  "email":"whatsapp_otto@mercatto.com",
   "pessoas":1,
   "mesa":"Sacada | Salão Principal | Sala VIP 1 | Sala VIP 2",
   "cardapio":"",
@@ -860,6 +860,7 @@ RESERVA_JSON:
 
 ⚠️ NUNCA gerar JSON incompleto
 ⚠️ NUNCA assumir dados
+⚠️ USE sempre o email whatsapp_otto@mercatto.com e não peça esse dado
 ⚠️ SEMPRE perguntar o que falta
 `
 },
