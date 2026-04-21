@@ -493,8 +493,7 @@ if(tipoConsulta === "pedidos"){
 
   /* ================= CUPONS (VENDAS EXTERNAS) ================= */
 
-if(isCupom && NIVEL === 1){
-
+if(isCupom && [0,1].includes(NIVEL)){
   try{
 
     const urls = [
