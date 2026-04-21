@@ -565,69 +565,20 @@ if(isCupom){
       }
     }
 
-    console.log("🌐 URL:", url)
-
     const resApi = await fetch(url)
     const data = await resApi.json()
 
     console.log("📊 RESPOSTA API:", JSON.stringify(data, null, 2))
 
-    const dataFormatada = formatarData(data.data)
+    // 🔥 AQUI É A CHAVE
+    resumoDia = data
 
-    const isGeral =
-      !empresaFiltro ||
-      empresaFiltro === "MERCATTO" ||
-      texto.includes("geral") ||
-      texto.includes("total")
-
-    // 🔥 GERAL
-    if(isGeral){
-
-      let resposta = `📊 ${dataFormatada}\n\n🏢 *GERAL*\n\n`
-
-      resposta += `💰 Total: *R$ ${formatar(data.faturamento)}*\n\n`
-
-      if(data.empresas){
-        data.empresas.forEach(emp => {
-          const metaInfo = calcularMeta(emp.empresa, emp.faturamento)
-
-          resposta += `🏢 ${emp.empresa}\n`
-          resposta += `💰 R$ ${formatar(emp.faturamento)}\n`
-          resposta += `📊 ${metaInfo.percentual.toFixed(2)}%\n\n`
-        })
-      }
-
-      resposta += `🧾 Vendas: ${data.vendas}\n`
-      resposta += `💳 Ticket médio: R$ ${formatar(data.ticket_medio)}`
-
-      return res.json({ resposta })
+    if(!empresaFiltro){
+      resumoDia.tipo = "GERAL"
+    }else{
+      resumoDia.tipo = "EMPRESA"
+      resumoDia.empresa = empresaFiltro
     }
-
-    // 🔥 EMPRESA
-    const empresaData = data.empresas?.find(e =>
-      e.empresa.toUpperCase() === empresaFiltro.toUpperCase()
-    )
-
-    if(!empresaData){
-      return res.json({ resposta: "❌ Empresa não encontrada" })
-    }
-
-    const metaInfo = calcularMeta(empresaData.empresa, empresaData.faturamento)
-
-    return res.json({
-      resposta:
-`📊 ${dataFormatada}
-
-🏢 *${empresaData.empresa}*
-
-💰 Já vendeu: *R$ ${formatar(empresaData.faturamento)}*
-
-🎯 Meta: R$ ${metaInfo.meta.toLocaleString("pt-BR")}
-📊 Atingido: *${metaInfo.percentual.toFixed(2)}%*
-
-🧾 Vendas: ${empresaData.vendas}
-💳 Ticket médio: R$ ${formatar(data.ticket_medio)}`
-    })
 
   }catch(e){
     console.log("❌ ERRO:", e)
@@ -998,8 +949,70 @@ Se o usuário disser:
 Para qualquer pergunta de vendas:
 
 🚫 NÃO usar GPT para calcular  
-🚫 NÃO gerar relatório  
-🚫 NÃO interpretar dados  
+🔥 MÓDULO DE ANÁLISE DE VENDAS (INTELIGENTE)
+
+Você DEVE usar os dados da API para:
+
+✔ Identificar tendência (subindo, caindo, estável)
+✔ Comparar com meta
+✔ Avaliar ticket médio
+✔ Detectar performance
+✔ Gerar percepção operacional
+
+🚨 REGRAS:
+
+- NÃO inventar valores
+- NÃO alterar números
+- NÃO recalcular dados
+- USAR apenas valores da API
+
+MAS você PODE:
+
+✔ Interpretar
+✔ Comparar
+✔ Gerar insights
+✔ Elogiar desempenho
+✔ Alertar queda
+✔ Sugerir ação
+
+---
+
+📊 COMPORTAMENTO ESPERADO:
+
+Se desempenho bom:
+→ elogiar (parabéns, forte, excelente ritmo)
+
+Se médio:
+→ neutro (dentro do esperado, atenção)
+
+Se ruim:
+→ alertar (queda, abaixo da meta, risco)
+
+---
+
+📈 EXEMPLO DE RESPOSTA:
+
+"📊 21/04
+
+🏢 EMPÓRIO MERCATTO
+
+💰 R$ 12.800
+🧾 310 vendas
+💳 Ticket: R$ 41,29
+
+🎯 68% da meta atingida
+
+📈 Ticket subiu — ótimo sinal
+🚀 Ritmo forte, tende a bater meta hoje
+
+👏 Excelente desempenho até agora"
+
+---
+
+⚠️ IMPORTANTE:
+
+Você NÃO cria dados  
+Você INTERPRETA dados existentes  
 🚫 NÃO somar valores  
 🚫 NÃO estimar  
 🚫 NÃO usar contexto interno  
