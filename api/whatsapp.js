@@ -1,16 +1,18 @@
 import fetch from "node-fetch"
+import OpenAI from "openai"
 
 /* ================= ENV ================= */
 
-// 🔹 VERIFY separado
-const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
-
-// 🔹 OTTO ISOLADO (NÃO USA OS ANTIGOS)
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN
 const OTTO_WHATSAPP_TOKEN = process.env.OTTO_WHATSAPP_TOKEN
 const OTTO_PHONE_NUMBER_ID = process.env.OTTO_PHONE_NUMBER_ID
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-const OTTO_ADMIN_TOKEN = process.env.OTTO_ADMIN_TOKEN
-const OTTO_AGENT_URL = process.env.OTTO_AGENT_URL
+/* ================= OPENAI ================= */
+
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY
+})
 
 /* ================= ADMINS ================= */
 
@@ -18,7 +20,6 @@ const OTTO_ADMINS = [
   "557798253249"
 ]
 
-// 🔹 número fallback
 const OTTO_NUMERO_RESTAURANTE = "5577999229807"
 
 /* ================= HANDLER ================= */
@@ -26,7 +27,7 @@ const OTTO_NUMERO_RESTAURANTE = "5577999229807"
 export default async function handler(req, res){
 
 /* ======================================================
-   🔐 VERIFICAÇÃO META (GET)
+   🔐 VERIFICAÇÃO META
 ====================================================== */
 
 if(req.method === "GET"){
@@ -35,16 +36,15 @@ if(req.method === "GET"){
   const challenge = req.query["hub.challenge"]
 
   if(mode === "subscribe" && token === VERIFY_TOKEN){
-    console.log("✅ OTTO WEBHOOK VALIDADO")
+    console.log("✅ WEBHOOK OK")
     return res.status(200).send(challenge)
   }
 
-  console.log("❌ VERIFY TOKEN INVALIDO")
   return res.sendStatus(403)
 }
 
 /* ======================================================
-   📥 EVENTO WHATSAPP (POST)
+   📥 EVENTO
 ====================================================== */
 
 if(req.method === "POST"){
@@ -59,11 +59,11 @@ if(req.method === "POST"){
     /* ================= STATUS ================= */
 
     if(change.statuses){
-      console.log("📩 OTTO STATUS:", change.statuses[0].status)
+      console.log("📩 STATUS:", change.statuses[0].status)
       return res.sendStatus(200)
     }
 
-    /* ================= MENSAGEM ================= */
+    /* ================= MSG ================= */
 
     const msg = change.messages?.[0]
     if(!msg) return res.sendStatus(200)
@@ -76,25 +76,22 @@ if(req.method === "POST"){
     if(OTTO_TIPO === "text"){
       OTTO_TEXTO = msg.text.body
     } else if(OTTO_TIPO === "image"){
-      OTTO_TEXTO = "[imagem enviada]"
+      OTTO_TEXTO = "O cliente enviou uma imagem"
     } else if(OTTO_TIPO === "audio"){
-      OTTO_TEXTO = "[audio enviado]"
+      OTTO_TEXTO = "O cliente enviou um áudio"
     } else {
-      OTTO_TEXTO = "[mensagem não suportada]"
+      OTTO_TEXTO = "Mensagem não suportada"
     }
 
-    console.log("🤖 OTTO RECEBEU:", OTTO_TEXTO)
-    console.log("📱 DE:", OTTO_NUMERO)
+    console.log("🤖 RECEBEU:", OTTO_TEXTO)
 
     /* ======================================================
-       🔐 BLOQUEIO NÃO ADMIN
+       🔐 BLOQUEIO
     ====================================================== */
 
     const OTTO_EH_ADMIN = OTTO_ADMINS.includes(OTTO_NUMERO)
 
     if(!OTTO_EH_ADMIN){
-
-      console.log("⛔ BLOQUEADO:", OTTO_NUMERO)
 
       await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
         method:"POST",
@@ -111,9 +108,7 @@ if(req.method === "POST"){
 
 Para atendimento, fale com o Mercatto Delícia:
 
-📞 (77) 99922-9807
-
-Obrigado!`
+📞 (77) 99922-9807`
           }
         })
       })
@@ -122,30 +117,38 @@ Obrigado!`
     }
 
     /* ======================================================
-       🧠 CHAMAR AGENTE
+       🧠 AGENTE OTTO (OPENAI DIRETO)
     ====================================================== */
 
-    console.log("🧠 CHAMANDO AGENTE...")
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      temperature: 0.3,
+      messages: [
+        {
+          role: "system",
+          content: `
+Você é OTTO, administrador do Mercatto Delícia.
 
-    const respostaAPI = await fetch(OTTO_AGENT_URL,{
-      method:"POST",
-      headers:{
-        "Authorization":"Bearer "+OTTO_ADMIN_TOKEN,
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify({
-        pergunta: OTTO_TEXTO
-      })
+Regras:
+- Seja direto
+- Não invente dados
+- Fale como gestor
+- Responda claro e profissional
+`
+        },
+        {
+          role: "user",
+          content: OTTO_TEXTO
+        }
+      ]
     })
 
-    const json = await respostaAPI.json()
+    let resposta = completion.choices[0].message.content
 
-    let OTTO_RESPOSTA = json?.resposta || "Ok"
-
-    console.log("🧠 RESPOSTA:", OTTO_RESPOSTA)
+    console.log("🧠 RESPOSTA:", resposta)
 
     /* ======================================================
-       📤 ENVIAR RESPOSTA
+       📤 ENVIO WHATSAPP
     ====================================================== */
 
     await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
@@ -158,7 +161,7 @@ Obrigado!`
         messaging_product:"whatsapp",
         to: OTTO_NUMERO,
         text:{
-          body: OTTO_RESPOSTA
+          body: resposta
         }
       })
     })
@@ -169,7 +172,7 @@ Obrigado!`
 
   }catch(e){
 
-    console.error("❌ ERRO OTTO:", e)
+    console.error("❌ ERRO:", e)
     return res.sendStatus(500)
 
   }
@@ -177,5 +180,3 @@ Obrigado!`
 }
 
 return res.sendStatus(405)
-
-}
