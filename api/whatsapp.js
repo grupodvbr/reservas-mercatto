@@ -2,15 +2,15 @@ import fetch from "node-fetch"
 
 /* ================= ENV ================= */
 
+// 🔹 VERIFY separado
 const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN
-const PHONE_NUMBER_ID = process.env.OTTO_PHONE_NUMBER_ID
+
+// 🔹 OTTO ISOLADO (NÃO USA OS ANTIGOS)
+const OTTO_WHATSAPP_TOKEN = process.env.OTTO_WHATSAPP_TOKEN
+const OTTO_PHONE_NUMBER_ID = process.env.OTTO_PHONE_NUMBER_ID
 
 const OTTO_ADMIN_TOKEN = process.env.OTTO_ADMIN_TOKEN
-
-// 👉 URL DO SEU AGENTE (EXATO)
-const OTTO_AGENT_URL = process.env.OTTO_AGENT_URL 
-// Ex: https://seu-projeto.vercel.app/api/admin-agente
+const OTTO_AGENT_URL = process.env.OTTO_AGENT_URL
 
 /* ================= ADMINS ================= */
 
@@ -18,6 +18,7 @@ const OTTO_ADMINS = [
   "557798253249"
 ]
 
+// 🔹 número fallback
 const OTTO_NUMERO_RESTAURANTE = "5577999229807"
 
 /* ================= HANDLER ================= */
@@ -51,12 +52,9 @@ if(req.method === "POST"){
   try{
 
     const body = req.body
-
     const change = body?.entry?.[0]?.changes?.[0]?.value
 
-    if(!change){
-      return res.sendStatus(200)
-    }
+    if(!change) return res.sendStatus(200)
 
     /* ================= STATUS ================= */
 
@@ -68,35 +66,20 @@ if(req.method === "POST"){
     /* ================= MENSAGEM ================= */
 
     const msg = change.messages?.[0]
-
-    if(!msg){
-      return res.sendStatus(200)
-    }
+    if(!msg) return res.sendStatus(200)
 
     const OTTO_NUMERO = msg.from
     const OTTO_TIPO = msg.type
 
     let OTTO_TEXTO = ""
 
-    /* ================= TEXTO ================= */
-
     if(OTTO_TIPO === "text"){
       OTTO_TEXTO = msg.text.body
-    }
-
-    /* ================= IMAGEM ================= */
-
-    if(OTTO_TIPO === "image"){
+    } else if(OTTO_TIPO === "image"){
       OTTO_TEXTO = "[imagem enviada]"
-    }
-
-    /* ================= AUDIO ================= */
-
-    if(OTTO_TIPO === "audio"){
+    } else if(OTTO_TIPO === "audio"){
       OTTO_TEXTO = "[audio enviado]"
-    }
-
-    if(!OTTO_TEXTO){
+    } else {
       OTTO_TEXTO = "[mensagem não suportada]"
     }
 
@@ -104,19 +87,19 @@ if(req.method === "POST"){
     console.log("📱 DE:", OTTO_NUMERO)
 
     /* ======================================================
-       🔐 BLOQUEIO DE NÃO ADMIN
+       🔐 BLOQUEIO NÃO ADMIN
     ====================================================== */
 
     const OTTO_EH_ADMIN = OTTO_ADMINS.includes(OTTO_NUMERO)
 
     if(!OTTO_EH_ADMIN){
 
-      console.log("⛔ OTTO BLOQUEOU NÃO ADMIN:", OTTO_NUMERO)
+      console.log("⛔ BLOQUEADO:", OTTO_NUMERO)
 
-      await fetch(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,{
+      await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
         method:"POST",
         headers:{
-          "Authorization":`Bearer ${WHATSAPP_TOKEN}`,
+          "Authorization":`Bearer ${OTTO_WHATSAPP_TOKEN}`,
           "Content-Type":"application/json"
         },
         body: JSON.stringify({
@@ -139,10 +122,10 @@ Obrigado!`
     }
 
     /* ======================================================
-       🧠 CHAMAR SEU AGENTE (admin-agente.js)
+       🧠 CHAMAR AGENTE
     ====================================================== */
 
-    console.log("🧠 OTTO CHAMANDO AGENTE...")
+    console.log("🧠 CHAMANDO AGENTE...")
 
     const respostaAPI = await fetch(OTTO_AGENT_URL,{
       method:"POST",
@@ -159,16 +142,16 @@ Obrigado!`
 
     let OTTO_RESPOSTA = json?.resposta || "Ok"
 
-    console.log("🧠 OTTO RESPOSTA:", OTTO_RESPOSTA)
+    console.log("🧠 RESPOSTA:", OTTO_RESPOSTA)
 
     /* ======================================================
-       📤 ENVIAR RESPOSTA WHATSAPP
+       📤 ENVIAR RESPOSTA
     ====================================================== */
 
-    await fetch(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`,{
+    await fetch(`https://graph.facebook.com/v19.0/${OTTO_PHONE_NUMBER_ID}/messages`,{
       method:"POST",
       headers:{
-        "Authorization":`Bearer ${WHATSAPP_TOKEN}`,
+        "Authorization":`Bearer ${OTTO_WHATSAPP_TOKEN}`,
         "Content-Type":"application/json"
       },
       body: JSON.stringify({
@@ -180,7 +163,7 @@ Obrigado!`
       })
     })
 
-    console.log("📤 OTTO ENVIOU:", OTTO_RESPOSTA)
+    console.log("📤 ENVIADO")
 
     return res.sendStatus(200)
 
@@ -192,10 +175,6 @@ Obrigado!`
   }
 
 }
-
-/* ======================================================
-   ❌ MÉTODO INVÁLIDO
-====================================================== */
 
 return res.sendStatus(405)
 
