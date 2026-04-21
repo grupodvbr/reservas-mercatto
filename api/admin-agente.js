@@ -546,24 +546,28 @@ if(isCupom){
 
     let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
 
-    if(empresaFiltro === "MERCATTO EMPORIO"){
-      url += `?empresa=VAREJO_URL_MERCATTO_EMPORIO`
-    }
-    else if(empresaFiltro === "MERCATTO RESTAURANTE"){
-      url += `?empresa=VAREJO_URL_MERCATTO_RESTAURANTE`
-    }
-    else if(empresaFiltro && empresaFiltro !== "MERCATTO"){
-      const mapa = {
-        "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
-        "VILLA GOURMET": "VAREJO_URL_VILLA",
-        "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
-      }
+  const MAPA_EMPRESAS = {
+  "MERCATTO EMPORIO": "VAREJO_URL_MERCATTO_EMPORIO",
+  "MERCATTO RESTAURANTE": "VAREJO_URL_MERCATTO_RESTAURANTE",
+  "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
+  "VILLA GOURMET": "VAREJO_URL_VILLA",
+  "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
+}
 
-      const chave = mapa[empresaFiltro]
-      if(chave){
-        url += `?empresa=${chave}`
-      }
-    }
+if(empresaFiltro){
+
+  const chave = MAPA_EMPRESAS[empresaFiltro]
+
+  if(chave){
+    url += `?empresa=${chave}`
+    console.log("🏢 FILTRO APLICADO:", empresaFiltro, "→", chave)
+  }else{
+    console.log("⚠️ EMPRESA SEM MAPA:", empresaFiltro)
+  }
+
+}else{
+  console.log("🌎 SEM FILTRO (GERAL)")
+}
 
     const resApi = await fetch(url)
     const data = await resApi.json()
