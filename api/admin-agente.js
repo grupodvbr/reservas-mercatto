@@ -90,6 +90,28 @@ let dataFiltro = hojeISO
 
 const texto = pergunta.toLowerCase()
 
+
+  let empresaFiltro = null
+
+if(texto.includes("mercatto")){
+  empresaFiltro = "MERCATTO DELÍCIA"
+}
+
+if(texto.includes("villa")){
+  empresaFiltro = "VILLA GOURMET"
+}
+
+if(texto.includes("padaria")){
+  empresaFiltro = "PADARIA DELÍCIA"
+}
+
+if(texto.includes("kids")){
+  empresaFiltro = "M.KIDS"
+}
+
+
+
+  
 let tipoConsulta = "geral"
 
 if(texto.includes("reserva")){
@@ -307,90 +329,88 @@ content: pergunta
 
 
 
-/* ================= BUSCA TOTAL DO SISTEMA ================= */
+/* ================= BUSCA INTELIGENTE ================= */
 
-const { data:reservas } = await supabase
+let reservas = []
+let pedidos = []
+let clientes = []
+let produtos = []
+let buffetLancamentos = []
+
+/* ================= RESERVAS ================= */
+
+if(tipoConsulta === "reservas" || tipoConsulta === "relatorio"){
+
+let query = supabase
 .from("reservas_mercatto")
 .select("*")
-.order("created_at",{ ascending:false })
-.limit(1000)
-
-/* ================= 🔥 COLE AQUI ================= */
-
-const reservasHoje = reservas.filter(r =>
-  r.datahora?.startsWith(dataFiltro)
-)
-
-const reservasOntem = reservas.filter(r =>
-  r.datahora?.startsWith(ontemISO)
-)
-
-const totalHoje = reservasHoje.length
-const totalOntem = reservasOntem.length
-
-const clientesHoje = new Set(reservasHoje.map(r => r.telefone)).size
-
-const faturamentoHoje = reservasHoje.reduce((acc,r)=>
-  acc + (r.valorFinalPago || r.valorEstimado || 0)
-,0)
-
-const ticketHoje = totalHoje > 0 ? faturamentoHoje / totalHoje : 0
-
-let variacao = 0
-if(totalOntem > 0){
-  variacao = ((totalHoje - totalOntem) / totalOntem) * 100
-}
-
-/* ================= 🔥 FIM ================= */
-
-const { data:agenda } = await supabase
-.from("agenda_musicos")
-.select("*")
-.order("data",{ ascending:false })
-.limit(500)
-
-const { data:clientes } = await supabase
-.from("memoria_clientes")
-.select("*")
-.order("ultima_interacao",{ ascending:false })
-.limit(1000)
-
-const { data:buffet } = await supabase
-.from("buffet")
-.select("*")
-.limit(500)
-
-
-// 🔥 detectar empresa
-let empresaFiltro = null
-
-if(texto.includes("mercatto")){
-  empresaFiltro = "MERCATTO DELÍCIA"
-}
-
-if(texto.includes("villa")){
-  empresaFiltro = "VILLA GOURMET"
-}
-
-if(texto.includes("padaria")){
-  empresaFiltro = "PADARIA DELÍCIA"
-}
-
-// 🔥 query correta (igual painel)
-let query = supabase
-  .from("buffet_lancamentos")
-  .select("*")
-  .eq("data", dataFiltro)
+.gte("datahora", dataFiltro + " 00:00:00")
+.lte("datahora", dataFiltro + " 23:59:59")
 
 if(empresaFiltro){
   query = query.eq("empresa", empresaFiltro)
 }
 
-let { data:buffetLancamentos } = await query
-buffetLancamentos = buffetLancamentos || []
+const { data } = await query.limit(100)
 
+  
+  reservas = data || []
+}
 
+/* ================= PEDIDOS ================= */
 
+if(tipoConsulta === "pedidos"){
+
+  const { data } = await supabase
+  .from("pedidos")
+  .select("*")
+  .order("created_at",{ ascending:false })
+  .limit(100)
+
+  pedidos = data || []
+}
+
+/* ================= CLIENTES ================= */
+
+if(tipoConsulta === "clientes"){
+
+  const { data } = await supabase
+  .from("memoria_clientes")
+  .select("*")
+  .limit(100)
+
+  clientes = data || []
+}
+
+/* ================= PRODUTOS ================= */
+
+if(tipoConsulta === "buffet"){
+
+  const { data } = await supabase
+  .from("produtos")
+  .select("*")
+  .limit(100)
+
+  produtos = data || []
+}
+
+/* ================= BUFFET ================= */
+
+if(tipoConsulta === "buffet"){
+
+  let query = supabase
+    .from("buffet_lancamentos")
+    .select("*")
+    .eq("data", dataFiltro)
+
+  if(empresaFiltro){
+    query = query.eq("empresa", empresaFiltro)
+  }
+
+  const { data } = await query.limit(100)
+
+  buffetLancamentos = data || []
+}
 
 
 
@@ -419,35 +439,6 @@ if(!buffetLancamentos || buffetLancamentos.length === 0){
 
   
   
-const { data:itensBuffet } = await supabase
-.from("itens_buffet")
-.select("*")
-.limit(200)
-
-const { data:produtos } = await supabase
-.from("produtos")
-.select("*")
-.limit(2000)
-
-const { data:pedidos } = await supabase
-.from("pedidos")
-.select("*")
-.order("created_at",{ ascending:false })
-.limit(1000)
-
-const { data:pedidosPendentes } = await supabase
-.from("pedidos_pendentes")
-.select("*")
-.order("created_at",{ ascending:false })
-.limit(200)
-  
-const { data:histReservas } = await supabase
-.from("hist_reservas_mercatto")
-.select("*")
-.order("created_at",{ ascending:false })
-.limit(2000)
-
-
   
 /* ================= BUSCAR PROMPTS DO AGENTE ================= */
 
@@ -472,10 +463,9 @@ const promptAgente = (prompts || [])
 /* ================= CONTEXTO INTELIGENTE ================= */
 
 function addContext(label, data){
-  if(!data) return null
-
-  const limite = Array.isArray(data) ? data.slice(0, 200) : data
-
+if(!data || data.length === 0) return null
+const limite = Array.isArray(data) ? data.slice(0, 100) : data
+  
   return {
 
 
@@ -498,20 +488,28 @@ function addContext(label, data){
   }
 }
 
-const contextos = [
+const contextos = []
 
-addContext("RESERVAS", reservas),
-addContext("HIST_RESERVAS", histReservas),
-addContext("AGENDA", agenda),
-addContext("CLIENTES", clientes),
-addContext("CARDAPIO", buffet),
-addContext("BUFFET_LANCAMENTOS", buffetLancamentos),
-addContext("PEDIDOS", pedidos),
-addContext("PEDIDOS_PENDENTES", pedidosPendentes),
-addContext("ITENS_BUFFET", itensBuffet),
-addContext("PRODUTOS", produtos)
+if(reservas.length){
+  contextos.push(addContext("RESERVAS", reservas))
+}
 
-].filter(Boolean)
+if(pedidos.length){
+  contextos.push(addContext("PEDIDOS", pedidos))
+}
+
+if(clientes.length){
+  contextos.push(addContext("CLIENTES", clientes))
+}
+
+if(produtos.length){
+  contextos.push(addContext("PRODUTOS", produtos))
+}
+
+if(buffetLancamentos.length){
+  contextos.push(addContext("BUFFET_LANCAMENTOS", buffetLancamentos))
+}
+  
 
 
   
@@ -519,8 +517,8 @@ addContext("PRODUTOS", produtos)
 
 const completion = await openai.chat.completions.create({
 
-model:"gpt-4.1",
-temperature:0,
+model:"gpt-4.1-mini",
+  temperature:0,
 
   
 messages:[
@@ -532,16 +530,23 @@ role:"system",
 content:`
 📊 DADOS REAIS DE RESERVAS:
 
-reservas_hoje: ${totalHoje}
-reservas_ontem: ${totalOntem}
+reservas_hoje: ${reservas.length}
 
-clientes_hoje: ${clientesHoje}
+clientes_hoje: ${new Set(reservas.map(r => r.telefone)).size}
 
-faturamento_hoje: ${faturamentoHoje}
+faturamento_hoje: ${reservas.reduce((acc,r)=>
+  acc + (r.valorFinalPago || r.valorEstimado || 0)
+,0)}
 
-ticket_medio_hoje: ${ticketHoje}
+ticket_medio_hoje: ${
+  reservas.length > 0
+  ? reservas.reduce((acc,r)=>
+      acc + (r.valorFinalPago || r.valorEstimado || 0)
+    ,0) / reservas.length
+  : 0
+}
 
-variacao_percentual: ${variacao.toFixed(2)}
+variacao_percentual: 0
 
 ⚠️ REGRA:
 Use apenas esses dados. Não inventar.
