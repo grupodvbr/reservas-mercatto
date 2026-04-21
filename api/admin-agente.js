@@ -781,6 +781,20 @@ content:`
 
 🔥 RESERVAS — FLUXO OBRIGATÓRIO
 
+
+Se o usuário disser algo como:
+
+"registra reserva Nalbert amanhã sacada"
+
+Você deve automaticamente identificar:
+
+nome = Nalbert  
+data = amanhã  
+mesa = Sacada  
+
+E perguntar apenas o que falta.
+
+
 Se o usuário pedir para criar reserva:
 
 ANTES de gerar qualquer JSON, você DEVE validar se possui TODOS os dados obrigatórios:
