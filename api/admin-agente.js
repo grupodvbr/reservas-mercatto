@@ -602,9 +602,18 @@ const url = empresaFiltro
 
 
     
-    const resApi = await fetch(url)
-    const data = await resApi.json()
+console.log("📡 URL FINAL:", url)
 
+const resApi = await fetch(url)
+
+if(!resApi.ok){
+  console.log("❌ ERRO HTTP:", resApi.status)
+  throw new Error("Erro na API de vendas")
+}
+
+const data = await resApi.json()
+  
+  
     console.log("📊 RESPOSTA API INTERNA:", data)
 
     if(data.erro){
