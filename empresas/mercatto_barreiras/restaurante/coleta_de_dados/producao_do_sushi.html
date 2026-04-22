@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+
+<!-- 🔒 BLOQUEIO TOTAL DE ZOOM -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>Controle Sushi</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+  --bg:#0b1220;
+  --card:#111827;
+  --primary:#22c55e;
+  --danger:#ef4444;
+  --text:#fff;
+  --muted:#9ca3af;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
+.header{
+  padding:18px;
+  font-size:20px;
+  font-weight:900;
+  background:#020617;
+  text-align:center;
+}
+
+/* BUSCA */
+.search{
+  padding:14px;
+}
+
+.search input{
+  width:100%;
+  height:44px;
+  border-radius:12px;
+  border:none;
+  padding:0 14px;
+  font-size:14px;
+  font-weight:600;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  padding:12px;
+}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:active{
+  transform:scale(.97);
+}
+
+.card img{
+  width:100%;
+  height:110px;
+  object-fit:cover;
+}
+
+.card-body{
+  padding:10px;
+}
+
+.card-body b{
+  font-size:13px;
+}
+
+.card-body p{
+  font-size:11px;
+  color:var(--muted);
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:flex-end;
+}
+
+.modal-box{
+  width:100%;
+  height:90%;
+  background:#fff;
+  color:#000;
+  border-radius:20px 20px 0 0;
+  padding:16px;
+  overflow:auto;
+}
+
+/* INPUTS */
+input,select,textarea{
+  width:100%;
+  margin-top:10px;
+  height:44px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  padding:10px;
+  font-weight:600;
+}
+
+textarea{
+  height:80px;
+}
+
+/* BOTÃO */
+.btn{
+  margin-top:14px;
+  height:46px;
+  border-radius:14px;
+  border:none;
+  font-weight:900;
+  font-size:14px;
+  background:var(--primary);
+  color:#fff;
+}
+
+/* FOTO */
+.preview{
+  width:100%;
+  height:180px;
+  border-radius:12px;
+  object-fit:cover;
+  margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">🍣 Controle de Sushi</div>
+
+<div class="search">
+  <input id="busca" placeholder="Buscar sushi...">
+</div>
+
+<div id="cards" class="grid"></div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-box">
+
+    <h2 id="nome"></h2>
+
+    <img id="foto" class="preview">
+
+    <input type="file" id="uploadFoto">
+
+    <p id="descricao"></p>
+
+    <select id="tipo">
+      <option>Produção</option>
+      <option>Reaproveitamento</option>
+      <option>Desperdício</option>
+    </select>
+
+    <input id="qtd" type="number" placeholder="Quantidade">
+
+    <textarea id="obs" placeholder="Observação"></textarea>
+
+    <button class="btn" onclick="salvar()">SALVAR</button>
+    <button class="btn" style="background:#111" onclick="fechar()">FECHAR</button>
+
+  </div>
+</div>
+
+<script>
+
+// 🔥 CONFIG SUPABASE
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let lista = [];
+let atual = null;
+
+// 🔥 CARREGAR SUSHI
+async function carregar(){
+  const { data } = await sb
+    .from("buffet")
+    .select("*")
+    .eq("tipo","SUSHI");
+
+  lista = data || [];
+  render(lista);
+}
+
+// 🔥 RENDER
+function render(dados){
+  cards.innerHTML = "";
+
+  dados.forEach(p=>{
+    const c = document.createElement("div");
+    c.className="card";
+
+    c.onclick = ()=>abrir(p);
+
+    c.innerHTML = `
+      <img src="${p.foto_url || ''}">
+      <div class="card-body">
+        <b>${p.nome}</b>
+        <p>${p.descricao || ""}</p>
+      </div>
+    `;
+
+    cards.appendChild(c);
+  });
+}
+
+// 🔍 BUSCA
+busca.oninput = ()=>{
+  const v = busca.value.toLowerCase();
+  render(lista.filter(p=>p.nome?.toLowerCase().includes(v)));
+};
+
+// 🔥 MODAL
+function abrir(p){
+  atual = p;
+
+  modal.style.display="flex";
+
+  nome.innerText = p.nome;
+  descricao.innerText = p.descricao || "";
+  foto.src = p.foto_url || "";
+}
+
+function fechar(){
+  modal.style.display="none";
+}
+
+// 🔥 SALVAR
+async function salvar(){
+
+  const tipo = document.getElementById("tipo").value;
+  const qtd = document.getElementById("qtd").value;
+  const obs = document.getElementById("obs").value;
+
+  await sb.from("controle_sushi").insert({
+    buffet_id: atual.id,
+    nome: atual.nome,
+    tipo,
+    quantidade: qtd,
+    observacao: obs
+  });
+
+  alert("Registrado!");
+  fechar();
+}
+
+// 🔥 FOTO
+uploadFoto.onchange = async (e)=>{
+
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const nomeArquivo = atual.id + ".jpg";
+
+  await sb.storage.from("buffet")
+    .upload(nomeArquivo,file,{upsert:true});
+
+  const { data } = sb.storage.from("buffet")
+    .getPublicUrl(nomeArquivo);
+
+  await sb.from("buffet")
+    .update({ foto_url:data.publicUrl })
+    .eq("id",atual.id);
+
+  foto.src = data.publicUrl;
+};
+
+// INIT
+carregar();
+
+</script>
+
+</body>
+</html>
