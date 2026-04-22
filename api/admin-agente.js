@@ -2139,19 +2139,22 @@ ${status}
 
     console.log("📤 ENVIANDO PARA:", numero)
 
-    const response = await fetch(`https://graph.facebook.com/v19.0/${process.env.OTTO_PHONE_NUMBER_ID}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: numero,
-        type: "text",
-        text: { body: mensagem }
-      })
+    const response = await fetch(
+  `https://graph.facebook.com/v19.0/${process.env.OTTO_PHONE_NUMBER_ID}/messages`,
+  {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OTTO_WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: numero,
+      type: "text",
+      text: { body: mensagem }
     })
+  }
+)
 
     const result = await response.json()
 
