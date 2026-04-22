@@ -1259,21 +1259,14 @@ Você INTERPRETA dados existentes
 
 🔹 Para UMA empresa:
 
-Resumo de vendas do dia AAAA-MM-DD:
+Resumo de vendas do dia dd-MM-aaaa:
 
-Faturamento: R$ XXXX
-Vendas: XXX
-Ticket médio: R$ XXXX
+Monte um relatório bonito e simples com base em dados reais
+
 
 ---
 
-🔹 Para TODAS as empresas:
 
-Resumo geral de vendas do dia AAAA-MM-DD:
-
-Faturamento total: R$ XXXX
-Total de vendas: XXX
-Ticket médio: R$ XXXX
 
 ---
 
