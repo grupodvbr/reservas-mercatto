@@ -2097,25 +2097,31 @@ async function executarRelatorioAutomatico(){
     .filter(([_, u]) => u.nivel === 0)
     .map(([numero]) => numero)
 
-let data = null
+let dataDia = null
+let dataMes = null
 
-try{
-  const resApi = await fetch("https://goals-continental-examinations-carrier.trycloudflare.com/cupons-ontem")
+const [resDia, resMes] = await Promise.all([
+  fetch("https://goals-continental-examinations-carrier.trycloudflare.com/cupons-ontem"),
+  fetch("https://goals-continental-examinations-carrier.trycloudflare.com/resumo-mes")
+])
 
-  console.log("🌐 STATUS API:", resApi.status)
+if(!resDia.ok || !resMes.ok){
+  throw new Error("Erro ao buscar APIs")
+}
 
-  if(!resApi.ok){
-    throw new Error("API respondeu erro")
-  }
+dataDia = await resDia.json()
+dataMes = await resMes.json()
 
-  data = await resApi.json()
+
+
+  
 
 }catch(e){
   console.error("❌ ERRO AO BUSCAR API:", e)
   return
 }
 
-if(!data || !data.empresas || data.empresas.length === 0){
+if(!dataDia || !dataDia.empresas || dataDia.empresas.length === 0){
   console.log("⚠️ SEM DADOS PARA RELATÓRIO")
   return
 }
@@ -2136,7 +2142,16 @@ ontem.setDate(ontem.getDate() - 1)
 
 const dataFormatada = ontem.toLocaleDateString("pt-BR")
 
+// 🔥 JUNÇÃO DIA + MÊS (LOCAL EXATO)
+for(const empresa of dataDia.empresas){
 
+  const mes = (dataMes.empresas || [])
+    .find(e => e.empresa === empresa.empresa)
+
+  empresa.faturamento_mes = mes?.faturamento_mes || 0
+  empresa.vendas_mes = mes?.vendas_mes || 0
+
+}
   
 let mensagem = `
 *Bom dia, Sr. Leonardo*
@@ -2151,7 +2166,7 @@ let mensagem = `
 
   
 
-for(const empresa of data.empresas){
+for(const empresa of dataDia.empresas){
 
   const meta = METAS[empresa.empresa]?.prata || 0
 
@@ -2219,7 +2234,7 @@ mensagem += `
   return "https://quickchart.io/chart?c=" + encodeURIComponent(JSON.stringify(chartConfig))
 }
 
-const graficoURL = gerarGraficoURL(data.empresas)
+const graficoURL = gerarGraficoURL(dataDia.empresas)
 
 console.log("📊 GRAFICO:", graficoURL)
 
