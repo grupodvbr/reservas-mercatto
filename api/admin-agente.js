@@ -2187,30 +2187,62 @@ mensagem += `
   const labels = empresas.map(e => e.empresa)
   const dados = empresas.map(e => Number(e.faturamento))
 
+  const meta = 20000 // 🔥 sua meta diária (ajusta se quiser)
+
   const chartConfig = {
     type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: "Faturamento por Empresa",
-        data: dados,
-        backgroundColor: [
-          "#22c55e",
-          "#3b82f6",
-          "#f59e0b",
-          "#ef4444",
-          "#8b5cf6"
-        ]
-      }]
+      datasets: [
+        {
+          label: "Faturamento",
+          data: dados,
+          borderRadius: 8,
+          backgroundColor: [
+            "rgba(34,197,94,0.9)",
+            "rgba(59,130,246,0.9)",
+            "rgba(245,158,11,0.9)",
+            "rgba(239,68,68,0.9)",
+            "rgba(139,92,246,0.9)"
+          ]
+        },
+        {
+          type: "line",
+          label: "Meta",
+          data: labels.map(() => meta),
+          borderColor: "#22c55e",
+          borderWidth: 2,
+          borderDash: [6,6],
+          pointRadius: 0
+        }
+      ]
     },
+
     options: {
       plugins: {
-        legend: { display: false }
+        legend: {
+          labels: {
+            color: "#fff"
+          }
+        }
+      },
+
+      scales: {
+        x: {
+          ticks: { color: "#ccc" },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: "#ccc" },
+          grid: {
+            color: "rgba(255,255,255,0.05)"
+          }
+        }
       }
     }
   }
 
-  return "https://quickchart.io/chart?c=" + encodeURIComponent(JSON.stringify(chartConfig))
+  return "https://quickchart.io/chart?width=900&height=500&backgroundColor=black&c=" + encodeURIComponent(JSON.stringify(chartConfig))
 }
 
 const graficoURL = gerarGraficoURL(data.empresas)
