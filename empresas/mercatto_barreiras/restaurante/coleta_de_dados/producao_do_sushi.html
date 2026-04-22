@@ -25,6 +25,8 @@
 html, body{
   width:100%;
   overflow-x:hidden;
+  overscroll-behavior: none; /* 🔥 BLOQUEIA bounce GLOBAL */
+
 }
 
 
@@ -190,6 +192,9 @@ body{
   align-items:flex-end;
 
   z-index:9999;
+
+  overflow:hidden; /* 🔥 ESSENCIAL */
+  touch-action:none; /* 🔥 BLOQUEIA gesto externo */
 }
 
 .box-reg{
@@ -203,8 +208,11 @@ body{
 
   overflow-y:auto;
 
-  -webkit-overflow-scrolling: touch; /* 🔥 suaviza */
-  overscroll-behavior: contain;      /* 🔥 BLOQUEIA bounce */
+  -webkit-overflow-scrolling: touch;
+
+  overscroll-behavior: contain;
+
+  touch-action: pan-y; /* 🔥 BLOQUEIA MULTI-DIREÇÃO */
 
   box-shadow:0 -10px 40px rgba(0,0,0,0.6);
 
