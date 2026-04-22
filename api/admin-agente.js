@@ -2173,7 +2173,7 @@ for(const empresa of dataDia.empresas){
     : 0
 
 
-let status = "➡️ Estável"
+let status = "Estável"
 
 if((empresa.variacao_semana || 0) > 5){
   status = `📈 +${empresa.variacao_semana}%`
@@ -2189,7 +2189,7 @@ mensagem += `
 💰 Dia        : R$ ${formatar(empresa.faturamento)}
 📅 Mês        : R$ ${formatar(empresa.faturamento_mes)}
 💳 Ticket     : R$ ${formatar(empresa.ticket_medio)}
-🎯 Meta       : ${percentual}%
+🎯 Meta       : R$ ${formatar(meta)} - ${percentual}%
 
 📊 Desempenho : ${status}
 
