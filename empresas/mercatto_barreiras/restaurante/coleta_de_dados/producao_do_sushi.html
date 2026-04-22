@@ -453,21 +453,37 @@ body.travado{
 
 <div class="search" style="
 position:fixed;
-top:40px;
+top:38px;
 left:0;
 width:100%;
 z-index:50;
 background:#0b1220;
 
 display:flex;
-gap:8px;
+justify-content:center;
 align-items:center;
-padding:6px;
+gap:8px;
+padding:6px 12px;
 ">
-  <input id="busca" placeholder="Buscar sushi..." style="flex:1">
 
-<button class="btn-registros" onclick="abrirRegistros()" style="margin:0;height:44px;min-width:120px">
-  Registros
+  <input id="busca" placeholder="Buscar sushi..." style="
+    flex:1;
+    max-width:480px;
+    height:36px;
+    border-radius:10px;
+    padding:0 12px;
+    font-size:13px;
+  ">
+
+  <button class="btn-registros" onclick="abrirRegistros()" style="
+    height:36px;
+    padding:0 14px;
+    font-size:13px;
+    border-radius:10px;
+    min-width:auto;
+    white-space:nowrap;
+  ">
+    Registros
   </button>
 
 </div>
