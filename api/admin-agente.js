@@ -2177,6 +2177,44 @@ mensagem += `
 *Relatório automático • Carneiro Holding*
 `
 
+
+  function gerarGraficoURL(empresas){
+
+  const labels = empresas.map(e => e.empresa)
+  const dados = empresas.map(e => Number(e.faturamento))
+
+  const chartConfig = {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Faturamento por Empresa",
+        data: dados,
+        backgroundColor: [
+          "#22c55e",
+          "#3b82f6",
+          "#f59e0b",
+          "#ef4444",
+          "#8b5cf6"
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  }
+
+  return "https://quickchart.io/chart?c=" + encodeURIComponent(JSON.stringify(chartConfig))
+}
+
+const graficoURL = gerarGraficoURL(data.empresas)
+
+console.log("📊 GRAFICO:", graficoURL)
+
+
+  
   for(const numero of admins){
 
     console.log("📤 ENVIANDO PARA:", numero)
@@ -2192,8 +2230,11 @@ mensagem += `
     body: JSON.stringify({
       messaging_product: "whatsapp",
       to: numero,
-      type: "text",
-      text: { body: mensagem }
+type: "image",
+image: {
+  link: graficoURL,
+  caption: mensagem
+}
     })
   }
 )
