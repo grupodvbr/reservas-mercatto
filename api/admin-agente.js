@@ -2182,12 +2182,12 @@ mensagem += `
 `
 
 
-  function gerarGraficoURL(empresas){
+ function gerarGraficoURL(empresas){
 
   const labels = empresas.map(e => e.empresa)
   const dados = empresas.map(e => Number(e.faturamento))
 
-  const meta = 20000 // 🔥 sua meta diária (ajusta se quiser)
+  const meta = 20000
 
   const chartConfig = {
     type: "bar",
@@ -2197,52 +2197,121 @@ mensagem += `
         {
           label: "Faturamento",
           data: dados,
-          borderRadius: 8,
+          borderRadius: 12,
+          borderSkipped: false,
+
           backgroundColor: [
-            "rgba(34,197,94,0.9)",
-            "rgba(59,130,246,0.9)",
-            "rgba(245,158,11,0.9)",
-            "rgba(239,68,68,0.9)",
-            "rgba(139,92,246,0.9)"
+            "rgba(34,197,94,0.85)",
+            "rgba(59,130,246,0.85)",
+            "rgba(245,158,11,0.85)",
+            "rgba(239,68,68,0.85)",
+            "rgba(139,92,246,0.85)"
+          ],
+
+          // 🔥 SOMBRA (EFEITO PREMIUM)
+          hoverBackgroundColor: [
+            "#22c55e",
+            "#3b82f6",
+            "#f59e0b",
+            "#ef4444",
+            "#8b5cf6"
           ]
         },
+
+        // 🔥 LINHA DE META
         {
           type: "line",
-          label: "Meta",
+          label: "Meta diária",
           data: labels.map(() => meta),
           borderColor: "#22c55e",
           borderWidth: 2,
-          borderDash: [6,6],
+          borderDash: [8,6],
           pointRadius: 0
         }
       ]
     },
 
     options: {
+      layout: {
+        padding: {
+          top: 40,
+          bottom: 20,
+          left: 20,
+          right: 20
+        }
+      },
+
       plugins: {
+
+        // 🔥 TÍTULO
+        title: {
+          display: true,
+          text: "DESEMPENHO DO DIA",
+          color: "#ffffff",
+          font: {
+            size: 20,
+            weight: "bold"
+          },
+          padding: {
+            bottom: 20
+          }
+        },
+
         legend: {
           labels: {
-            color: "#fff"
+            color: "#cbd5e1",
+            font: {
+              size: 12
+            }
           }
+        },
+
+        // 🔥 VALORES NAS BARRAS
+        datalabels: {
+          anchor: "end",
+          align: "end",
+          color: "#ffffff",
+          font: {
+            weight: "bold"
+          },
+          formatter: (v) => "R$ " + v.toLocaleString("pt-BR")
         }
       },
 
       scales: {
+
         x: {
-          ticks: { color: "#ccc" },
-          grid: { display: false }
-        },
-        y: {
-          ticks: { color: "#ccc" },
+          ticks: {
+            color: "#cbd5e1",
+            font: {
+              size: 11
+            }
+          },
           grid: {
-            color: "rgba(255,255,255,0.05)"
+            display: false
+          }
+        },
+
+        y: {
+          beginAtZero: true,
+
+          ticks: {
+            color: "#94a3b8",
+            callback: (v) => "R$ " + v.toLocaleString("pt-BR")
+          },
+
+          grid: {
+            color: "rgba(255,255,255,0.06)",
+            drawBorder: false
           }
         }
       }
-    }
+    },
+
+    plugins: ["chartjs-plugin-datalabels"]
   }
 
-  return "https://quickchart.io/chart?width=900&height=500&backgroundColor=black&c=" + encodeURIComponent(JSON.stringify(chartConfig))
+  return "https://quickchart.io/chart?width=1000&height=550&backgroundColor=%23020517&c=" + encodeURIComponent(JSON.stringify(chartConfig))
 }
 
 const graficoURL = gerarGraficoURL(data.empresas)
