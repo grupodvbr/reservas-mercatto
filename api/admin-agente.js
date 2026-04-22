@@ -1263,56 +1263,6 @@ Resumo de vendas do dia dd-MM-aaaa:
 
 Monte um relatório bonito e simples com base em dados reais
 
-
----
-
-
-
----
-
-📌 8. REGRAS DE SEGURANÇA
-
-Se os dados não estiverem disponíveis:
-
-→ responder: "Não foi possível obter os dados de vendas no momento"
-
----
-
-📌 9. PROIBIÇÕES
-
-❌ Nunca inventar valores  
-❌ Nunca responder sem consultar API  
-❌ Nunca gerar JSON de relatório  
-❌ Nunca misturar com reservas  
-
----
-
-📌 10. RESULTADO ESPERADO
-
-Pergunta:
-"quanto vendeu hoje nas empresas"
-
-Resposta:
-Resumo geral de vendas do dia 2026-04-21:
-
-Faturamento total: R$ XXXXX
-Total de vendas: XXX
-Ticket médio: R$ XXXX
-
----
-
-Pergunta:
-"quanto o mercatto vendeu hoje"
-
-Resposta:
-Resumo de vendas do dia 2026-04-21:
-
-Faturamento: R$ XXXX
-Vendas: XXX
-Ticket médio: R$ XXXX
-
----
-
 ⚠️ QUALQUER DESVIO DESSAS REGRAS TORNA A RESPOSTA INVÁLIDA
 `
 },
