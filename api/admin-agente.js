@@ -2172,8 +2172,7 @@ const ticketMercatto = mercattoVendas ? mercattoTotal / mercattoVendas : 0
 
 
 
-  
- let mensagem = `
+let mensagem = `
 *Bom dia, Sr. Leonardo*
 
 📊 *Relatório Executivo* • ${dataFormatada}
@@ -2189,7 +2188,9 @@ const ticketMercatto = mercattoVendas ? mercattoTotal / mercattoVendas : 0
 💰 R$ ${formatar(mercattoTotal)}
 🧾 ${mercattoVendas} vendas
 💳 Ticket médio: R$ ${formatar(ticketMercatto)}
-`for(const e of data.empresas){
+`;
+
+  for(const e of data.empresas){
 
   const ticket = e.vendas ? e.faturamento / e.vendas : 0
 
@@ -2206,16 +2207,37 @@ const ticketMercatto = mercattoVendas ? mercattoTotal / mercattoVendas : 0
 🏬 *${nome}*
 💰 R$ ${formatar(e.faturamento)}
 🧾 ${e.vendas} vendas
-💳 R$ ${formatar(ticket)}
+💳 Ticket: R$ ${formatar(ticket)}
 `
-}mensagem += `
+}
+
+for(const e of data.empresas){
+
+  const ticket = e.vendas ? e.faturamento / e.vendas : 0
+
+  let nome = e.empresa
+
+  if(nome === "MERCATTO EMPORIO") nome = "Empório"
+  if(nome === "MERCATTO RESTAURANTE") nome = "Restaurante"
+  if(nome === "PADARIA DELÍCIA") nome = "Padaria"
+  if(nome === "DELÍCIA GOURMET") nome = "Delícia"
+  if(nome === "VILLA GOURMET") nome = "Villa"
+
+  mensagem += `
+
+🏬 *${nome}*
+💰 R$ ${formatar(e.faturamento)}
+🧾 ${e.vendas} vendas
+💳 Ticket: R$ ${formatar(ticket)}
+`
+}
+
+mensagem += `
 
 ━━━━━━━━━━━━━━━━━━
 *Carneiro Holding*
 Relatório automático
-`
-
-
+`;
 
 
 
