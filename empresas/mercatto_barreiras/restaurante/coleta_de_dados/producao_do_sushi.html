@@ -692,7 +692,7 @@ ${editavel ? `
   const senhaDigitada = document.getElementById("pass").value;
 
   const resposta = await sb
-    .from("buffet_usuarios_do_sistema") // CORRIGIDO
+    .from("usuarios_do_sistema") // CORRIGIDO
     .select("*")
     .eq("usuario", usuarioDigitado)
     .eq("senha", senhaDigitada)
