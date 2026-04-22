@@ -181,12 +181,11 @@ input,select{
 
 <div class="header">Controle Sushi</div>
 
-<div class="search" style="display:flex;gap:8px">
-
+<div class="search" style="display:flex;gap:8px;align-items:center">
   <input id="busca" placeholder="Buscar sushi..." style="flex:1">
 
-  <button class="btn-registros" onclick="abrirRegistros()" style="margin:0;width:140px">
-    Registros
+<button class="btn-registros" onclick="abrirRegistros()" style="margin:0;height:44px;min-width:120px">
+  Registros
   </button>
 
 </div>
@@ -336,8 +335,8 @@ async function salvar(){
   await sb.from("controle_sushi").insert({
     buffet_id: atual.id,
     nome: atual.nome,
-    tipo: tipo.value,
-    quantidade: qtd.value,
+tipo: document.getElementById("tipo").value,
+quantidade: document.getElementById("qtd").value,
     data_registro: hoje
   });
 
