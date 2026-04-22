@@ -673,10 +673,8 @@ function normalizar(txt){
 let empresaData = null
 
 if(empresaFiltro){
-  // 🔥 API JÁ VEM FILTRADA → USA DIRETO
   empresaData = data.empresas?.[0]
 }else{
-  // 🔥 GERAL → USA TOTAL
   empresaData = {
     faturamento: data.faturamento,
     vendas: data.vendas,
@@ -684,11 +682,23 @@ if(empresaFiltro){
   }
 }
 
-// 🔥 CALCULAR TICKET REAL DA EMPRESA
+// 🔥 BLOQUEIO DE ZERO (ESSENCIAL)
+if(!empresaData || Number(empresaData.faturamento) <= 0){
+  console.log("⚠️ SEM VENDAS - BLOQUEADO")
+
+  return res.json({
+    resposta: "Ainda não houve vendas registradas até agora."
+  })
+}
+
+
 const ticket = empresaData.vendas > 0
   ? empresaData.faturamento / empresaData.vendas
   : 0
 
+
+
+  
 resumoDia = {
   data: data.data,
   faturamento: empresaData.faturamento,
@@ -789,13 +799,27 @@ ${texto}
 `
 }
 
-const respostaFormatada = criarResumoPremium(respostaIA)
+// 🔥 DETECTA SE É RELATÓRIO COMPLETO
+const isRelatorio =
+  texto.includes("resumo") ||
+  texto.includes("relatorio") ||
+  texto.includes("fechamento") ||
+  texto.includes("desempenho")
 
-  
-return res.json({
-  resposta: respostaFormatada
-})
+if(isRelatorio){
+  // ✅ MANTÉM RESUMO BONITO
+  const respostaFormatada = criarResumoPremium(respostaIA)
+
+  return res.json({
+    resposta: respostaFormatada
+  })
+}else{
+  // ✅ RESPOSTA DIRETA (SEM FORMATO)
+  return res.json({
+    resposta: respostaIA
+  })
 }
+
     
 
   }catch(e){
