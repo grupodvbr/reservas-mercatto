@@ -294,16 +294,6 @@ if(tipoAcao !== "consulta"){
 }
 
   
-const isCupom =
-  texto.includes("cupom") ||
-  texto.includes("venda") ||
-  texto.includes("vendas") ||
-  texto.includes("faturamento") ||
-  texto.includes("quanto vendeu") ||
-  texto.includes("resumo de vendas") ||
-  texto.includes("resumo das vendas") ||
-  texto.includes("resumo vendas") ||
-  texto.includes("vendas de hoje")
 
 
 
@@ -616,8 +606,7 @@ function formatarData(dataISO){
 
 
 
-if(isCupom){
-
+if(tipoConsulta === "vendas"){
   try{
 
     console.log("🔥 CONSULTANDO API DE VENDAS...")
