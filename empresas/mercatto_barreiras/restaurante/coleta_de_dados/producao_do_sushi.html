@@ -621,22 +621,36 @@ async function atualizarCards(listaFiltrada = lista){
 
   listaFiltrada.forEach(p=>{
 
-    const total = registros
-      .filter(r=>r.buffet_id===p.id)
-      .reduce((s,r)=>s+Number(r.quantidade||0),0);
+const prod = registros
+  .filter(r => r.buffet_id === p.id && r.tipo === "Produção")
+  .reduce((s,r)=>s+Number(r.quantidade||0),0);
 
-    const c = document.createElement("div");
-    c.className="card";
+const reap = registros
+  .filter(r => r.buffet_id === p.id && r.tipo === "Reaproveitamento")
+  .reduce((s,r)=>s+Number(r.quantidade||0),0);
 
-    c.onclick = ()=>abrir(p);
+const desp = registros
+  .filter(r => r.buffet_id === p.id && r.tipo === "Desperdício")
+  .reduce((s,r)=>s+Number(r.quantidade||0),0);
 
-    c.innerHTML = `
-      ${total>0 ? `<div class="badge">${total}</div>` : ``}
-      <img src="${p.foto_url||''}">
-      <div class="card-body">
-        <b>${p.nome}</b>
-      </div>
-    `;
+c.innerHTML = `
+  <div style="
+    position:absolute;
+    top:6px;
+    right:6px;
+    display:flex;
+    gap:4px;
+  ">
+    ${prod > 0 ? `<div style="background:#3b82f6;padding:4px 6px;border-radius:10px;font-size:10px;font-weight:900;">${prod}</div>` : ``}
+    ${reap > 0 ? `<div style="background:#22c55e;padding:4px 6px;border-radius:10px;font-size:10px;font-weight:900;">${reap}</div>` : ``}
+    ${desp > 0 ? `<div style="background:#ef4444;padding:4px 6px;border-radius:10px;font-size:10px;font-weight:900;">${desp}</div>` : ``}
+  </div>
+
+  <img src="${p.foto_url||''}">
+  <div class="card-body">
+    <b>${p.nome}</b>
+  </div>
+`;
 
     cards.appendChild(c);
   });
