@@ -659,50 +659,53 @@ if(empresaFiltro){
 
 let empresaData = null
 
-// 🔥 TRATAMENTO CORRETO DOS DADOS
 
-let empresaData = null
+if(isCupom){
 
-if(empresaFiltro){
-  console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
-  empresaData = data.empresas?.[0]
-}else{
-  console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
-  empresaData = {
-    faturamento: data.faturamento,
-    vendas: data.vendas,
-    ticket_medio: data.ticket_medio
-  }
-}
+  try{
 
-// 🔥 BLOQUEIO SEM DADOS
-if(!empresaData || Number(empresaData.faturamento) <= 0){
-  return res.json({
-    resposta: "Ainda não houve vendas registradas até agora."
-  })
-}
+    console.log("🔥 CONSULTANDO API DE VENDAS...")
 
-// 🔥 CALCULO DO TICKET
-const ticket = empresaData.vendas > 0
-  ? empresaData.faturamento / empresaData.vendas
-  : 0
+    let url = "https://revision-peripherals-glad-martha.trycloudflare.com/resumo-dia"
 
-resumoDia = {
-  data: data.data,
-  faturamento: empresaData.faturamento,
-  vendas: empresaData.vendas,
-  ticket_medio: ticket,
-  tipo: empresaFiltro ? "EMPRESA" : "GERAL",
-  empresa: empresaFiltro
-}
+    const resApi = await fetch(url)
+    const data = await resApi.json()
 
-}
+    let empresaData = null
 
- // ✅ CORRETO — BASE + GPT ANALISANDO
+    if(empresaFiltro){
+      console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
+      empresaData = data.empresas?.[0]
+    }else{
+      console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
+      empresaData = {
+        faturamento: data.faturamento,
+        vendas: data.vendas,
+        ticket_medio: data.ticket_medio
+      }
+    }
 
-if(resumoDia){
+    if(!empresaData || Number(empresaData.faturamento) <= 0){
+      return res.json({
+        resposta: "Ainda não houve vendas registradas até agora."
+      })
+    }
 
-  console.log("🧠 SOMENTE IA")
+    const ticket = empresaData.vendas > 0
+      ? empresaData.faturamento / empresaData.vendas
+      : 0
+
+    resumoDia = {
+      data: data.data,
+      faturamento: empresaData.faturamento,
+      vendas: empresaData.vendas,
+      ticket_medio: ticket,
+      tipo: empresaFiltro ? "EMPRESA" : "GERAL",
+      empresa: empresaFiltro
+    }
+
+    // ✅ RESPOSTA AQUI DENTRO
+    console.log("🧠 SOMENTE IA")
 
   const analise = await openai.chat.completions.create({
     model:"gpt-4.1-mini",
@@ -781,23 +784,53 @@ if(isRelatorio){
   // ✅ MANTÉM RESUMO BONITO
   const respostaFormatada = criarResumoPremium(respostaIA)
 
-  return res.json({
-    resposta: respostaFormatada
-  })
-}else{
-  // ✅ RESPOSTA DIRETA (SEM FORMATO)
-  return res.json({
-    resposta: respostaIA
-  })
-}
 
-    
+
+
+
+
+return res.json({
+      resposta: respostaIA
+    })
 
   }catch(e){
+
     console.log("❌ ERRO:", e)
-    return res.json({ resposta: "Erro ao buscar vendas" })
+
+    return res.json({
+      resposta: "Erro ao buscar vendas"
+    })
+
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ================= CLIENTES ================= */
 
 
