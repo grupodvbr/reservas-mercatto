@@ -181,13 +181,36 @@ body{
 .modal-reg{
   position:fixed;
   inset:0;
-  background:#000000ee;
+
+  background:rgba(0,0,0,0.85);
+
   display:none;
-  overflow:auto;
+
+  justify-content:center;
+  align-items:flex-end;
+
+  z-index:9999;
 }
 
 .box-reg{
+  width:100%;
+  max-height:85vh;
+
+  background:#0b1220;
+  border-radius:20px 20px 0 0;
+
   padding:16px;
+
+  overflow-y:auto;
+
+  box-shadow:0 -10px 40px rgba(0,0,0,0.6);
+
+  animation: subir .25s ease;
+}
+
+@keyframes subir{
+  from{ transform:translateY(100%); }
+  to{ transform:translateY(0); }
 }
 
 .reg-card{
@@ -521,13 +544,13 @@ async function pegarHoje(){
 /* =========================
    CARDS
 ========================= */
-async function atualizarCards(){
+async function atualizarCards(listaFiltrada = lista){
 
   const registros = await pegarHoje();
 
   cards.innerHTML="";
 
-  lista.forEach(p=>{
+  listaFiltrada.forEach(p=>{
 
     const total = registros
       .filter(r=>r.buffet_id===p.id)
@@ -550,14 +573,7 @@ async function atualizarCards(){
   });
 }
 
-/* =========================
-   BUSCA
-========================= */
-busca.oninput = ()=>{
-  const v = busca.value.toLowerCase();
-  atualizarCards(lista.filter(p=>p.nome.toLowerCase().includes(v)));
-};
-
+  
 /* =========================
    MODAL
 ========================= */
@@ -623,16 +639,19 @@ uploadFoto.onchange = async (e)=>{
    REGISTROS
 ========================= */
 function abrirRegistros(){
-  registros.style.display="block";
+  registros.style.display="flex";
+
+  document.body.style.overflow = "hidden"; // 🔥 trava fundo
 
   const hoje = new Date().toISOString().slice(0,10);
   dataFiltro.value = hoje;
 
   carregarRegistros();
 }
-
 function fecharRegistros(){
   registros.style.display="none";
+
+  document.body.style.overflow = "auto"; // 🔥 libera fundo
 }
 
 /* =========================
