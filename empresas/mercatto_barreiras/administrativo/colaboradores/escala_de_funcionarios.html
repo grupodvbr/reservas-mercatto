@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Escala Profissional • Mercatto</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --bg:#f4f6f9;
+  --card:#ffffff;
+  --border:#e5e7eb;
+
+  --text:#111827;
+  --muted:#6b7280;
+
+  --primary:#2563eb;
+  --primary-light:#eff6ff;
+  --primary-dark:#1d4ed8;
+
+  --success:#22c55e;
+  --danger:#ef4444;
+
+  --radius:14px;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 20px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+header b{
+  font-size:16px;
+}
+
+/* BOTÕES */
+button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+
+button:hover{
+  background:var(--primary-dark);
+  transform:translateY(-1px);
+}
+
+/* CALENDARIO */
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
+  padding:20px;
+}
+
+.day{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:12px;
+  min-height:140px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.day:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow);
+}
+
+/* ESCALA */
+.item-escala{
+  margin-top:6px;
+  padding:6px 8px;
+  border-radius:8px;
+  font-size:11px;
+  background:var(--primary-light);
+  color:var(--primary-dark);
+  font-weight:600;
+}
+
+/* STATUS BADGE */
+.status{
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  display:inline-block;
+}
+
+.status.ativo{
+  background:rgba(34,197,94,.15);
+  color:var(--success);
+}
+
+.status.inativo{
+  background:rgba(239,68,68,.15);
+  color:var(--danger);
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(4px);
+}
+
+.box{
+  background:var(--card);
+  padding:20px;
+  border-radius:18px;
+  width:520px;
+  max-width:95%;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  animation:fadeIn .2s ease;
+}
+
+@keyframes fadeIn{
+  from{transform:scale(.95);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* FORM */
+.form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.form-full{
+  grid-column:1/-1;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.field label{
+  font-size:12px;
+  font-weight:700;
+  color:#374151;
+  margin-bottom:2px;
+  letter-spacing:.3px;
+}
+
+/* INPUTS */
+.field input,
+.field select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:13px;
+  transition:.2s;
+}
+
+.field input:focus,
+.field select:focus{
+  border-color:var(--primary);
+  outline:none;
+  box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
+
+/* CHECKBOX */
+.checkbox-group{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.checkbox-group label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:#f9fafb;
+  padding:8px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:.2s;
+  font-size:13px;
+}
+
+.checkbox-group label:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+}
+
+.checkbox-group input{
+  accent-color:var(--primary);
+}
+
+/* LISTA */
+.lista{
+  margin-top:10px;
+  max-height:200px;
+  overflow:auto;
+}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-weight:600;
+}
+
+.item span{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* ACTIONS */
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:20px;
+}
+
+.btn{
+  padding:10px 16px;
+  border-radius:10px;
+  font-weight:600;
+}
+
+.btn.cancel{
+  background:#e5e7eb;
+  color:#111;
+}
+
+.btn.save{
+  background:var(--primary);
+  color:#fff;
+}
+
+/* ================= LOADING ================= */
+
+/* OVERLAY LOADING */
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.6);
+  backdrop-filter:blur(4px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.spinner{
+  width:50px;
+  height:50px;
+  border:4px solid #e5e7eb;
+  border-top:4px solid var(--primary);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+/* SKELETON */
+.skeleton{
+  background:linear-gradient(90deg,#eee,#f5f5f5,#eee);
+  background-size:200% 100%;
+  animation:skeleton 1.5s infinite;
+  border-radius:8px;
+}
+
+@keyframes skeleton{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+/* SCROLL */
+::-webkit-scrollbar{
+  width:6px;
+}
+::-webkit-scrollbar-thumb{
+  background:#d1d5db;
+  border-radius:6px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <button onclick="mesAnterior()">◀</button>
+  <b id="mes"></b>
+  <div>
+    <button onclick="abrirCadastro()">+ Funcionário</button>
+    <button onclick="mesProximo()">▶</button>
+  </div>
+</header>
+
+<div id="calendar" class="calendar"></div>
+
+<!-- MODAL ESCALA -->
+<div id="modal" class="modal">
+  <div class="box">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 id="data"></h3>
+      <input type="date" id="dataManual">
+    </div>
+
+<button onclick="abrirEdicao()" style="margin-bottom:10px">
+  + Adicionar Escala
+</button>
+
+<div id="formEscala" style="display:none">
+
+  <div class="field">
+    <label>Funcionário</label>
+    <select id="funcionario"></select>
+  </div>
+
+  <div id="blocos"></div>
+
+  <button onclick="addBloco()" style="margin-top:10px">
+    + Adicionar Horário
+  </button>
+
+</div>
+
+    <div class="lista" id="preview"></div>
+
+    <div class="actions">
+      <button class="btn cancel" onclick="fechar()">Cancelar</button>
+      <button class="btn save" onclick="salvarEscala()">Salvar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CADASTRO -->
+<div id="cadastro" class="modal">
+  <div class="box">
+
+    <h3>Cadastro de Colaborador</h3>
+
+  <div class="form">
+
+  <div class="field form-full">
+    <label>Nome Completo *</label>
+    <input id="nome" placeholder="Digite o nome completo">
+  </div>
+
+  <div class="field">
+    <label>Data de Nascimento *</label>
+    <input type="date" id="nascimento">
+  </div>
+
+  <div class="field">
+    <label>WhatsApp *</label>
+    <input id="numero" placeholder="(77) 99999-9999">
+  </div>
+
+  <div class="field">
+    <label>Sexo *</label>
+    <select id="sexo">
+      <option value="">Selecionar</option>
+      <option>MASCULINO</option>
+      <option>FEMININO</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Data de Contratação *</label>
+    <input type="date" id="contratacao">
+  </div>
+
+  <div class="field">
+    <label>Setor *</label>
+    <select id="setor">
+      <option value="">Selecionar</option>
+      <option>COZINHA</option>
+      <option>SALÃO</option>
+      <option>BAR</option>
+      <option>CAIXA</option>
+      <option>ADMINISTRATIVO</option>
+    </select>
+  </div>
+
+  <div class="field form-full">
+    <label>Função *</label>
+    <input id="funcao" placeholder="Ex: Garçom, Cozinheiro...">
+  </div>
+
+  <div class="field form-full">
+    <label>Dias de Folga *</label>
+    <div id="folga" class="checkbox-group">
+      <label><input type="checkbox" value="DOMINGO"> Dom</label>
+      <label><input type="checkbox" value="SEGUNDA"> Seg</label>
+      <label><input type="checkbox" value="TERÇA"> Ter</label>
+      <label><input type="checkbox" value="QUARTA"> Qua</label>
+      <label><input type="checkbox" value="QUINTA"> Qui</label>
+      <label><input type="checkbox" value="SEXTA"> Sex</label>
+      <label><input type="checkbox" value="SÁBADO"> Sab</label>
+    </div>
+  </div>
+
+</div>
+
+    
+    <div class="actions">
+      <button onclick="fecharCadastro()">Cancelar</button>
+      <button onclick="salvarFuncionario()">Salvar</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+  "https://ehxrrpsiksceljmhsfxk.supabase.co",
+  "sb_publishable_Jm2ZQKzPS3gNPCKSjFAmYQ_WNMYwF1j"
+)
+
+let dataAtual=new Date()
+let funcionarios=[]
+let escalas=[]
+let dataSelecionada=null
+
+async function loadFuncionarios(){
+  const {data}=await sb.from("funcionarios_mercatto").select("*")
+  funcionarios=data||[]
+
+  funcionario.innerHTML=""
+  funcionarios.forEach(f=>{
+    funcionario.innerHTML+=`<option value="${f.id}">${f.nome}</option>`
+  })
+}
+
+async function loadEscala(){
+  const {data}=await sb.from("escala_funcionarios").select("*")
+  escalas=data||[]
+}
+
+async function render(){
+  await loadEscala()
+  calendar.innerHTML=""
+
+  const ano=dataAtual.getFullYear()
+  const mes=dataAtual.getMonth()
+  mesEl.innerText=dataAtual.toLocaleString("pt-BR",{month:"long",year:"numeric"})
+
+  const dias=new Date(ano,mes+1,0).getDate()
+
+  for(let i=1;i<=dias;i++){
+    const dataStr=`${ano}-${String(mes+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`
+
+    const d=document.createElement("div")
+    d.className="day"
+    d.innerHTML=`${i}`
+
+    escalas.filter(e=>e.data===dataStr).forEach(e=>{
+      d.innerHTML+=`<div class="item-escala">${e.nome}</div>`
+    })
+
+    d.onclick=()=>abrirVisual(dataStr)
+    calendar.appendChild(d)
+  }
+}
+
+function abrirVisual(data){
+  dataSelecionada = data
+
+  // LIMPA EDIÇÃO
+  blocos.innerHTML = ""
+  document.getElementById("formEscala").style.display = "none"
+
+  const lista = escalas.filter(e=>e.data === data)
+
+  let agrupado = {}
+
+  lista.forEach(e=>{
+    if(!agrupado[e.setor]) agrupado[e.setor] = []
+    agrupado[e.setor].push(e)
+  })
+
+  let html = ""
+
+  for(const setor in agrupado){
+    html += `<h4 style="margin-top:10px">${setor}</h4>`
+
+    agrupado[setor].forEach(e=>{
+      html += `
+        <div class="item">
+          <div>${e.nome}</div>
+          <span>${e.entrada} - ${e.saida}</span>
+        </div>
+      `
+    })
+  }
+
+  preview.innerHTML = html
+
+  modal.style.display="flex"
+  dataEl.innerText = data
+}
+function fechar(){ modal.style.display="none" }
+
+async function add(){
+  const f=funcionarios.find(x=>x.id==funcionario.value)
+
+  await sb.from("escala_funcionarios").insert({
+    funcionario_id:f.id,
+    nome:f.nome,
+    data:dataSelecionada,
+    entrada:entrada.value,
+    saida:saida.value
+  })
+
+  render()
+}
+
+function abrirCadastro(){ cadastro.style.display="flex" }
+function fecharCadastro(){ cadastro.style.display="none" }
+
+async function salvarFuncionario(){
+
+  const folgasSelecionadas=[...document.querySelectorAll('#folga input:checked')].map(el=>el.value)
+
+  if(
+    !nome.value ||
+    !nascimento.value ||
+    !contratacao.value ||
+    !setor.value ||
+    !funcao.value ||
+    folgasSelecionadas.length===0 ||
+    !numero.value ||
+    !sexo.value
+  ){
+    alert("Preencha todos os campos")
+    return
+  }
+
+const { data, error } = await sb
+  .from("funcionarios_mercatto")
+  .insert({
+    nome:nome.value,
+    numero:numero.value.replace(/\D/g,""),
+    sexo:sexo.value,
+    data_nascimento:nascimento.value,
+    data_contratacao:contratacao.value,
+    setor:setor.value,
+    funcao:funcao.value,
+    folga:folgasSelecionadas.join(",")
+  })
+
+if(error){
+  console.error("ERRO SUPABASE:", error)
+  alert(error.message)
+  return
+}
+
+  fecharCadastro()
+  loadFuncionarios()
+}
+
+/* MASCARA */
+const numeroInput=document.getElementById("numero")
+numeroInput.addEventListener("input",(e)=>{
+  let v=e.target.value.replace(/\D/g,"")
+  if(v.length>11)v=v.slice(0,11)
+
+  if(v.length<=10){
+    v=v.replace(/(\d{2})(\d)/,"($1) $2")
+    v=v.replace(/(\d{4})(\d)/,"$1-$2")
+  }else{
+    v=v.replace(/(\d{2})(\d)/,"($1) $2")
+    v=v.replace(/(\d{5})(\d)/,"$1-$2")
+  }
+
+  e.target.value=v
+})
+
+function mesAnterior(){ dataAtual.setMonth(dataAtual.getMonth()-1); render() }
+function mesProximo(){ dataAtual.setMonth(dataAtual.getMonth()+1); render() }
+
+const mesEl=document.getElementById("mes")
+const dataEl=document.getElementById("data")
+
+loadFuncionarios()
+render()
+
+
+
+
+
+let horarios = []
+
+function addBloco(){
+  const id = Date.now()
+
+const html = `
+  <div class="item" id="bloco-${id}">
+    <span>Entrada</span>
+    <input type="time" id="inicio-${id}">
+    <span>Saída</span>
+    <input type="time" id="fim-${id}">
+    <button onclick="remover(${id})">✕</button>
+  </div>
+`
+
+
+  blocos.innerHTML += html
+}
+
+function remover(id){
+  document.getElementById(`bloco-${id}`).remove()
+}
+
+function validarConflito(lista){
+  const ordenado = lista.sort((a,b)=>a.inicio.localeCompare(b.inicio))
+
+  for(let i=0;i<ordenado.length-1;i++){
+    if(ordenado[i].fim > ordenado[i+1].inicio){
+      return true
+    }
+  }
+  return false
+}
+
+function coletarHorarios(){
+  const blocos = document.querySelectorAll("[id^='bloco-']")
+  let lista = []
+
+  blocos.forEach(b=>{
+    const id = b.id.split("-")[1]
+    const inicio = document.getElementById(`inicio-${id}`).value
+    const fim = document.getElementById(`fim-${id}`).value
+
+    if(inicio && fim){
+      lista.push({inicio,fim})
+    }
+  })
+
+  return lista
+}
+
+async function salvarEscala(){
+
+  const f = funcionarios.find(x=>x.id == funcionario.value)
+  const lista = coletarHorarios()
+
+  if(lista.length === 0){
+    alert("Adicione pelo menos um horário")
+    return
+  }
+
+  if(validarConflito(lista)){
+    alert("Existe conflito de horários!")
+    return
+  }
+
+  const dataBase = dataManual.value || dataSelecionada
+
+  for(const h of lista){
+
+    let dataFinal = dataBase
+
+    // VIRADA DE DIA (ex: 23:00 -> 02:00)
+    if(h.fim < h.inicio){
+      // continua sendo o mesmo "dia lógico"
+      // mas salva corretamente no banco
+      dataFinal = dataBase
+    }
+
+await sb.from("escala_funcionarios").insert({
+  funcionario_id: f.id,
+  nome: f.nome,
+  data: dataBase,
+  entrada: h.inicio,
+  saida: h.fim,
+  setor: f.setor // 🔥 ESSENCIAL
+})
+  }
+
+  fechar()
+  render()
+}
+
+
+  function abrir(data){
+  dataSelecionada = data
+
+  const lista = escalas.filter(e=>e.data === data)
+
+  let agrupado = {}
+
+  lista.forEach(e=>{
+    if(!agrupado[e.setor]) agrupado[e.setor] = []
+    agrupado[e.setor].push(e)
+  })
+
+  let html = ""
+
+  for(const setor in agrupado){
+    html += `<h4 style="margin-top:10px">${setor}</h4>`
+
+    agrupado[setor].forEach(e=>{
+      html += `
+        <div class="item">
+          ${e.nome} • ${e.entrada} - ${e.saida}
+        </div>
+      `
+    })
+  }
+
+  preview.innerHTML = html
+
+  modal.style.display="flex"
+  dataEl.innerText = data
+}
+
+  function abrirEdicao(){
+  document.getElementById("formEscala").style.display = "block"
+  blocos.innerHTML = ""
+}
+</script>
+
+</body>
+</html>

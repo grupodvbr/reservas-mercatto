@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Dashboard Operacional</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+
+body{
+  background:#f1f5f9;
+  height:100vh;
+  overflow:hidden;
+}
+
+.header{
+  height:56px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.container{
+  position:absolute;
+  top:56px;
+  bottom:0;
+  left:0;
+  right:0;
+  overflow:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.05);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.kpi{
+  background:#f8fafc;
+  padding:14px;
+  border-radius:12px;
+}
+
+.kpi-title{font-size:11px;color:#64748b}
+.kpi-value{font-size:20px;font-weight:800}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  font-size:13px;
+  border-bottom:1px solid #f1f5f9;
+}
+
+.loading{
+  text-align:center;
+  padding:30px;
+  font-size:14px;
+  color:#64748b;
+}
+
+.error{
+  color:red;
+  font-size:12px;
+  margin-top:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <b>Dashboard Operacional</b>
+  <span id="status">● carregando</span>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="grid">
+      <div class="kpi"><div class="kpi-title">Hoje</div><div class="kpi-value" id="hoje">--</div></div>
+      <div class="kpi"><div class="kpi-title">Mês</div><div class="kpi-value" id="mes">--</div></div>
+      <div class="kpi"><div class="kpi-title">Buffet Hoje</div><div class="kpi-value" id="buffet">--</div></div>
+      <div class="kpi"><div class="kpi-title">Pico</div><div class="kpi-value" id="pico">--</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <b>Empresas</b>
+    <div id="empresas" class="loading">Carregando...</div>
+  </div>
+
+  <div class="card">
+    <b>Status</b>
+    <div id="statusBox"></div>
+  </div>
+
+  <div id="erro" class="error"></div>
+
+</div>
+
+<script>
+
+// 🔥 CLIENTE CORRETO (SEM CONFLITO)
+const db = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+// 🔥 DATA SEGURA
+function hoje(){
+  const d=new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function inicioMes(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-01";
+}
+
+// 🔥 TABELAS
+const tabelas = [
+  {nome:"Mercatto", tabela:"reservas_mercatto"},
+  {nome:"Villa", tabela:"reservas_villa"},
+  {nome:"Delícia", tabela:"reservas_delicia"}
+];
+
+async function carregar(){
+
+  try{
+
+    document.getElementById("status").innerText="● carregando";
+
+    let totalHoje=0,totalMes=0;
+    let empresasHTML="";
+    let statusMap={};
+    let horas={};
+
+    for(const t of tabelas){
+
+      const { data, error } = await db.from(t.tabela).select("status,datahora");
+
+      if(error){
+        console.error(error);
+        document.getElementById("erro").innerText = error.message;
+        continue;
+      }
+
+      if(!data) continue;
+
+      const hojeData = data.filter(r=>r.datahora?.startsWith(hoje()));
+      const mesData = data.filter(r=>r.datahora>=inicioMes());
+
+      totalHoje += hojeData.length;
+      totalMes += mesData.length;
+
+      empresasHTML += `
+        <div class="row">
+          <span>${t.nome}</span>
+          <span>${hojeData.length}</span>
+        </div>
+      `;
+
+      hojeData.forEach(r=>{
+        const s=r.status||"Sem status";
+        statusMap[s]=(statusMap[s]||0)+1;
+
+        const h=r.datahora?.substring(11,13);
+        horas[h]=(horas[h]||0)+1;
+      });
+    }
+
+    // BUFFET
+    const { data: buffet } = await db.from("buffet_lancamentos").select("data");
+
+    const buffetHoje = buffet?.filter(b=>b.data===hoje()) || [];
+
+    // PICO
+    let pico="--",max=0;
+    Object.keys(horas).forEach(h=>{
+      if(horas[h]>max){
+        max=horas[h];
+        pico=h+":00";
+      }
+    });
+
+    // STATUS HTML
+    let statusHTML="";
+    Object.keys(statusMap).forEach(s=>{
+      statusHTML+=`
+        <div class="row">
+          <span>${s}</span>
+          <span>${statusMap[s]}</span>
+        </div>
+      `;
+    });
+
+    // UI
+    document.getElementById("hoje").innerText=totalHoje;
+    document.getElementById("mes").innerText=totalMes;
+    document.getElementById("buffet").innerText=buffetHoje.length;
+    document.getElementById("pico").innerText=pico;
+
+    document.getElementById("empresas").innerHTML=empresasHTML || "Sem dados";
+    document.getElementById("statusBox").innerHTML=statusHTML || "Sem status";
+
+    document.getElementById("status").innerText="● atualizado";
+
+    console.log("✅ carregado com sucesso");
+
+  }catch(e){
+
+    console.error(e);
+    document.getElementById("erro").innerText = "Erro geral: "+e.message;
+
+  }
+
+}
+
+// 🔥 LOAD
+carregar();
+
+// 🔥 AUTO
+setInterval(carregar,20000);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Criar Usuário</h2>
+
+<input id="user" placeholder="Usuário">
+<input id="pass" placeholder="Senha" type="password">
+<button onclick="criar()">Criar</button>
+
+<script>
+function criar(){
+  fetch("http://localhost:3000/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      usuario: document.getElementById("user").value,
+      senha: document.getElementById("pass").value
+    })
+  })
+  .then(r => r.json())
+  .then(r => alert(JSON.stringify(r)))
+}
+</script>
+
+</body>
+</html>
