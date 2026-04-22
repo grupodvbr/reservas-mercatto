@@ -659,6 +659,10 @@ if(empresaFiltro){
 
 let empresaData = null
 
+// 🔥 TRATAMENTO CORRETO DOS DADOS
+
+let empresaData = null
+
 if(empresaFiltro){
   console.log("🏢 USANDO DADOS DIRETOS DA API:", empresaFiltro)
   empresaData = data.empresas?.[0]
@@ -691,23 +695,8 @@ resumoDia = {
   tipo: empresaFiltro ? "EMPRESA" : "GERAL",
   empresa: empresaFiltro
 }
-  }
-else{
-
-  console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
-
-  // 👉 Aqui sim usa total
-  resumoDia = {
-    data: data.data,
-    faturamento: data.faturamento,
-    vendas: data.vendas,
-    ticket_medio: data.ticket_medio,
-    tipo: "GERAL"
-  }
 
 }
-
-
 
  // ✅ CORRETO — BASE + GPT ANALISANDO
 
