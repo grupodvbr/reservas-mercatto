@@ -212,10 +212,6 @@ try {
 console.log("🧠 CLASSIFICAÇÃO:", classificacao)
 let empresaFiltro = classificacao.empresa || null
 
-if(classificacao.geral){
-  empresaFiltro = null
-}
-
 
 // NIVEL 2 → BLOQUEIA EMPRESA
 if(NIVEL === 2){
@@ -627,14 +623,35 @@ if(empresaFiltro){
 
 }else{
 
-  
-      console.log("🌎 USANDO DADOS GERAIS (TODAS EMPRESAS)")
-      empresaData = {
-        faturamento: data.faturamento,
-        vendas: data.vendas,
-        ticket_medio: data.ticket_medio
-      }
-    }
+  const pediuTotal =
+    texto.includes("total") ||
+    texto.includes("todas") ||
+    texto.includes("soma")
+
+  if(!pediuTotal){
+    return res.json({
+      resposta: "Informe a empresa para consultar vendas."
+    })
+  }
+
+  console.log("🧮 SOMANDO EMPRESAS (PEDIDO EXPLÍCITO)")
+
+  const empresas = data.empresas || []
+
+  const faturamento = empresas.reduce((acc,e)=>acc + Number(e.faturamento || 0),0)
+  const vendas = empresas.reduce((acc,e)=>acc + Number(e.vendas || 0),0)
+
+  const ticket = vendas > 0
+    ? Number((faturamento / vendas).toFixed(2))
+    : 0
+
+  empresaData = {
+    faturamento,
+    vendas,
+    ticket_medio: ticket
+  }
+
+}
 
     if(!empresaData || Number(empresaData.faturamento) <= 0){
       return res.json({
