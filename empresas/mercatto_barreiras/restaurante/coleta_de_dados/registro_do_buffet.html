@@ -478,6 +478,10 @@ button.ghost{
   const quantidadeInput = document.getElementById("quantidade");
   const taraInput = document.getElementById("tara");
   const unidadeSelect = document.getElementById("unidade");
+  const editQuantidade = document.getElementById("editQuantidade");
+const editTara = document.getElementById("editTara");
+
+  
   /* ================= AJUSTE VISUAL POR UNIDADE ================= */
 
 unidadeSelect.addEventListener("change", () => {
@@ -935,8 +939,10 @@ function fecharModal(){
   
 async function confirmarEdicao(){
 
-  const bruto = parseFloat(document.getElementById("editQuantidade").value);
-  const tara = parseFloat(document.getElementById("editTara").value || 0);
+const bruto = parsePeso(document.getElementById("editQuantidade").value);
+const tara = parsePeso(document.getElementById("editTara").value || 0);
+
+  
   const un = document.getElementById("editUnidade").value;
   const tipo = document.getElementById("editTipo").value;
 
@@ -1044,6 +1050,10 @@ function aplicarMascaraKg(input){
   input.value = (Number(inteiro) || 0) + "," + dec;
 }
 
+
+
+  
+
 quantidadeInput.addEventListener("input", () => {
 
   if(unidadeSelect.value === "KG"){
@@ -1063,6 +1073,27 @@ taraInput.addEventListener("input", () => {
 });
 
 
+
+  // 🔥 MÁSCARA NO MODAL DE EDIÇÃO
+editQuantidade.addEventListener("input", () => {
+
+  if(document.getElementById("editUnidade").value === "KG"){
+    aplicarMascaraKg(editQuantidade);
+  }
+
+});
+
+editTara.addEventListener("input", () => {
+
+  if(document.getElementById("editUnidade").value === "KG"){
+    aplicarMascaraKg(editTara);
+  }
+
+});
+
+
+
+  
 function abrirConsumo(){
   const titulo = document.getElementById("tituloModalConsumo");
 
