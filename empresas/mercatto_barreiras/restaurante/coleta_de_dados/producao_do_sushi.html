@@ -81,11 +81,19 @@ body{
 /* GRID */
 .grid{
   display:grid;
-  gap:6px;
-  padding:8px;
 
-  margin-top:120px; /* altura real do topo */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+
+  gap:10px;
+
+  padding:10px;
+
+  max-width:1200px;
+  margin:90px auto 0; /* 🔥 CENTRALIZA */
 }
+
+
+  
 
 /* 📱 CELULAR → 4 COLUNAS */
 @media (max-width: 600px){
@@ -93,9 +101,11 @@ body{
     grid-template-columns: repeat(4, 1fr);
   }
 
-  .card img{
-    height:70px;
-  }
+.card img{
+  width:100%;
+  aspect-ratio: 1 / 1; /* 🔥 QUADRADO PERFEITO */
+  object-fit:cover;
+}
 
   .card-body b{
     font-size:10px;
