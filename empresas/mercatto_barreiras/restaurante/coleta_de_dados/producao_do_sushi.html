@@ -60,11 +60,12 @@ body{
 }
 
 .search input{
-  width:100%;
+  flex:1; /* 🔥 controla largura corretamente */
   height:44px;
   border-radius:12px;
   border:none;
   padding:0 14px;
+  min-width:0; /* 🔥 evita estourar no desktop */
 }
 
 /* BOTÃO REGISTROS */
