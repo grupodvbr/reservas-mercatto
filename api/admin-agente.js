@@ -2097,8 +2097,34 @@ async function executarRelatorioAutomatico(){
     .filter(([_, u]) => u.nivel === 0)
     .map(([numero]) => numero)
 
+let data = null
+
+try{
   const resApi = await fetch("https://goals-continental-examinations-carrier.trycloudflare.com/cupons-ontem")
-  const data = await resApi.json()
+
+  console.log("🌐 STATUS API:", resApi.status)
+
+  if(!resApi.ok){
+    throw new Error("API respondeu erro")
+  }
+
+  data = await resApi.json()
+
+}catch(e){
+  console.error("❌ ERRO AO BUSCAR API:", e)
+  return
+}
+
+if(!data || !data.empresas || data.empresas.length === 0){
+  console.log("⚠️ SEM DADOS PARA RELATÓRIO")
+  return
+}
+
+function formatar(v){
+  return Number(v || 0).toLocaleString("pt-BR",{minimumFractionDigits:2})
+}
+
+  
 
   let mensagem = `🌅 *RELATÓRIO FINANCEIRO*\n━━━━━━━━━━━━━━━━━━\n`
 
@@ -2106,13 +2132,18 @@ async function executarRelatorioAutomatico(){
 
     const meta = METAS[empresa.empresa]?.prata || 0
 
-    const percentual = meta > 0
-      ? ((empresa.faturamento_mes / meta) * 100).toFixed(0)
-      : 0
+const faturamentoMes = Number(empresa.faturamento_mes || empresa.faturamento || 0)
 
-    const ticketMes = empresa.vendas_mes > 0
-      ? empresa.faturamento_mes / empresa.vendas_mes
-      : 0
+const percentual = meta > 0
+  ? ((faturamentoMes / meta) * 100).toFixed(0)
+  : 0
+
+const vendasMes = Number(empresa.vendas_mes || empresa.vendas || 0)
+const faturamentoMes2 = Number(empresa.faturamento_mes || empresa.faturamento || 0)
+
+const ticketMes = vendasMes > 0
+  ? faturamentoMes2 / vendasMes
+  : 0
 
     let status = "➡️ Estável"
 
