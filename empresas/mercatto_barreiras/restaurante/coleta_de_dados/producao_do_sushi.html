@@ -843,7 +843,11 @@ listaRegistros.innerHTML += `
   font-weight:800;
   margin-left:4px;
 ">
-  ${r.quantidade} unidade${r.quantidade > 1 ? 's' : ''}
+<span style="color:${cor}">
+  ${r.quantidade}
+</span> unidade${r.quantidade > 1 ? 's' : ''}
+
+
 </span>
 
 
