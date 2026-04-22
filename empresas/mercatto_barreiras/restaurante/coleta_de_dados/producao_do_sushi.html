@@ -81,19 +81,11 @@ body{
 /* GRID */
 .grid{
   display:grid;
+  gap:6px;
+  padding:8px;
 
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-
-  gap:10px;
-
-  padding:10px;
-
-  max-width:1200px;
-  margin:90px auto 0; /* 🔥 CENTRALIZA */
+  margin-top:120px; /* altura real do topo */
 }
-
-
-  
 
 /* 📱 CELULAR → 4 COLUNAS */
 @media (max-width: 600px){
@@ -101,11 +93,9 @@ body{
     grid-template-columns: repeat(4, 1fr);
   }
 
-.card img{
-  width:100%;
-  aspect-ratio: 1 / 1; /* 🔥 QUADRADO PERFEITO */
-  object-fit:cover;
-}
+  .card img{
+    height:70px;
+  }
 
   .card-body b{
     font-size:10px;
@@ -463,37 +453,21 @@ body.travado{
 
 <div class="search" style="
 position:fixed;
-top:38px;
+top:40px;
 left:0;
 width:100%;
 z-index:50;
 background:#0b1220;
 
 display:flex;
-justify-content:center;
-align-items:center;
 gap:8px;
-padding:6px 12px;
+align-items:center;
+padding:6px;
 ">
+  <input id="busca" placeholder="Buscar sushi..." style="flex:1">
 
-  <input id="busca" placeholder="Buscar sushi..." style="
-    flex:1;
-    max-width:480px;
-    height:36px;
-    border-radius:10px;
-    padding:0 12px;
-    font-size:13px;
-  ">
-
-  <button class="btn-registros" onclick="abrirRegistros()" style="
-    height:36px;
-    padding:0 14px;
-    font-size:13px;
-    border-radius:10px;
-    min-width:auto;
-    white-space:nowrap;
-  ">
-    Registros
+<button class="btn-registros" onclick="abrirRegistros()" style="margin:0;height:44px;min-width:120px">
+  Registros
   </button>
 
 </div>
