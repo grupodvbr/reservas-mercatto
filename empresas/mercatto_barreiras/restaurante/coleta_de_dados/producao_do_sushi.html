@@ -203,10 +203,19 @@ body{
 
   overflow-y:auto;
 
+  -webkit-overflow-scrolling: touch; /* 🔥 suaviza */
+  overscroll-behavior: contain;      /* 🔥 BLOQUEIA bounce */
+
   box-shadow:0 -10px 40px rgba(0,0,0,0.6);
 
   animation: subir .25s ease;
 }
+
+.modal-reg{
+  overscroll-behavior: none; /* 🔥 bloqueia scroll externo */
+}
+
+  
 
 @keyframes subir{
   from{ transform:translateY(100%); }
