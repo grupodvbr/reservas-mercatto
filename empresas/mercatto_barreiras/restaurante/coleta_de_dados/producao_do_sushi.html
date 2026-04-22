@@ -666,7 +666,7 @@ function fechar(){
 ========================= */
 async function salvar(){
 
-  const hoje = new Date().toISOString().slice(0,10);
+  const hoje = new Date().toLocaleDateString("en-CA");
 
   await sb.from("controle_sushi").insert({
     buffet_id: atual.id,
@@ -713,7 +713,7 @@ function abrirRegistros(){
   registros.style.display="flex";
   travarTela(); // 🔥 AQUI
 
-  const hoje = new Date().toISOString().slice(0,10);
+  const hoje = new Date().toLocaleDateString("en-CA");
   dataFiltro.value = hoje;
 
   carregarRegistros();
@@ -755,8 +755,17 @@ async function carregarRegistros(){
 
       const editavel = data === new Date().toISOString().slice(0,10);
 
-      listaRegistros.innerHTML += `
-        <div class="reg-card">
+   const cor =
+  tipo === "Desperdício" ? "#ef4444" :
+  tipo === "Reaproveitamento" ? "#22c55e" :
+  "#3b82f6";
+
+listaRegistros.innerHTML += `
+  <div class="reg-card" style="border-left:4px solid ${cor}">
+
+
+
+  
           <img src="${prato?.foto_url || ''}">
           <div>
             <b>${r.nome}</b><br>
