@@ -731,10 +731,31 @@ function mostrarBoasVindas(user){
 
   tela.style.display = "flex";
 
-setTimeout(()=>{
+async function mostrarBoasVindas(user, primeiraVez = false){
+
+  const tela = document.getElementById("boasvindas");
+
+  document.getElementById("fotoUser").src =
+    user.foto_url || "https://i.imgur.com/2DhmtJ4.png";
+
+  if(primeiraVez){
+    document.getElementById("msgUser").innerText =
+      "Bem-vindo(a), " + (user.nome || user.usuario);
+  }else{
+    document.getElementById("msgUser").innerText =
+      "Olá " + (user.nome || user.usuario) + ", carregando dados...";
+  }
+
+  tela.style.display = "flex";
+
+  // 🔥 ESPERA CARREGAR OS DADOS
+  await carregar();
+
+  // 🔥 SÓ SOME DEPOIS QUE CARREGAR
   tela.style.display = "none";
+
   localStorage.setItem("boas_vindas_mostrada", "sim");
-}, 1500);
+}
 }
 
 
@@ -760,11 +781,11 @@ if(usuarioLogado){
     "Controle Sushi - " + (user.nome || user.usuario);
 
   // 🔥 MOSTRA SÓ UMA VEZ
-  if(boasVindas !== "sim"){
-    mostrarBoasVindas(user);
-  }else{
-    carregar();
-  }
+if(boasVindas !== "sim"){
+  mostrarBoasVindas(user, true); // primeira vez
+}else{
+  mostrarBoasVindas(user, false); // já logado → loading leve
+}
 
 }else{
   document.getElementById("login").style.display = "flex";
