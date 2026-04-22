@@ -670,27 +670,18 @@ function normalizar(txt){
     .toUpperCase()
 }
 
-// 🔥 BUSCAR EMPRESA CORRETA DENTRO DO ARRAY
-const empresaData = (data.empresas || []).find(e => {
-  const nomeAPI = normalizar(e.empresa)
-  const nomeFiltro = normalizar(empresaFiltro)
+let empresaData = null
 
-  return (
-    nomeAPI === nomeFiltro ||
-    nomeAPI.includes(nomeFiltro) ||
-    nomeFiltro.includes(nomeAPI)
-  )
-})
-
-
-  
-
-if(!empresaData){
-  console.log("❌ EMPRESA NÃO ENCONTRADA:", empresaFiltro)
-
-  return res.json({
-    resposta: `Não encontrei dados para ${empresaFiltro}`
-  })
+if(empresaFiltro){
+  // 🔥 API JÁ VEM FILTRADA → USA DIRETO
+  empresaData = data.empresas?.[0]
+}else{
+  // 🔥 GERAL → USA TOTAL
+  empresaData = {
+    faturamento: data.faturamento,
+    vendas: data.vendas,
+    ticket_medio: data.ticket_medio
+  }
 }
 
 // 🔥 CALCULAR TICKET REAL DA EMPRESA
