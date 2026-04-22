@@ -358,6 +358,14 @@ input, textarea, select{
   font-size:16px !important;
 }
 
+body.travado{
+  overflow:hidden;
+  position:fixed;
+  width:100%;
+}
+
+
+
   
 </style>
 </head>
@@ -517,6 +525,19 @@ const sb = supabase.createClient(
 let lista = [];
 let atual = null;
 
+
+
+
+function travarTela(){
+  document.body.classList.add("travado");
+}
+
+function liberarTela(){
+  document.body.classList.remove("travado");
+}
+
+
+  
 /* =========================
    CARREGAR SUSHI
 ========================= */
@@ -527,7 +548,6 @@ async function carregar(){
 if(!usuarioLogado){
   document.getElementById("login").style.display = "flex";
 
-  document.body.style.overflow = "hidden"; // 🔥 AQUI
 
   return;
 }
@@ -594,6 +614,7 @@ async function atualizarCards(listaFiltrada = lista){
 function abrir(p){
   atual = p;
   modal.style.display="flex";
+  travarTela(); // 🔥 AQUI
 
   nome.innerText = p.nome;
   descricao.innerText = p.descricao||"";
@@ -602,6 +623,7 @@ function abrir(p){
 
 function fechar(){
   modal.style.display="none";
+  liberarTela(); // 🔥 AQUI
 }
 
 /* =========================
@@ -654,18 +676,20 @@ uploadFoto.onchange = async (e)=>{
 ========================= */
 function abrirRegistros(){
   registros.style.display="flex";
-
-  document.body.style.overflow = "hidden"; // 🔥 trava fundo
+  travarTela(); // 🔥 AQUI
 
   const hoje = new Date().toISOString().slice(0,10);
   dataFiltro.value = hoje;
 
   carregarRegistros();
 }
+
+
+
+  
 function fecharRegistros(){
   registros.style.display="none";
-
-  document.body.style.overflow = "auto"; // 🔥 libera fundo
+  liberarTela(); // 🔥 AQUI
 }
 
 /* =========================
