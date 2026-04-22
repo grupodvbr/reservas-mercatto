@@ -2141,26 +2141,55 @@ const dataFormatada = ontem.toLocaleDateString("pt-BR")
 
 
 
-  
 
 
+
+
+
+  let totalGrupo = 0
+let totalVendasGrupo = 0
+
+let mercattoTotal = 0
+let mercattoVendas = 0
+
+for(const e of data.empresas){
+  totalGrupo += e.faturamento
+  totalVendasGrupo += e.vendas
+
+  if(
+    e.empresa === "MERCATTO EMPORIO" ||
+    e.empresa === "MERCATTO RESTAURANTE"
+  ){
+    mercattoTotal += e.faturamento
+    mercattoVendas += e.vendas
+  }
+}
+
+const ticketGrupo = totalVendasGrupo ? totalGrupo / totalVendasGrupo : 0
+const ticketMercatto = mercattoVendas ? mercattoTotal / mercattoVendas : 0
+
+
+
+
+
   
-let mensagem = `
+ let mensagem = `
 *Bom dia, Sr. Leonardo*
 
-📊 *Relatório Executivo* — ${dataFormatada}
+📊 *Relatório Executivo* • ${dataFormatada}
 
 ━━━━━━━━━━━━━━━━━━
+
 💼 *Grupo*
 💰 R$ ${formatar(totalGrupo)}
-🧾 ${totalVendasGrupo} vendas • 💳 Ticket R$ ${formatar(ticketGrupo)}
+🧾 ${totalVendasGrupo} vendas
+💳 Ticket médio: R$ ${formatar(ticketGrupo)}
 
 🏢 *Mercatto (Total)*
 💰 R$ ${formatar(mercattoTotal)}
-🧾 ${mercattoVendas} vendas • 💳 Ticket R$ ${formatar(ticketMercatto)}
-`
-
-for(const e of data.empresas){
+🧾 ${mercattoVendas} vendas
+💳 Ticket médio: R$ ${formatar(ticketMercatto)}
+`for(const e of data.empresas){
 
   const ticket = e.vendas ? e.faturamento / e.vendas : 0
 
@@ -2176,17 +2205,15 @@ for(const e of data.empresas){
 
 🏬 *${nome}*
 💰 R$ ${formatar(e.faturamento)}
-🧾 ${e.vendas} vendas • 💳 R$ ${formatar(ticket)}
+🧾 ${e.vendas} vendas
+💳 R$ ${formatar(ticket)}
 `
-}
-
-mensagem += `
+}mensagem += `
 
 ━━━━━━━━━━━━━━━━━━
-Carneiro Holding • Relatório automático
+*Carneiro Holding*
+Relatório automático
 `
-
-
 
 
 
