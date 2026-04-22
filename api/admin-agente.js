@@ -294,18 +294,6 @@ if(tipoAcao !== "consulta"){
 }
 
   
-const isCupom =
-  texto.includes("cupom") ||
-  texto.includes("venda") ||
-  texto.includes("vendas") ||
-  texto.includes("faturamento") ||
-  texto.includes("quanto vendeu") ||
-  texto.includes("resumo de vendas") ||
-  texto.includes("resumo das vendas") ||
-  texto.includes("resumo vendas") ||
-  texto.includes("vendas de hoje")
-
-
 
 
 
@@ -540,7 +528,72 @@ content: pergunta
 
 
 /* ================= BUSCA INTELIGENTE ================= */
+// ================= VENDAS SEMPRE CARREGA =================
 
+let resumoDia = null
+
+try{
+
+  let url = "https://revision-peripherals-glad-martha.trycloudflare.com/resumo-dia"
+
+  const MAPA_EMPRESAS = {
+    "MERCATTO EMPORIO": "VAREJO_URL_MERCATTO_EMPORIO",
+    "MERCATTO RESTAURANTE": "VAREJO_URL_MERCATTO_RESTAURANTE",
+    "PADARIA DELÍCIA": "VAREJO_URL_PADARIA",
+    "VILLA GOURMET": "VAREJO_URL_VILLA",
+    "DELÍCIA GOURMET": "VAREJO_URL_DELICIA"
+  }
+
+  if(empresaFiltro){
+    const chave = MAPA_EMPRESAS[empresaFiltro]
+    if(chave){
+      url += `?empresa=${chave}`
+    }
+  }
+
+  const resApi = await fetch(url)
+  const data = await resApi.json()
+
+  function normalizar(txt){
+    return txt
+      ?.normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase()
+  }
+
+  if(empresaFiltro){
+
+    const empresaData = (data.empresas || []).find(e =>
+      normalizar(e.empresa) === normalizar(empresaFiltro)
+    )
+
+    if(empresaData){
+      resumoDia = {
+        data: data.data,
+        faturamento: empresaData.faturamento,
+        vendas: empresaData.vendas,
+        ticket_medio: empresaData.vendas > 0
+          ? empresaData.faturamento / empresaData.vendas
+          : 0,
+        empresa: empresaFiltro
+      }
+    }
+
+  }else{
+
+    resumoDia = {
+      data: data.data,
+      faturamento: data.faturamento,
+      vendas: data.vendas,
+      ticket_medio: data.ticket_medio,
+      empresa: "GERAL"
+    }
+
+  }
+
+}catch(e){
+  console.log("❌ ERRO API:", e)
+}
 
   
 
@@ -1401,95 +1454,32 @@ ALTERAR_REGISTRO_JSON:
 role:"system",
 content:`
 
-💰 REGRA CRÍTICA — CUPONS DE VENDAS (MODO INTELIGENTE)
+🔥 REGRA ABSOLUTA — VENDAS
 
-Você recebeu dados PRONTOS em:
+Se existir RESUMO_CUPONS_DIA:
 
-RESUMO_CUPONS_DIA
+👉 use obrigatoriamente esses dados
+👉 nunca diga que é zero
+👉 nunca invente valores
 
-🚨 REGRAS:
+Se o usuário perguntar sobre:
 
-1. NÃO recalcular
-2. NÃO alterar valores
-3. NÃO inventar dados
+- vendas
+- faturamento
+- quanto vendeu
+- movimento
+- caixa
+- resultado
 
-MAS AGORA VOCÊ DEVE:
+👉 responda com os dados reais recebidos
 
-✔ Interpretar os dados
-✔ Avaliar desempenho
-✔ Comparar com meta
-✔ Analisar ticket médio
-✔ Identificar tendência
-✔ Gerar percepção operacional
-
----
-
-📊 COMPORTAMENTO:
-
-Se percentual > 70%
-→ forte (elogiar)
-
-Se entre 40% e 70%
-→ médio (atenção)
-
-Se < 40%
-→ fraco (alertar)
-
----
-
-📈 TICKET:
-
-Se ticket alto:
-→ destacar positivamente
-
-Se ticket baixo:
-→ alertar oportunidade de melhoria
-
----
-
-🚀 RESPOSTA ESPERADA:
-
-"📊 21/04
-
-🏢 EMPÓRIO MERCATTO
-
-💰 R$ 12.800
-🧾 310 vendas
-💳 Ticket médio: R$ 41,29
-
-🎯 68% da meta atingida
-
-📈 Ticket subindo — ótimo sinal
-🚀 Ritmo consistente
-
-👏 Bom desempenho até agora"
-
----
+Se não houver dados:
+→ diga que não encontrou dados
 
 ⚠️ PROIBIDO:
-
-❌ inventar valores  
-❌ modificar números  
-❌ recalcular  
-❌ misturar com outros dados  
-
-✅ USAR EXATAMENTE OS DADOS RECEBIDOS
-Campos disponíveis:
-
-- faturamento
-- vendas
-- ticket_medio
-
-
-📊 FORMATO LIVRE:
-
-- Responda como consultor executivo
-- Use os dados reais recebidos
-- NÃO use modelo fixo
-- NÃO escreva "Resumo de vendas do dia"
-- NÃO repita estrutura padrão
-
-Responda de forma natural, profissional e estratégica.
+- inventar
+- zerar
+- ignorar os dados
 
 `
 },
