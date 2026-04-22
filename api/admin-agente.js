@@ -2135,15 +2135,21 @@ const ontem = new Date(hoje)
 ontem.setDate(ontem.getDate() - 1)
 
 const dataFormatada = ontem.toLocaleDateString("pt-BR")
+
+
+  
 let mensagem = `
 *Bom dia, Sr. Leonardo*
 
 📅 ${dataFormatada}
 
-━━━━━━━━━━━━━━━━━━
-📊 *RELATÓRIO FINANCEIRO*
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊  RELATÓRIO EXECUTIVO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
+
+
+  
 
 for(const empresa of data.empresas){
 
@@ -2161,16 +2167,17 @@ for(const empresa of data.empresas){
     status = `📉 ${empresa.variacao_semana}%`
   }
 
-  mensagem += `
-🏢 *${empresa.empresa}*
+mensagem += `
+━━━━━━━━━━━━━━━━━━
+🏢 *${empresa.empresa.toUpperCase()}*
+━━━━━━━━━━━━━━━━━━
 
-💰 Faturamento (Dia): R$ ${formatar(empresa.faturamento)}
-📅 Faturamento (Mês): R$ ${formatar(empresa.faturamento_mes)}
+💰 Dia        : R$ ${formatar(empresa.faturamento)}
+📅 Mês        : R$ ${formatar(empresa.faturamento_mes)}
+💳 Ticket     : R$ ${formatar(empresa.ticket_medio)}
+🎯 Meta       : ${percentual}%
 
-🎯 Atingimento da Meta: ${percentual}%
-💳 Ticket Médio: R$ ${formatar(empresa.ticket_medio)}
-
-${status}
+📊 Desempenho : ${status}
 
 `
 }
