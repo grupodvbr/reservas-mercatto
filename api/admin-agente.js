@@ -34,7 +34,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 
 const USUARIOS = {
   "557798253249": { nivel: 0 }, // ADMIN REAL
-  "557799761436": { nivel: 0 }, // ADMIN REAL
+  "5577997614": { nivel: 0 }, // ADMIN REAL
   "778888888888": { nivel: 1 },
   "777777777777": { nivel: 2, empresa: "MERCATTO DELÍCIA" },
   "776666666666": { nivel: 3 }
@@ -46,7 +46,15 @@ const USUARIOS = {
 module.exports = async function handler(req, res){
 
 try{
+// 🔥 CRON AUTOMÁTICO (RELATÓRIO 05:00)
+if(req.query.cron === "true"){
 
+  console.log("⏰ CRON DISPARADO")
+
+  await executarRelatorioAutomatico()
+
+  return res.json({ ok: true })
+}
 /* ================= AUTORIZAÇÃO ================= */
 
 if(req.headers.authorization !== `Bearer ${ADMIN_TOKEN}`){
@@ -2070,4 +2078,79 @@ erro:"erro interno"
 
 }
 
+}
+// ================= RELATÓRIO AUTOMÁTICO =================
+
+async function executarRelatorioAutomatico(){
+
+  console.log("🌅 GERANDO RELATÓRIO AUTOMÁTICO...")
+
+  const admins = Object.entries(USUARIOS)
+    .filter(([_, u]) => u.nivel === 0)
+    .map(([numero]) => numero)
+
+  const resApi = await fetch("https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia")
+  const data = await resApi.json()
+
+  let mensagem = `🌅 Bom dia!\n`
+
+  for(const empresa of data.empresas){
+
+    const faturamentoDia = empresa.faturamento
+    const vendasDia = empresa.vendas
+    const ticketDia = empresa.ticket_medio
+
+    const faturamentoMes = empresa.faturamento_mes || 0
+    const vendasMes = empresa.vendas_mes || 0
+
+    const meta = METAS[empresa.empresa]?.prata || 0
+
+    const percentual = meta > 0
+      ? ((faturamentoMes / meta) * 100).toFixed(0)
+      : 0
+
+    const ticketMes = vendasMes > 0
+      ? faturamentoMes / vendasMes
+      : 0
+
+    let analise = "➡️ Estável"
+
+    if(empresa.variacao_semana > 5){
+      analise = `📈 +${empresa.variacao_semana}% vs semana passada`
+    }
+    else if(empresa.variacao_semana < -5){
+      analise = `📉 ${empresa.variacao_semana}% vs semana passada`
+    }
+
+    mensagem += `
+📊 *${empresa.empresa}*
+💰 Dia: R$ ${formatar(faturamentoDia)} | 📅 Mês: R$ ${formatar(faturamentoMes)}
+🎯 Meta: R$ ${formatar(meta)} | 📈 ${percentual}%
+💳 Ticket: R$ ${formatar(ticketDia)} (dia) | R$ ${formatar(ticketMes)} (mês)
+${analise}
+`
+  }
+
+  mensagem += `\n🤖 Sistema DV`
+
+  for(const numero of admins){
+
+    await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: numero,
+        type: "text",
+        text: { body: mensagem }
+      })
+    })
+
+    console.log("📤 ENVIADO PARA:", numero)
+  }
+
+  console.log("✅ RELATÓRIO FINALIZADO")
 }
