@@ -978,46 +978,9 @@ if(boasVindas !== "sim"){
   /* =========================
    EDITAR REGISTRO
 ========================= */
-let editandoId = null;
+async function editar(id){
 
-function editar(id){
-  editandoId = id;
-  document.getElementById("modalEditar").style.display = "flex";
-  document.getElementById("inputEditar").focus();
-}
-
-
-function fecharEditar(){
-  document.getElementById("modalEditar").style.display = "none";
-}
-
-async function confirmarEditar(){
-
-  const valor = document.getElementById("inputEditar").value;
-
-  if(!valor || valor <= 0){
-    alert("Valor inválido");
-    return;
-  }
-
-  const { error } = await sb
-    .from("controle_sushi")
-    .update({ quantidade: valor })
-    .eq("id", editandoId);
-
-  if(error){
-    alert("Erro");
-    return;
-  }
-
-  fecharEditar();
-  carregarRegistros();
-  atualizarCards();
-}
-
-
-
-  
+  const novo = prompt("Nova quantidade:");
 
   if(novo === null) return;
 
@@ -1046,34 +1009,9 @@ async function confirmarEditar(){
 /* =========================
    APAGAR REGISTRO
 ========================= */
-let excluirId = null;
+async function excluir(id){
 
-function excluir(id){
-  excluirId = id;
-  document.getElementById("modalExcluir").style.display = "flex";
-}
-
-
-function fecharExcluir(){
-  document.getElementById("modalExcluir").style.display = "none";
-}
-
-async function confirmarExcluir(){
-
-  const { error } = await sb
-    .from("controle_sushi")
-    .delete()
-    .eq("id", excluirId);
-
-  if(error){
-    alert("Erro ao apagar");
-    return;
-  }
-
-  fecharExcluir();
-  carregarRegistros();
-  atualizarCards();
-}
+  if(!confirm("Deseja apagar esse registro?")) return;
 
   const { error } = await sb
     .from("controle_sushi")
@@ -1146,113 +1084,6 @@ document.addEventListener('touchend', function (event) {
   lastTouchEnd = now;
 }, false);
 </script>
-
-
-<!-- MODAL EDITAR -->
-<div id="modalEditar" style="
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.85);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:99999;
-">
-
-  <div style="
-    width:90%;
-    max-width:320px;
-    background:#111827;
-    border-radius:16px;
-    padding:16px;
-  ">
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <b style="font-size:14px;">Editar quantidade</b>
-
-      <span onclick="fecharEditar()" style="
-        font-size:18px;
-        cursor:pointer;
-        color:#9ca3af;
-      ">✕</span>
-    </div>
-
-    <input id="inputEditar" type="number" inputmode="numeric" placeholder="Digite a quantidade" style="
-      width:100%;
-      height:48px;
-      margin-top:12px;
-      border-radius:10px;
-      border:none;
-      padding:10px;
-      font-size:18px;
-    ">
-
-    <button onclick="confirmarEditar()" style="
-      width:100%;
-      margin-top:12px;
-      height:44px;
-      border:none;
-      border-radius:12px;
-      background:#22c55e;
-      color:#fff;
-      font-weight:800;
-    ">
-      Salvar
-    </button>
-
-  </div>
-</div>
-
-  <!-- MODAL EXCLUIR -->
-<div id="modalExcluir" style="
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.85);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:99999;
-">
-
-  <div style="
-    width:90%;
-    max-width:320px;
-    background:#111827;
-    border-radius:16px;
-    padding:16px;
-  ">
-
-    <b>Deseja excluir?</b>
-
-    <div style="display:flex; gap:10px; margin-top:14px;">
-
-      <button onclick="fecharExcluir()" style="
-        flex:1;
-        height:44px;
-        border-radius:10px;
-        border:none;
-        background:#374151;
-        color:#fff;
-      ">
-        Cancelar
-      </button>
-
-      <button onclick="confirmarExcluir()" style="
-        flex:1;
-        height:44px;
-        border-radius:10px;
-        border:none;
-        background:#ef4444;
-        color:#fff;
-        font-weight:800;
-      ">
-        Excluir
-      </button>
-
-    </div>
-
-  </div>
-</div>
 </body>
 
 </html>
