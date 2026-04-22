@@ -1467,15 +1467,18 @@ Campos disponíveis:
 - vendas
 - ticket_medio
 
-Resposta obrigatória:
 
-"Resumo de vendas do dia ${dataFiltro}:
+📊 FORMATO LIVRE:
 
-Faturamento: R$ XXXX
-Vendas: XXX
-Ticket médio: R$ XXX"
+- Responda como consultor executivo
+- Use os dados reais recebidos
+- NÃO use modelo fixo
+- NÃO escreva "Resumo de vendas do dia"
+- NÃO repita estrutura padrão
 
-⚠️ Se modificar qualquer valor → resposta inválida`
+Responda de forma natural, profissional e estratégica.
+
+`
 },
 
 
