@@ -2135,22 +2135,28 @@ ${analise}
 
   for(const numero of admins){
 
-    await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: numero,
-        type: "text",
-        text: { body: mensagem }
-      })
+for(const numero of admins){
+
+  console.log("📤 ENVIANDO PARA:", numero)
+
+  const response = await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: numero,
+      type: "text",
+      text: { body: mensagem }
     })
+  })
 
-    console.log("📤 ENVIADO PARA:", numero)
-  }
+  const result = await response.json()
 
-  console.log("✅ RELATÓRIO FINALIZADO")
+  console.log("📡 RESPOSTA WHATS:", JSON.stringify(result, null, 2))
+}
+
+console.log("✅ RELATÓRIO FINALIZADO")
 }
