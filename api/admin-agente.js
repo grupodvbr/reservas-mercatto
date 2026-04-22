@@ -2097,7 +2097,7 @@ async function executarRelatorioAutomatico(){
     .filter(([_, u]) => u.nivel === 0)
     .map(([numero]) => numero)
 
-  const resApi = await fetch("https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia")
+  const resApi = await fetch("https://goals-continental-examinations-carrier.trycloudflare.com/cupons-ontem")
   const data = await resApi.json()
 
   let mensagem = `🌅 *RELATÓRIO FINANCEIRO*\n━━━━━━━━━━━━━━━━━━\n`
