@@ -512,6 +512,7 @@ unidadeSelect.addEventListener("change", () => {
   const btnLimpar = document.getElementById("btnLimpar");
 const empresaSelect = document.getElementById("empresaSelect");
   let salvandoAgora = false;
+  let modoModal = null;
 const consumoAutorizado = document.getElementById("consumoAutorizado");
 
 // 🔒 nunca mostrar a flag na tela
@@ -748,7 +749,7 @@ lista.innerHTML += `
     </div>
 
     <div style="display:flex;gap:10px;align-items:flex-start">
-      <button class="icon-btn" onclick="abrirModal('${l.id}', ${l.quantidade}, '${l.unidade}', '${l.tipo}', ${l.tara || 0}, '${l.produto_nome}')">
+      <button class="icon-btn" onclick="abrirModal('${l.id}', ${Number(l.quantidade) + Number(l.tara || 0)}, '${l.unidade}', '${l.tipo}', ${l.tara || 0}, '${l.produto_nome}')">
         <i class="ri-edit-2-line"></i>
       </button>
       <button class="icon-btn danger" onclick="excluir('${l.id}')">
@@ -928,39 +929,44 @@ function fecharModal(){
   document.getElementById("editUnidade").disabled = false; // 🔓 destrava unidade
   editId = null;
 }
+
+
+
+  
 async function confirmarEdicao(){
-  const qtd = parseFloat(document.getElementById("editQuantidade").value);
+
+  const bruto = parseFloat(document.getElementById("editQuantidade").value);
+  const tara = parseFloat(document.getElementById("editTara").value || 0);
   const un = document.getElementById("editUnidade").value;
   const tipo = document.getElementById("editTipo").value;
-  const tara = parseFloat(document.getElementById("editTara").value || 0);
 
-  if(!qtd){ alert("Quantidade inválida"); return; }
+  if(!bruto){ 
+    alert("Quantidade inválida"); 
+    return; 
+  }
 
-  // 🔒 não permite alterar tipo de um CONSUMO
-  const { data:atual } = await sb
-    .from("buffet_lancamentos")
-    .select("tipo, produto_nome")
-    .eq("id", editId)
-    .maybeSingle();
-
-  if (atual?.tipo === "CONSUMO" && tipo !== "CONSUMO") {
-    alert("Lançamentos de CONSUMO não podem ter o tipo alterado.");
+  if(tara > bruto){
+    alert("Tara não pode ser maior que o peso bruto");
     return;
   }
 
+  const liquido = Number((bruto - tara).toFixed(3));
+
   await sb.from("buffet_lancamentos")
-.update({ 
-  quantidade: qtd,
-  unidade: un,
-  tipo,
-  tara: tara
-})
-    
-.eq("id", editId);
+  .update({ 
+    quantidade: liquido, // ✅ correto
+    unidade: un,
+    tipo: tipo,
+    tara: tara
+  })
+  .eq("id", editId);
 
   fecharModal(); 
   carregarLancamentos();
 }
+
+
+  
 
   async function excluir(id){
     if(!confirm("Excluir esse lançamento?")) return;
