@@ -898,8 +898,12 @@ function abrirModal(id, qtd, un, tipo, tara, nome){
   
   editId = id;
 
-  document.getElementById("editQuantidade").value = qtd;
-  document.getElementById("editUnidade").value = un;
+document.getElementById("editQuantidade").value = formatPeso(qtd);
+document.getElementById("editTara").value = formatPeso(tara || 0);
+
+
+
+  
   document.getElementById("editTara").value = tara || 0;
 
   // ✅ AQUI É O LUGAR CERTO
