@@ -259,10 +259,16 @@ if(isMercatto){
   }
 
   else{
-empresaFiltro = null
+    // 🔥 REGRA NOVA
+    empresaFiltro = "MERCATTO_TOTAL"
   }
 
 }
+
+
+
+
+  
 else if(normal.includes("padaria")){
   empresaFiltro = "PADARIA DELÍCIA"
 }
@@ -614,14 +620,46 @@ if(tipoConsulta === "vendas"){
 
     let empresaData = null
 
-if(empresaFiltro){
-  console.log("🏢 USANDO DADOS CORRETOS DA API:", empresaFiltro)
+if(empresaFiltro === "MERCATTO_TOTAL"){
+
+  console.log("🧮 SOMANDO MERCATTO (EMPÓRIO + RESTAURANTE)")
+
+  const empresas = data.empresas || []
+
+  const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
+  const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
+
+  const faturamento =
+    Number(emporio?.faturamento || 0) +
+    Number(restaurante?.faturamento || 0)
+
+  const vendas =
+    Number(emporio?.vendas || 0) +
+    Number(restaurante?.vendas || 0)
+
+  const ticket = vendas > 0
+    ? Number((faturamento / vendas).toFixed(2))
+    : 0
+
+  empresaData = {
+    faturamento,
+    vendas,
+    ticket_medio: ticket
+  }
+
+}
+else if(empresaFiltro){
 
   empresaData = data.empresas?.find(
     e => e.empresa === empresaFiltro
   )
 
-}else{
+}
+
+
+
+
+else{
 
   const pediuTotal =
     texto.includes("total") ||
