@@ -271,12 +271,10 @@ if(isMercatto){
   else if(isRestaurante){
     empresaFiltro = "MERCATTO RESTAURANTE"
   }
-
-  else{
-    // 🔥 REGRA NOVA
-    empresaFiltro = "MERCATTO_TOTAL"
-  }
-
+else{
+  // 🔥 CONTINUA SOMANDO, MAS SEM POLUIR NOME
+  empresaFiltro = "MERCATTO"
+}
 }
 
 
@@ -634,7 +632,7 @@ if(tipoConsulta === "vendas"){
 
     let empresaData = null
 
-if(empresaFiltro === "MERCATTO_TOTAL"){
+if(empresaFiltro === "MERCATTO"){
 
   console.log("🧮 SOMANDO MERCATTO (EMPÓRIO + RESTAURANTE)")
 
