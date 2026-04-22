@@ -800,9 +800,19 @@ ${texto}
 
 const respostaFormatada = criarResumoPremium(respostaIA)
 
-  
+// 🔥 NOVO RETORNO COM DADOS PARA GRÁFICO
 return res.json({
-  resposta: respostaFormatada
+  tipo: "grafico",
+
+  dados: {
+    labels: (data.empresas || []).map(e => e.empresa),
+    faturamento: (data.empresas || []).map(e => e.faturamento),
+    vendas: (data.empresas || []).map(e => e.vendas),
+    ticket: (data.empresas || []).map(e => e.ticket_medio)
+  },
+
+  resumo: resumoDia,
+  texto: respostaFormatada // mantém texto também
 })
 }
     
@@ -2183,28 +2193,75 @@ mensagem += `
   const labels = empresas.map(e => e.empresa)
   const dados = empresas.map(e => Number(e.faturamento))
 
-  const chartConfig = {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Faturamento por Empresa",
+const chartConfig = {
+  type: "bar",
+
+  data: {
+    labels,
+
+    datasets: [
+      {
+        label: "Faturamento Atual",
         data: dados,
-        backgroundColor: [
-          "#22c55e",
-          "#3b82f6",
-          "#f59e0b",
-          "#ef4444",
-          "#8b5cf6"
-        ]
-      }]
+
+        backgroundColor: "#f97316", // laranja premium
+        borderRadius: 12,
+        barPercentage: 0.5
+      }
+    ]
+  },
+
+  options: {
+    layout: {
+      padding: {
+        top: 30,
+        bottom: 20
+      }
     },
-    options: {
-      plugins: {
-        legend: { display: false }
+
+    plugins: {
+      legend: { display: false },
+
+      title: {
+        display: true,
+        text: "Carneiro Holding",
+        color: "#ffffff",
+        font: {
+          size: 22,
+          weight: "bold",
+          family: "Inter, sans-serif"
+        },
+        padding: {
+          bottom: 20
+        }
+      }
+    },
+
+    scales: {
+      x: {
+        ticks: {
+          color: "#9ca3af",
+          font: {
+            size: 12
+          }
+        },
+        grid: {
+          display: false
+        }
+      },
+
+      y: {
+        ticks: {
+          color: "#9ca3af",
+          callback: value => "R$ " + value.toLocaleString("pt-BR")
+        },
+        grid: {
+          color: "rgba(255,255,255,0.05)"
+        }
       }
     }
   }
+}
 
   return "https://quickchart.io/chart?c=" + encodeURIComponent(JSON.stringify(chartConfig))
 }
