@@ -719,46 +719,6 @@ document.getElementById("login").style.display = "none";
 
 
 
-function mostrarBoasVindas(user){
-
-  const tela = document.getElementById("boasvindas");
-
-  document.getElementById("fotoUser").src =
-    user.foto_url || "https://i.imgur.com/2DhmtJ4.png";
-
-  document.getElementById("msgUser").innerText =
-    "Bem-vindo(a), " + (user.nome || user.usuario);
-
-  tela.style.display = "flex";
-
-async function mostrarBoasVindas(user, primeiraVez = false){
-
-  const tela = document.getElementById("boasvindas");
-
-  document.getElementById("fotoUser").src =
-    user.foto_url || "https://i.imgur.com/2DhmtJ4.png";
-
-  if(primeiraVez){
-    document.getElementById("msgUser").innerText =
-      "Bem-vindo(a), " + (user.nome || user.usuario);
-  }else{
-    document.getElementById("msgUser").innerText =
-      "Olá " + (user.nome || user.usuario) + ", carregando dados...";
-  }
-
-  tela.style.display = "flex";
-
-  // 🔥 ESPERA CARREGAR OS DADOS
-  await carregar();
-
-  // 🔥 SÓ SOME DEPOIS QUE CARREGAR
-  tela.style.display = "none";
-
-  localStorage.setItem("boas_vindas_mostrada", "sim");
-}
-}
-
-
   
 
 function logout(){
