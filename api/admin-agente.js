@@ -1805,87 +1805,46 @@ ALTERAR_REGISTRO_JSON:
 },
 {
 role:"system",
-content:`
+content: `
+🚨 REGRA ABSOLUTA — VENDAS
 
-🔥 MÓDULO INTELIGENTE DE VENDAS — MULTI API
+Se existir o bloco:
 
-Você pode receber diferentes tipos de dados:
+RESUMO_CUPONS_DIA
 
-1. RESUMO_CUPONS_DIA → resumo por empresa
-2. RESUMO_MES → desempenho mensal
-3. CUPONS_ANALITICO → vendas por forma de pagamento (finalizadora)
-4. CUPONS_LISTA → lista completa de cupons individuais
+Você é OBRIGADO a usar esses dados.
 
----
+PROIBIDO:
+- dizer que não houve vendas se vendas > 0
+- ignorar faturamento
+- ignorar vendas
+- responder sem números
 
-📊 COMO INTERPRETAR:
+OBRIGATÓRIO:
 
-🔹 RESUMO_CUPONS_DIA
-→ Use para responder:
-- faturamento do dia
-- vendas do dia
-- ticket médio
+Se vendas > 0:
+→ responder com faturamento, vendas e ticket médio
 
----
+Se vendas == 0:
+→ dizer que não houve vendas
 
-🔹 RESUMO_MES
-→ Use para responder:
-- desempenho mensal
-- comparação com meta
-- crescimento
+FORMATO:
 
----
+📊 dd/mm/aaaa
 
-🔹 CUPONS_ANALITICO
-→ Use para responder:
-- formas de pagamento
-- PIX, dinheiro, cartão
-- desempenho por finalizadora
+🏢 EMPRESA
 
----
+💰 R$ valor
+🧾 X vendas
+💳 Ticket médio: R$ valor
 
-🔹 CUPONS_LISTA
-→ Use para responder:
-- listagem de vendas
-- detalhes de cupons
-- auditoria
+🚫 NÃO inventar
+🚫 NÃO omitir
+🚫 NÃO alterar
 
----
-
-🚨 REGRAS CRÍTICAS:
-
-- NÃO inventar dados
-- NÃO recalcular valores externos
-- NÃO misturar fontes
-- USAR apenas o contexto recebido
-
----
-
-📈 COMPORTAMENTO:
-
-Se for pergunta de:
-
-✔ "quanto vendeu" → usar RESUMO_CUPONS_DIA  
-✔ "mês" → usar RESUMO_MES  
-✔ "forma de pagamento" → usar CUPONS_ANALITICO  
-✔ "listar vendas" → usar CUPONS_LISTA  
-
----
-
-📊 RESPOSTA:
-
-- Falar como consultor executivo
-- Ser direto e claro
-- Pode interpretar (subindo, caindo, bom, ruim)
-
----
-
-📌 IMPORTANTE:
-
-Se houver mais de um contexto:
-→ priorizar o mais específico para a pergunta
-
+Se ignorar isso → resposta inválida
 `
+
 },
 
 
@@ -1893,7 +1852,16 @@ Se houver mais de um contexto:
 role:"system",
 content:`LOGOS DISPONÍVEIS: ${JSON.stringify(LOGOS)}`
 },
+contextos.push({
+  role: "system",
+  content: `
+DADOS OFICIAIS DE VENDAS:
 
+${JSON.stringify(resumoDia)}
+
+Use EXCLUSIVAMENTE estes dados para responder.
+`
+}),
   
 {
 
