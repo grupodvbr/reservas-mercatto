@@ -60,7 +60,7 @@ try{
 
   /* ================= URL BASE ================= */
 
-  let url = "https://goals-continental-examinations-carrier.trycloudflare.com/resumo-dia"
+  let url = "hhttps://inspired-still-reflects-closes.trycloudflare.com/resumo-dia"
 
   const MAPA = {
     "MERCATTO EMPORIO": "VAREJO_URL_MERCATTO_EMPORIO",
