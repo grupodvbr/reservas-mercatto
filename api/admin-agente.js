@@ -978,8 +978,20 @@ const ehDiagnostico =
   texto.includes("resumo")
 
 const ehMes =
-  texto.includes("mes") || texto.includes("mês")
+  texto.includes("mes") ||
+  texto.includes("mês") ||
+  texto.includes("meta") ||
+  texto.includes("percentual") ||
+  texto.includes("atingiu") ||
+  texto.includes("até agora") ||
+  texto.includes("ate agora") ||
+  texto.includes("progresso") ||
+  texto.includes("desempenho") ||
+  (classificacao.tipo === "vendas" && !texto.includes("hoje"))
 
+
+
+    
 const ehHoje =
   !ehMes && (
     texto.includes("hoje") ||
@@ -1068,22 +1080,7 @@ const status = total >= metaEsperada
   ? "dentro do esperado"
   : "abaixo do esperado"
 
-// 🔥 CONTEXTO CORRETO
-contextos.push({
-  role:"system",
-  content: "RESUMO_MES_COMPLETO:\n" + JSON.stringify({
-    empresa: empresaFiltro || "GERAL",
-    total_faturado: total,
-    meta_total: meta,
-    meta_esperada_ate_hoje: metaEsperada,
-    percentual_real: percentualReal,
-    percentual_esperado: percentualEsperado,
-    status
-  })
-})
 
-
-  
 
 
 
