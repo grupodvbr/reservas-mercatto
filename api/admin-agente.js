@@ -533,13 +533,16 @@ if(pergunta && pergunta.toLowerCase() === "sim"){
 const { data:last } = await supabase
 .from("assistente_otto_chat")
 .select("acao_json")
-.not("acao_json","is",null)
+.eq("telefone", numero)
+.eq("aguardando_confirmacao", true) // 🔥 GARANTE AÇÃO PENDENTE
 .order("created_at",{ascending:false})
 .limit(1)
+.maybeSingle()
 
-if(last && last[0]){
-confirmar = last[0].acao_json
+if(last?.acao_json){
+confirmar = last.acao_json
 }
+
 
 }
 
@@ -659,14 +662,16 @@ throw error
 await supabase
 .from("assistente_otto_chat")
 .insert({
-role:"assistant",
-mensagem:"✅ Ação executada com sucesso"
+  role:"assistant",
+  mensagem:"✅ Ação executada com sucesso"
 })
 
-
-
-
-
+// 🔥 LIMPA CONFIRMAÇÃO (LOCAL EXATO)
+await supabase
+.from("assistente_otto_chat")
+.update({ aguardando_confirmacao: false })
+.eq("telefone", numero)
+.eq("aguardando_confirmacao", true)
   
 return res.json({
 resposta:"✅ Ação executada com sucesso"
