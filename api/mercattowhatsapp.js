@@ -2714,9 +2714,10 @@ let templatePayload = null
 
 /* ===== TEMPLATE CONFIRMAÇÃO ===== */
 if(templateNome === "confirmao_de_reserva"){
+
   templatePayload = {
     name: templateNome,
-    language:{ code: idiomaTemplate }, // ✅ CORRIGIDO
+    language:{ code: idiomaTemplate },
     components:[
       {
         type:"body",
@@ -2729,44 +2730,45 @@ if(templateNome === "confirmao_de_reserva"){
       }
     ]
   }
+
 }
 
-case "aniversario_mercatto":
+/* 🔥 NOVO TEMPLATE ANIVERSÁRIO */
+else if(templateNome === "aniversario_mercatto"){
 
-  templateData = {
-    name: template,
-    language: { code: idioma },
-    components: [
+  templatePayload = {
+    name: templateNome,
+    language:{ code: idiomaTemplate },
+    components:[
       {
-        type: "body",
-        parameters: [
-          { type:"text", text: parametros?.nome || "Cliente" }
+        type:"body",
+        parameters:[
+          { type:"text", text: nomeMemoria || "Cliente" }
         ]
       }
     ]
   }
 
-break
+}
 
-
-
-
-
-  
 /* ===== TEMPLATE VIDEO ===== */
 else if(templateNome === "reserva_especial"){
-templatePayload = {
-  name: templateNome,
-  language:{ code: idiomaTemplate } // ✅ DINÂMICO
-}
-}
 
-/* ===== TEMPLATE SIMPLES ===== */
-else if(templateNome === "hello_world"){
   templatePayload = {
     name: templateNome,
     language:{ code: idiomaTemplate }
   }
+
+}
+
+/* ===== TEMPLATE SIMPLES ===== */
+else if(templateNome === "hello_world"){
+
+  templatePayload = {
+    name: templateNome,
+    language:{ code: idiomaTemplate }
+  }
+
 }
 
 /* ===== ENVIO ===== */
