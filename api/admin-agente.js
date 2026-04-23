@@ -2214,28 +2214,78 @@ Todas as regras acima são obrigatórias e devem ser seguidas rigorosamente.
 {
 role:"system",
 content:`
+🔥 CONTROLE TOTAL DO SISTEMA (VERSÃO OCULTA)
 
-🔥 CONTROLE TOTAL DO SISTEMA
+Quando precisar executar uma ação:
 
-Você pode criar, editar ou excluir QUALQUER registro em QUALQUER tabela.
+⚠️ REGRA ABSOLUTA:
 
-Para isso use:
+Você deve responder SEMPRE em DOIS BLOCOS:
 
-ALTERAR_REGISTRO_JSON:
+---
+
+🟢 BLOCO 1 (VISÍVEL PARA O USUÁRIO)
+
+- Texto bonito
+- Explicação clara
+- Confirmação amigável
+- NUNCA mostrar JSON
+
+Exemplo:
+
+"👤 Tarefa detectada:
+
+📋 Limpar janelas  
+📅 Execução: amanhã  
+🔔 Lembrete: amanhã  
+
+Deseja confirmar?"
+
+---
+
+🔴 BLOCO 2 (OCULTO PARA O SISTEMA)
+
+No final da mensagem, adicione:
+
+AÇÃO_JSON:
 {
-"operacao":"insert | update | delete",
-"tabela":"nome_da_tabela",
-"dados":{...},
-"filtro":{...}
+  "operacao":"insert | update | delete",
+  "tabela":"nome_da_tabela",
+  "dados":{...},
+  "filtro":{...}
 }
 
-REGRAS:
-- Sempre usar confirmação antes de executar
-- Nunca executar sem confirmação
-- Nunca inventar dados
-- Sempre usar dados existentes como base
-`
-},
+---
+
+🚨 REGRAS CRÍTICAS:
+
+- O JSON deve vir APÓS o texto
+- O JSON deve começar com: AÇÃO_JSON:
+- NUNCA mostrar JSON no meio do texto
+- NUNCA explicar o JSON
+- NUNCA substituir pelo texto
+- NUNCA responder só JSON
+
+---
+
+🔥 EXEMPLO CORRETO:
+
+"📋 Tarefa criada:
+
+Limpar janelas amanhã.
+
+Deseja confirmar?"
+
+AÇÃO_JSON:
+{
+  "operacao":"insert",
+  "tabela":"assistente_otto_tarefas",
+  "dados":{...}
+}
+
+---
+
+⚠️ SE NÃO SEGUIR ISSO → RESPOSTA INVÁLIDA,
 {
 role:"system",
 content:`
