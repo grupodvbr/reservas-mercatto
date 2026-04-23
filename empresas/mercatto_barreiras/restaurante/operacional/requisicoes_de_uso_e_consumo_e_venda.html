@@ -685,7 +685,7 @@ async function carregarUsuarios(){
        <small>${u.setor}</small>
      </div>
      <div>
-      <button onclick="editarUsuario(${JSON.stringify(u)})">✏️</button>
+     <button onclick='editarUsuario(${JSON.stringify(u)})'>✏️</button>
        <button onclick="excluirUsuario('${u.id}')">🗑️</button>
      </div>
    </div>
@@ -806,7 +806,22 @@ async function excluirUsuario(id){
 
  carregarUsuarios();
 }
+async function editarUsuarioPorId(id){
 
+ const { data, error } = await sb
+   .from("usuarios")
+   .select("*")
+   .eq("id", id)
+   .single();
+
+ if(error){
+   console.error(error);
+   mostrarAlerta("Erro ao carregar usuário");
+   return;
+ }
+
+ editarUsuario(data);
+}
 
 
   
