@@ -357,6 +357,10 @@ try {
 console.log("🧠 CLASSIFICAÇÃO:", classificacao)
 let empresaFiltro = classificacao.empresa || null
 
+// 🔥 CORREÇÃO CRÍTICA
+if(empresaFiltro){
+  classificacao.geral = false
+}
 
 // NIVEL 2 → BLOQUEIA EMPRESA
 if(NIVEL === 2){
