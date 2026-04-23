@@ -2698,7 +2698,8 @@ if(templateMatch){
 const TEMPLATE_IDIOMAS = {
   confirmao_de_reserva: "en_US",
   reserva_especial: "en_US",
-  hello_world: "en_US"
+  hello_world: "en_US",
+  aniversario_mercatto: "pt_BR" // 🔥 NOVO TEMPLATE
 }
 
 const idiomaTemplate = TEMPLATE_IDIOMAS[templateNome] || "pt_BR"
@@ -2730,6 +2731,28 @@ if(templateNome === "confirmao_de_reserva"){
   }
 }
 
+case "aniversario_mercatto":
+
+  templateData = {
+    name: template,
+    language: { code: idioma },
+    components: [
+      {
+        type: "body",
+        parameters: [
+          { type:"text", text: parametros?.nome || "Cliente" }
+        ]
+      }
+    ]
+  }
+
+break
+
+
+
+
+
+  
 /* ===== TEMPLATE VIDEO ===== */
 else if(templateNome === "reserva_especial"){
 templatePayload = {
