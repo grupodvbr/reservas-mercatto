@@ -2628,10 +2628,26 @@ let dataMes = null
 
 try{
 
-  const [resDia, resMes] = await Promise.all([
-    fetch("https://revision-peripherals-glad-martha.trycloudflare.com/cupons-ontem"),
-    fetch("https://revision-peripherals-glad-martha.trycloudflare.com/resumo-mes")
-  ])
+const API = "https://inspired-still-reflects-closes.trycloudflare.com"
+
+// 🔥 DATA DE ONTEM CORRETA (BAHIA)
+const hoje = new Date(
+  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
+
+const ontem = new Date(hoje)
+ontem.setDate(ontem.getDate() - 1)
+
+const ontemISO = ontem.toISOString().slice(0,10)
+
+// 🔥 FETCH CORRETO
+const [resDia, resMes] = await Promise.all([
+  fetch(`${API}/resumo-dia?data=${ontemISO}`),
+  fetch(`${API}/resumo-mes`)
+])
+
+
+  
 
   if(!resDia.ok || !resMes.ok){
     throw new Error("Erro ao buscar APIs")
@@ -2645,10 +2661,13 @@ try{
   return
 }
 
-if(!dataDia || !dataDia.empresas || dataDia.empresas.length === 0){
-  console.log("⚠️ SEM DADOS PARA RELATÓRIO")
+if(!dataDia){
+  console.log("⚠️ SEM DADOS DA API")
   return
 }
+
+const empresasDia = dataDia.empresas || []
+  
 
 function formatar(v){
   return Number(v || 0).toLocaleString("pt-BR",{minimumFractionDigits:2})
