@@ -1478,6 +1478,27 @@ if(resumoDia && resumoDia.faturamento !== undefined){
 /* ================= OPENAI ================= */
 
 const completion = await openai.chat.completions.create({
+  // 🔥 FORÇA DADO FINAL (PRIORIDADE MÁXIMA)
+if(resumoDia){
+  mensagens.push({
+    role: "system",
+    content: `
+🚨 DADO FINAL DE VENDAS (OBRIGATÓRIO)
+
+${JSON.stringify(resumoDia)}
+
+Use EXATAMENTE esses números.
+Não interprete.
+Não invente.
+Não ignore.
+`
+  })
+}
+
+
+
+
+  
 
 model:"gpt-4.1-mini",
   temperature:0,
