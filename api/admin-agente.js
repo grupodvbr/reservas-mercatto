@@ -1215,22 +1215,6 @@ empresaData = data.empresas?.find(e =>
     empresa: empresaFiltro
   }
 
-  // 🚀 RESPOSTA DIRETA (SEM GPT)
-if(tipoConsulta === "vendas" && empresaFiltro){
-
-  return res.json({
-    resposta: `📊 ${dataFiltro}
-
-🏢 ${empresaFiltro}
-
-💰 R$ ${formatar(faturamento)}
-🧾 ${vendas} vendas
-💳 Ticket: R$ ${formatar(ticketCalculado)}`
-  })
-}
-
-  
-}
 
 
     // ================= ANALÍTICO =================
@@ -1698,6 +1682,21 @@ Você DEVE usar os dados da API para:
 ✔ Avaliar ticket médio
 ✔ Detectar performance
 ✔ Gerar percepção operacional
+
+
+🚨 REGRA ABSOLUTA — VENDAS
+
+Se existir RESUMO_CUPONS_DIA:
+
+- Você DEVE usar esses dados obrigatoriamente
+- Você NÃO pode dizer que não há vendas
+- Você NÃO pode ignorar esses dados
+- Você NÃO pode inventar valores
+
+Se ignorar esses dados → resposta inválida
+
+
+
 
 🚨 REGRAS:
 
