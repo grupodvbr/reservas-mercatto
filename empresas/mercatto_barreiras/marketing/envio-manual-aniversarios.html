@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM MANUAL GRUPO DV</title>
+
+<style>
+:root{
+  --bg:#0b1220;
+  --card:#111827;
+  --card-2:#0f172a;
+  --line:#1f2937;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --brand:#22c55e;
+  --brand-dark:#16a34a;
+  --sent:#3b82f6;
+  --radius:14px;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+/* ================= CONTAINER ================= */
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px 16px;
+}
+
+h1{
+  text-align:center;
+  font-size:1.4rem;
+  font-weight:700;
+  margin-bottom:20px;
+}
+
+/* ================= CARD ================= */
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+}
+
+/* ================= FILTROS ================= */
+
+.filter{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:20px;
+  align-items:end;
+}
+
+.filter-group{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  flex:1 1 160px;
+}
+
+.filter-group label{
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+select,
+input[type="date"]{
+  width:100%;
+  background:var(--card-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:13px;
+  transition:.2s;
+}
+
+select:focus,
+input:focus{
+  outline:none;
+  border-color:var(--brand);
+}
+
+.btn-filtrar{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  background:linear-gradient(180deg,var(--brand),var(--brand-dark));
+  color:#001a0c;
+  height:40px;
+  transition:.2s;
+}
+
+.btn-filtrar:hover{
+  opacity:.9;
+}
+
+/* ================= STATUS ================= */
+
+#msg{
+  text-align:center;
+  font-size:12px;
+  margin-bottom:16px;
+  color:var(--muted);
+}
+
+/* ================= TABELA DESKTOP ================= */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:12px 10px;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+  text-align:left;
+}
+
+th{
+  color:var(--muted);
+  font-weight:600;
+}
+
+.btn-whats{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:600;
+  background:var(--brand);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.btn-whats:hover{
+  opacity:.9;
+}
+
+.btn-whats.sent{
+  background:var(--sent);
+  color:#fff;
+}
+
+/* ================= RESPONSIVO MOBILE ================= */
+
+@media(max-width:768px){
+
+  .container{
+    padding:16px 12px;
+  }
+
+  h1{
+    font-size:1.1rem;
+  }
+
+  /* filtros empilhados */
+  .filter{
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .filter-group{
+    width:100%;
+  }
+
+  .btn-filtrar{
+    width:100%;
+  }
+
+  /* tabela vira cards */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr{
+    display:block;
+    width:100%;
+  }
+
+  thead{
+    display:none;
+  }
+
+  tr{
+    background:var(--card-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:12px;
+    padding:12px;
+  }
+
+  td{
+    border:none;
+    padding:6px 0;
+    font-size:13px;
+  }
+
+  td::before{
+    content:attr(data-label);
+    display:block;
+    font-size:11px;
+    font-weight:600;
+    color:var(--muted);
+    margin-bottom:2px;
+  }
+
+  .btn-whats{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    font-size:13px;
+  }
+}
+
+/* ================= ULTRA SMALL ================= */
+
+@media(max-width:420px){
+
+  h1{
+    font-size:1rem;
+  }
+
+  select,
+  input[type="date"]{
+    font-size:12px;
+    padding:9px;
+  }
+
+  .btn-filtrar{
+    font-size:12px;
+  }
+
+  td{
+    font-size:12px;
+  }
+}
+
+
+  
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>CRM MANUAL GRUPO DV</h1>
+
+<div class="card">
+
+<div class="filter">
+
+  <div class="filter-group">
+    <label>Empresa</label>
+    <select id="empresaFiltro">
+      <option value="">Todas</option>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label>Mês</label>
+    <select id="mesFiltro"></select>
+  </div>
+
+  <div class="filter-group">
+    <label>Data início</label>
+    <input type="date" id="dataInicio">
+  </div>
+
+  <div class="filter-group">
+    <label>Data fim</label>
+    <input type="date" id="dataFim">
+  </div>
+
+  <button class="btn-filtrar" onclick="filtrar()">Filtrar</button>
+
+</div>
+
+<div id="msg">Carregando aniversariantes...</div>
+
+<table>
+<thead>
+<tr>
+<th>Empresa</th>
+<th>Nome</th>
+<th>Aniversário</th>
+<th>Telefone</th>
+<th>Cargo</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<div class="mobile-list" id="mobileList"></div>
+
+</div>
+</div>
+
+<script>
+
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzEgyXiXkU6zoZ2zqj2LRBogArNucDMOLFLhSTQo3WKZjm8th9EfmozQz5BPYo0-Bi4Bw/exec";
+
+/* 🔥 LINKS POR EMPRESA */
+const LINKS_EMPRESA = {
+  "MERCATTO DELÍCIA": "https://grupodvbr.github.io/aniversariosmercatto/",
+  "VILLA GOURMET": "https://link-da-villa.com",
+  "PADARIA DELÍCIA": "https://link-da-padaria.com",
+  "DELÍCIA GOURMET": "https://link-da-delicia.com"
+};
+
+let aniversariantes = [];
+const enviados = JSON.parse(localStorage.getItem("aniversariosEnviados") || "[]");
+
+function esc(s){
+  return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))
+}
+
+function formatarTelefone(num){
+  if(!num) return "";
+  const digits = num.replace(/\D/g,"");
+  if(digits.length < 10) return digits;
+  const ddd = digits.slice(0,2);
+  let base = digits.slice(2);
+  if(base.startsWith("9")) base = base.slice(1);
+  return `55${ddd}${base}`;
+}
+
+async function carregar(){
+  const msg=document.getElementById('msg');
+  msg.textContent='Carregando...';
+
+  try{
+    const res=await fetch(GAS_API_URL);
+    const data=await res.json();
+    aniversariantes=data.aniversariantes||[];
+
+    if(!aniversariantes.length){
+      msg.textContent='Nenhum aniversariante encontrado.';
+      return;
+    }
+
+    const empresas=[...new Set(aniversariantes.map(a=>a.empresa))];
+    document.getElementById('empresaFiltro').innerHTML =
+      '<option value="">Todas</option>' +
+      empresas.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
+
+    const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    document.getElementById('mesFiltro').innerHTML =
+      '<option value="">Todos</option>' +
+      meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+
+    msg.textContent=`${aniversariantes.length} aniversariante(s) carregado(s).`;
+    renderizar(aniversariantes);
+
+  }catch(e){
+    msg.textContent='Erro ao carregar.';
+  }
+}
+
+function filtrar(){
+
+  const empresa = document.getElementById('empresaFiltro').value;
+  const mesEscolhido = parseInt(document.getElementById('mesFiltro').value);
+  const dataInicio = document.getElementById('dataInicio').value;
+  const dataFim = document.getElementById('dataFim').value;
+
+  let filtrados = aniversariantes;
+
+  if(empresa){
+    filtrados = filtrados.filter(a => a.empresa === empresa);
+  }
+
+  if(mesEscolhido){
+    filtrados = filtrados.filter(a=>{
+      const partes = a.aniversario?.split('/');
+      if(!partes || partes.length<2) return false;
+      return parseInt(partes[1]) === mesEscolhido;
+    });
+  }
+
+  if(dataInicio || dataFim){
+    filtrados = filtrados.filter(a=>{
+      const partes = a.aniversario?.split('/');
+      if(!partes || partes.length<2) return false;
+
+      const anoAtual = new Date().getFullYear();
+      const dataAniv = new Date(`${anoAtual}-${partes[1]}-${partes[0]}`);
+
+      const inicio = dataInicio ? new Date(dataInicio) : null;
+      const fim = dataFim ? new Date(dataFim) : null;
+
+      if(inicio && dataAniv < inicio) return false;
+      if(fim && dataAniv > fim) return false;
+
+      return true;
+    });
+  }
+
+  document.getElementById('msg').textContent =
+    `${filtrados.length} aniversariante(s) encontrado(s).`;
+
+  renderizar(filtrados);
+}
+
+function renderizar(lista){
+
+  const tb=document.getElementById('tbody');
+  tb.innerHTML='';
+
+  lista.forEach(a=>{
+
+    const fone=formatarTelefone(a.telefone||"");
+    const sent=enviados.includes(a.nome+a.aniversario);
+
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td data-label="Empresa">${esc(a.empresa)}</td>
+      <td data-label="Nome">${esc(a.nome)}</td>
+      <td data-label="Aniversário">${a.aniversario||""}</td>
+      <td data-label="Telefone">${fone}</td>
+      <td data-label="Cargo">${esc(a.cargo||"")}</td>
+      <td data-label="Ação">
+        <button class="btn-whats ${sent?'sent':''}"
+        onclick="enviar('${a.nome}','${a.aniversario}','${fone}','${a.empresa}',this)">
+        WhatsApp
+        </button>
+      </td>
+    `;
+    tb.appendChild(tr);
+
+  });
+}
+
+function enviar(nome, aniversario, telefone, empresa, btn){
+
+  if(!telefone){
+    alert('Telefone não encontrado.');
+    return;
+  }
+
+  const linkReserva = LINKS_EMPRESA[empresa] ||
+  "https://grupodvbr.github.io/aniversariosmercatto/";
+
+  const mensagem =
+` *${nome}, seu aniversário está chegando!* 
+
+Sua data especial é *${aniversario}*.
+
+No mês do seu aniversário você ganha *ATÉ R$ 100 OFF* no ${empresa}.
+
+ Desconto progressivo  
+ Válido durante todo o mês  
+ Necessário documento com foto  
+
+Garanta sua reserva agora:
+
+${linkReserva}`;
+
+  const link = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(link, "_blank");
+
+  btn.classList.add('sent');
+
+  if(!enviados.includes(nome+aniversario)){
+    enviados.push(nome+aniversario);
+    localStorage.setItem("aniversariosEnviados",JSON.stringify(enviados));
+  }
+}
+
+document.addEventListener('DOMContentLoaded',carregar);
+
+</script>
+</body>
+</html>
