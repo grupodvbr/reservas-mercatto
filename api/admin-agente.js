@@ -1031,12 +1031,63 @@ else if(ehMes){
   const vendasMes = Number(empresaMes?.vendas_mes || 0)
   const vendasHoje = Number(empresaHoje?.vendas || 0)
 
-  const total = faturamentoMes + faturamentoHoje
+ const total = faturamentoMes + faturamentoHoje
 
-  const metaInfo = empresaFiltro
-    ? calcularMeta(empresaFiltro, total)
-    : { meta:0, percentual:0 }
+// 📅 DATA ATUAL
+const hoje = new Date(
+  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
 
+const diaAtual = hoje.getDate()
+
+// 📅 DIAS NO MÊS
+const diasNoMes = new Date(
+  hoje.getFullYear(),
+  hoje.getMonth() + 1,
+  0
+).getDate()
+
+// 🎯 META TOTAL
+const meta = METAS[empresaFiltro]?.prata || 0
+
+// 🎯 META ESPERADA ATÉ HOJE
+const metaEsperada = (meta / diasNoMes) * diaAtual
+
+// 📊 % REAL DA META
+const percentualReal = meta > 0
+  ? (total / meta) * 100
+  : 0
+
+// 📊 % DO ESPERADO
+const percentualEsperado = meta > 0
+  ? (metaEsperada / meta) * 100
+  : 0
+
+// 📊 STATUS
+const status = total >= metaEsperada
+  ? "dentro do esperado"
+  : "abaixo do esperado"
+
+// 🔥 CONTEXTO CORRETO
+contextos.push({
+  role:"system",
+  content: "RESUMO_MES_COMPLETO:\n" + JSON.stringify({
+    empresa: empresaFiltro || "GERAL",
+    total_faturado: total,
+    meta_total: meta,
+    meta_esperada_ate_hoje: metaEsperada,
+    percentual_real: percentualReal,
+    percentual_esperado: percentualEsperado,
+    status
+  })
+})
+
+
+  
+
+
+
+  
   contextos.push({
     role:"system",
     content: "RESUMO_MES_COMPLETO:\n" + JSON.stringify({
