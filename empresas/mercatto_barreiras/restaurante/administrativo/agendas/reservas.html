@@ -1000,46 +1000,6 @@ font-size:.9rem;
 }
 
 }
-
-
-  .summary-compact{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:8px;
-  padding:10px;
-}
-
-.mini-kpi{
-  display:flex;
-  align-items:center;
-  gap:8px;
-
-  background:#081428;
-  border:1px solid var(--line);
-  border-radius:10px;
-
-  padding:10px;
-}
-
-.mini-kpi span{
-  font-size:18px;
-}
-
-.mini-kpi small{
-  display:block;
-  font-size:.7rem;
-  color:var(--muted);
-}
-
-.mini-kpi b{
-  font-size:.95rem;
-  font-weight:800;
-}
-
-.mini-kpi.total{
-  background:linear-gradient(90deg,#1e3a8a,#2563eb);
-}
-
 .summary-compact{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -1078,8 +1038,16 @@ font-size:.9rem;
   background:linear-gradient(90deg,#1e3a8a,#2563eb);
 }
 
+  @media (max-width:600px){
+  .summary-compact{
+    grid-template-columns:1fr 1fr;
+  }
+}
 
 
+
+
+    
     
   </style>
 </head>
