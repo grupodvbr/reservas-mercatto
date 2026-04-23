@@ -871,89 +871,83 @@ if(tipoBusca !== "mes_completo"){
 }
 
     // ================= RESUMO DIA =================
-    if(tipoBusca === "dia"){
+if(tipoBusca === "dia"){
 
-
-      if(!empresaFiltro){
-  contextos.push({
-    role:"system",
-    content: "RESUMO_EMPRESAS_DIA:\n" + JSON.stringify(data.empresas || [])
-  })
-}
-
-// 🔥 COLOCA EXATAMENTE AQUI
+  if(!empresaFiltro){
     contextos.push({
       role:"system",
-      content: "TOTAL_EMPRESAS_DIA:\n" + JSON.stringify({
-        faturamento_total: (data.empresas || []).reduce((a,e)=>a + (e.faturamento || 0),0),
-        vendas_total: (data.empresas || []).reduce((a,e)=>a + (e.vendas || 0),0)
-      })
+      content: "RESUMO_EMPRESAS_DIA:\n" + JSON.stringify(data.empresas || [])
     })
+  }
+
+  // 🔥 TOTAL DAS EMPRESAS
+  contextos.push({
+    role:"system",
+    content: "TOTAL_EMPRESAS_DIA:\n" + JSON.stringify({
+      faturamento_total: (data.empresas || []).reduce((a,e)=>a + (e.faturamento || 0),0),
+      vendas_total: (data.empresas || []).reduce((a,e)=>a + (e.vendas || 0),0)
+    })
+  })
+
+  // 🔥 AGORA FICA DENTRO (ANTES ESTAVA FORA ❌)
+  let empresaData = null
+
+  if(empresaFiltro === "MERCATTO"){
+
+    const empresas = data.empresas || []
+
+    const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
+    const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
+
+    const faturamento =
+      Number(emporio?.faturamento || 0) +
+      Number(restaurante?.faturamento || 0)
+
+    const vendas =
+      Number(emporio?.vendas || 0) +
+      Number(restaurante?.vendas || 0)
+
+    const ticket = vendas > 0
+      ? Number((faturamento / vendas).toFixed(2))
+      : 0
+
+    empresaData = { faturamento, vendas, ticket_medio: ticket }
+
+  } else if(empresaFiltro){
+
+    empresaData = data.empresas?.find(
+      e => e.empresa === empresaFiltro
+    )
+
+    if(!empresaData){
+      return res.json({
+        resposta: `⚠️ Não encontrei dados de vendas para ${empresaFiltro} no dia ${dataFiltro}`
+      })
+    }
+
+  } else {
+
+    empresaData = data
 
   }
 
+  const faturamento = Number(empresaData.faturamento || 0)
+  const vendas = Number(empresaData.vendas || 0)
 
-      
-      let empresaData = null
+  const ticketCalculado =
+    vendas > 0
+      ? Number((faturamento / vendas).toFixed(2))
+      : 0
 
-      if(empresaFiltro === "MERCATTO"){
-
-        const empresas = data.empresas || []
-
-        const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
-        const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
-
-        const faturamento =
-          Number(emporio?.faturamento || 0) +
-          Number(restaurante?.faturamento || 0)
-
-        const vendas =
-          Number(emporio?.vendas || 0) +
-          Number(restaurante?.vendas || 0)
-
-        const ticket = vendas > 0
-          ? Number((faturamento / vendas).toFixed(2))
-          : 0
-
-        empresaData = { faturamento, vendas, ticket_medio: ticket }
-
-      } else if(empresaFiltro){
-
-empresaData = data.empresas?.find(
-  e => e.empresa === empresaFiltro
-)
-
-if(!empresaData){
-  return res.json({
-    resposta: `⚠️ Não encontrei dados de vendas para ${empresaFiltro} no dia ${dataFiltro}`
-  })
+  resumoDia = {
+    data: data.data,
+    faturamento,
+    vendas,
+    ticket_medio: empresaData.ticket_medio || ticketCalculado,
+    empresa: empresaFiltro
+  }
 }
 
-
-        
-
-      } else {
-
-        empresaData = data
-
-      }
-
-const faturamento = Number(empresaData.faturamento || 0)
-const vendas = Number(empresaData.vendas || 0)
-
-const ticketCalculado =
-  vendas > 0
-    ? Number((faturamento / vendas).toFixed(2))
-    : 0
-
-resumoDia = {
-  data: data.data,
-  faturamento,
-  vendas,
-  ticket_medio: empresaData.ticket_medio || ticketCalculado,
-  empresa: empresaFiltro
-}
-}
 
     // ================= ANALÍTICO =================
 if(tipoBusca === "analitico" && data){
