@@ -357,6 +357,16 @@ try {
 console.log("🧠 CLASSIFICAÇÃO:", classificacao)
 let empresaFiltro = classificacao.empresa || null
 
+// 🔥 RECUPERA MEMÓRIA AUTOMÁTICA
+if(!empresaFiltro && ultimaMemoria?.memoria_extraida?.ultima_empresa){
+  console.log("🧠 USANDO MEMÓRIA DA EMPRESA:", ultimaMemoria.memoria_extraida.ultima_empresa)
+  empresaFiltro = ultimaMemoria.memoria_extraida.ultima_empresa
+}
+
+
+
+
+  
 // 🔥 CORREÇÃO CRÍTICA
 if(empresaFiltro){
   classificacao.geral = false
@@ -453,6 +463,11 @@ else if(
   
 let tipoConsulta = classificacao.tipo || "geral"
 
+// 🔥 RECUPERA INTENÇÃO
+if(tipoConsulta === "desconhecido" && ultimaMemoria?.memoria_extraida?.ultima_intencao){
+  console.log("🧠 USANDO MEMÓRIA DE INTENÇÃO:", ultimaMemoria.memoria_extraida.ultima_intencao)
+  tipoConsulta = ultimaMemoria.memoria_extraida.ultima_intencao
+}
 
 
 
@@ -1514,6 +1529,24 @@ if(tipoConsulta === "vendas" && resumoDia && empresaFiltro){
   })
 }
 
+
+
+if(
+  texto.includes("meta") &&
+  empresaFiltro
+){
+
+  const meta = METAS[empresaFiltro]?.prata || 0
+
+  return res.json({
+    resposta: `🎯 Meta de ${empresaFiltro}
+
+💰 R$ ${formatar(meta)}`
+  })
+}
+
+
+  
 /* ================= OPENAI ================= */
 
 
