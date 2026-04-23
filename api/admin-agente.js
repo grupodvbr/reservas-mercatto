@@ -1122,58 +1122,44 @@ if(tipoBusca === "dia"){
   // 🔥 AGORA FICA DENTRO (ANTES ESTAVA FORA ❌)
   let empresaData = null
 
- // 🔥 CORREÇÃO FINAL
+  if(empresaFiltro === "MERCATTO"){
 
-if(classificacao.geral === true){
-  
-  // 🔥 SOMA TOTAL (GERAL)
-  const empresas = data.empresas || []
+    const empresas = data.empresas || []
 
-  const faturamento = empresas.reduce((a,e)=>a + Number(e.faturamento || 0),0)
-  const vendas = empresas.reduce((a,e)=>a + Number(e.vendas || 0),0)
+    const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
+    const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
 
-  const ticket = vendas > 0 ? Number((faturamento / vendas).toFixed(2)) : 0
+    const faturamento =
+      Number(emporio?.faturamento || 0) +
+      Number(restaurante?.faturamento || 0)
 
-  empresaData = { faturamento, vendas, ticket_medio: ticket }
+    const vendas =
+      Number(emporio?.vendas || 0) +
+      Number(restaurante?.vendas || 0)
 
-} else if(empresaFiltro === "MERCATTO"){
+    const ticket = vendas > 0
+      ? Number((faturamento / vendas).toFixed(2))
+      : 0
 
-  const empresas = data.empresas || []
+    empresaData = { faturamento, vendas, ticket_medio: ticket }
 
-  const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
-  const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
+  } else if(empresaFiltro){
 
-  const faturamento =
-    Number(emporio?.faturamento || 0) +
-    Number(restaurante?.faturamento || 0)
+    empresaData = data.empresas?.find(
+      e => e.empresa === empresaFiltro
+    )
 
-  const vendas =
-    Number(emporio?.vendas || 0) +
-    Number(restaurante?.vendas || 0)
+    if(!empresaData){
+      return res.json({
+        resposta: `⚠️ Não encontrei dados de vendas para ${empresaFiltro} no dia ${dataFiltro}`
+      })
+    }
 
-  const ticket = vendas > 0
-    ? Number((faturamento / vendas).toFixed(2))
-    : 0
+  } else {
 
-  empresaData = { faturamento, vendas, ticket_medio: ticket }
+    empresaData = data
 
-} else if(empresaFiltro){
-
-  empresaData = data.empresas?.find(
-    e => e.empresa === empresaFiltro
-  )
-
-  if(!empresaData){
-    return res.json({
-      resposta: `⚠️ Não encontrei dados para ${empresaFiltro}`
-    })
   }
-
-} else {
-
-  empresaData = data
-
-}
 
   const faturamento = Number(empresaData.faturamento || 0)
   const vendas = Number(empresaData.vendas || 0)
@@ -1478,27 +1464,6 @@ if(resumoDia && resumoDia.faturamento !== undefined){
 /* ================= OPENAI ================= */
 
 const completion = await openai.chat.completions.create({
-  // 🔥 FORÇA DADO FINAL (PRIORIDADE MÁXIMA)
-if(resumoDia){
-  mensagens.push({
-    role: "system",
-    content: `
-🚨 DADO FINAL DE VENDAS (OBRIGATÓRIO)
-
-${JSON.stringify(resumoDia)}
-
-Use EXATAMENTE esses números.
-Não interprete.
-Não invente.
-Não ignore.
-`
-  })
-}
-
-
-
-
-  
 
 model:"gpt-4.1-mini",
   temperature:0,
@@ -1840,46 +1805,87 @@ ALTERAR_REGISTRO_JSON:
 },
 {
 role:"system",
-content: `
-🚨 REGRA ABSOLUTA — VENDAS
+content:`
 
-Se existir o bloco:
+🔥 MÓDULO INTELIGENTE DE VENDAS — MULTI API
 
-RESUMO_CUPONS_DIA
+Você pode receber diferentes tipos de dados:
 
-Você é OBRIGADO a usar esses dados.
+1. RESUMO_CUPONS_DIA → resumo por empresa
+2. RESUMO_MES → desempenho mensal
+3. CUPONS_ANALITICO → vendas por forma de pagamento (finalizadora)
+4. CUPONS_LISTA → lista completa de cupons individuais
 
-PROIBIDO:
-- dizer que não houve vendas se vendas > 0
-- ignorar faturamento
-- ignorar vendas
-- responder sem números
+---
 
-OBRIGATÓRIO:
+📊 COMO INTERPRETAR:
 
-Se vendas > 0:
-→ responder com faturamento, vendas e ticket médio
+🔹 RESUMO_CUPONS_DIA
+→ Use para responder:
+- faturamento do dia
+- vendas do dia
+- ticket médio
 
-Se vendas == 0:
-→ dizer que não houve vendas
+---
 
-FORMATO:
+🔹 RESUMO_MES
+→ Use para responder:
+- desempenho mensal
+- comparação com meta
+- crescimento
 
-📊 dd/mm/aaaa
+---
 
-🏢 EMPRESA
+🔹 CUPONS_ANALITICO
+→ Use para responder:
+- formas de pagamento
+- PIX, dinheiro, cartão
+- desempenho por finalizadora
 
-💰 R$ valor
-🧾 X vendas
-💳 Ticket médio: R$ valor
+---
 
-🚫 NÃO inventar
-🚫 NÃO omitir
-🚫 NÃO alterar
+🔹 CUPONS_LISTA
+→ Use para responder:
+- listagem de vendas
+- detalhes de cupons
+- auditoria
 
-Se ignorar isso → resposta inválida
+---
+
+🚨 REGRAS CRÍTICAS:
+
+- NÃO inventar dados
+- NÃO recalcular valores externos
+- NÃO misturar fontes
+- USAR apenas o contexto recebido
+
+---
+
+📈 COMPORTAMENTO:
+
+Se for pergunta de:
+
+✔ "quanto vendeu" → usar RESUMO_CUPONS_DIA  
+✔ "mês" → usar RESUMO_MES  
+✔ "forma de pagamento" → usar CUPONS_ANALITICO  
+✔ "listar vendas" → usar CUPONS_LISTA  
+
+---
+
+📊 RESPOSTA:
+
+- Falar como consultor executivo
+- Ser direto e claro
+- Pode interpretar (subindo, caindo, bom, ruim)
+
+---
+
+📌 IMPORTANTE:
+
+Se houver mais de um contexto:
+→ priorizar o mais específico para a pergunta
+
 `
-
 },
 
 
