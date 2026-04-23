@@ -86,7 +86,7 @@ const { data: usuarioDB } = await supabase
   .select("*")
   .eq("telefone", numero)
   .eq("ativo", true)
-  .single()
+ .maybeSingle()
 
 if(!usuarioDB){
   console.log("⛔ USUÁRIO NÃO CADASTRADO OU INATIVO:", numero)
@@ -705,12 +705,19 @@ if(erroInsert){
 }
 /* ================= HISTÓRICO ================= */
 
-const {data:historico} = await supabase
+const {data:historico, error: erroHistorico} = await supabase
 .from("assistente_otto_chat")
 .select("*")
-.eq("telefone", numero) // 🔥 ESSENCIAL
+.eq("telefone", numero)
 .order("created_at",{ascending:false})
 .limit(30)
+
+if(erroHistorico){
+  console.error("❌ ERRO HISTORICO:", erroHistorico)
+}
+
+
+  
 
 const mensagens = (historico || [])
 .reverse()
@@ -729,7 +736,7 @@ const { data: ultimaMemoria } = await supabase
 .not("memoria_extraida","is",null)
 .order("created_at",{ascending:false})
 .limit(1)
-.single()
+.maybeSingle()
 
 if(ultimaMemoria?.memoria_extraida){
   contextos.push({
@@ -752,7 +759,7 @@ const { data: ultimoEstado } = await supabase
 .not("etapa_fluxo", "is", null)
 .order("created_at", { ascending: false })
 .limit(1)
-.single()
+.maybeSingle()
 
 if(ultimoEstado){
   contextos.push({
@@ -2334,7 +2341,7 @@ const { data: ultima } = await supabase
 .eq("telefone", numero)
 .order("created_at",{ascending:false})
 .limit(1)
-.single()
+.maybeSingle()
 
 if(ultima){
   await supabase
