@@ -743,7 +743,7 @@ if(tipoConsulta === "vendas"){
     }
 
     else{
-      url = `${API_CUPONS}/resumo-dia?data=${dataFiltro}`
+      url = `${API_CUPONS}/resumo-dia`
       tipoBusca = "dia"
     }
 
