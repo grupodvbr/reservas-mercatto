@@ -1145,9 +1145,20 @@ if(tipoBusca === "dia"){
 
   } else if(empresaFiltro){
 
-    empresaData = data.empresas?.find(
-      e => e.empresa === empresaFiltro
-    )
+empresaData = data.empresas?.find(e =>
+  e.empresa
+    ?.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+  ===
+  empresaFiltro
+    ?.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+)
+
+
+
+
+    
 
     if(!empresaData){
       return res.json({
