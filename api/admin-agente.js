@@ -404,6 +404,21 @@ else if(
 
   
 let tipoConsulta = classificacao.tipo || "geral"
+// 🔥 DETECTAR TAREFA
+if(
+  texto.includes("lembra") ||
+  texto.includes("lembrete") ||
+  texto.includes("agenda") ||
+  texto.includes("avisar") ||
+  texto.includes("me lembra")
+){
+  tipoConsulta = "tarefas"
+}
+
+
+
+
+  
 const tipoAcao = classificacao.intencao || "consulta"
 if(tipoAcao !== "consulta"){
   console.log("🛠️ AÇÃO DETECTADA:", tipoAcao)
@@ -457,6 +472,15 @@ if(tipoConsulta === "vendas" && ![0,1].includes(NIVEL)){
   
 
 if(NIVEL === 3){
+
+  // 🔥 BLOQUEIO TAREFAS
+if(tipoConsulta === "tarefas" && NIVEL !== 0){
+  return res.json({
+    resposta: "⛔ Apenas administradores podem criar tarefas"
+  })
+}
+
+  
   if(tipoConsulta !== "relatorio"){
     return res.json({
       resposta: "⛔ Seu acesso permite apenas relatórios"
@@ -619,17 +643,18 @@ resposta:"Erro ao executar ação"
 await supabase
 .from("administrador_chat")
 .insert({
-role:"user",
-mensagem:pergunta
+  role:"user",
+  mensagem:pergunta,
+  telefone: numero
 })
-
 /* ================= HISTÓRICO ================= */
 
 const {data:historico} = await supabase
 .from("administrador_chat")
 .select("*")
+.eq("telefone", numero) // 🔥 ESSENCIAL
 .order("created_at",{ascending:false})
-.limit(20)
+.limit(30)
 
 const mensagens = (historico || [])
 .reverse()
@@ -659,6 +684,24 @@ let musicos = []
 let cupons = []
   let resumoDia = null
   const contextos = []
+
+
+
+// 🔥 BUSCAR USUÁRIOS DO SISTEMA (PARA TAREFAS)
+const { data: usuariosSistema } = await supabase
+  .from("usuarios_do_sistema")
+  .select("id,nome,telefone,empresa,setor,cargo,descricao_funcao")
+  .eq("ativo", true)
+
+// 🔥 MANDA PARA O GPT
+contextos.push({
+  role: "system",
+  content: "USUARIOS_SISTEMA:\n" + JSON.stringify(usuariosSistema || [])
+})
+
+
+
+  
 /* ================= RESERVAS ================= */
 
 if(tipoConsulta === "reservas" || tipoConsulta === "relatorio"){
@@ -1955,6 +1998,91 @@ RESERVA_JSON:
 ⚠️ SEMPRE perguntar o que falta
 `
 },
+
+
+
+  {
+role:"system",
+content:`
+
+🔥 MÓDULO DE TAREFAS — ASSISTENTE OTTO
+
+REGRAS:
+
+1. Apenas usuários nível 0 podem criar tarefas
+
+2. Você receberá a lista:
+USUARIOS_SISTEMA
+
+Campos:
+- id
+- nome
+- telefone
+- empresa
+- setor
+- cargo
+- descricao_funcao
+
+---
+
+📌 IDENTIFICAR RESPONSÁVEL:
+
+Se o usuário falar o nome:
+→ usar direto
+
+Se NÃO falar:
+→ sugerir baseado na função
+
+Exemplo:
+"pagar fornecedor" → financeiro
+
+---
+
+📌 ANTES DE SALVAR:
+
+MOSTRAR:
+
+👤 Nome  
+🏢 Empresa  
+📋 Tarefa  
+⏰ Execução  
+🔔 Lembrete  
+
+E perguntar:
+"Confirma?"
+
+---
+
+📌 APÓS CONFIRMAÇÃO:
+
+GERAR:
+
+TAREFA_JSON:
+{
+  "operacao":"insert",
+  "tabela":"assistente_otto_tarefas",
+  "dados":{
+    "usuario_id":"",
+    "telefone":"",
+    "tarefa":"",
+    "data_execucao":"",
+    "data_lembrete":"",
+    "status":"pendente"
+  }
+}
+
+---
+
+🚨 REGRAS:
+
+- Nunca criar sem confirmação
+- Nunca inventar usuário
+- Sempre usar USUARIOS_SISTEMA
+- Sempre mostrar empresa antes de salvar
+
+`
+},
+  
 {
 role:"system",
 content:`REGRAS DO AGENTE:
@@ -2179,30 +2307,48 @@ if(matchReserva){
   
 let acao = null
 
-const match = resposta.match(/ALTERAR_REGISTRO_JSON:\s*(\{[\s\S]*\})/)
+// 🔥 DETECTAR TAREFA
+const matchTarefa = resposta.match(/TAREFA_JSON:\s*([\s\S]*)/)
 
-if(match && NIVEL === 0){
+if(matchTarefa && NIVEL === 0){
 
   try{
 
-    let jsonTexto = match[1]
+    let jsonTexto = matchTarefa[1]
 
     jsonTexto = jsonTexto
       .replace(/```json/g,"")
       .replace(/```/g,"")
       .trim()
 
-    acao = JSON.parse(jsonTexto)
+    const inicio = jsonTexto.indexOf("{")
+    const fim = jsonTexto.lastIndexOf("}")
 
-    if(!resposta.includes("Confirme")){
-      resposta += "\n\n⚠️ Confirme para executar esta ação."
+    if(inicio !== -1 && fim !== -1){
+      jsonTexto = jsonTexto.substring(inicio, fim + 1)
     }
 
-  }catch(e){
-    console.log("Erro parse JSON ação:", match[1])
-  }
+    const acaoTarefa = JSON.parse(jsonTexto)
 
+    const { error } = await supabase
+      .from("assistente_otto_tarefas")
+      .insert(acaoTarefa.dados)
+
+    if(error){
+      console.error("❌ ERRO TAREFA:", error)
+      throw error
+    }
+
+    resposta = "✅ Tarefa agendada com sucesso"
+
+  }catch(e){
+    console.error("❌ ERRO TAREFA:", e)
+    resposta = "❌ Erro ao criar tarefa"
+  }
 }
+
+
+
 
 /* ================= SALVAR RESPOSTA ================= */
 
