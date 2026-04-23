@@ -1,210 +1,225 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Envio de Currículos • Mercatto Delícia</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <meta name="color-scheme" content="light dark" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-  <style>
-    :root{
-      --bg:#f3f5f9; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
-      --brand:#2563eb; --brand-2:#1e40af; --accent:#f59e0b;
-      --ok:#16a34a; --danger:#dc2626; --shadow:0 12px 30px rgba(2,6,23,.06);
-    }
-    @media (prefers-color-scheme: dark){
-      :root{
-        --bg:#0b0e14; --card:#0f131b; --text:#e5e7eb; --muted:#9ca3af; --line:#1f2937;
-        --shadow:0 12px 30px rgba(0,0,0,.35);
-      }
-    }
-    *{box-sizing:border-box}
-    body{
-      font-family:'Inter',sans-serif; margin:0; padding:0; background:var(--bg); color:var(--text);
-      display:flex; align-items:center; justify-content:center; min-height:100vh;
-      background:radial-gradient(800px 600px at -10% -10%, rgba(37,99,235,.08), transparent 60%),
-                 radial-gradient(800px 600px at 110% -10%, rgba(245,158,11,.08), transparent 60%), var(--bg);
-    }
-    .card{
-      width:100%; max-width:480px; background:var(--card); border-radius:18px; box-shadow:var(--shadow);
-      padding:28px 26px 34px; margin:20px; border:1px solid var(--line);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-    /* Corrige cor do select e opções */
-    select {
-      background-color: var(--card);
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
-    select option {
-      background-color: var(--card);
-      color: var(--text);
-    }
+<title>Trabalhe Conosco • Grupo DV</title>
 
-    h1{text-align:center; color:var(--accent); font-weight:800; margin-bottom:20px}
-    label{font-weight:600; display:block; margin-top:14px; font-size:.94rem}
-    input,select,button{
-      width:100%; padding:12px; border-radius:12px; border:1px solid var(--line);
-      background:transparent; color:inherit; font-size:16px; outline:none; transition:.15s;
-    }
-    input:focus,select:focus{border-color:var(--brand); box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-    button{
-      background:linear-gradient(90deg,var(--brand),var(--brand-2)); color:#fff; font-weight:700;
-      border:0; margin-top:20px; cursor:pointer; transition:.25s;
-    }
-    button:hover{opacity:.9}
-    .file-box{display:flex; align-items:center; justify-content:space-between; margin-top:10px;
-      border:1px dashed var(--line); border-radius:10px; padding:10px 12px; font-size:.9rem; color:var(--muted);}
-    .file-box span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
-    .progress{height:8px; width:100%; border-radius:8px; background:#1e293b; margin-top:10px; overflow:hidden;}
-    .progress span{display:block; height:100%; width:0%; background:var(--accent); transition:width .3s;}
-    .msg{text-align:center; margin-top:12px; font-size:.9rem;}
-    .msg.ok{color:var(--ok)} .msg.err{color:var(--danger)}
-  </style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:#0b0e14;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.card{
+  width:100%;
+  max-width:500px;
+  background:#121826;
+  border-radius:18px;
+  padding:28px;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+
+h1{
+  text-align:center;
+  margin-bottom:20px;
+  color:#f59e0b;
+}
+
+label{
+  display:block;
+  margin-top:12px;
+  font-weight:600;
+}
+
+input, select{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid #1f2937;
+  background:#0b0e14;
+  color:#fff;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:20px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#f59e0b,#d97706);
+  font-weight:bold;
+  color:#000;
+  cursor:pointer;
+}
+
+.msg{
+  text-align:center;
+  margin-top:12px;
+}
+
+.ok{color:#22c55e}
+.err{color:#ef4444}
+
+.progress{
+  height:6px;
+  background:#1f2937;
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress span{
+  display:block;
+  height:100%;
+  width:0%;
+  background:#f59e0b;
+}
+</style>
 </head>
+
 <body>
-  <form class="card" id="cvForm">
-    <h1>Cadastre seu Currículo</h1>
 
-    <label>Nome completo *</label>
-    <input type="text" id="nome" required placeholder="Digite seu nome completo" />
+<form class="card" id="form">
 
-    <label>Idade *</label>
-    <input type="number" id="idade" min="14" required placeholder="Sua idade" />
+<h1>Envie seu Currículo</h1>
 
-    <label>Área de interesse *</label>
-    <select id="area" required>
-      <option value="">Selecione</option>
-      <option>Cozinha</option>
-      <option>Atendimento</option>
-      <option>Garçom</option>
-      <option>Administração</option>
-      <option>Auxiliar</option>
-      <option>Financeiro</option>
-      <option>Outros</option>
-    </select>
+<label>Nome *</label>
+<input id="nome" required>
 
-    <!-- Campo adicional escondido -->
-    <div id="outrosBox" style="display:none;">
-      <label>Especifique a função</label>
-      <input type="text" id="funcaoOutros" placeholder="Digite a função desejada" />
-    </div>
+<label>Idade *</label>
+<input id="idade" type="number" required>
 
-    <label>Currículo (PDF, DOC ou DOCX) *</label>
-    <input type="file" id="arquivo" accept=".pdf,.doc,.docx" required />
-    <div class="file-box" id="fileBox" style="display:none;">
-      <span id="fileName">Nenhum arquivo selecionado</span>
-      <button type="button" id="clearFile" style="width:auto;background:var(--danger);padding:8px 10px;border-radius:8px;">Remover</button>
-    </div>
+<label>Sexo *</label>
+<select id="sexo" required>
+<option value="">Selecione</option>
+<option>Masculino</option>
+<option>Feminino</option>
+<option>Outro</option>
+</select>
 
-    <div class="progress" id="progressBar" style="display:none;"><span></span></div>
+<label>Telefone *</label>
+<input id="telefone" required>
 
-    <button type="submit">📤 Enviar Currículo</button>
-    <div class="msg" id="mensagem"></div>
-  </form>
+<label>Email</label>
+<input id="email">
 
-  <script>
-    const ENDPOINT = "https://script.google.com/macros/s/AKfycbyFk_V6sLlZbNbnQwZK1nMhtHaxqSDQkq-0eARh67yKZByuQEOGwZLzs_Ir4YkY6okG/exec";
+<label>Empresa *</label>
+<select id="empresa" required>
+<option value="">Selecione</option>
+<option>MERCATTO DELÍCIA</option>
+<option>VILLA GOURMET</option>
+<option>PADARIA DELÍCIA</option>
+<option>M.KIDS</option>
+<option>DELÍCIA GOURMET</option>
+</select>
 
-    const form = document.getElementById("cvForm");
-    const msg = document.getElementById("mensagem");
-    const inputArquivo = document.getElementById("arquivo");
-    const fileBox = document.getElementById("fileBox");
-    const fileName = document.getElementById("fileName");
-    const clearFile = document.getElementById("clearFile");
-    const progress = document.getElementById("progressBar");
-    const bar = progress.querySelector("span");
-    const areaSelect = document.getElementById("area");
-    const outrosBox = document.getElementById("outrosBox");
-    const funcaoOutros = document.getElementById("funcaoOutros");
+<label>Área de Interesse *</label>
+<input id="area" placeholder="EX: GARÇOM, COZINHA..." required>
 
-    // Mostrar campo "Outros"
-    areaSelect.addEventListener("change", () => {
-      if (areaSelect.value === "Outros") {
-        outrosBox.style.display = "block";
-        funcaoOutros.required = true;
-      } else {
-        outrosBox.style.display = "none";
-        funcaoOutros.required = false;
-        funcaoOutros.value = "";
-      }
+<label>Currículo *</label>
+<input type="file" id="arquivo" required>
+
+<div class="progress"><span id="bar"></span></div>
+
+<button>Enviar Currículo</button>
+
+<div id="msg" class="msg"></div>
+
+</form>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+const form = document.getElementById("form");
+const msg = document.getElementById("msg");
+const bar = document.getElementById("bar");
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+
+  msg.textContent = "Enviando...";
+  bar.style.width = "20%";
+
+  const nome = nomeInput.value;
+  const idade = idade.value;
+  const sexo = sexo.value;
+  const telefone = telefone.value;
+  const email = emailInput.value;
+  const empresa = empresaSelect.value;
+  let area = areaInput.value.toUpperCase();
+
+  const file = arquivo.files[0];
+
+  // Upload arquivo
+  const fileName = Date.now() + "_" + file.name;
+
+  bar.style.width = "40%";
+
+  const { data: upload, error: errUpload } = await supabase
+    .storage
+    .from("curriculos")
+    .upload(fileName, file);
+
+  if(errUpload){
+    msg.textContent = "Erro upload";
+    msg.className="msg err";
+    return;
+  }
+
+  bar.style.width = "70%";
+
+  const { data: urlData } = supabase
+    .storage
+    .from("curriculos")
+    .getPublicUrl(fileName);
+
+  // Salvar no banco
+  const { error } = await supabase
+    .from("curriculo_empresas")
+    .insert({
+      nome,
+      idade,
+      sexo,
+      telefone,
+      email,
+      empresa,
+      area_interesse: area,
+      arquivo_url: urlData.publicUrl,
+      nome_arquivo: file.name
     });
 
-    // Exibir nome do arquivo
-    inputArquivo.addEventListener("change", () => {
-      const f = inputArquivo.files[0];
-      if (!f) { fileBox.style.display = "none"; return; }
-      fileBox.style.display = "flex";
-      fileName.textContent = f.name + " • " + (f.size/1024/1024).toFixed(2) + " MB";
-    });
-    clearFile.addEventListener("click", () => {
-      inputArquivo.value = "";
-      fileBox.style.display = "none";
-    });
+  if(error){
+    msg.textContent = "Erro ao salvar";
+    msg.className="msg err";
+    return;
+  }
 
-    // Envio
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.textContent = "";
-      msg.className = "msg";
-      progress.style.display = "block";
-      bar.style.width = "0%";
+  bar.style.width = "100%";
 
-      const nome = document.getElementById("nome").value.trim();
-      const idade = document.getElementById("idade").value.trim();
-      let area = document.getElementById("area").value;
-      const file = inputArquivo.files[0];
+  msg.innerHTML = `✅ Obrigado <b>${nome}</b>!<br>Seu currículo foi enviado para <b>${empresa}</b>.`;
+  msg.className="msg ok";
 
-      // Se for "Outros", usar o texto digitado
-      if (area === "Outros" && funcaoOutros.value.trim()) {
-        area = "Outros - " + funcaoOutros.value.trim();
-      }
+  form.reset();
+});
+</script>
 
-      if (!file) { msg.textContent = "Selecione um arquivo."; msg.classList.add("err"); return; }
-
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-        reader.onprogress = (ev) => {
-          if (ev.lengthComputable) {
-            const pct = (ev.loaded / ev.total) * 100;
-            bar.style.width = pct + "%";
-          }
-        };
-      });
-
-      msg.textContent = "Enviando dados...";
-      try {
-        const resp = await fetch(ENDPOINT, {
-          method: "POST",
-          body: JSON.stringify({
-            nome,
-            idade,
-            area,
-            nomeArquivo: file.name,
-            arquivo: base64
-          }),
-        });
-        const data = await resp.json();
-        if (data.sucesso) {
-          bar.style.width = "100%";
-          msg.textContent = "✅ Currículo enviado com sucesso!";
-          msg.classList.add("ok");
-          form.reset();
-          fileBox.style.display = "none";
-          outrosBox.style.display = "none";
-          setTimeout(() => progress.style.display = "none", 1500);
-        } else {
-          msg.textContent = "⚠️ Erro: " + (data.erro || "Falha ao enviar.");
-          msg.classList.add("err");
-        }
-      } catch (err) {
-        msg.textContent = "⚠️ Erro de rede: " + err.message;
-        msg.classList.add("err");
-      }
-    });
-  </script>
 </body>
 </html>
