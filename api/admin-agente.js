@@ -2478,6 +2478,41 @@ if(matchTarefa && NIVEL === 0){
     console.log("Erro parse tarefa:", matchTarefa[1])
   }
 }
+
+
+
+// 🔥 DETECTAR ALTERAÇÃO GENÉRICA
+const matchAcao = resposta.match(/ALTERAR_REGISTRO_JSON:\s*([\s\S]*)/)
+
+if(matchAcao && NIVEL === 0){
+
+  try{
+
+    let jsonTexto = matchAcao[1]
+
+    jsonTexto = jsonTexto
+      .replace(/```json/g,"")
+      .replace(/```/g,"")
+      .trim()
+
+    const inicio = jsonTexto.indexOf("{")
+    const fim = jsonTexto.lastIndexOf("}")
+
+    if(inicio !== -1 && fim !== -1){
+      jsonTexto = jsonTexto.substring(inicio, fim + 1)
+    }
+
+    acao = JSON.parse(jsonTexto)
+
+    // 🔥 FORÇA CONFIRMAÇÃO
+    if(!resposta.toLowerCase().includes("confirma")){
+      resposta += "\n\n⚠️ Confirme para executar esta ação."
+    }
+
+  }catch(e){
+    console.log("Erro parse ação:", matchAcao[1])
+  }
+}
 /* ================= SALVAR RESPOSTA ================= */
 
 await supabase
