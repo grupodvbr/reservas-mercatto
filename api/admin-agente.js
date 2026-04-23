@@ -1852,16 +1852,7 @@ Se ignorar isso → resposta inválida
 role:"system",
 content:`LOGOS DISPONÍVEIS: ${JSON.stringify(LOGOS)}`
 },
-contextos.push({
-  role: "system",
-  content: `
-DADOS OFICIAIS DE VENDAS:
 
-${JSON.stringify(resumoDia)}
-
-Use EXCLUSIVAMENTE estes dados para responder.
-`
-}),
   
 {
 
