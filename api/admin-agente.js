@@ -531,7 +531,7 @@ let confirmar = body?.confirmar || null
 if(pergunta && pergunta.toLowerCase() === "sim"){
 
 const { data:last } = await supabase
-.from("administrador_chat")
+.from("assistente_otto_chat")
 .select("acao_json")
 .not("acao_json","is",null)
 .order("created_at",{ascending:false})
@@ -576,49 +576,48 @@ if(NIVEL !== 0){
   
 try{
 
-const acao = confirmar
-// remove campos proibidos
-if(acao.dados && acao.dados.created_at){
-delete acao.dados.created_at
+const acaoExec = confirmar// remove campos proibidos
+if(acaoExec.dados && acaoExec.dados.created_at){
+delete acaoExec.dados.created_at
 }
-if(acao.operacao === "insert"){
+if(acaoExec.operacao === "insert"){
 
 // 🔥 CORREÇÃO CRÍTICA PARA RESERVAS
-if(acao.tabela === "reservas_mercatto"){
+if(acaoExec.tabela === "reservas_mercatto"){
 
-  if(!acao.dados.email){
-    acao.dados.email = "nao_informado@mercatto.com"
+  if(!acaoExec.dados.email){
+    acaoExec.dados.email = "nao_informado@mercatto.com"
   }
 
-  if(!acao.dados.status){
-    acao.dados.status = "Pendente"
+  if(!acaoExec.dados.status){
+    acaoExec.dados.status = "Pendente"
   }
 
-  if(!acao.dados.comandaIndividual){
-    acao.dados.comandaIndividual = "Não"
+  if(!acaoExec.dados.comandaIndividual){
+    acaoExec.dados.comandaIndividual = "Não"
   }
 
-  if(!acao.dados.valorEstimado){
-    acao.dados.valorEstimado = 0
+  if(!acaoExec.dados.valorEstimado){
+    acaoExec.dados.valorEstimado = 0
   }
 
-  if(!acao.dados.pagamentoAntecipado){
-    acao.dados.pagamentoAntecipado = 0
+  if(!acaoExec.dados.pagamentoAntecipado){
+    acaoExec.dados.pagamentoAntecipado = 0
   }
 
-  if(!acao.dados.banco){
-    acao.dados.banco = ""
+  if(!acaoExec.dados.banco){
+    acaoExec.dados.banco = ""
   }
 
-  if(!acao.dados.observacoes){
-    acao.dados.observacoes = ""
+  if(!acaoExec.dados.observacoes){
+    acaoExec.dados.observacoes = ""
   }
 
 }
 
 const { data, error } = await supabase
-.from(acao.tabela)
-.insert(acao.dados)
+.from(acaoExec.tabela)
+.insert(acaoExec.dados)
 .select()
 
 if(error){
@@ -628,27 +627,27 @@ throw error
 
 }
 
-if(acao.operacao === "update"){
+if(acaoExec.operacao === "update"){
 
 const { data, error } = await supabase
-.from(acao.tabela)
-.update(acao.dados)
-.match(acao.filtro)
+.from(acaoExec.tabela)
+.update(acaoExec.dados)
+.match(acaoExec.filtro)
 .select()
 
-if(error){
+if(acaoExec){
 console.error("Erro update:", error)
 throw error
 }
 
 }
 
-if(acao.operacao === "delete"){
+if(acaoExec.operacao === "delete"){
 
 const { error } = await supabase
-.from(acao.tabela)
+.from(acaoExec.tabela)
 .delete()
-.match(acao.filtro)
+.match(acaoExec.filtro)
 
 if(error){
 console.error("Erro delete:", error)
@@ -658,12 +657,17 @@ throw error
 }
 
 await supabase
-.from("administrador_chat")
+.from("assistente_otto_chat")
 .insert({
 role:"assistant",
 mensagem:"✅ Ação executada com sucesso"
 })
 
+
+
+
+
+  
 return res.json({
 resposta:"✅ Ação executada com sucesso"
 })
@@ -683,17 +687,22 @@ resposta:"Erro ao executar ação"
 /* ================= SALVAR PERGUNTA ================= */
 
 await supabase
-.from("administrador_chat")
+.from("assistente_otto_chat")
 .insert({
-  role:"user",
-  mensagem:pergunta,
+  role: "user",
+  mensagem: pergunta,
+  mensagem_limpa: textoNormalizado,
   telefone: numero,
-  nome: NOME
+  usuario_id: usuarioDB.id,
+  nome: NOME,
+  empresa: EMPRESA,
+  tipo: tipoConsulta,
+  intencao: tipoAcao
 })
 /* ================= HISTÓRICO ================= */
 
 const {data:historico} = await supabase
-.from("administrador_chat")
+.from("assistente_otto_chat")
 .select("*")
 .eq("telefone", numero) // 🔥 ESSENCIAL
 .order("created_at",{ascending:false})
@@ -706,6 +715,50 @@ const mensagens = (historico || [])
   content: m.mensagem + (m.acao_json ? `\n\nAÇÃO_JSON:\n${JSON.stringify(m.acao_json)}` : "")
 }))
 
+// ================= MEMÓRIA DO USUÁRIO =================
+
+const { data: ultimaMemoria } = await supabase
+.from("assistente_otto_chat")
+.select("memoria_extraida")
+.eq("telefone", numero)
+.not("memoria_extraida","is",null)
+.order("created_at",{ascending:false})
+.limit(1)
+.single()
+
+if(ultimaMemoria?.memoria_extraida){
+  contextos.push({
+    role: "system",
+    content: "MEMORIA_USUARIO:\n" + JSON.stringify(ultimaMemoria.memoria_extraida)
+  })
+}
+
+
+
+
+
+  
+// 🔥 CRIA CONTEXTO ANTES DE USAR
+const contextos = []
+// ================= ESTADO DA CONVERSA =================
+
+const { data: ultimoEstado } = await supabase
+.from("assistente_otto_chat")
+.select("etapa_fluxo, contexto")
+.eq("telefone", numero)
+.not("etapa_fluxo", "is", null)
+.order("created_at", { ascending: false })
+.limit(1)
+.single()
+
+if(ultimoEstado){
+  contextos.push({
+    role: "system",
+    content: "ESTADO_CONVERSA:\n" + JSON.stringify(ultimoEstado)
+  })
+}
+
+  
 mensagens.push({
 role:"user",
 content: pergunta
@@ -725,8 +778,8 @@ let produtos = []
 let buffetLancamentos = []
 let musicos = []
 let cupons = []
-  let resumoDia = null
-  const contextos = []
+let resumoDia = null
+  
 
 // 🔥 CONTEXTO DO USUÁRIO (LOCAL EXATO)
 contextos.push({
@@ -2263,17 +2316,38 @@ Se não gerar o JSON a ação será ignorada.
 let resposta = completion.choices[0].message.content
 // 🔥 BLOQUEIO TOTAL DE INVENÇÃO
 
+// ================= MEMÓRIA AUTOMÁTICA =================
 
-  
+const memoriaExtraida = {
+  ultima_intencao: tipoConsulta,
+  ultima_empresa: empresaFiltro,
+  ultima_data: dataFiltro
+}
 
 
+const { data: ultima } = await supabase
+.from("assistente_otto_chat")
+.select("id")
+.eq("telefone", numero)
+.order("created_at",{ascending:false})
+.limit(1)
+.single()
 
+if(ultima){
+  await supabase
+  .from("assistente_otto_chat")
+  .update({
+    memoria_extraida: memoriaExtraida
+  })
+  .eq("id", ultima.id)
+}
 
 
 
 /* ================= DETECTAR RESERVA ================= */
 
 const matchReserva = resposta.match(/RESERVA_JSON:\s*([\s\S]*)/)
+  
 
 if(matchReserva){
 
@@ -2394,11 +2468,16 @@ if(matchTarefa && NIVEL === 0){
 /* ================= SALVAR RESPOSTA ================= */
 
 await supabase
-.from("administrador_chat")
+.from("assistente_otto_chat")
 .insert({
-role:"assistant",
-mensagem:resposta,
-acao_json:acao
+  role: "assistant",
+  mensagem: resposta,
+  telefone: numero,
+  usuario_id: usuarioDB.id,
+  nome: NOME,
+  empresa: EMPRESA,
+  acao_json: acao,
+  aguardando_confirmacao: acao ? true : false
 })
 
 return res.json({
