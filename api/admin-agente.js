@@ -978,29 +978,15 @@ const ehDiagnostico =
   texto.includes("resumo")
 
 const ehMes =
-  texto.includes("mes") ||
-  texto.includes("mês") ||
-  texto.includes("meta") ||
-  texto.includes("percentual") ||
-  texto.includes("atingiu") ||
-  texto.includes("até agora") ||
-  texto.includes("ate agora") ||
-  texto.includes("progresso") ||
-  texto.includes("desempenho") 
+  texto.includes("mes") || texto.includes("mês")
 
-
-
-    
 const ehHoje =
-  !ehMes &&
-  texto.includes("hoje") &&
-  !texto.includes("até agora") &&
-  !texto.includes("ate agora")
-
-
-    
+  !ehMes && (
+    texto.includes("hoje") ||
+    dataFiltro === hojeISO
+  )
 // 🔥 DIAGNÓSTICO TEM PRIORIDADE TOTAL
-if(ehDiagnostico && !ehMes){
+if(ehDiagnostico){
   console.log("🧠 MODO DIAGNÓSTICO → FORÇANDO RESUMO DIA")
 
   empresaFiltro = null
@@ -1045,48 +1031,12 @@ else if(ehMes){
   const vendasMes = Number(empresaMes?.vendas_mes || 0)
   const vendasHoje = Number(empresaHoje?.vendas || 0)
 
- const total = faturamentoMes
+  const total = faturamentoMes + faturamentoHoje
 
-// 📅 DATA ATUAL
-const hoje = new Date(
-  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
-)
+  const metaInfo = empresaFiltro
+    ? calcularMeta(empresaFiltro, total)
+    : { meta:0, percentual:0 }
 
-const diaAtual = hoje.getDate()
-
-// 📅 DIAS NO MÊS
-const diasNoMes = new Date(
-  hoje.getFullYear(),
-  hoje.getMonth() + 1,
-  0
-).getDate()
-
-// 🎯 META TOTAL
-const meta = METAS[empresaFiltro]?.prata || 0
-
-// 🎯 META ESPERADA ATÉ HOJE
-const metaEsperada = (meta / diasNoMes) * diaAtual
-
-// 📊 % REAL DA META
-const percentualReal = meta > 0
-  ? (total / meta) * 100
-  : 0
-
-// 📊 % DO ESPERADO
-const percentualEsperado = meta > 0
-  ? (metaEsperada / meta) * 100
-  : 0
-
-// 📊 STATUS
-const status = total >= metaEsperada
-  ? "dentro do esperado"
-  : "abaixo do esperado"
-
-
-
-
-
-  
   contextos.push({
     role:"system",
     content: "RESUMO_MES_COMPLETO:\n" + JSON.stringify({
@@ -1103,16 +1053,8 @@ const status = total >= metaEsperada
         faturamento: total,
         vendas: vendasMes + vendasHoje
       },
-
-
-      
-meta_total: meta,
-meta_esperada_ate_hoje: metaEsperada,
-
-percentual_real: percentualReal,
-percentual_esperado: percentualEsperado,
-
-status: status
+      meta: metaInfo.meta,
+      percentual_meta: metaInfo.percentual
     })
   })
 }
