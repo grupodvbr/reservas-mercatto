@@ -810,20 +810,28 @@ async function salvarEscala(){
 
   const dataBase = dataManual.value || dataSelecionada
 
-  for(const h of lista){
-await sb
-  .from("escala_funcionarios")
-  .insert({
-    funcionario_id: f.id,
-    nome: f.nome,
-    data: dataBase,
-    entrada: h.inicio,
-    saida: h.fim,
-    setor: f.setor,
-    empresa: "MERCATTO DELICIA", // 🔥 FALTAVA ISSO
-    atualizado_em: new Date().toISOString()
-  })
+for(const h of lista){
+
+  const { error } = await sb
+    .from("escala_funcionarios")
+    .upsert({
+      funcionario_id: f.id,
+      nome: f.nome,
+      data: dataBase,
+      entrada: h.inicio,
+      saida: h.fim,
+      setor: f.setor,
+      empresa: "MERCATTO DELICIA",
+      atualizado_em: new Date().toISOString()
+    },{
+      onConflict: 'funcionario_id,data,entrada'
+    })
+
+  if(error){
+    console.error("ERRO:", error)
+    alert("Já existe escala nesse horário!")
   }
+}
 
   fechar()
   render()
