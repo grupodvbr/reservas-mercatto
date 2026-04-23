@@ -146,18 +146,58 @@ const texto = pergunta.toLowerCase()
 
 let dataFiltro = hojeISO
 
-// 🔥 INTERPRETAÇÃO DE DATA FALADA (CRÍTICO)
-const matchData = texto.match(/(\d{1,2})\D+(\d{1,2})/)
-
-if(matchData){
-  const dia = matchData[1].padStart(2,"0")
-  const mes = matchData[2].padStart(2,"0")
-
-  dataFiltro = `${hojeISO.slice(0,4)}-${mes}-${dia}`
-
-  console.log("📅 DATA INTERPRETADA:", dataFiltro)
+function formatarData(date){
+  return date.toISOString().slice(0,10)
 }
 
+const hojeDate = new Date(`${hojeISO}T00:00:00`)
+
+// 🔥 PRIORIDADE 1 — PALAVRAS
+if(texto.includes("hoje")){
+  dataFiltro = hojeISO
+}
+
+else if(texto.includes("ontem")){
+  const d = new Date(hojeDate)
+  d.setDate(d.getDate() - 1)
+  dataFiltro = formatarData(d)
+}
+
+else if(texto.includes("anteontem")){
+  const d = new Date(hojeDate)
+  d.setDate(d.getDate() - 2)
+  dataFiltro = formatarData(d)
+}
+
+else if(texto.includes("amanha") || texto.includes("amanhã")){
+  const d = new Date(hojeDate)
+  d.setDate(d.getDate() + 1)
+  dataFiltro = formatarData(d)
+}
+
+// 🔥 PRIORIDADE 2 — DATA COMPLETA (21/04, 21-04, 21 do 4)
+else if(texto.match(/(\d{1,2})\D+(\d{1,2})/)){
+
+  const match = texto.match(/(\d{1,2})\D+(\d{1,2})/)
+
+  const dia = match[1].padStart(2,"0")
+  const mes = match[2].padStart(2,"0")
+
+  dataFiltro = `${hojeISO.slice(0,4)}-${mes}-${dia}`
+}
+
+// 🔥 PRIORIDADE 3 — DIA SOLTO (dia 21)
+else if(texto.match(/dia\s+(\d{1,2})/)){
+
+  const match = texto.match(/dia\s+(\d{1,2})/)
+
+  const dia = match[1].padStart(2,"0")
+  const mesAtual = hojeISO.slice(5,7)
+
+  dataFiltro = `${hojeISO.slice(0,4)}-${mesAtual}-${dia}`
+}
+
+console.log("📅 DATA FINAL USADA:", dataFiltro)
 // ================= INTELIGÊNCIA GLOBAL =================
 
 const interpretacao = await openai.chat.completions.create({
