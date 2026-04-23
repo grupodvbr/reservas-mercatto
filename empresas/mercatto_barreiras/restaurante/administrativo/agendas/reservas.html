@@ -2207,7 +2207,6 @@ $('#confirmDelete').addEventListener('click', async ()=>{
     $('#prevMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()-1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#nextMonth').addEventListener('click', ()=>{ const m = new Date(state.ano,state.mes,1); m.setMonth(m.getMonth()+1); state.mes=m.getMonth(); state.ano=m.getFullYear(); refreshAll(); });
     $('#todayBtn').addEventListener('click', ()=>{ const t=new Date(); state.mes=t.getMonth(); state.ano=t.getFullYear(); refreshAll(); });
-    $('#refreshBtn').addEventListener('click', ()=> refreshAll());
 
     async function loadMonth(ano, mes){
       try{
