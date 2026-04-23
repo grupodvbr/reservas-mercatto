@@ -556,6 +556,7 @@ let buffetLancamentos = []
 let musicos = []
 let cupons = []
   let resumoDia = null
+  const contextos = []
 /* ================= RESERVAS ================= */
 
 if(tipoConsulta === "reservas" || tipoConsulta === "relatorio"){
@@ -620,179 +621,143 @@ function formatarData(dataISO){
 
 
 
+const API_CUPONS = "https://inspired-still-reflects-closes.trycloudflare.com"
+
 if(tipoConsulta === "vendas"){
   try{
 
-    console.log("🔥 CONSULTANDO API DE VENDAS...")
+    console.log("🔥 CONSULTA INTELIGENTE DE VENDAS")
 
-    let url = "https://inspired-still-reflects-closes.trycloudflare.com/resumo-dia"
+    let url = ""
+    let tipoBusca = "dia"
+
+    // ================= DECISÃO INTELIGENTE =================
+
+    if(
+      texto.includes("mes") ||
+      texto.includes("mês")
+    ){
+      url = `${API_CUPONS}/resumo-mes`
+      tipoBusca = "mes"
+    }
+
+    else if(
+      texto.includes("forma") ||
+      texto.includes("pagamento") ||
+      texto.includes("pix") ||
+      texto.includes("cartao") ||
+      texto.includes("cartão")
+    ){
+      url = `${API_CUPONS}/cupons-analitico?data=${dataFiltro}`
+      tipoBusca = "analitico"
+    }
+
+    else if(
+      texto.includes("lista") ||
+      texto.includes("cupons") ||
+      texto.includes("vendas detalhadas")
+    ){
+      url = `${API_CUPONS}/cupons?data=${dataFiltro}`
+      tipoBusca = "lista"
+    }
+
+    else{
+      url = `${API_CUPONS}/resumo-dia?data=${dataFiltro}`
+      tipoBusca = "dia"
+    }
+
+    console.log("🌐 URL:", url)
 
     const resApi = await fetch(url)
     const data = await resApi.json()
 
-    let empresaData = null
+    // ================= RESUMO DIA =================
+    if(tipoBusca === "dia"){
 
-if(empresaFiltro === "MERCATTO"){
+      let empresaData = null
 
-  console.log("🧮 SOMANDO MERCATTO (EMPÓRIO + RESTAURANTE)")
+      if(empresaFiltro === "MERCATTO"){
 
-  const empresas = data.empresas || []
+        const empresas = data.empresas || []
 
-  const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
-  const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
+        const emporio = empresas.find(e => e.empresa === "MERCATTO EMPORIO")
+        const restaurante = empresas.find(e => e.empresa === "MERCATTO RESTAURANTE")
 
-  const faturamento =
-    Number(emporio?.faturamento || 0) +
-    Number(restaurante?.faturamento || 0)
+        const faturamento =
+          Number(emporio?.faturamento || 0) +
+          Number(restaurante?.faturamento || 0)
 
-  const vendas =
-    Number(emporio?.vendas || 0) +
-    Number(restaurante?.vendas || 0)
+        const vendas =
+          Number(emporio?.vendas || 0) +
+          Number(restaurante?.vendas || 0)
 
-  const ticket = vendas > 0
-    ? Number((faturamento / vendas).toFixed(2))
-    : 0
+        const ticket = vendas > 0
+          ? Number((faturamento / vendas).toFixed(2))
+          : 0
 
-  empresaData = {
-    faturamento,
-    vendas,
-    ticket_medio: ticket
-  }
+        empresaData = { faturamento, vendas, ticket_medio: ticket }
 
-}
-else if(empresaFiltro){
+      } else if(empresaFiltro){
 
-  empresaData = data.empresas?.find(
-    e => e.empresa === empresaFiltro
-  )
+        empresaData = data.empresas?.find(
+          e => e.empresa === empresaFiltro
+        )
 
-}
+      } else {
 
+        empresaData = data
 
+      }
 
+      resumoDia = {
+        data: data.data,
+        faturamento: empresaData.faturamento,
+        vendas: empresaData.vendas,
+        ticket_medio: empresaData.ticket_medio || 0,
+        empresa: empresaFiltro
+      }
 
-else{
+    }
 
-  const pediuTotal =
-    texto.includes("total") ||
-    texto.includes("todas") ||
-    texto.includes("soma")
+    // ================= ANALÍTICO =================
+if(tipoBusca === "analitico" && data){
 
-  if(!pediuTotal){
-    return res.json({
-      resposta: "Informe a empresa para consultar vendas."
-    })
-  }
+  const finalizadoras = data.empresas || data
 
-  console.log("🧮 SOMANDO EMPRESAS (PEDIDO EXPLÍCITO)")
-
-  const empresas = data.empresas || []
-
-  const faturamento = empresas.reduce((acc,e)=>acc + Number(e.faturamento || 0),0)
-  const vendas = empresas.reduce((acc,e)=>acc + Number(e.vendas || 0),0)
-
-  const ticket = vendas > 0
-    ? Number((faturamento / vendas).toFixed(2))
-    : 0
-
-  empresaData = {
-    faturamento,
-    vendas,
-    ticket_medio: ticket
-  }
+  contextos.push({
+    role:"system",
+    content: "CUPONS_ANALITICO:\n" + JSON.stringify(finalizadoras)
+  })
 
 }
 
-    if(!empresaData || Number(empresaData.faturamento) <= 0){
-      return res.json({
-        resposta: "Ainda não houve vendas registradas até agora."
+    // ================= LISTA =================
+if(tipoBusca === "lista" && Array.isArray(data)){
+  contextos.push({
+    role:"system",
+    content: "CUPONS_LISTA:\n" + JSON.stringify(data.slice(0,100))
+  })
+}
+    
+
+    // ================= MÊS =================
+    if(tipoBusca === "mes" && data){
+      contextos.push({
+        role:"system",
+        content: "RESUMO_MES:\n" + JSON.stringify(data)
       })
     }
 
-const ticket = empresaData.ticket_medio || 0
-
-    resumoDia = {
-      data: data.data,
-      faturamento: empresaData.faturamento,
-      vendas: empresaData.vendas,
-      ticket_medio: ticket,
-      tipo: empresaFiltro ? "EMPRESA" : "GERAL",
-      empresa: empresaFiltro
-    }
-
-    const analise = await openai.chat.completions.create({
-      model:"gpt-4.1-mini",
-      temperature:0.3,
-   messages: [
-  {
-    role: "system",
-
-content: `
-Você é um consultor executivo.
-
-Responda de forma NATURAL, como um humano.
-
-⚠️ REGRAS:
-
-- NÃO usar formato fixo
-- NÃO usar blocos ou caixas
-- NÃO usar títulos obrigatórios
-- NÃO repetir estrutura padrão
-- NÃO usar "Resumo do dia"
-
-Use linguagem direta, fluida e profissional.
-
-Exemplos de resposta:
-
-"Hoje a Padaria Delícia já faturou R$ 12.840 com 312 vendas.  
-O ticket médio está em R$ 41, mantendo o padrão esperado."
-
-"Mercatto está com R$ 18.200 até agora, ritmo forte e acima do normal para o horário."
-
-"Vendas da Villa estão em R$ 9.700, com ticket mais baixo que o ideal — ponto de atenção."
-
-⚠️ Use sempre os dados reais fornecidos.
-⚠️ Nunca invente valores.
-`
-  },
-  {
-    role: "user",
-    content: `
-DADOS REAIS:
-
-Empresa: ${resumoDia.empresa || "GERAL"}
-Faturamento: ${resumoDia.faturamento}
-Vendas: ${resumoDia.vendas}
-const faturamento = Number(empresaData?.faturamento || 0)
-const vendas = Number(empresaData?.vendas || 0)
-
-const ticket = vendas > 0
-  ? Number((faturamento / vendas).toFixed(2))
-  : 0
-
-// usa o valor calculado
-Ticket médio: ${ticket}`
-        }
-      ]
-    })
-
-    const respostaIA = analise.choices[0].message.content
-
-    return res.json({
-      resposta: respostaIA
-    })
-
   } catch(e){
 
-    console.log("❌ ERRO:", e)
+    console.log("❌ ERRO CUPONS:", e)
 
     return res.json({
-      resposta: "Erro ao buscar vendas"
+      resposta: "Erro ao consultar vendas"
     })
 
   }
 }
-
 
 
 
@@ -962,7 +927,6 @@ const limite = Array.isArray(data) ? data.slice(0, 100) : data
   }
 }
 
-const contextos = []
 
 if(reservas.length){
   contextos.push(addContext("RESERVAS", reservas))
@@ -1023,26 +987,22 @@ if(musicos.length){
     content: "AGENDA_MUSICOS:\n" + JSON.stringify(musicos)
   })
 }
-if(resumoDia){
-
+if(resumoDia && resumoDia.faturamento !== undefined){
   const metaInfo = resumoDia.empresa
     ? calcularMeta(resumoDia.empresa, resumoDia.faturamento)
     : null
 
   contextos.push({
     role:"system",
-    content: `
-RESUMO_CUPONS_DIA:
-${JSON.stringify({
-  data: resumoDia.data,
-  empresa: resumoDia.empresa || "GERAL",
-  faturamento: resumoDia.faturamento,
-  vendas: resumoDia.vendas,
-  ticket_medio: resumoDia.ticket_medio,
-  meta: metaInfo?.meta || 0,
-  percentual_meta: metaInfo?.percentual || 0
-})}
-`
+    content: "RESUMO_CUPONS_DIA:\n" + JSON.stringify({
+      data: resumoDia.data,
+      empresa: resumoDia.empresa || "GERAL",
+      faturamento: Number(resumoDia.faturamento || 0),
+      vendas: Number(resumoDia.vendas || 0),
+      ticket_medio: Number(resumoDia.ticket_medio || 0),
+      meta: metaInfo?.meta || 0,
+      percentual_meta: metaInfo?.percentual || 0
+    })
   })
 
 }
@@ -1393,95 +1353,83 @@ ALTERAR_REGISTRO_JSON:
 role:"system",
 content:`
 
-💰 REGRA CRÍTICA — CUPONS DE VENDAS (MODO INTELIGENTE)
+🔥 MÓDULO INTELIGENTE DE VENDAS — MULTI API
 
-Você recebeu dados PRONTOS em:
+Você pode receber diferentes tipos de dados:
 
-RESUMO_CUPONS_DIA
-
-🚨 REGRAS:
-
-1. NÃO recalcular
-2. NÃO alterar valores
-3. NÃO inventar dados
-
-MAS AGORA VOCÊ DEVE:
-
-✔ Interpretar os dados
-✔ Avaliar desempenho
-✔ Comparar com meta
-✔ Analisar ticket médio
-✔ Identificar tendência
-✔ Gerar percepção operacional
+1. RESUMO_CUPONS_DIA → resumo por empresa
+2. RESUMO_MES → desempenho mensal
+3. CUPONS_ANALITICO → vendas por forma de pagamento (finalizadora)
+4. CUPONS_LISTA → lista completa de cupons individuais
 
 ---
 
-📊 COMPORTAMENTO:
+📊 COMO INTERPRETAR:
 
-Se percentual > 70%
-→ forte (elogiar)
-
-Se entre 40% e 70%
-→ médio (atenção)
-
-Se < 40%
-→ fraco (alertar)
+🔹 RESUMO_CUPONS_DIA
+→ Use para responder:
+- faturamento do dia
+- vendas do dia
+- ticket médio
 
 ---
 
-📈 TICKET:
-
-Se ticket alto:
-→ destacar positivamente
-
-Se ticket baixo:
-→ alertar oportunidade de melhoria
+🔹 RESUMO_MES
+→ Use para responder:
+- desempenho mensal
+- comparação com meta
+- crescimento
 
 ---
 
-🚀 RESPOSTA ESPERADA:
-
-"📊 21/04
-
-🏢 EMPÓRIO MERCATTO
-
-💰 R$ 12.800
-🧾 310 vendas
-💳 Ticket médio: R$ 41,29
-
-🎯 68% da meta atingida
-
-📈 Ticket subindo — ótimo sinal
-🚀 Ritmo consistente
-
-👏 Bom desempenho até agora"
+🔹 CUPONS_ANALITICO
+→ Use para responder:
+- formas de pagamento
+- PIX, dinheiro, cartão
+- desempenho por finalizadora
 
 ---
 
-⚠️ PROIBIDO:
+🔹 CUPONS_LISTA
+→ Use para responder:
+- listagem de vendas
+- detalhes de cupons
+- auditoria
 
-❌ inventar valores  
-❌ modificar números  
-❌ recalcular  
-❌ misturar com outros dados  
+---
 
-✅ USAR EXATAMENTE OS DADOS RECEBIDOS
-Campos disponíveis:
+🚨 REGRAS CRÍTICAS:
 
-- faturamento
-- vendas
-- ticket_medio
+- NÃO inventar dados
+- NÃO recalcular valores externos
+- NÃO misturar fontes
+- USAR apenas o contexto recebido
 
+---
 
-📊 FORMATO LIVRE:
+📈 COMPORTAMENTO:
 
-- Responda como consultor executivo
-- Use os dados reais recebidos
-- NÃO use modelo fixo
-- NÃO escreva "Resumo de vendas do dia"
-- NÃO repita estrutura padrão
+Se for pergunta de:
 
-Responda de forma natural, profissional e estratégica.
+✔ "quanto vendeu" → usar RESUMO_CUPONS_DIA  
+✔ "mês" → usar RESUMO_MES  
+✔ "forma de pagamento" → usar CUPONS_ANALITICO  
+✔ "listar vendas" → usar CUPONS_LISTA  
+
+---
+
+📊 RESPOSTA:
+
+- Falar como consultor executivo
+- Ser direto e claro
+- Pode interpretar (subindo, caindo, bom, ruim)
+
+---
+
+📌 IMPORTANTE:
+
+Se houver mais de um contexto:
+→ priorizar o mais específico para a pergunta
 
 `
 },
