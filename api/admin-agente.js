@@ -956,7 +956,7 @@ function toBR(dataISO){
 
 
 
-const API_CUPONS = "http://177.42.253.186:3000"
+const API_CUPONS = "https://between-wiley-portrait-essential.trycloudflare.com"
 
 if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
   console.log("📅 DATA FINAL USADA:", dataFiltro)
@@ -2660,7 +2660,7 @@ let dataMes = null
 
 try {
 
-  const API_CUPONS = "http://177.42.253.186:3000/"
+  const API_CUPONS = "https://between-wiley-portrait-essential.trycloudflare.com"
 
   const hoje = new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
