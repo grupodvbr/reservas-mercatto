@@ -1000,6 +1000,87 @@ font-size:.9rem;
 }
 
 }
+
+
+  .summary-compact{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  padding:10px;
+}
+
+.mini-kpi{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  background:#081428;
+  border:1px solid var(--line);
+  border-radius:10px;
+
+  padding:10px;
+}
+
+.mini-kpi span{
+  font-size:18px;
+}
+
+.mini-kpi small{
+  display:block;
+  font-size:.7rem;
+  color:var(--muted);
+}
+
+.mini-kpi b{
+  font-size:.95rem;
+  font-weight:800;
+}
+
+.mini-kpi.total{
+  background:linear-gradient(90deg,#1e3a8a,#2563eb);
+}
+
+.summary-compact{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  padding:10px;
+}
+
+.mini-kpi{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  background:#081428;
+  border:1px solid var(--line);
+  border-radius:10px;
+
+  padding:10px;
+}
+
+.mini-kpi span{
+  font-size:18px;
+}
+
+.mini-kpi small{
+  display:block;
+  font-size:.7rem;
+  color:var(--muted);
+}
+
+.mini-kpi b{
+  font-size:.95rem;
+  font-weight:800;
+}
+
+.mini-kpi.total{
+  background:linear-gradient(90deg,#1e3a8a,#2563eb);
+}
+
+
+
+    
   </style>
 </head>
 <body>
@@ -1174,28 +1255,45 @@ font-size:.9rem;
 
       <div class="summary">
         <h3 style="margin:0 0 6px 0; color:var(--muted)">Resumo do mês</h3>
-        <div class="summary-grid">
-          <div class="kpi"><div class="label">Antecipado (mês)</div><div class="value" id="kpiAntecipado">R$ 0,00</div></div>
-          <div class="kpi"><div class="label">Final pago (mês)</div><div class="value" id="kpiFinalPago">R$ 0,00</div></div>
-          <div class="kpi">
-            <div class="label">A receber (mês)</div>
-            <div class="value" id="kpiAReceber">R$ 0,00</div>
-            <div class="sum-note">* "A receber" não entra na soma do mês (apenas adiantamento + final pago).</div>
-          </div>
-        </div>
-        <div class="section" style="padding-top:12px">
-          <div class="kpi" style="display:flex; align-items:center; justify-content:space-between">
-            <div>
-              <div class="label">Total do mês (adiantamento + final pago)</div>
-              <div class="value" id="kpiTotalMes">R$ 0,00</div>
-            </div>
-            <button id="refreshBtn" class="btn btn-ghost" style="width:auto">Atualizar</button>
-          </div>
-        </div>
-      </div>
+
+
+
+
+        <div class="summary-compact">
+
+  <div class="mini-kpi">
+    <span>💰</span>
+    <div>
+      <small>Antecipado</small>
+      <b id="kpiAntecipado">R$ 0,00</b>
     </div>
   </div>
 
+  <div class="mini-kpi">
+    <span>🏁</span>
+    <div>
+      <small>Final</small>
+      <b id="kpiFinalPago">R$ 0,00</b>
+    </div>
+  </div>
+
+  <div class="mini-kpi">
+    <span>📥</span>
+    <div>
+      <small>Receber</small>
+      <b id="kpiAReceber">R$ 0,00</b>
+    </div>
+  </div>
+
+  <div class="mini-kpi total">
+    <span>📊</span>
+    <div>
+      <small>Total</small>
+      <b id="kpiTotalMes">R$ 0,00</b>
+    </div>
+  </div>
+
+</div>
   <!-- ============ MODAIS ============ -->
 <div class="modal" id="dayModal">
   <div class="sheet">
