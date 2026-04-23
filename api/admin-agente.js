@@ -686,7 +686,7 @@ resposta:"Erro ao executar ação"
 
 /* ================= SALVAR PERGUNTA ================= */
 
-await supabase
+const { error: erroInsert } = await supabase
 .from("assistente_otto_chat")
 .insert({
   role: "user",
@@ -699,6 +699,10 @@ await supabase
   tipo: tipoConsulta,
   intencao: tipoAcao
 })
+
+if(erroInsert){
+  console.error("❌ ERRO AO SALVAR PERGUNTA:", erroInsert)
+}
 /* ================= HISTÓRICO ================= */
 
 const {data:historico} = await supabase
@@ -714,7 +718,8 @@ const mensagens = (historico || [])
   role: m.role,
   content: m.mensagem + (m.acao_json ? `\n\nAÇÃO_JSON:\n${JSON.stringify(m.acao_json)}` : "")
 }))
-
+// 🔥 CRIA CONTEXTO ANTES DE QUALQUER USO
+const contextos = []
 // ================= MEMÓRIA DO USUÁRIO =================
 
 const { data: ultimaMemoria } = await supabase
@@ -738,8 +743,6 @@ if(ultimaMemoria?.memoria_extraida){
 
 
   
-// 🔥 CRIA CONTEXTO ANTES DE USAR
-const contextos = []
 // ================= ESTADO DA CONVERSA =================
 
 const { data: ultimoEstado } = await supabase
