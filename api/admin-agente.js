@@ -142,10 +142,21 @@ const amanhaISO = amanha.toISOString().split("T")[0]
 
 
 
-  
+const texto = pergunta.toLowerCase()
+
 let dataFiltro = hojeISO
 
-const texto = pergunta.toLowerCase()
+// 🔥 INTERPRETAÇÃO DE DATA FALADA (CRÍTICO)
+const matchData = texto.match(/(\d{1,2})\D+(\d{1,2})/)
+
+if(matchData){
+  const dia = matchData[1].padStart(2,"0")
+  const mes = matchData[2].padStart(2,"0")
+
+  dataFiltro = `${hojeISO.slice(0,4)}-${mes}-${dia}`
+
+  console.log("📅 DATA INTERPRETADA:", dataFiltro)
+}
 
 // ================= INTELIGÊNCIA GLOBAL =================
 
@@ -624,6 +635,7 @@ function formatarData(dataISO){
 const API_CUPONS = "https://inspired-still-reflects-closes.trycloudflare.com"
 
 if(tipoConsulta === "vendas"){
+  console.log("📅 DATA FINAL USADA:", dataFiltro)
   try{
 
     console.log("🔥 CONSULTA INTELIGENTE DE VENDAS")
