@@ -1199,6 +1199,22 @@ empresaData = data.empresas?.find(e =>
     ticket_medio: empresaData.ticket_medio || ticketCalculado,
     empresa: empresaFiltro
   }
+
+  // 🚀 RESPOSTA DIRETA (SEM GPT)
+if(tipoConsulta === "vendas" && empresaFiltro){
+
+  return res.json({
+    resposta: `📊 ${dataFiltro}
+
+🏢 ${empresaFiltro}
+
+💰 R$ ${formatar(faturamento)}
+🧾 ${vendas} vendas
+💳 Ticket: R$ ${formatar(ticketCalculado)}`
+  })
+}
+
+  
 }
 
 
