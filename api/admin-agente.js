@@ -2286,6 +2286,9 @@ AÇÃO_JSON:
 ---
 
 ⚠️ SE NÃO SEGUIR ISSO → RESPOSTA INVÁLIDA,
+`},
+
+
 {
 role:"system",
 content:`
