@@ -1094,10 +1094,13 @@ else{
 let data = null
 
 if(tipoBusca !== "mes_completo"){
-  console.log("🌐 URL:", url)
+console.log("🌐 URL:", url)
 
-  const resApi = await fetch(url)
-  data = await resApi.json()
+const resApi = await fetch(url)
+data = await resApi.json()
+
+// 🔥 LOG COMPLETO DA API
+console.log("📦 RESPOSTA API (COMPLETA):", JSON.stringify(data, null, 2))
 }
 
     // ================= RESUMO DIA =================
