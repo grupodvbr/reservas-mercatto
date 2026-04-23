@@ -953,7 +953,7 @@ resumoDia = {
   ticket_medio: empresaData.ticket_medio || ticketCalculado,
   empresa: empresaFiltro
 }
-}}
+}
 
     // ================= ANALÍTICO =================
 if(tipoBusca === "analitico" && data){
