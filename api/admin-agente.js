@@ -179,14 +179,20 @@ let textoNormalizado = texto
   .replace(/[\u0300-\u036f]/g, "")
 
 // 🔥 CONVERTE EXTENSO → NÚMERO
-for(const palavra in NUMEROS_EXTENSO){
+const palavrasOrdenadas = Object.keys(NUMEROS_EXTENSO)
+  .sort((a,b)=>b.length - a.length) // 🔥 MUITO IMPORTANTE
+
+for(const palavra of palavrasOrdenadas){
   const valor = NUMEROS_EXTENSO[palavra]
+
   textoNormalizado = textoNormalizado.replace(
     new RegExp(`\\b${palavra}\\b`, "g"),
     valor
   )
 }
 
+
+  
 // 🔥 AGORA SIM INTERPRETA
 
 if(textoNormalizado.includes("hoje")){
@@ -199,9 +205,9 @@ else if(textoNormalizado.includes("ontem")){
   dataFiltro = formatarData(d)
 }
 
-else if(textoNormalizado.match(/(\d{1,2})\D+(\d{1,2})/)){
+else if(textoNormalizado.match(/(\d{1,2})\D+(?:de\s*)?(\d{1,2})/)){
 
-  const match = textoNormalizado.match(/(\d{1,2})\D+(\d{1,2})/)
+  const match = textoNormalizado.match(/(\d{1,2})\D+(?:de\s*)?(\d{1,2})/)
 
   const dia = match[1].padStart(2,"0")
   const mes = match[2].padStart(2,"0")
@@ -774,9 +780,18 @@ if(tipoConsulta === "vendas"){
 
       } else if(empresaFiltro){
 
-        empresaData = data.empresas?.find(
-          e => e.empresa === empresaFiltro
-        )
+empresaData = data.empresas?.find(
+  e => e.empresa === empresaFiltro
+)
+
+if(!empresaData){
+  return res.json({
+    resposta: `⚠️ Não encontrei dados de vendas para ${empresaFiltro} no dia ${dataFiltro}`
+  })
+}
+
+
+        
 
       } else {
 
