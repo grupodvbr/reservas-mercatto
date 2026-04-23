@@ -625,7 +625,7 @@ if(tipoConsulta === "vendas"){
 
     console.log("🔥 CONSULTANDO API DE VENDAS...")
 
-    let url = "https://revision-peripherals-glad-martha.trycloudflare.com/resumo-dia"
+    let url = "https://inspired-still-reflects-closes.trycloudflare.com/resumo-dia"
 
     const resApi = await fetch(url)
     const data = await resApi.json()
