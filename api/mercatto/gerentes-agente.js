@@ -82,8 +82,11 @@ module.exports = async function handler(req, res){
 
 if(texto.includes("hoje")){
 
-  const hoje = new Date().toISOString().split("T")[0]
+const hoje = new Date().toLocaleDateString("en-CA", {
+  timeZone: "America/Bahia"
+})
 
+  
   const { data } = await supabase
     .from("agenda_musicos")
     .select("*")
