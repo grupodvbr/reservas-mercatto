@@ -18,13 +18,19 @@ const supabase = createClient(
 /* ================= AGENTES ================= */
 
 const adminAgente = require("./admin-agente")
-const gerenteAgente = require("./gerentes-agente")
+
+let gerenteAgente = null
+
+try{
+  gerenteAgente = require("./gerentes-agente")
+}catch(e){
+  console.log("⚠️ gerente-agente não encontrado, ignorando...")
+}
 
 const AGENTES = {
   admin: adminAgente,
   gerente: gerenteAgente
 }
-
 /* ================= ENV ================= */
 
 const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
