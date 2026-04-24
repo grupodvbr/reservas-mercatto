@@ -2751,10 +2751,20 @@ let mensagem = `
 
 for(const empresa of dataDia.empresas){
 
-// 🔥 TOTAL REAL DO MÊS
-const faturamentoTotalMes = 
-  Number(empresa.faturamento_mes || 0) + 
-  Number(empresa.faturamento || 0)
+  // 🔥 CORREÇÃO DO TICKET (LOCAL EXATO)
+  const ticketDia =
+    Number(empresa.ticket_medio) > 0
+      ? Number(empresa.ticket_medio)
+      : (
+          Number(empresa.vendas) > 0
+            ? Number(empresa.faturamento) / Number(empresa.vendas)
+            : 0
+        )
+
+  // 🔥 TOTAL REAL DO MÊS
+  const faturamentoTotalMes = 
+    Number(empresa.faturamento_mes || 0) + 
+    Number(empresa.faturamento || 0)
 
 // 🎯 METAS
 const metaPrata = METAS[empresa.empresa]?.prata || 0
@@ -2762,11 +2772,11 @@ const metaOuro = METAS[empresa.empresa]?.ouro || 0
 
 // 📊 PERCENTUAIS
 const percentualPrata = metaPrata > 0
-  ? ((faturamentoTotalMes / metaPrata) * 100).toFixed(0)
+  ? ((Number(empresa.faturamento || 0) / metaPrata) * 100).toFixed(0)
   : 0
 
 const percentualOuro = metaOuro > 0
-  ? ((faturamentoTotalMes / metaOuro) * 100).toFixed(0)
+  ? ((Number(empresa.faturamento || 0) / metaOuro) * 100).toFixed(0)
   : 0
 
 let status = "Estável"
@@ -2784,7 +2794,7 @@ mensagem += `
 
 💰 Dia        : R$ ${formatar(empresa.faturamento)}
 📅 Mês        : R$ ${formatar(faturamentoTotalMes)}
-💳 Ticket     : R$ ${formatar(empresa.ticket_medio)}
+💳 Ticket     : R$ ${formatar(ticketDia)}
 🎯 Prata      : R$ ${formatar(metaPrata)} - ${percentualPrata}%
 🥇 Ouro       : R$ ${formatar(metaOuro)} - ${percentualOuro}%
 📊 Desempenho : ${status}
