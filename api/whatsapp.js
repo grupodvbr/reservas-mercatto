@@ -211,11 +211,25 @@ if(usuario.nivel_acesso === 0){
 
 
     
-  if(!agenteSelecionado){
-  console.log("⚠️ agente inválido, usando ADMIN como fallback")
-  agenteSelecionado = adminAgente
-}
+if(!agenteSelecionado){
 
+  console.log("⛔ AGENTE NÃO EXISTE - BLOQUEADO")
+
+  await enviarMensagem(
+    ADMIN_ALERTA,
+`🚨 AGENTE NÃO ENCONTRADO
+
+👤 ${usuario.nome}
+📱 ${numero}
+🤖 agente: ${usuario.agente}
+
+💬 Mensagem:
+${texto}`
+  )
+
+  // 🔥 NÃO RESPONDE AO USUÁRIO
+  return res.status(200).end()
+}
     /* ================= PREPARA REQ ================= */
 
     let resposta = "Erro ao processar"
