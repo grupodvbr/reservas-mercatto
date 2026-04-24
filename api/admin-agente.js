@@ -2767,9 +2767,38 @@ for(const empresa of dataDia.empresas){
 
   const meta = METAS[empresa.empresa]?.prata || 0
 
-  const percentual = meta > 0
-    ? ((empresa.faturamento_mes / meta) * 100).toFixed(0)
-    : 0
+const hoje = new Date(
+  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
+
+const diaAtual = hoje.getDate()
+
+const diasNoMes = new Date(
+  hoje.getFullYear(),
+  hoje.getMonth() + 1,
+  0
+).getDate()
+
+const faturamentoTotal = Number(empresa.faturamento_mes || 0)
+
+const percentualReal = meta > 0
+  ? (faturamentoTotal / meta) * 100
+  : 0
+
+const percentualEsperado = (diaAtual / diasNoMes) * 100
+
+let statusMeta = "Dentro da meta"
+
+if(percentualReal < percentualEsperado){
+  statusMeta = "Abaixo da meta"
+}
+
+if(percentualReal > percentualEsperado){
+  statusMeta = "Acima da meta"
+}
+
+
+  
 
 
 let status = "Estável"
