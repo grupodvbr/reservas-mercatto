@@ -1453,8 +1453,14 @@ if(resumoDia && resumoDia.faturamento !== undefined){
       faturamento: Number(resumoDia.faturamento || 0),
       vendas: Number(resumoDia.vendas || 0),
       ticket_medio: Number(resumoDia.ticket_medio || 0),
-      meta: metaInfo?.meta || 0,
-      percentual_meta: metaInfo?.percentual || 0
+const faturamentoTotalMes = 
+  Number(resumoDia.faturamento || 0) + 
+  Number(resumoDia.faturamento_mes || 0)
+
+const metaInfo = resumoDia.empresa
+  ? calcularMeta(resumoDia.empresa, faturamentoTotalMes)
+  : null
+      
     })
   })
 
