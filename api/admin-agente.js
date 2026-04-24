@@ -34,8 +34,6 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN
 
 const USUARIOS = {
   "557798253249": { nivel: 0 }, // ADMIN REAL
-  "557799761436": { nivel: 0 }, // ADMIN REAL
-  "557798315510": { nivel: 0 },
   "777777777777": { nivel: 2, empresa: "MERCATTO DELÍCIA" },
   "776666666666": { nivel: 3 }
 }
