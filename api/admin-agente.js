@@ -1148,12 +1148,13 @@ if(tipoBusca === "dia"){
       e => e.empresa === empresaFiltro
     )
 
-    if(!empresaData){
-      return res.json({
-        resposta: `⚠️ Não encontrei dados de vendas para ${empresaFiltro} no dia ${dataFiltro}`
-      })
-    }
-
+if(!empresaData){
+  empresaData = {
+    faturamento: 0,
+    vendas: 0,
+    ticket_medio: 0
+  }
+}
   } else {
 
     empresaData = data
