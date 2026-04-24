@@ -1,277 +1,180 @@
+const OpenAI = require("openai")
+const { createClient } = require("@supabase/supabase-js")
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE
+)
+
 module.exports = async function handler(req, res){
 
   try{
 
-    const { pergunta, numero, usuario } = req.body
+    const { pergunta, usuario } = req.body
 
     const empresa = usuario.empresa
-    const nivel = usuario.nivel_acesso
-    const texto = pergunta.toLowerCase()
 
-    await salvar({ telefone: numero, mensagem: pergunta, role: "user", usuario })
+    /* ================= TOOLS ================= */
 
-    const hist = await historico(numero)
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "listar_musicos",
+          description: "Lista músicos por data ou todos",
+          parameters: {
+            type: "object",
+            properties: {
+              data: { type: "string" }
+            }
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "deletar_musico",
+          description: "Remove músico por id",
+          parameters: {
+            type: "object",
+            properties: {
+              id: { type: "string" }
+            },
+            required: ["id"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "inserir_musico",
+          description: "Insere novo músico",
+          parameters: {
+            type: "object",
+            properties: {
+              cantor: { type: "string" },
+              data: { type: "string" },
+              hora: { type: "string" }
+            },
+            required: ["cantor", "data", "hora"]
+          }
+        }
+      }
+    ]
 
-    /* ================= DATA HOJE ================= */
+    /* ================= IA ================= */
 
-    const hoje = new Date().toLocaleDateString("en-CA", {
-      timeZone: "America/Bahia"
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: `
+Você é o cérebro da gestão de agenda de músicos da empresa ${empresa}.
+
+Data atual: ${new Date().toLocaleDateString("pt-BR", {
+            timeZone: "America/Bahia"
+          })}
+
+REGRAS:
+- Se pedir "hoje", use a data atual
+- Se pedir agenda → listar
+- Se pedir deletar → usar função deletar
+- Se pedir inserir → usar função inserir
+
+NUNCA pergunte o óbvio.
+NUNCA peça data se já estiver implícita.
+`
+        },
+        { role: "user", content: pergunta }
+      ],
+      tools,
+      tool_choice: "auto"
     })
 
-    /* ================= HOJE ================= */
+    const msg = completion.choices[0].message
 
-    if(texto.includes("hoje")){
+    /* ================= EXECUÇÃO ================= */
 
-      const { data } = await supabase
-        .from("agenda_musicos")
-        .select("*")
-        .eq("empresa", empresa)
-        .eq("data", hoje)
+    if(msg.tool_calls){
 
-      if(!data || data.length === 0){
-        return res.json({
-          resposta: "📅 Nenhum músico hoje."
-        })
-      }
+      const call = msg.tool_calls[0]
+      const name = call.function.name
+      const args = JSON.parse(call.function.arguments || "{}")
 
-      const lista = data.map(m =>
-        `🎤 ${m.cantor.trim()} - ${m.hora}`
-      ).join("\n")
+      /* ===== LISTAR ===== */
 
-      return res.json({
-        resposta: `📅 Músicos de hoje:\n\n${lista}`
-      })
-    }
+      if(name === "listar_musicos"){
 
-    /* ================= AGENDA COMPLETA ================= */
-
-    if(texto.includes("agenda") || texto.includes("completa")){
-
-      const { data } = await supabase
-        .from("agenda_musicos")
-        .select("*")
-        .eq("empresa", empresa)
-        .order("data", { ascending: true })
-
-      if(!data || data.length === 0){
-        return res.json({ resposta: "📭 Agenda vazia." })
-      }
-
-      const lista = data.map(m =>
-        `${m.data} - 🎤 ${m.cantor.trim()} (${m.hora})`
-      ).join("\n")
-
-      return res.json({
-        resposta: `📅 Agenda completa:\n\n${lista}`
-      })
-    }
-
-    /* ================= BUSCA POR NOME ================= */
-
-    if(texto.includes("musico") || texto.includes("cantor")){
-
-      const nome = pergunta.replace(/musico|cantor/gi,"").trim()
-
-      if(nome.length > 2){
+        const dataFiltro = args.data ||
+          new Date().toLocaleDateString("en-CA", {
+            timeZone: "America/Bahia"
+          })
 
         const { data } = await supabase
           .from("agenda_musicos")
           .select("*")
           .eq("empresa", empresa)
-          .ilike("cantor", `%${nome}%`)
+          .eq("data", dataFiltro)
 
         if(!data || data.length === 0){
-          return res.json({ resposta: "❌ Não encontrado." })
+          return res.json({ resposta: "📭 Nenhum músico." })
         }
 
         const lista = data.map(m =>
-          `${m.data} - ${m.cantor}`
+          `🎤 ${m.cantor.trim()} - ${m.hora}`
         ).join("\n")
 
-        return res.json({ resposta: lista })
-      }
-    }
-
-    /* ================= DELETE ================= */
-
-    if(texto.includes("deletar") && nivel >= 1){
-
-      const nome = pergunta.replace(/deletar/i,"").trim()
-
-      const lista = await buscarMusico(empresa, nome)
-
-      if(lista.length === 0){
-        return res.json({ resposta: "❌ Nenhum encontrado." })
+        return res.json({
+          resposta: `📅 Agenda:\n\n${lista}`
+        })
       }
 
-      if(lista.length === 1){
+      /* ===== DELETE ===== */
 
-        const m = lista[0]
+      if(name === "deletar_musico"){
 
-        await deletar(m.id)
+        await supabase
+          .from("agenda_musicos")
+          .delete()
+          .eq("id", args.id)
 
-        await salvar({
-          telefone: numero,
-          mensagem: "delete",
-          role: "assistant",
-          usuario,
-          acao: "delete",
-          dados: m
+        return res.json({
+          resposta: "🗑️ Removido com sucesso."
+        })
+      }
+
+      /* ===== INSERT ===== */
+
+      if(name === "inserir_musico"){
+
+        await supabase.from("agenda_musicos").insert({
+          empresa,
+          cantor: args.cantor,
+          data: args.data,
+          hora: args.hora,
+          valor: 0
         })
 
         return res.json({
-          resposta: `🗑️ ${m.cantor} removido.`
+          resposta: "✅ Inserido com sucesso."
         })
       }
-
-      const msg = lista.map(m =>
-        `${m.cantor} - ${m.data}`
-      ).join("\n")
-
-      return res.json({
-        resposta: `⚠️ Mais de um:\n\n${msg}\n\nInforme a data.`
-      })
     }
 
-    /* ================= REVERSÃO ================= */
+    /* ================= RESPOSTA NORMAL ================= */
 
-    if(texto.includes("reverter") || texto.includes("desfazer")){
-
-      const ultima = [...hist].reverse().find(m => m.acao)
-
-      if(!ultima){
-        return res.json({ resposta: "❌ Nada para reverter." })
-      }
-
-      await inserir(ultima.dados_acao)
-
-      return res.json({
-        resposta: "♻️ Revertido com sucesso."
-      })
-    }
-
-    /* ================= IA (SÓ SE PRECISAR) ================= */
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-  {
-  role: "system",
-  content: `
-Você é o cérebro operacional da gestão de agenda de músicos da empresa ${empresa}.
-
-Você NÃO é um chatbot comum.
-Você é responsável por ENTENDER, DECIDIR e EXECUTAR ações no sistema.
-
----
-
-📅 DATA ATUAL DO SISTEMA:
-${new Date().toLocaleDateString("pt-BR", { timeZone: "America/Bahia" })}
-
----
-
-📊 DADOS REAIS DA AGENDA (FONTE DA VERDADE):
-
-${JSON.stringify(await supabase
-  .from("agenda_musicos")
-  .select("*")
-  .eq("empresa", empresa)
-, null, 2)}
-
----
-
-🎯 SUA MISSÃO
-
-Você deve:
-- Entender o que o usuário quer
-- Tomar decisão
-- Responder diretamente com base nos dados acima
-- NÃO perguntar o óbvio
-- NÃO pedir confirmação desnecessária
-
----
-
-🧠 COMPORTAMENTO INTELIGENTE
-
-1. Se o usuário disser "hoje":
-→ use a DATA ATUAL
-→ filtre automaticamente
-
-2. Se disser "agenda":
-→ mostre tudo organizado
-
-3. Se disser "deletar":
-→ encontre o registro
-→ se único → confirmar e executar
-→ se múltiplos → listar opções
-
-4. Se disser "reverter":
-→ restaurar última ação
-
----
-
-🚫 PROIBIDO
-
-- perguntar "qual data é hoje?"
-- pedir informação que já está no sistema
-- responder de forma genérica
-- inventar dados
-
----
-
-🧾 FORMATO DE RESPOSTA
-
-- direto
-- organizado
-- objetivo
-
-Exemplo:
-
-📅 Músicos de hoje:
-
-🎤 Leandro Reis - 18:00
-🎤 Daniel Cruz - 21:00
-
----
-
-⚙️ EXECUÇÃO
-
-Você não executa diretamente o banco.
-
-Você deve retornar intenções claras:
-
-Tipos de ação:
-- LISTAR
-- INSERIR
-- ATUALIZAR
-- DELETAR
-- NENHUMA
-
-Se for ação, deixe claro no texto.
-
----
-
-🎯 OBJETIVO FINAL
-
-Ser um gerente inteligente, rápido, preciso e que usa os dados do sistema como verdade absoluta.
-
-Você é o cérebro do sistema.
-Não aja como assistente comum.
-`
-},
-        { role: "user", content: pergunta }
-      ]
+    return res.json({
+      resposta: msg.content || "OK"
     })
-
-    const resposta = completion.choices[0].message.content
-
-    await salvar({ telefone: numero, mensagem: resposta, role: "assistant", usuario })
-
-    return res.json({ resposta })
 
   }catch(e){
 
-    console.error("❌ ERRO:", e)
+    console.error(e)
 
     return res.json({
       resposta: "Erro interno"
