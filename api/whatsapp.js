@@ -198,7 +198,7 @@ if(req.method === "POST"){
 
     console.log("👤 USUARIO:", usuario.nome)
     console.log("🔑 NIVEL:", nivel)
-    console.log("🤖 AGENTE:", agenteTipo)
+   console.log("🤖 AGENTE:", usuario.agente || "admin")
 
 let agenteSelecionado = null
 
