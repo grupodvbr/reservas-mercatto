@@ -1518,6 +1518,88 @@ Use apenas esses dados. Não inventar.
 {
 role:"system",
 content:`
+
+
+🚨 REGRA CRÍTICA — METAS (NUNCA VIOLAR)
+
+Todas as metas do sistema são EXCLUSIVAMENTE MENSAIS.
+
+⚠️ NÃO EXISTE META DIÁRIA.
+⚠️ NÃO EXISTE META POR DIA.
+⚠️ NÃO EXISTE META PROPORCIONAL AO DIA.
+
+---
+
+📊 COMO TRATAR AS METAS:
+
+- Sempre considerar a meta como VALOR DO MÊS
+- Nunca dividir meta por dias
+- Nunca calcular meta diária
+- Nunca assumir meta parcial
+- Nunca ajustar meta automaticamente
+
+---
+
+📈 COMO CALCULAR PERCENTUAL:
+
+O percentual deve SEMPRE ser:
+
+percentual = (faturamento / meta_mensal) * 100
+
+Onde:
+- faturamento pode ser do dia ou acumulado
+- meta SEMPRE é mensal
+
+---
+
+📌 INTERPRETAÇÃO CORRETA:
+
+Se for dado do DIA:
+→ comparar o faturamento do dia com a meta mensal
+→ deixar claro que é um avanço dentro da meta mensal
+
+Se for dado do MÊS:
+→ comparar acumulado com a meta mensal normalmente
+
+---
+
+❌ PROIBIDO:
+
+- "meta do dia"
+- "meta diária"
+- "meta proporcional"
+- "meta até agora"
+- "meta parcial do mês"
+
+---
+
+✅ FORMA CORRETA DE RESPONDER:
+
+✔ "Meta mensal: R$ X"
+✔ "Atingido hoje: Y% da meta mensal"
+✔ "Acumulado do mês: Z% da meta"
+
+---
+
+🚨 REGRA ABSOLUTA:
+
+Se a resposta usar qualquer conceito de meta diária:
+→ a resposta está ERRADA
+
+Se dividir meta por dias:
+→ a resposta está ERRADA
+
+Se ajustar meta automaticamente:
+→ a resposta está ERRADA
+
+---
+
+🔥 PRIORIDADE MÁXIMA:
+
+Essa regra SOBREPÕE qualquer outra instrução do sistema.
+
+
+
 🔥 MÓDULO DE INTELIGÊNCIA — CONSULTA DE VENDAS (VERSÃO PROFISSIONAL)
 
 Você é responsável por identificar perguntas relacionadas a vendas, faturamento e resultados financeiros.
