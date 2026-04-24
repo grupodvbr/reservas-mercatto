@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Painel de Reservas • Mercatto Delícia</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <meta name="color-scheme" content="light dark" />
   <style>
 :root{
@@ -1206,11 +1207,21 @@ font-size:.9rem;
     <div class="card" style="margin-top:20px">
       <div class="card-head">
         <h2>Calendário de Reservas</h2>
-        <div class="toolbar">
-          <button id="prevMonth" class="btn btn-ghost">◀ Mês anterior</button>
-          <button id="todayBtn" class="btn btn-ghost">Hoje</button>
-          <button id="nextMonth" class="btn btn-ghost">Próximo mês ▶</button>
-        </div>
+
+
+<div class="toolbar">
+  <button id="prevMonth" class="btn btn-ghost">◀ Mês anterior</button>
+  <button id="todayBtn" class="btn btn-ghost">Hoje</button>
+  <button id="nextMonth" class="btn btn-ghost">Próximo mês ▶</button>
+
+  <button id="btnPDF" class="btn btn-primary">
+    📄 Gerar PDF do Mês
+  </button>
+</div>
+
+
+
+        
       </div>
 
       <div class="cal">
@@ -2541,7 +2552,89 @@ buildCalendar()
 updateSummary()
 
 }
-  
+  document.getElementById("btnPDF").addEventListener("click", gerarPDFMes);
+
+function gerarPDFMes(){
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const mesNome = monthNames[state.mes];
+  const ano = state.ano;
+
+  const reservas = state.reservas.filter(r=>{
+    if(!r.datahora) return false;
+    const d = new Date(r.datahora);
+    return d.getMonth() === state.mes && d.getFullYear() === ano;
+  });
+
+  // ===== CABEÇALHO =====
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(18);
+  doc.text(`Relatório de Reservas`, 14, 18);
+
+  doc.setFontSize(12);
+  doc.text(`${mesNome} de ${ano}`, 14, 26);
+
+  // ===== RESUMO =====
+  let y = 36;
+
+  const totalReservas = reservas.length;
+  const totalPessoas = reservas.reduce((a,r)=>a+Number(r.pessoas||0),0);
+
+  const totalEstimado = reservas.reduce((a,r)=>a+parseBRL(r.valorEstimado||0),0);
+  const totalAntecipado = reservas.reduce((a,r)=>a+parseBRL(r.pagamentoAntecipado||0),0);
+  const totalFinal = reservas.reduce((a,r)=>a+parseBRL(r.valorFinalPago||0),0);
+
+  doc.setFont("helvetica","bold");
+  doc.text("Resumo Geral", 14, y);
+  y+=8;
+
+  doc.setFont("helvetica","normal");
+  doc.text(`Total de Reservas: ${totalReservas}`, 14, y); y+=6;
+  doc.text(`Total de Pessoas: ${totalPessoas}`, 14, y); y+=6;
+  doc.text(`Valor Estimado: ${formatBRL(totalEstimado)}`, 14, y); y+=6;
+  doc.text(`Valor Antecipado: ${formatBRL(totalAntecipado)}`, 14, y); y+=6;
+  doc.text(`Valor Final Pago: ${formatBRL(totalFinal)}`, 14, y); y+=10;
+
+  // ===== LISTA =====
+  doc.setFont("helvetica","bold");
+  doc.text("Reservas Detalhadas", 14, y);
+  y+=8;
+
+  doc.setFontSize(10);
+
+  reservas.forEach(r=>{
+
+    if(y > 270){
+      doc.addPage();
+      y = 20;
+    }
+
+    const data = new Date(r.datahora).toLocaleString("pt-BR");
+
+    doc.setFont("helvetica","bold");
+    doc.text(`${r.nome}`, 14, y);
+    y+=5;
+
+    doc.setFont("helvetica","normal");
+
+    doc.text(`Data: ${data}`, 14, y); y+=4;
+    doc.text(`Pessoas: ${r.pessoas} • Local: ${r.mesa}`, 14, y); y+=4;
+    doc.text(`Status: ${r.status}`, 14, y); y+=4;
+
+    doc.text(
+      `Valores: Estimado ${formatBRL(r.valorEstimado)} | Antecipado ${formatBRL(r.pagamentoAntecipado)} | Final ${formatBRL(r.valorFinalPago)}`,
+      14, y
+    );
+
+    y+=8;
+
+  });
+
+  // ===== DOWNLOAD =====
+  doc.save(`relatorio_reservas_${mesNome}_${ano}.pdf`);
+}
   
 </script>
 </body>
