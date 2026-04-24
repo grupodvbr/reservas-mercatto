@@ -464,7 +464,7 @@ async function carregarRequisicoes(){
 
   
 const { data, error } = await sb
-.from("mercatto_estoque")
+.from("mercatto_requisicoes")
 .select("*")
 .order("criado_em", { ascending: false })
   .limit(20);
@@ -563,7 +563,7 @@ async function atualizarStatus(i,st){
   }
 
   const { error } = await sb
-    .from("mercatto_estoque")
+    .from("mercatto_requisicoes")
     .update(payload)
     .eq("id", i);
 
@@ -594,7 +594,7 @@ const filtrados = dadosRequisicoes.filter(r=>{
 
  for(const item of filtrados){
   await sb
-   .from("mercatto_estoque")
+   .from("mercatto_requisicoes")
    .update({ status: st })
    .eq("id", item.index);
 
