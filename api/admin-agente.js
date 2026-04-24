@@ -1441,9 +1441,23 @@ if(musicos.length){
   })
 }
 if(resumoDia && resumoDia.faturamento !== undefined){
+
+  let totalMes = resumoDia.faturamento
+
+  const ctxMes = contextos.find(c => c.content.includes("RESUMO_MES_COMPLETO"))
+
+  if(ctxMes){
+    try{
+      const json = JSON.parse(ctxMes.content.split("\n")[1])
+      totalMes = json.total?.faturamento || resumoDia.faturamento
+    }catch(e){}
+  }
+
   const metaInfo = resumoDia.empresa
-    ? calcularMeta(resumoDia.empresa, resumoDia.faturamento)
+    ? calcularMeta(resumoDia.empresa, totalMes)
     : null
+
+    
 
   contextos.push({
     role:"system",
