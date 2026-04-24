@@ -19,14 +19,28 @@ const supabase = createClient(
 
 const adminAgente = require("./admin-agente")
 
-function carregarAgente(nome){
+function carregarAgente(empresa, nome){
   try{
-    return require(`./${nome}-agente`)
+
+    const empresaPath = (empresa || "")
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // remove acento
+
+    const path = require.resolve(`./${empresaPath}/${nome}-agente`)
+    delete require.cache[path]
+
+    return require(path)
+
   }catch(e){
-    console.log(`⚠️ agente ${nome} não encontrado`)
+    console.log(`⚠️ agente ${nome} não encontrado na empresa ${empresa}`)
     return null
   }
 }
+
+
+
 /* ================= ENV ================= */
 
 const VERIFY_TOKEN = process.env.OTTO_VERIFY_TOKEN
@@ -206,7 +220,11 @@ let agenteSelecionado = null
 if(usuario.nivel_acesso === 0){
   agenteSelecionado = adminAgente
 }else{
-  agenteSelecionado = carregarAgente(usuario.agente || "admin")
+agenteSelecionado = carregarAgente(
+  usuario.empresa,
+  usuario.agente || "admin"
+)
+
 }
 
 
