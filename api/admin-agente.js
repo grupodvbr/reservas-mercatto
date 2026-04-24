@@ -2690,11 +2690,11 @@ const metaOuro = METAS[empresa.empresa]?.ouro || 0
 
 // 📊 PERCENTUAIS
 const percentualPrata = metaPrata > 0
-  ? ((Number(empresa.faturamento || 0) / metaPrata) * 100).toFixed(0)
+  ? ((faturamentoTotalMes / metaPrata) * 100).toFixed(0)
   : 0
 
 const percentualOuro = metaOuro > 0
-  ? ((Number(empresa.faturamento || 0) / metaOuro) * 100).toFixed(0)
+  ? ((faturamentoTotalMes / metaOuro) * 100).toFixed(0)
   : 0
 
 let status = "Estável"
