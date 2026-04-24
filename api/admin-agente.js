@@ -1538,12 +1538,8 @@ status_meta: metaInfo?.status || "-"
 }
   // 🔥 RESPOSTA DIRETA DE META (LOCAL EXATO)
 if(texto.includes("meta")){
-
-  if(!empresaFiltro){
-    return res.json({
-      resposta: "⚠️ Informe a empresa para consultar a meta"
-    })
-  }
+  tipoConsulta = "vendas"
+}
 
   const meta = METAS[empresaFiltro]
 
@@ -1700,34 +1696,28 @@ Se o usuário disser:
 
 Para qualquer pergunta de vendas:
 
-🚫 NÃO usar GPT para calcular  
-🔥 MÓDULO DE ANÁLISE DE VENDAS (INTELIGENTE)
+🔥 REGRA CORRETA:
 
-Você DEVE usar os dados da API para:
+Você DEVE usar os dados recebidos para:
 
-✔ Identificar tendência (subindo, caindo, estável)
-✔ Comparar com meta
-✔ Avaliar ticket médio
-✔ Detectar performance
-✔ Gerar percepção operacional
+✔ calcular métricas (percentual, ticket, média)
+✔ comparar com meta
+✔ analisar desempenho
+✔ gerar insights reais
 
-🚨 REGRAS:
+🚫 NÃO pode:
+- inventar números
+- criar valores que não estão no contexto
 
-- NÃO inventar valores
-- NÃO alterar números
-- NÃO recalcular dados
-- USAR apenas valores da API
+✅ PODE:
+- calcular
+- dividir
+- comparar
+- interpretar
 
-MAS você PODE:
 
-✔ Interpretar
-✔ Comparar
-✔ Gerar insights
-✔ Elogiar desempenho
-✔ Alertar queda
-✔ Sugerir ação
 
----
+
 
 📊 COMPORTAMENTO ESPERADO:
 
@@ -2519,7 +2509,27 @@ Se não gerar o JSON a ação será ignorada.
 })
 
 let resposta = completion.choices[0].message.content
-// 🔥 BLOQUEIO TOTAL DE INVENÇÃO
+
+// 🔥 VALIDAÇÃO INTELIGENTE (SEM ENGESSAR)
+
+const contextoTemDados =
+  contextos.some(c =>
+    c.content.includes("RESUMO_CUPONS_DIA") ||
+    c.content.includes("RESUMO_EMPRESAS_DIA") ||
+    c.content.includes("TOTAL_EMPRESAS_DIA")
+  )
+
+if(!contextoTemDados){
+  console.log("⚠️ IA respondeu sem contexto de dados reais")
+
+  return res.json({
+    resposta: "Não encontrei dados suficientes no sistema para te responder com precisão."
+  })
+}
+  
+  
+  
+  // 🔥 BLOQUEIO TOTAL DE INVENÇÃO
 
 // ================= MEMÓRIA AUTOMÁTICA =================
 
