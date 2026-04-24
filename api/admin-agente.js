@@ -904,15 +904,13 @@ const METAS = {
   "PADARIA DELÍCIA": { prata: 720000, ouro: 850000 },
   "VILLA GOURMET": { prata: 746600, ouro: 900000 }
 }
-function calcularMeta(empresa, valorMensal){
+function calcularMeta(empresa, valor){
   const meta = METAS[empresa]
   if(!meta) return { meta:0, percentual:0 }
 
   return {
     meta: meta.prata,
-    percentual: meta.prata > 0
-      ? (valorMensal / meta.prata) * 100
-      : 0
+    percentual: (valor / meta.prata) * 100
   }
 }
 
@@ -1442,31 +1440,34 @@ if(musicos.length){
 }
 if(resumoDia && resumoDia.faturamento !== undefined){
 
-  let totalMes = 0
+  let totalMes = resumoDia.faturamento
 
   const ctxMes = contextos.find(c => c.content.includes("RESUMO_MES_COMPLETO"))
 
   if(ctxMes){
     try{
       const json = JSON.parse(ctxMes.content.split("\n")[1])
-      totalMes = json.total?.faturamento || 0
+      totalMes = json.total?.faturamento || resumoDia.faturamento
     }catch(e){}
   }
 
   const metaInfo = resumoDia.empresa
     ? calcularMeta(resumoDia.empresa, totalMes)
     : null
+
     
 
-  content: "RESUMO_CUPONS_DIA:\n" + JSON.stringify({
-  data: resumoDia.data,
-  empresa: resumoDia.empresa || "GERAL",
-  faturamento_dia: Number(resumoDia.faturamento || 0),
-  vendas_dia: Number(resumoDia.vendas || 0),
-  ticket_medio_dia: Number(resumoDia.ticket_medio || 0),
-  meta_mensal: metaInfo?.meta || 0,
-  percentual_meta_mensal: metaInfo?.percentual || 0
-})
+  contextos.push({
+    role:"system",
+    content: "RESUMO_CUPONS_DIA:\n" + JSON.stringify({
+      data: resumoDia.data,
+      empresa: resumoDia.empresa || "GERAL",
+      faturamento: Number(resumoDia.faturamento || 0),
+      vendas: Number(resumoDia.vendas || 0),
+      ticket_medio: Number(resumoDia.ticket_medio || 0),
+      meta: metaInfo?.meta || 0,
+      percentual_meta: metaInfo?.percentual || 0
+    })
   })
 
 }
@@ -2712,9 +2713,9 @@ mensagem += `
 💰 Dia        : R$ ${formatar(empresa.faturamento)}
 📅 Mês        : R$ ${formatar(faturamentoTotalMes)}
 💳 Ticket     : R$ ${formatar(ticketDia)}
-
-🎯 Meta Mês   : R$ ${formatar(metaPrata)}
-📊 Atingido   : ${percentualPrata}%
+🎯 Prata      : R$ ${formatar(metaPrata)} - ${percentualPrata}%
+🥇 Ouro       : R$ ${formatar(metaOuro)} - ${percentualOuro}%
+📊 Desempenho : ${status}
 
 `
 }
