@@ -907,43 +907,67 @@ const METAS = {
   "VILLA GOURMET": { prata: 746600 }
 }
 
-function calcularMeta(empresa, valor){
+function calcularMeta(empresa, valor, dataISO){
+
+  const METAS = {
+    "DELÍCIA GOURMET": { ouro: 700000, prata: 545000 },
+    "MERCATTO EMPORIO": { ouro: 700000, prata: 650000 },
+    "MERCATTO RESTAURANTE": { ouro: 900000, prata: 850000 },
+    "PADARIA DELÍCIA": { ouro: 800000, prata: 720000 },
+    "VILLA GOURMET": { ouro: 820000, prata: 746600 }
+  }
 
   const meta = METAS[empresa]
-  if(!meta) return { meta:0, percentual:0, esperado:0, status:"-" }
+  if(!meta) return null
 
-  const hoje = new Date(
-    new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
-  )
+  const data = new Date(dataISO + "T00:00:00")
 
-  const diaAtual = hoje.getDate()
+  const ano = data.getFullYear()
+  const mes = data.getMonth()
 
-  const diasNoMes = new Date(
-    hoje.getFullYear(),
-    hoje.getMonth() + 1,
-    0
-  ).getDate()
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
-  const percentualReal = (valor / meta.prata) * 100
-  const percentualEsperado = (diaAtual / diasNoMes) * 100
+  const diaSemana = data.getDay()
 
+  // 🔥 PESO DE FINAL DE SEMANA
+  let peso = 1
+  if(diaSemana === 6) peso = 1.2 // sábado
+  if(diaSemana === 0) peso = 1.3 // domingo
+
+  // 🔥 META DIÁRIA
+  const ouroDia = (meta.ouro / diasNoMes) * peso
+  const prataDia = (meta.prata / diasNoMes) * peso
+
+  // 🔥 PERCENTUAL REAL
+  const percOuro = ouroDia > 0 ? (valor / ouroDia) * 100 : 0
+  const percPrata = prataDia > 0 ? (valor / prataDia) * 100 : 0
+
+  // 🔥 STATUS BASEADO NA PRATA (referência)
   let status = "Dentro da meta"
 
-  if(percentualReal < percentualEsperado){
-    status = "Abaixo da meta"
-  }
-
-  if(percentualReal > percentualEsperado){
-    status = "Acima da meta"
-  }
+  if(percPrata < 100) status = "Abaixo da meta"
+  if(percPrata >= 100) status = "Meta batida"
 
   return {
-    meta: meta.prata,
-    percentual: percentualReal,
-    esperado: percentualEsperado,
+    ouro: {
+      mensal: meta.ouro,
+      diaria: ouroDia,
+      percentual: percOuro
+    },
+    prata: {
+      mensal: meta.prata,
+      diaria: prataDia,
+      percentual: percPrata
+    },
     status
   }
 }
+
+
+
+
+
+  
 function formatar(v){
   return Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2})
 }
@@ -1470,7 +1494,11 @@ if(musicos.length){
 }
 if(resumoDia && resumoDia.faturamento !== undefined){
   const metaInfo = resumoDia.empresa
-    ? calcularMeta(resumoDia.empresa, resumoDia.faturamento)
+    ? const metaInfo = calcularMeta(
+  resumoDia.empresa,
+  resumoDia.faturamento,
+  dataFiltro
+)
     : null
 
   contextos.push({
@@ -1481,8 +1509,16 @@ if(resumoDia && resumoDia.faturamento !== undefined){
       faturamento: Number(resumoDia.faturamento || 0),
       vendas: Number(resumoDia.vendas || 0),
       ticket_medio: Number(resumoDia.ticket_medio || 0),
-      meta: metaInfo?.meta || 0,
-      percentual_meta: metaInfo?.percentual || 0
+meta_ouro: metaInfo?.ouro?.mensal || 0,
+meta_prata: metaInfo?.prata?.mensal || 0,
+
+meta_ouro_dia: metaInfo?.ouro?.diaria || 0,
+meta_prata_dia: metaInfo?.prata?.diaria || 0,
+
+percentual_ouro: metaInfo?.ouro?.percentual || 0,
+percentual_prata: metaInfo?.prata?.percentual || 0,
+
+status_meta: metaInfo?.status || "-"
     })
   })
 
