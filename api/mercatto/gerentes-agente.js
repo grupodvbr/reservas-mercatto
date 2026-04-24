@@ -156,6 +156,70 @@ module.exports = async function handler(req, res){
       })
     }
 
+
+/* ================= INSERT ================= */
+
+if(
+  texto.includes("adiciona") ||
+  texto.includes("adicionar") ||
+  texto.includes("inserir")
+){
+
+  console.log("🧠 INTENÇÃO: INSERIR")
+
+  // tenta extrair dados da conversa
+  const nomeMatch = pergunta.match(/(?:adiciona|adicionar|inserir)\s+(.*?)(?:\s+para|\s+dia|$)/i)
+  const dataMatch = pergunta.match(/\b(\d{2}\/\d{2})\b/)
+  const horaMatch = pergunta.match(/\b(\d{1,2}:\d{2})\b/)
+  const valorMatch = pergunta.match(/\b(\d+)\s*(reais|r\$)?\b/i)
+
+  let cantor = nomeMatch ? nomeMatch[1].trim() : null
+  let data = dataMatch ? dataMatch[1] : null
+  let hora = horaMatch ? horaMatch[1] : null
+  let valor = valorMatch ? Number(valorMatch[1]) : 0
+
+  // trata data dd/mm → yyyy-mm-dd
+  if(data){
+    const [dia, mes] = data.split("/")
+    data = `${hoje.slice(0,4)}-${mes}-${dia}`
+  }
+
+  console.log("📥 EXTRAIDO:", { cantor, data, hora, valor })
+
+  // valida
+  if(!cantor || !data || !hora){
+    return res.json({
+      resposta: "⚠️ Preciso de nome, data e hora para inserir."
+    })
+  }
+
+  // insere
+  await supabase.from("agenda_musicos").insert({
+    empresa,
+    cantor,
+    data,
+    hora,
+    valor: valor || 0,
+    estilo: "Não definido"
+  })
+
+  return res.json({
+    resposta: `✅ ${cantor} adicionado em ${data} às ${hora}.`
+  })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+    
     /* ================= IA ================= */
 
     const completion = await openai.chat.completions.create({
