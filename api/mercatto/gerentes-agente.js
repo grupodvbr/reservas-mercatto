@@ -14,34 +14,32 @@ const TABELA_MEMORIA = "conversas_gerentes_mercatto"
 
 /* ================= MEMORIA ================= */
 
-async function salvarMensagem({ telefone, mensagem, role, usuario, acao = null, dados_acao = null }){
-
+async function salvar({ telefone, mensagem, role, usuario, acao=null, dados=null }) {
   await supabase.from(TABELA_MEMORIA).insert({
     telefone,
     mensagem,
     role,
-    nome_usuario: usuario?.nome,
-    empresa: usuario?.empresa,
+    nome_usuario: usuario.nome,
+    empresa: usuario.empresa,
     acao,
-    dados_acao
+    dados_acao: dados
   })
 }
 
-async function buscarHistorico(telefone){
+async function historico(telefone){
   const { data } = await supabase
     .from(TABELA_MEMORIA)
     .select("*")
     .eq("telefone", telefone)
     .order("created_at", { ascending: false })
-    .limit(30)
+    .limit(40)
 
   return (data || []).reverse()
 }
 
-/* ================= MUSICOS ================= */
+/* ================= BANCO ================= */
 
-async function buscarPorNome(empresa, nome){
-
+async function buscarMusico(empresa, nome){
   const { data } = await supabase
     .from("agenda_musicos")
     .select("*")
@@ -51,15 +49,16 @@ async function buscarPorNome(empresa, nome){
   return data || []
 }
 
-async function deletarPorId(id){
-  return await supabase
-    .from("agenda_musicos")
-    .delete()
-    .eq("id", id)
+async function inserir(d){
+  return await supabase.from("agenda_musicos").insert(d)
 }
 
-async function inserirMusico(dados){
-  return await supabase.from("agenda_musicos").insert(dados)
+async function update(id, d){
+  return await supabase.from("agenda_musicos").update(d).eq("id", id)
+}
+
+async function deletar(id){
+  return await supabase.from("agenda_musicos").delete().eq("id", id)
 }
 
 /* ================= HANDLER ================= */
@@ -72,94 +71,114 @@ module.exports = async function handler(req, res){
 
     const empresa = usuario.empresa
     const nivel = usuario.nivel_acesso
-
     const texto = pergunta.toLowerCase()
 
-    /* ================= SALVA USER ================= */
+    await salvar({ telefone: numero, mensagem: pergunta, role: "user", usuario })
 
-    await salvarMensagem({
-      telefone: numero,
-      mensagem: pergunta,
-      role: "user",
-      usuario
-    })
+    const hist = await historico(numero)
 
-    /* ================= HISTORICO ================= */
+    /* ================= REVERSÃO ================= */
 
-    const historico = await buscarHistorico(numero)
+    if(texto.includes("reverter") || texto.includes("desfazer")){
 
-    /* ================= REVERTER ================= */
+      const ultima = [...hist].reverse().find(m => m.acao)
 
-    if(texto.includes("reverter")){
-
-      const ultimaAcao = historico.reverse().find(m => m.acao === "delete")
-
-      if(!ultimaAcao){
-        return res.json({ resposta: "❌ Nenhuma exclusão recente encontrada." })
+      if(!ultima){
+        return res.json({ resposta: "❌ Nada para reverter." })
       }
 
-      const dados = ultimaAcao.dados_acao
+      if(ultima.acao === "delete"){
+        await inserir(ultima.dados_acao)
+      }
 
-      await inserirMusico(dados)
+      if(ultima.acao === "insert"){
+        await deletar(ultima.dados_acao.id)
+      }
 
-      const resposta = "♻️ Exclusão revertida com sucesso."
+      if(ultima.acao === "update"){
+        await update(ultima.dados_acao.id, ultima.dados_acao.old)
+      }
 
-      await salvarMensagem({
-        telefone: numero,
-        mensagem: resposta,
-        role: "assistant",
-        usuario
-      })
+      const resposta = "♻️ Ação revertida com sucesso."
+
+      await salvar({ telefone: numero, mensagem: resposta, role: "assistant", usuario })
 
       return res.json({ resposta })
     }
 
-    /* ================= DELETAR ================= */
+    /* ================= DELETE INTELIGENTE ================= */
 
     if(texto.includes("deletar") && nivel >= 1){
 
-      const nomeMatch = pergunta.replace(/deletar/i, "").trim()
+      const nome = pergunta.replace(/deletar/i,"").trim()
 
-      const encontrados = await buscarPorNome(empresa, nomeMatch)
+      const lista = await buscarMusico(empresa, nome)
 
-      if(encontrados.length === 0){
+      if(lista.length === 0){
         return res.json({ resposta: "❌ Nenhum músico encontrado." })
       }
 
-      if(encontrados.length === 1){
+      if(lista.length === 1){
 
-        const musico = encontrados[0]
+        const m = lista[0]
 
-        await deletarPorId(musico.id)
+        await deletar(m.id)
 
-        await salvarMensagem({
+        await salvar({
           telefone: numero,
-          mensagem: `Excluído ${musico.cantor}`,
+          mensagem: `delete ${m.cantor}`,
           role: "assistant",
           usuario,
           acao: "delete",
-          dados_acao: musico
+          dados: m
         })
 
-        return res.json({
-          resposta: `🗑️ ${musico.cantor} removido com sucesso.`
-        })
+        return res.json({ resposta: `🗑️ ${m.cantor} removido.` })
       }
 
-      /* MULTIPLOS RESULTADOS */
-
-      const lista = encontrados.map(m =>
-        `${m.cantor} - ${m.data} (${m.hora})`
+      const msg = lista.map(m =>
+        `${m.cantor} - ${m.data}`
       ).join("\n")
 
       return res.json({
-        resposta: `⚠️ Encontrei vários resultados:\n\n${lista}\n\nInforme a data para excluir.`
+        resposta: `⚠️ Mais de um encontrado:\n\n${msg}\n\nInforme a data.`
       })
     }
 
-    /* ================= IA NORMAL ================= */
+    /* ================= INSERT INTELIGENTE ================= */
 
-    const contexto = historico.map(m => ({
+    if(texto.includes("adicionar") || texto.includes("inserir")){
+
+      if(nivel < 1){
+        return res.json({ resposta: "❌ Sem permissão." })
+      }
+
+      const novo = {
+        empresa,
+        cantor: "Novo músico",
+        data: new Date(),
+        hora: "20:00",
+        valor: 0,
+        estilo: "A definir"
+      }
+
+      await inserir(novo)
+
+      await salvar({
+        telefone: numero,
+        mensagem: "insert",
+        role: "assistant",
+        usuario,
+        acao: "insert",
+        dados: novo
+      })
+
+      return res.json({ resposta: "✅ Inserido com sucesso." })
+    }
+
+    /* ================= IA ================= */
+
+    const contexto = hist.map(m => ({
       role: m.role,
       content: m.mensagem
     }))
@@ -169,7 +188,14 @@ module.exports = async function handler(req, res){
       messages: [
         {
           role: "system",
-          content: `Você é gerente da empresa ${empresa}. Responda de forma objetiva.`
+          content: `
+Você é gerente da empresa ${empresa}.
+
+Você gerencia agenda de músicos.
+
+Responda direto, sem enrolar.
+Nunca invente dados.
+`
         },
         ...contexto,
         { role: "user", content: pergunta }
@@ -178,12 +204,7 @@ module.exports = async function handler(req, res){
 
     const resposta = completion.choices[0].message.content
 
-    await salvarMensagem({
-      telefone: numero,
-      mensagem: resposta,
-      role: "assistant",
-      usuario
-    })
+    await salvar({ telefone: numero, mensagem: resposta, role: "assistant", usuario })
 
     return res.json({ resposta })
 
@@ -192,7 +213,7 @@ module.exports = async function handler(req, res){
     console.error("❌ ERRO:", e)
 
     return res.json({
-      resposta: "Erro interno no agente gerente"
+      resposta: "Erro interno no agente"
     })
   }
 }
