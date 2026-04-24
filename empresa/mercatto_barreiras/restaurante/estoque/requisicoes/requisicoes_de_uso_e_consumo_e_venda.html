@@ -466,8 +466,8 @@ async function carregarRequisicoes(){
 const { data, error } = await sb
 .from("mercatto_requisicoes")
 .select("*")
-.order("criado_em", { ascending: false })
-  .limit(20);
+.order("created_at", { ascending: false }) // ou criado_em se for o seu caso
+.limit(100);
 
 if(error){
  console.error(error);
@@ -478,7 +478,7 @@ if(error){
 
 dadosRequisicoes = (data || []).map(r => ({
   index: r.id,
-  dataHora: formatarDataHora(r.criado_em),
+  dataHora: formatarDataHora(r.created_at), // ou criado_em
   item: r.produto,
   unidade: r.unidade,
   qtd: parseInt(r.quantidade),
