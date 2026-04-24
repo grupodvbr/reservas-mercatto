@@ -466,8 +466,10 @@ async function carregarRequisicoes(){
 const { data, error } = await sb
 .from("mercatto_requisicoes")
 .select("*")
-.order("criado_em", { ascending: false })// ou criado_em se for o seu caso
+.order("criado_em", { ascending: false })
 .limit(100);
+
+console.log("DADOS BRUTOS:", data);
 
 if(error){
  console.error(error);
