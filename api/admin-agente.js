@@ -955,7 +955,7 @@ function toBR(dataISO){
 
 
 
-const API_CUPONS = "https://arts-gnome-architects-influenced.trycloudflare.com"
+const API_CUPONS = "https://stress-andale-heritage-icq.trycloudflare.com"
 
 if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
   console.log("📅 DATA FINAL USADA:", dataFiltro)
@@ -2593,7 +2593,7 @@ let dataMes = null
 
 try {
 
-  const API_CUPONS = "https://arts-gnome-architects-influenced.trycloudflare.com"
+  const API_CUPONS = "https://stress-andale-heritage-icq.trycloudflare.com"
 
   const hoje = new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
