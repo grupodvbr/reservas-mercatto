@@ -506,10 +506,29 @@ function preencherFiltros(){
  document.getElementById("filtroSetor").innerHTML='<option value="">Todos os Setores</option>'+setores.map(s=>`<option>${s}</option>`).join('');
  const solicitantes=[...new Set(dadosRequisicoes.map(r=>r.solicitante).filter(Boolean))];
  document.getElementById("filtroSolicitante").innerHTML='<option value="">Todos os Solicitantes</option>'+solicitantes.map(s=>`<option>${s}</option>`).join('');
- document.getElementById("lista-solicitantes").innerHTML=solicitantes.map(n=>`<div onclick="filtrarPorSolicitante('${n}')">${n}</div>`).join('');
+ document.getElementById("lista-solicitantes").innerHTML=solicitantes.map(n=>`<div onclick="filtrarPorSolicitante('${String(n).replace(/'/g,"")}')">${n}</div>`).join('');
 }
-function parseData(d){if(!d)return null;const p=d.includes('/')?d.split('/'):[...d.split('-')];if(p.length===3){const[a,b,c]=p.map(x=>parseInt(x));return new Date(d.includes('/')?`${c}-${b}-${a}`:`${a}-${b}-${c}`);}return null;}
-function filtrarRequisicoes(){
+function parseData(d){
+  if(!d) return null;
+
+  const p = d.includes('/') ? d.split('/') : d.split('-');
+
+  if(p.length === 3){
+    const [a,b,c] = p.map(x => parseInt(x));
+    return new Date(d.includes('/') 
+      ? `${c}-${b}-${a}` 
+      : `${a}-${b}-${c}`
+    );
+  }
+
+  return null;
+}
+  
+  
+  
+  
+  
+  function filtrarRequisicoes(){
  const fs=document.getElementById('filtroStatus').value.toUpperCase(),fi=document.getElementById('filtroItem').value.toLowerCase(),
  fsol=document.getElementById('filtroSolicitante').value,fset=document.getElementById('filtroSetor').value,
  din=parseData(document.getElementById('dataInicio').value),df=parseData(document.getElementById('dataFim').value),
@@ -554,20 +573,13 @@ function renderizarTabela(lista,modo='setor'){
 
 
 
-
-
-
-
-
-
-
 <td>
   ${i.status === 'PENDENTE' 
     ? `<button onclick="abrirAjuste('${i.index}')" 
-         style="padding:4px 8px;border:none;border-radius:6px;background:#007bff;color:#fff;cursor:pointer">
-         Ajustar
+         style="padding:6px 10px;border:none;border-radius:8px;background:linear-gradient(135deg,#007bff,#0056b3);color:#fff;cursor:pointer;font-weight:600">
+         ✏️ Ajustar
        </button>`
-    : '-'}
+    : '<span style="opacity:.5">—</span>'}
 </td>
   <td>${i.unidade}</td>
   <td>${i.setor}</td>
@@ -712,11 +724,11 @@ async function carregarUsuarios(){
  const html = data.map(u=>`
    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;border-bottom:1px solid #ccc;padding:4px;">
      <div>
-       <b>${u.nome}</b><br>
-       <small>${u.setor}</small>
+       <b>${String(u.nome).replace(/'/g,"")}</b><br>
+       <small>${String(u.setor).replace(/'/g,"")}</small>
      </div>
      <div>
-       <button onclick="editarUsuario('${u.id}','${u.nome}','${u.setor}')" style="margin-right:5px;">✏️</button>
+     <button onclick="editarUsuario('${u.id}','${String(u.nome).replace(/'/g,"")}','${String(u.setor).replace(/'/g,"")}')" style="margin-right:5px;">✏️</button>
        <button onclick="excluirUsuario('${u.id}')">🗑️</button>
      </div>
    </div>
