@@ -10,6 +10,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE
 )
 
+
+
+
+
+// ================= MEMÓRIA =================
+
+global.contextoUsuarios = global.contextoUsuarios || {}
+global.acoesPendentes = global.acoesPendentes || {}
+
+
+
+
 /* ================= NORMALIZA ================= */
 
 function normalize(str){
@@ -19,6 +31,16 @@ function normalize(str){
     .replace(/[\u0300-\u036f]/g, "")
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ================= HANDLER ================= */
 
 module.exports = async function handler(req, res){
@@ -27,9 +49,74 @@ module.exports = async function handler(req, res){
 
     const { pergunta, usuario } = req.body
 
+
+const numero = usuario.telefone || "default"
+
+let contextoAtual = global.contextoUsuarios[numero] || {
+  cantor: null,
+  data: null,
+  hora: null,
+  valor: null
+}
+
+let acaoPendente = global.acoesPendentes[numero] || null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     const empresa = usuario.empresa
     const texto = pergunta.toLowerCase()
 
+/* ================= CONFIRMAÇÃO ================= */
+
+if(acaoPendente){
+
+  if(["sim","isso","confirmo"].includes(texto)){
+
+    console.log("✅ CONFIRMADO")
+
+    if(acaoPendente.tipo === "update"){
+
+      await supabase
+        .from("agenda_musicos")
+        .update(acaoPendente.dados)
+        .eq("id", acaoPendente.id)
+
+      delete global.acoesPendentes[numero]
+
+      return res.json({
+        resposta: `✅ ${acaoPendente.cantor} atualizado com sucesso.`
+      })
+    }
+  }
+
+  if(["não","cancelar"].includes(texto)){
+
+    delete global.acoesPendentes[numero]
+
+    return res.json({
+      resposta: "❌ Operação cancelada."
+    })
+  }
+}
+
+
+
+
+
+
+    
     console.log("📩 PERGUNTA:", pergunta)
     console.log("🏢 EMPRESA:", empresa)
 
@@ -214,6 +301,8 @@ if(
 
 /* ================= UPDATE INTELIGENTE ================= */
 
+/* ================= UPDATE REAL COM MEMÓRIA ================= */
+
 if(
   texto.includes("atualiza") ||
   texto.includes("alterar") ||
@@ -221,13 +310,17 @@ if(
   texto.includes("coloca")
 ){
 
-  console.log("🧠 UPDATE INTELIGENTE")
+  console.log("🧠 UPDATE REAL")
 
-  // tenta pegar nome
-  const nomeMatch = pergunta.match(/pedro|rafa|guthierry|kauan|sofia|alan|daniel|leandro/i)
+  // detectar nome automaticamente pela base
+  const nomes = base.map(m => m.cantor.toLowerCase())
 
-  if(nomeMatch){
-    contextoAtual.cantor = nomeMatch[0]
+  let nomeDetectado = nomes.find(n =>
+    texto.includes(normalize(n))
+  )
+
+  if(nomeDetectado){
+    contextoAtual.cantor = nomeDetectado
   }
 
   // data
@@ -249,12 +342,13 @@ if(
     contextoAtual.valor = Number(valorMatch[1])
   }
 
+  // salva contexto
+  global.contextoUsuarios[numero] = contextoAtual
+
   console.log("📌 CONTEXTO:", contextoAtual)
 
   if(!contextoAtual.cantor){
-    return res.json({
-      resposta: "⚠️ Qual músico você quer alterar?"
-    })
+    return res.json({ resposta: "⚠️ Qual músico?" })
   }
 
   const encontrados = base.filter(m =>
@@ -265,17 +359,13 @@ if(
     return res.json({ resposta: "❌ Músico não encontrado." })
   }
 
-  let alvo = null
-
-  if(contextoAtual.data){
-    alvo = encontrados.find(m => m.data === contextoAtual.data)
-  } else {
-    alvo = encontrados[0]
-  }
+  let alvo = contextoAtual.data
+    ? encontrados.find(m => m.data === contextoAtual.data)
+    : encontrados[0]
 
   if(!alvo){
     return res.json({
-      resposta: "❌ Não encontrei esse show na data."
+      resposta: "❌ Não encontrei esse show nessa data."
     })
   }
 
@@ -290,16 +380,18 @@ if(
     })
   }
 
-  await supabase
-    .from("agenda_musicos")
-    .update(updateData)
-    .eq("id", alvo.id)
+  // salva ação pendente
+  global.acoesPendentes[numero] = {
+    tipo: "update",
+    id: alvo.id,
+    dados: updateData,
+    cantor: alvo.cantor
+  }
 
   return res.json({
-    resposta: `✅ ${alvo.cantor} atualizado (${JSON.stringify(updateData)})`
+    resposta: `Confirma alterar ${alvo.cantor} para ${JSON.stringify(updateData)}?`
   })
 }
-
 
 
 
