@@ -1493,14 +1493,14 @@ if(musicos.length){
   })
 }
 if(resumoDia && resumoDia.faturamento !== undefined){
-  const metaInfo = resumoDia.empresa
-    ? const metaInfo = calcularMeta(
-  resumoDia.empresa,
-  resumoDia.faturamento,
-  dataFiltro
-)
-    : null
 
+  const metaInfo = resumoDia.empresa
+    ? calcularMeta(
+        resumoDia.empresa,
+        resumoDia.faturamento,
+        dataFiltro
+      )
+    : null
   contextos.push({
     role:"system",
     content: "RESUMO_CUPONS_DIA:\n" + JSON.stringify({
