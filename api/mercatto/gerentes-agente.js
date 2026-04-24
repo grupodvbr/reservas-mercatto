@@ -10,42 +10,49 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE
 )
 
-/* ================= SALVAR CONVERSA ================= */
+/* ================= MEMORIA ================= */
 
-async function salvarMensagem({ telefone, mensagem, role }){
+const TABELA_MEMORIA = "conversas_gerentes_mercatto"
 
-  await supabase.from("conversas_whatsapp").insert({
+/* ================= SALVAR ================= */
+
+async function salvarMensagem({ telefone, mensagem, role, usuario }){
+
+  await supabase.from(TABELA_MEMORIA).insert({
     telefone,
     mensagem,
     role,
-    tipo: "texto"
+    nome_usuario: usuario?.nome,
+    empresa: usuario?.empresa
   })
 
 }
 
-/* ================= BUSCAR HISTORICO ================= */
+/* ================= HISTORICO ================= */
 
 async function buscarHistorico(telefone){
 
   const { data } = await supabase
-    .from("conversas_whatsapp")
+    .from(TABELA_MEMORIA)
     .select("mensagem, role")
     .eq("telefone", telefone)
-    .order("created_at", { ascending: true })
-    .limit(20)
+    .order("created_at", { ascending: false })
+    .limit(30)
 
-  return data || []
+  return (data || []).reverse()
 }
 
 /* ================= CRUD MUSICOS ================= */
 
-async function listarMusicos(){
+async function listarMusicos(empresa){
+
   const { data } = await supabase
     .from("agenda_musicos")
     .select("*")
+    .eq("empresa", empresa)
     .order("data", { ascending: true })
 
-  return data
+  return data || []
 }
 
 async function inserirMusico(dados){
@@ -75,13 +82,15 @@ module.exports = async function handler(req, res){
     const { pergunta, numero, usuario } = req.body
 
     const nivel = usuario?.nivel_acesso || 0
+    const empresa = usuario?.empresa
 
-    /* ================= SALVA PERGUNTA ================= */
+    /* ================= SALVA USER ================= */
 
     await salvarMensagem({
       telefone: numero,
       mensagem: pergunta,
-      role: "user"
+      role: "user",
+      usuario
     })
 
     /* ================= HISTORICO ================= */
@@ -96,35 +105,26 @@ module.exports = async function handler(req, res){
     /* ================= PROMPT ================= */
 
     const systemPrompt = `
-Você é um agente GERENTE do sistema Mercatto.
+Você é um GERENTE do sistema Mercatto.
 
-Você pode:
+Você tem acesso TOTAL à agenda de músicos da empresa ${empresa}.
 
-- Ver agenda de músicos
-- Inserir músicos
-- Atualizar músicos
-- Deletar músicos
+Funções:
+- Listar agenda
+- Inserir músico
+- Atualizar músico
+- Deletar músico
 
-Tabela:
-agenda_musicos:
-- id
-- empresa
-- data
-- cantor
-- hora
-- valor
-- estilo
-- foto
-
-REGRAS:
-
-- Só execute ações se o usuário pedir claramente
-- Sempre confirme antes de deletar
-- Se o usuário mandar imagem, pergunte:
-  "Deseja usar essa imagem como poster do músico?"
+Regras:
 
 - Nunca invente dados
-- Sempre responda claro e direto
+- Sempre confirme antes de deletar
+- Sempre use a empresa ${empresa}
+- Responda de forma objetiva
+
+Se o usuário enviar imagem:
+Pergunte:
+"Deseja usar essa imagem como poster do músico?"
 `
 
     /* ================= IA ================= */
@@ -140,37 +140,47 @@ REGRAS:
 
     let resposta = completion.choices[0].message.content
 
-    /* ================= AÇÕES ================= */
-
     const texto = pergunta.toLowerCase()
 
-    if(texto.includes("listar") || texto.includes("agenda")){
+    /* ================= LISTAR ================= */
 
-      const dados = await listarMusicos()
+    if(texto.includes("agenda") || texto.includes("listar")){
 
-      resposta = `📅 Agenda:\n\n` + dados.map(m =>
+      const dados = await listarMusicos(empresa)
+
+      resposta = `📅 Agenda ${empresa}:\n\n` + dados.map(m =>
         `${m.data} - ${m.cantor} (${m.hora})`
       ).join("\n")
-
     }
+
+    /* ================= INSERIR ================= */
 
     if(texto.includes("inserir") && nivel >= 1){
 
       await inserirMusico({
-        empresa: usuario.empresa,
-        cantor: "Novo cantor",
+        empresa,
+        cantor: "Novo músico",
         data: new Date(),
         hora: "20:00",
         valor: 0,
-        estilo: "Não definido"
+        estilo: "A definir"
       })
 
       resposta = "✅ Músico inserido com sucesso"
     }
 
+    /* ================= ATUALIZAR ================= */
+
+    if(texto.includes("atualizar") && nivel >= 1){
+
+      resposta = "✏️ Informe o ID do músico e os novos dados."
+    }
+
+    /* ================= DELETAR ================= */
+
     if(texto.includes("deletar") && nivel >= 1){
 
-      resposta = "⚠️ Confirme o ID do músico para deletar."
+      resposta = "⚠️ Confirme o ID do músico para exclusão."
     }
 
     /* ================= SALVA RESPOSTA ================= */
@@ -178,7 +188,8 @@ REGRAS:
     await salvarMensagem({
       telefone: numero,
       mensagem: resposta,
-      role: "assistant"
+      role: "assistant",
+      usuario
     })
 
     return res.json({ resposta })
