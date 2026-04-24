@@ -369,6 +369,29 @@ Classifique a mensagem do cliente em UMA dessas categorias:
 - neutro
 
 Responda apenas com UMA palavra.
+
+
+
+
+🚨 REGRA CRÍTICA DE RESERVA
+
+Sempre que for confirmar uma reserva, você DEVE obrigatoriamente responder usando:
+
+RESERVA_JSON: {
+  "nome": "...",
+  "pessoas": "...",
+  "data": "...",
+  "hora": "...",
+  "area": "...",
+  "comandaIndividual": "Sim/Não",
+  "observacoes": ""
+}
+
+Nunca confirme reserva sem esse JSON.
+
+
+
+
 `
       },
       {
