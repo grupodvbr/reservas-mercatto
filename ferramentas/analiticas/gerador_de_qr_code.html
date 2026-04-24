@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CLENA • QR Dashboard</title>
+
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial}
+html,body{margin:0;height:100%}
+
+:root{
+  --bg:#0b1020;
+  --surface:#121a32;
+  --card:#18224a;
+  --primary:#38bdf8;
+  --secondary:#7c3aed;
+  --muted:#94a3b8;
+  --border:#273469;
+  --success:#22c55e;
+  --danger:#ef4444;
+}
+
+body{
+  background:radial-gradient(70% 60% at 50% 25%, #18224a 0%, #0b1020 65%);
+  color:#fff;
+  display:none;
+}
+
+#splash{
+  position:fixed;inset:0;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+.splash-logo{
+  font-size:64px;
+  font-weight:900;
+  display:flex;
+  gap:8px;
+}
+.splash-logo span{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+header{
+  max-width:1200px;
+  margin:24px auto;
+  padding:0 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.right{
+  display:flex;
+  gap:12px;
+}
+
+.search{
+  background:#020617;
+  border-radius:999px;
+  padding:10px 16px;
+  width:240px;
+}
+.search input{
+  width:100%;
+  background:none;
+  border:none;
+  color:#fff;
+}
+
+.profile-btn{
+  width:42px;height:42px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.card{
+  max-width:1200px;
+  margin:auto;
+  background:rgba(18,26,50,.9);
+  padding:26px;
+  border-radius:22px;
+}
+
+form{
+  display:grid;
+  grid-template-columns:1fr 2fr auto;
+  gap:14px;
+  margin-bottom:26px;
+}
+form input{
+  padding:14px;
+  border-radius:12px;
+  border:none;
+}
+form button{
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:22px;
+}
+
+.qr-card{
+  background:#020617;
+  border-radius:18px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+}
+.qr-card img{
+  width:100%;
+  border-radius:12px;
+  background:#fff;
+  margin-bottom:12px;
+}
+
+.meta{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:auto;
+}
+.actions button{
+  height:42px;
+  border:none;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+.open{background:#334155;color:#fff}
+.edit{background:#22c55e;color:#000}
+.del{background:var(--danger);color:#fff}
+
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:var(--surface);
+  padding:26px;
+  border-radius:18px;
+  width:90%;
+  max-width:420px;
+}
+.modal-box input{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+@media(max-width:768px){
+  form{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+  <div class="splash-logo"><span>C</span><span>lena</span></div>
+</div>
+
+<header>
+  <h1>CLENA QR</h1>
+  <div class="right">
+    <div class="search"><input id="search" placeholder="Buscar"></div>
+    <div class="profile-btn" onclick="abrirPerfil()">👤</div>
+  </div>
+</header>
+
+<div class="card">
+<form id="qrForm">
+  <input id="nome" placeholder="Nome" required>
+  <input id="destino" placeholder="URL destino" required>
+  <button>Gerar</button>
+</form>
+
+<div class="grid" id="lista"></div>
+</div>
+
+<div class="modal" id="perfilModal">
+  <div class="modal-box">
+    <h3>Modo Público</h3>
+    <p>Sem login ativo</p>
+    <button onclick="perfilModal.style.display='none'">Fechar</button>
+  </div>
+</div>
+
+<div class="modal" id="editModal">
+  <div class="modal-box">
+    <h3>Editar</h3>
+    <input id="editNome">
+    <input id="editDestino">
+    <button onclick="salvarEdit()">Salvar</button>
+  </div>
+</div>
+
+<script>
+const API_CREATE="https://fcehmjmtxqmrjkuqlkay.supabase.co/functions/v1/create";
+const API_REDIRECT="https://fcehmjmtxqmrjkuqlkay.supabase.co/functions/v1/r/";
+const REST_QR="https://fcehmjmtxqmrjkuqlkay.supabase.co/rest/v1/qr_codes";
+const API_KEY="sb_publishable_iCDWHsq6EguNauQPP49JCg_jUNcz30o";
+
+let dados=[], editId=null;
+
+function gerarSlug(){
+  return Math.random().toString(36).substring(2,10);
+}
+
+function abrirPerfil(){
+  perfilModal.style.display="flex";
+}
+
+qrForm.onsubmit = async e=>{
+  e.preventDefault();
+
+  const slug = gerarSlug();
+  const canvas = document.createElement("canvas");
+  await QRCode.toCanvas(canvas,API_REDIRECT+slug,{width:512});
+
+  await fetch(API_CREATE,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      nome:nome.value,
+      slug,
+      destino:destino.value,
+      imagem:canvas.toDataURL("image/png"),
+      email:"publico"
+    })
+  });
+
+  nome.value="";
+  destino.value="";
+  carregar();
+};
+
+async function carregar(){
+  const r = await fetch(
+    REST_QR+"?ativo=eq.true&order=criado_em.desc",
+    {headers:{apikey:API_KEY,Authorization:"Bearer "+API_KEY}}
+  );
+  dados = await r.json();
+  render();
+}
+
+function render(){
+  lista.innerHTML="";
+  dados.filter(d=>d.nome.toLowerCase().includes(search.value.toLowerCase()))
+  .forEach(qr=>{
+    lista.innerHTML+=`
+    <div class="qr-card">
+      <img src="${qr.imagem_url}">
+      <strong>${qr.nome}</strong>
+      <div class="meta">
+        ${qr.destino}<br>
+        Acessos: ${qr.acessos}
+      </div>
+      <div class="actions">
+        <button class="open" onclick="window.open('${API_REDIRECT+qr.slug}')">Abrir</button>
+        <button class="edit" onclick="editar('${qr.id}','${qr.nome}','${qr.destino}')">Editar</button>
+        <button class="del" onclick="excluir('${qr.id}')">Excluir</button>
+      </div>
+    </div>`;
+  });
+}
+
+function editar(id,nome,dest){
+  editId=id;
+  editNome.value=nome;
+  editDestino.value=dest;
+  editModal.style.display="flex";
+}
+
+async function salvarEdit(){
+  await fetch(REST_QR+"?id=eq."+editId,{
+    method:"PATCH",
+    headers:{
+      apikey:API_KEY,
+      Authorization:"Bearer "+API_KEY,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+      nome:editNome.value,
+      destino:editDestino.value
+    })
+  });
+  editModal.style.display="none";
+  carregar();
+}
+
+async function excluir(id){
+  if(!confirm("Excluir QR?")) return;
+  await fetch(REST_QR+"?id=eq."+id,{
+    method:"PATCH",
+    headers:{
+      apikey:API_KEY,
+      Authorization:"Bearer "+API_KEY,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({ativo:false})
+  });
+  carregar();
+}
+
+search.oninput=render;
+
+setTimeout(()=>{
+  splash.style.display="none";
+  document.body.style.display="block";
+},800);
+
+carregar();
+</script>
+
+</body>
+</html>
