@@ -552,7 +552,7 @@ function renderizarTabela(lista,modo='setor'){
 
 
    
-  t.insertAdjacentHTML('beforeend',`<tr><td colspan="9">${modo==='setor'?'Setor':'Solicitante'}: ${k}</td></tr>`);
+  t.insertAdjacentHTML('beforeend',`<tr><td colspan="9">${modo==='setor'?'Setor':'Solicitante'}:${String(k).replace(/'/g,"")}</td></tr>`);
   g[k].forEach(i=>{
 
 
