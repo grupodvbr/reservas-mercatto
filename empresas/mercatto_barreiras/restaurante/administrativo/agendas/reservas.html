@@ -2568,82 +2568,82 @@ function gerarPDFMes(){
     return d.getMonth() === state.mes && d.getFullYear() === ano;
   });
 
-  // =========================
-  // LOGO
-  // =========================
-  const logo = new Image();
-  logo.src = "https://reservas-mercatto.vercel.app/logo/mercatto.png";
+  // ================= STATUS =================
+  const concluidas = reservas.filter(r=>r.status === "Concluída").length;
+  const canceladas = reservas.filter(r=>r.status === "Cancelada").length;
+  const pendentes = reservas.filter(r=>r.status === "Pendente").length;
+  const confirmadas = reservas.filter(r=>r.status === "Confirmada").length;
 
-  logo.onload = () => {
+  // ================= LOGO =================
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = "https://raw.githubusercontent.com/grupodvbr/otto/main/logo/mercatto.png";
 
-    doc.addImage(logo, "PNG", 14, 10, 40, 15);
+  img.onload = ()=>{
 
-    // =========================
-    // TÍTULO
-    // =========================
+    // ================= HEADER =================
+    doc.setFillColor(5,11,22);
+    doc.rect(0,0,210,30,"F");
+
+    doc.addImage(img,"PNG",14,6,40,18);
+
+    doc.setTextColor(255,255,255);
     doc.setFont("helvetica","bold");
-    doc.setFontSize(18);
-    doc.text("RELATÓRIO DE RESERVAS", 105, 20, {align:"center"});
+    doc.setFontSize(16);
+    doc.text("Relatório de Reservas", 60, 14);
 
-    doc.setFontSize(12);
-    doc.setTextColor(120);
-    doc.text(`${mesNome} de ${ano}`, 105, 27, {align:"center"});
+    doc.setFontSize(10);
+    doc.text(`${mesNome} de ${ano}`, 60, 22);
 
-    // =========================
-    // KPIs (CARDS)
-    // =========================
+    // ================= CARDS =================
     let y = 40;
 
-    const countStatus = (s) =>
-      reservas.filter(r => (r.status || "").trim() === s).length;
+    function drawCard(x, label, value, color){
+      doc.setFillColor(...color);
+      doc.roundedRect(x, y, 45, 20, 4,4,"F");
 
-    const cards = [
-      {label:"PENDENTES", value:countStatus("Pendente"), color:[245,158,11]},
-      {label:"CONFIRMADAS", value:countStatus("Confirmada"), color:[59,130,246]},
-      {label:"CONCLUÍDAS", value:countStatus("Concluída"), color:[34,197,94]},
-      {label:"CANCELADAS", value:countStatus("Cancelada"), color:[239,68,68]}
-    ];
-
-    let x = 14;
-
-    cards.forEach(c=>{
-      doc.setFillColor(...c.color);
-      doc.roundedRect(x, y, 45, 20, 3, 3, "F");
-
-      doc.setTextColor(255);
-      doc.setFontSize(10);
-      doc.text(c.label, x+22.5, y+7, {align:"center"});
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(9);
+      doc.text(label, x+4, y+8);
 
       doc.setFontSize(14);
-      doc.text(String(c.value), x+22.5, y+15, {align:"center"});
+      doc.text(String(value), x+4, y+16);
+    }
 
-      x += 48;
-    });
+    drawCard(14, "Concluídas", concluidas, [34,197,94]);
+    drawCard(62, "Pendentes", pendentes, [245,158,11]);
+    drawCard(110, "Confirmadas", confirmadas, [59,130,246]);
+    drawCard(158, "Canceladas", canceladas, [239,68,68]);
 
     y += 30;
 
-    // =========================
-    // RESUMO FINANCEIRO
-    // =========================
+    // ================= FINANCEIRO =================
     const totalEstimado = reservas.reduce((a,r)=>a+parseBRL(r.valorEstimado||0),0);
-    const totalAntecipado = reservas.reduce((a,r)=>a+parseBRL(r.pagamentoAntecipado||0),0);
     const totalFinal = reservas.reduce((a,r)=>a+parseBRL(r.valorFinalPago||0),0);
 
-    doc.setTextColor(0);
-    doc.setFontSize(12);
+    doc.setTextColor(0,0,0);
     doc.setFont("helvetica","bold");
+    doc.setFontSize(11);
     doc.text("Resumo Financeiro", 14, y);
 
-    y+=8;
+    y += 6;
 
     doc.setFont("helvetica","normal");
-    doc.text(`Estimado: ${formatBRL(totalEstimado)}`, 14, y); y+=6;
-    doc.text(`Antecipado: ${formatBRL(totalAntecipado)}`, 14, y); y+=6;
-    doc.text(`Final Pago: ${formatBRL(totalFinal)}`, 14, y); y+=10;
+    doc.text(`Estimado: ${formatBRL(totalEstimado)}`, 14, y);
+    y += 5;
+    doc.text(`Recebido: ${formatBRL(totalFinal)}`, 14, y);
 
-    // =========================
-    // LISTAGEM
-    // =========================
+    y += 10;
+
+    // ================= LISTA =================
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(12);
+    doc.text("Reservas", 14, y);
+
+    y += 6;
+
+    doc.setFontSize(9);
+
     reservas.forEach(r=>{
 
       if(y > 270){
@@ -2653,41 +2653,47 @@ function gerarPDFMes(){
 
       const data = new Date(r.datahora).toLocaleString("pt-BR");
 
-      // cor por status
-      let cor = [0,0,0];
+      // FUNDO
+      if(r.status === "Cancelada"){
+        doc.setFillColor(255,235,235);
+      }else{
+        doc.setFillColor(245,245,245);
+      }
 
-      if(r.status === "Cancelada") cor = [239,68,68];
-      if(r.status === "Concluída") cor = [34,197,94];
+      doc.rect(14, y-4, 180, 18, "F");
 
-      doc.setTextColor(...cor);
+      // BORDA
+      if(r.status === "Cancelada"){
+        doc.setDrawColor(239,68,68);
+      }else if(r.status === "Concluída"){
+        doc.setDrawColor(34,197,94);
+      }else{
+        doc.setDrawColor(200,200,200);
+      }
+
+      doc.rect(14, y-4, 180, 18);
+
+      doc.setTextColor(0,0,0);
+
       doc.setFont("helvetica","bold");
-      doc.setFontSize(12);
+      doc.text(r.nome || "-", 16, y);
 
-      doc.text(r.nome || "—", 14, y);
-      y+=5;
-
-      doc.setTextColor(80);
       doc.setFont("helvetica","normal");
-      doc.setFontSize(10);
+      doc.text(`${data} • ${r.pessoas}p • ${r.mesa}`, 16, y+4);
 
-      doc.text(`Data: ${data}`, 14, y); y+=4;
-      doc.text(`Pessoas: ${r.pessoas} | Local: ${r.mesa}`, 14, y); y+=4;
-      doc.text(`Status: ${r.status}`, 14, y); y+=4;
+      doc.text(`Status: ${r.status}`, 140, y);
 
-      doc.text(
-        `R$: Est ${formatBRL(r.valorEstimado)} | Ant ${formatBRL(r.pagamentoAntecipado)} | Final ${formatBRL(r.valorFinalPago)}`,
-        14,
-        y
-      );
-
-      y+=10;
+      y += 20;
 
     });
 
-    // =========================
-    // EXPORT
-    // =========================
-    doc.save(`relatorio_mercatto_${mesNome}_${ano}.pdf`);
+    // ================= EXPORTAR =================
+    doc.save(`relatorio_${mesNome}_${ano}.pdf`);
+
+  };
+
+  img.onerror = ()=>{
+    alert("Erro ao carregar logo. Verifique a URL.");
   };
 
 }
