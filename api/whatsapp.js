@@ -19,17 +19,13 @@ const supabase = createClient(
 
 const adminAgente = require("./admin-agente")
 
-let gerenteAgente = null
-
-try{
-  gerenteAgente = require("./gerentes-agente")
-}catch(e){
-  console.log("⚠️ gerente-agente não encontrado, ignorando...")
-}
-
-const AGENTES = {
-  admin: adminAgente,
-  gerente: gerenteAgente
+function carregarAgente(nome){
+  try{
+    return require(`./${nome}-agente`)
+  }catch(e){
+    console.log(`⚠️ agente ${nome} não encontrado`)
+    return null
+  }
 }
 /* ================= ENV ================= */
 
@@ -196,16 +192,7 @@ if(req.method === "POST"){
       return res.status(200).end()
     }
 
-let agenteTipo = "admin"
 
-// 🔥 REGRA: NIVEL 0 SEMPRE ADMIN
-if(usuario.nivel_acesso === 0){
-  agenteTipo = "admin"
-}else{
-  agenteTipo = (usuario.agente || "admin").toLowerCase()
-}
-    
-    
     
     const nivel = usuario.nivel_acesso
 
@@ -213,23 +200,21 @@ if(usuario.nivel_acesso === 0){
     console.log("🔑 NIVEL:", nivel)
     console.log("🤖 AGENTE:", agenteTipo)
 
-    const agenteSelecionado = AGENTES[agenteTipo]
+let agenteSelecionado = null
 
-    if(!agenteSelecionado){
+// 🔥 NIVEL 0 SEMPRE ADMIN
+if(usuario.nivel_acesso === 0){
+  agenteSelecionado = adminAgente
+}else{
+  agenteSelecionado = carregarAgente(usuario.agente || "admin")
+}
 
-      console.log("⛔ AGENTE NÃO CONFIGURADO")
 
-      await enviarMensagem(
-        ADMIN_ALERTA,
-`🚨 AGENTE INVÁLIDO
-
-👤 ${usuario.nome}
-📱 ${numero}
-🤖 agente: ${usuario.agente}`
-      )
-
-      return res.status(200).end()
-    }
+    
+  if(!agenteSelecionado){
+  console.log("⚠️ agente inválido, usando ADMIN como fallback")
+  agenteSelecionado = adminAgente
+}
 
     /* ================= PREPARA REQ ================= */
 
