@@ -178,19 +178,6 @@ const amanhaISO = getDataISO(amanhaDate)
 
 
 const texto = pergunta.toLowerCase()
-  // ================= DETECTA GRÁFICO =================
-const pediuGrafico =
-  texto.includes("grafico") ||
-  texto.includes("gráfico") ||
-  texto.includes("chart") ||
-  texto.includes("visual") ||
-  texto.includes("comparação visual") ||
-  texto.includes("barras") ||
-  texto.includes("linha") ||
-  texto.includes("pizza") ||
-  texto.includes("evolução")
-
-
   
 /* ================= GERENCIAR PROMPTS ================= */
 
@@ -262,11 +249,7 @@ if(
       resposta: "⛔ Apenas administradores podem criar prompts"
     })
   }
-  
 
-
-
-  
   const interpretacaoPrompt = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
     temperature: 0,
@@ -612,30 +595,8 @@ else if(
   
 let tipoConsulta = classificacao.tipo || "geral"
 
-// 🔥 PRIORIDADE TOTAL PARA GRÁFICO
-if(pediuGrafico){
-  contextos.push({
-    role: "system",
-    content: `
-🚨 MODO_GRAFICO_ATIVO
 
-RESPONDA SOMENTE COM:
 
-GRAFICO_JSON:
-{
-  "tipo": "bar",
-  "titulo": "Faturamento",
-  "labels": [],
-  "dados": []
-}
-
-PROIBIDO:
-- texto
-- explicação
-- relatório
-`
-  })
-}
 
   // 🔥 BLOQUEIO GLOBAL DE TAREFAS
 if(tipoConsulta === "tarefas" && NIVEL !== 0){
@@ -944,30 +905,8 @@ const mensagens = (historico || [])
       : ""
   )
 }))
-
-
-
-
-
-
-
-
-
 // 🔥 CRIA CONTEXTO ANTES DE QUALQUER USO
 const contextos = []
-
-// ✅ AGORA SIM
-if(pediuGrafico){
-  contextos.push({
-    role: "system",
-    content: "MODO_GRAFICO_ATIVO: true"
-  })
-}
-
-
-
-
-  
 // ================= MEMÓRIA DO USUÁRIO =================
 
 const { data: ultimaMemoria } = await supabase
@@ -1196,13 +1135,7 @@ function toBR(dataISO){
 
 const API_CUPONS = "https://marked-resolved-tropical-posting.trycloudflare.com"
 
-if(
-  tipoConsulta === "vendas" ||
-  tipoConsulta === "relatorio" ||
-  tipoConsulta === "grafico" // 🔥 ADICIONAR ISSO
-){
-  
-  
+if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
   console.log("📅 DATA FINAL USADA:", dataFiltro)
   try{
 
@@ -1711,15 +1644,21 @@ if(resumoDia && resumoDia.faturamento !== undefined){
 
 
 
+const pediuGrafico =
+  texto.includes("grafico") ||
+  texto.includes("gráfico") ||
+  texto.includes("chart")
+
 if(
   !pediuGrafico && (
     texto.includes("relatorio") ||
     texto.includes("relatório") ||
-    texto.includes("resumo")
+    texto.includes("vendas") ||
+    texto.includes("faturamento") ||
+    texto.includes("resumo") ||
+    texto.includes("meta")
   )
-)
-
-{
+){
   contextos.push({
     role: "system",
     content: `
