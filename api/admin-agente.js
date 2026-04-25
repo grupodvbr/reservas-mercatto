@@ -178,7 +178,29 @@ const amanhaISO = getDataISO(amanhaDate)
 
 
 const texto = pergunta.toLowerCase()
+// 🔥 FORÇA MODO RELATÓRIO INTELIGENTE
+if(
+  texto.includes("relatorio") ||
+  texto.includes("relatório") ||
+  texto.includes("vendas") ||
+  texto.includes("faturamento") ||
+  texto.includes("resumo") ||
+  texto.includes("quanto vendi")
+){
+  contextos.push({
+    role: "system",
+    content: `
+O usuário está solicitando um RELATÓRIO.
 
+Responda obrigatoriamente em formato de relatório completo.
+Nunca responda texto simples.
+Use os modelos definidos.
+`
+  })
+}
+
+
+  
 /* ================= GERENCIAR PROMPTS ================= */
 
 if(texto.includes("novo prompt")){
@@ -993,6 +1015,16 @@ try{
   }
 
 }catch(e){
+
+
+// 🔥 ENVIA TODOS OS DADOS DE VENDAS PARA O GPT (LOCAL EXATO)
+contextos.push({
+  role: "system",
+  content: "DADOS_VENDAS_COMPLETO:\n" + JSON.stringify(dadosExternos)
+})
+
+
+  
   console.log("❌ ERRO API:", e)
 }
 
@@ -1666,16 +1698,23 @@ content: `
 
 ${promptAgente}
 
-INSTRUÇÕES:
+REGRAS CRÍTICAS:
 
-- Todos os relatórios devem seguir os MODELOS definidos acima
-- Nunca criar formato próprio
+- Se houver dados de vendas no contexto:
+  → SEMPRE gerar um relatório completo
+  → NUNCA responder texto simples
+  → SEMPRE usar formato estruturado
+
+- Se o usuário perguntar qualquer coisa sobre:
+  vendas, faturamento, valores, resumo, metas
+  → responder como relatório
+
 - Nunca inventar dados
 - Usar apenas dados do contexto
-- Se não houver dados → avisar claramente
 
-Se o usuário pedir relatório:
-→ aplicar o modelo correspondente
+- Se não houver dados:
+  → responder: "⚠️ Sem dados disponíveis para o período"
+
 `
 },
 
