@@ -296,7 +296,7 @@ REGRAS:
 
 const prioridade = dados.prioridade || 5
 
-const acao = {
+const acaoPrompt = {
   tabela: "prompt_agente",
   operacao: "insert",
   dados: {
@@ -329,7 +329,7 @@ Digite:
     usuario_id: usuarioDB.id,
     nome: NOME,
     empresa: EMPRESA,
-    acao_json: acao,
+    acao_json: acaoPrompt,
     aguardando_confirmacao: true
   })
 
@@ -1900,7 +1900,7 @@ await supabase
   usuario_id: usuarioDB.id,
   nome: NOME,
   empresa: EMPRESA,
-  acao_json: acao,
+  acao_json: acaoPrompt,
   aguardando_confirmacao: acao ? true : false
 })
 
