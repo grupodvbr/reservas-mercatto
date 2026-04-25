@@ -178,7 +178,86 @@ const amanhaISO = getDataISO(amanhaDate)
 
 
 const texto = pergunta.toLowerCase()
-  
+  // ================= ANALISE DE RELATÓRIO =================
+
+if(texto === "sim"){
+
+  // 🔥 BUSCA ÚLTIMA MENSAGEM DO BOT
+  const { data: ultimaMsg } = await supabase
+    .from("assistente_otto_chat")
+    .select("mensagem")
+    .eq("telefone", numero)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const pediuAnalise =
+    ultimaMsg?.mensagem?.includes("Deseja que eu faça uma análise estratégica")
+
+  if(!pediuAnalise){
+    // 🔥 deixa seguir fluxo normal (confirmações etc)
+  } else {
+
+    // 🔥 BUSCA RELATÓRIO
+    const { data: relatorio } = await supabase
+      .from("assistente_otto_chat")
+      .select("mensagem")
+      .eq("tipo", "relatorio_admin")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if(!relatorio){
+      return res.json({
+        resposta: "⚠️ Não encontrei relatório recente para analisar."
+      })
+    }
+
+    const analise = await openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      temperature: 0.3,
+      messages: [
+        {
+          role: "system",
+          content: `
+Você é um analista estratégico de negócios.
+
+Analise o relatório abaixo e gere:
+
+- Pontos positivos
+- Problemas
+- Oportunidades
+- Riscos
+- Conclusão direta
+
+Seja direto, estratégico e objetivo.
+`
+        },
+        {
+          role: "user",
+          content: relatorio.mensagem
+        }
+      ]
+    })
+
+    const respostaAnalise = analise.choices[0].message.content
+
+    await supabase
+      .from("assistente_otto_chat")
+      .insert({
+        role: "assistant",
+        mensagem: respostaAnalise,
+        telefone: numero,
+        usuario_id: usuarioDB.id,
+        nome: NOME,
+        empresa: EMPRESA
+      })
+
+    return res.json({
+      resposta: respostaAnalise
+    })
+  }
+}
 /* ================= GERENCIAR PROMPTS ================= */
 
 if(texto.includes("novo prompt")){
@@ -2295,6 +2374,10 @@ mensagem += `
 `
 
 
+
+
+  
+
   function gerarGraficoURL(empresas){
 
   const labels = empresas.map(e => e.empresa)
@@ -2330,7 +2413,15 @@ const graficoURL = gerarGraficoURL(dataDia.empresas)
 
 console.log("📊 GRAFICO:", graficoURL)
 
-
+// 🔥 SALVA RELATÓRIO PARA ANÁLISE
+await supabase
+  .from("assistente_otto_chat")
+  .insert({
+    role: "assistant",
+    mensagem: mensagem,
+    tipo: "relatorio_admin",
+    telefone: "sistema"
+  })
   
   for(const numero of admins){
 
@@ -2362,6 +2453,26 @@ image: {
       console.error("❌ ERRO WHATS:", result.error)
     }else{
       console.log("✅ ENVIADO:", numero)
+      await fetch(
+  `https://graph.facebook.com/v19.0/${process.env.OTTO_PHONE_NUMBER_ID}/messages`,
+  {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OTTO_WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: numero,
+      type: "text",
+      text: {
+        body: `📊 Deseja que eu faça uma análise estratégica deste relatório?\n\n✔ SIM → análise completa\n❌ NÃO → encerrar`
+      }
+    })
+  }
+)
+
+      
     }
   }
 
