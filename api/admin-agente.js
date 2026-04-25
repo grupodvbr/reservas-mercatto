@@ -225,8 +225,24 @@ const nomeCurto = (p.prompt || "")
 if(
   texto.startsWith("prompt:") ||
   texto.includes("criar prompt") ||
-  texto.includes("novo prompt com")
-){
+  texto.includes("novo prompt com") ||
+
+  // 🔥 NOVO BLOCO INTELIGENTE
+  texto.includes("sempre que eu") ||
+  texto.includes("a partir de agora") ||
+  texto.includes("quero que voce") ||
+  texto.includes("quero que você") ||
+  texto.includes("regra nova") ||
+  texto.includes("toda vez que")
+)
+
+
+
+
+
+
+
+{
 
   if(NIVEL !== 0){
     return res.json({
