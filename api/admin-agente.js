@@ -263,12 +263,6 @@ if(
     })
   }
   
-  if(pediuGrafico){
-  contextos.push({
-    role: "system",
-    content: "MODO_GRAFICO_ATIVO: true"
-  })
-}
 
 
 
@@ -928,6 +922,21 @@ const mensagens = (historico || [])
       : ""
   )
 }))
+
+
+
+
+
+
+
+
+
+  if(pediuGrafico){
+  contextos.push({
+    role: "system",
+    content: "MODO_GRAFICO_ATIVO: true"
+  })
+}
 // 🔥 CRIA CONTEXTO ANTES DE QUALQUER USO
 const contextos = []
 // ================= MEMÓRIA DO USUÁRIO =================
