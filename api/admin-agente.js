@@ -1843,8 +1843,7 @@ if(matchTarefa && NIVEL === 0){
       jsonTexto = jsonTexto.substring(inicio, fim + 1)
     }
 
-    acao = JSON.parse(jsonTexto)
-
+acaoFinal = JSON.parse(jsonTexto)
     if(!resposta.includes("Confirme")){
       resposta += "\n\n⚠️ Confirme para agendar esta tarefa."
     }
@@ -1877,8 +1876,7 @@ if(matchAcao && NIVEL === 0){
       jsonTexto = jsonTexto.substring(inicio, fim + 1)
     }
 
-    acao = JSON.parse(jsonTexto)
-
+acaoFinal = JSON.parse(jsonTexto)
     // 🔥 FORÇA CONFIRMAÇÃO
     if(!resposta.toLowerCase().includes("confirma")){
       resposta += "\n\n⚠️ Confirme para executar esta ação."
