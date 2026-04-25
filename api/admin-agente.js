@@ -2066,7 +2066,7 @@ let dataMes = null
 
 try {
 
-  const API_CUPONS = "https://stress-andale-heritage-icq.trycloudflare.com"
+  const API_CUPONS = "https://marked-resolved-tropical-posting.trycloudflare.com"
 
   const hoje = new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
