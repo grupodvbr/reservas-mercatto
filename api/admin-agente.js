@@ -1708,6 +1708,44 @@ REGRAS CRÍTICAS:
 - Se não houver dados:
   → responder: "⚠️ Sem dados disponíveis para o período"
 
+
+
+
+
+
+
+// ================= GRÁFICOS =================
+
+- Se o usuário pedir gráfico, chart, visualizar dados:
+
+→ Responder com JSON no formato:
+
+GRAFICO_JSON:
+{
+  "tipo": "bar",
+  "titulo": "titulo do gráfico",
+  "labels": ["label1","label2"],
+  "dados": [100,200]
+}
+
+REGRAS:
+- labels = nomes das empresas ou categorias
+- dados = valores correspondentes
+- nunca inventar dados
+- usar somente dados do contexto
+
+
+
+
+
+
+
+
+
+
+
+  
+
 `
 },
 
@@ -1722,6 +1760,59 @@ REGRAS CRÍTICAS:
 let resposta = completion.choices[0].message.content
 // 🔥 BLOQUEIO TOTAL DE INVENÇÃO
 
+// ================= DETECTAR GRAFICO =================
+
+const matchGrafico = resposta.match(/GRAFICO_JSON:\s*([\s\S]*)/)
+
+if(matchGrafico){
+
+  try{
+
+    let jsonTexto = matchGrafico[1]
+      .replace(/```json/g,"")
+      .replace(/```/g,"")
+      .trim()
+
+    const inicio = jsonTexto.indexOf("{")
+    const fim = jsonTexto.lastIndexOf("}")
+
+    if(inicio !== -1 && fim !== -1){
+      jsonTexto = jsonTexto.substring(inicio, fim + 1)
+    }
+
+    const grafico = JSON.parse(jsonTexto)
+
+    const chartConfig = {
+      type: grafico.tipo || "bar",
+      data: {
+        labels: grafico.labels,
+        datasets: [{
+          label: grafico.titulo,
+          data: grafico.dados
+        }]
+      }
+    }
+
+    const url = "https://quickchart.io/chart?c=" + encodeURIComponent(JSON.stringify(chartConfig))
+
+    return res.json({
+      resposta: grafico.titulo,
+      grafico_url: url
+    })
+
+  }catch(e){
+    console.log("❌ ERRO GRAFICO:", e)
+  }
+}
+
+
+
+
+
+
+
+
+  
 // ================= MEMÓRIA AUTOMÁTICA =================
 
 const memoriaExtraida = {
