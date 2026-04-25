@@ -1821,8 +1821,7 @@ if(matchReserva){
 
 
   
-let acao = null
-
+let acaoFinal = null
 // 🔥 DETECTAR TAREFA
 const matchTarefa = resposta.match(/TAREFA_JSON:\s*([\s\S]*)/)
 
