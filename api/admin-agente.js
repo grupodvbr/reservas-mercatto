@@ -183,16 +183,18 @@ const texto = pergunta.toLowerCase()
 if(texto === "sim"){
 
   // 🔥 BUSCA ÚLTIMA MENSAGEM DO BOT
-  const { data: ultimaMsg } = await supabase
-    .from("assistente_otto_chat")
-    .select("mensagem")
-    .eq("telefone", numero)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
+const { data: ultimaAnalise } = await supabase
+  .from("assistente_otto_chat")
+  .select("id")
+  .eq("telefone", numero)
+  .eq("tipo", "analise_relatorio")
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle()
 
-  const pediuAnalise =
-    ultimaMsg?.mensagem?.includes("Deseja que eu faça uma análise estratégica")
+const pediuAnalise =
+  !!ultimaPergunta &&
+  (!ultimaAnalise || ultimaAnalise.created_at < ultimaPergunta.created_at)
 
   if(!pediuAnalise){
     // 🔥 deixa seguir fluxo normal (confirmações etc)
