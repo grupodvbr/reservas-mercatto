@@ -291,6 +291,7 @@ const acao = {
     ativo: true
   }
 }
+
 return res.json({
   resposta: `
 ⚠️ CONFIRMAÇÃO DE PROMPT
