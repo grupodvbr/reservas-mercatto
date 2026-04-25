@@ -1683,11 +1683,6 @@ if(resumoDia && resumoDia.faturamento !== undefined){
 
 
 
-const pediuGrafico =
-  texto.includes("grafico") ||
-  texto.includes("gráfico") ||
-  texto.includes("chart")
-
 if(
   !pediuGrafico && (
     texto.includes("relatorio") ||
