@@ -612,7 +612,11 @@ else if(
   
 let tipoConsulta = classificacao.tipo || "geral"
 
-
+// 🔥 PRIORIDADE TOTAL PARA GRÁFICO
+if(pediuGrafico){
+  console.log("📊 MODO GRÁFICO ATIVADO (PRIORIDADE TOTAL)")
+  tipoConsulta = "grafico"
+}
 
 
   // 🔥 BLOQUEIO GLOBAL DE TAREFAS
@@ -1174,7 +1178,13 @@ function toBR(dataISO){
 
 const API_CUPONS = "https://marked-resolved-tropical-posting.trycloudflare.com"
 
-if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
+if(
+  tipoConsulta === "vendas" ||
+  tipoConsulta === "relatorio" ||
+  tipoConsulta === "grafico" // 🔥 ADICIONAR ISSO
+){
+  
+  
   console.log("📅 DATA FINAL USADA:", dataFiltro)
   try{
 
@@ -1687,12 +1697,11 @@ if(
   !pediuGrafico && (
     texto.includes("relatorio") ||
     texto.includes("relatório") ||
-    texto.includes("vendas") ||
-    texto.includes("faturamento") ||
-    texto.includes("resumo") ||
-    texto.includes("meta")
+    texto.includes("resumo")
   )
-){
+)
+
+{
   contextos.push({
     role: "system",
     content: `
