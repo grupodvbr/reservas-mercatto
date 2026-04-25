@@ -295,6 +295,8 @@ REGRAS:
     
 const prioridade = dados.prioridade || 5
 
+const prioridade = dados.prioridade || 5
+
 const acao = {
   tabela: "prompt_agente",
   operacao: "insert",
@@ -305,9 +307,7 @@ const acao = {
   }
 }
 
-return res.json({
-  resposta: `
-// 🔥 SALVA A AÇÃO PARA CONFIRMAÇÃO
+// 🔥 SALVA A CONFIRMAÇÃO NO BANCO
 await supabase
   .from("assistente_otto_chat")
   .insert({
@@ -334,6 +334,7 @@ Digite:
     aguardando_confirmacao: true
   })
 
+// 🔥 RETORNA APENAS TEXTO
 return res.json({
   resposta: `
 ⚠️ CONFIRMAÇÃO DE PROMPT
