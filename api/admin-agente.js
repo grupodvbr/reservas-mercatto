@@ -274,9 +274,6 @@ REGRAS:
     })
   }
 
-  const acao = {
-    tabela: "prompt_agente",
-    operacao: "insert",
 
 
     
