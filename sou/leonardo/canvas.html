@@ -984,8 +984,23 @@ async function load(){
 
 if(!API_URL) return
 
+// 🔥 DATA INTELIGENTE (REGRA 04:00)
+const agora = new Date(
+  new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
+)
+
+const horaAtual = agora.getHours()
+
+// antes das 04:00 → usa ontem
+if(horaAtual < 4){
+  agora.setDate(agora.getDate() - 1)
+}
+
+// formata YYYY-MM-DD
+const dataISO = agora.toISOString().slice(0,10)
+
 const res = await fetch(
-  API_URL + "?data=2026-04-24&inicio=00:00&fim=23:59&t=" + Date.now(),
+  API_URL + `?data=${dataISO}&inicio=04:00&fim=03:59&t=` + Date.now(),
   {
     cache: "no-store"
   }
