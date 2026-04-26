@@ -906,9 +906,9 @@ mapa[p.id] = {
     const qtd = parseFloat(m.quantidade) || 0;
 
     // 🔥 ENTRADA
-    if(["COMPRADO","RECEBIDA"].includes(m.status)){
-      mapa[m.produto_id].atual += qtd;
-    }
+if(m.status === "RECEBIDA"){
+  mapa[m.produto_id].atual += qtd;
+}
 
     // 🔥 SAÍDA
     if(m.status === "ENTREGUE"){
