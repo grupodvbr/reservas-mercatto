@@ -465,7 +465,7 @@ const { data, error } = await sb
 .from("mercatto_requisicoes")
 .select(`
   *,
-  produtos_mercatto (
+  produtos_mercatto!fk_req_produto (
     nome
   )
 `)
