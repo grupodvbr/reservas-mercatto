@@ -624,6 +624,36 @@ async function atualizarStatus(i, st){
 
     const statusAnterior = (it.status || '').toUpperCase();
     const novoStatus = (st || '').toUpperCase();
+
+
+
+    // 🚨 TRAVA DE FLUXO (ANTI BAGUNÇA)
+const fluxo = {
+  "PENDENTE": ["COMPRADO"],
+  "COMPRADO": ["RECEBIDA"],
+  "RECEBIDA": ["CONFERIDA"],
+  "CONFERIDA": ["ENTREGUE"],
+  "ENTREGUE": [] // final
+};
+
+// 🔥 PERMITE VOLTAR SÓ PRA CANCELAR (OPCIONAL)
+const podeVoltarDeEntregue = ["PENDENTE"];
+
+// ❌ BLOQUEIO
+if(statusAnterior !== novoStatus){
+
+  const permitido = fluxo[statusAnterior] || [];
+
+  const liberado =
+    permitido.includes(novoStatus) ||
+    (statusAnterior === "ENTREGUE" && podeVoltarDeEntregue.includes(novoStatus));
+
+  if(!liberado){
+    console.warn("⛔ TRANSIÇÃO BLOQUEADA:", statusAnterior, "→", novoStatus);
+    mostrarAlerta("Fluxo inválido!");
+    return;
+  }
+}
     const quantidade = parseFloat(it.qtd) || 0;
     const produto_id = it.produto_id;
 
