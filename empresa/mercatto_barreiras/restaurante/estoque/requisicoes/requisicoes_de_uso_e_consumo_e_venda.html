@@ -484,7 +484,7 @@ dadosRequisicoes = (data || []).map(r => ({
   dataHora: formatarDataHora(r.created_at),
 
   // 🔥 AQUI É A MUDANÇA IMPORTANTE
-  item: r.produtos_mercatto?.nome || "SEM PRODUTO",
+  item: r.produtos_mercatto?.nome || r.produto || "SEM PRODUTO",
 
   unidade: r.unidade,
  qtd: parseFloat(r.quantidade) || 0,
