@@ -481,8 +481,8 @@ if(error){
 
 dadosRequisicoes = (data || []).map(r => ({
   index: r.id,
-  dataHora: formatarDataHora(r.created_at),
-
+dataHoraRaw: r.created_at, // ✅ NOVO
+dataHora: formatarDataHora(r.created_at),
   // 🔥 AQUI É A MUDANÇA IMPORTANTE
   item: r.produtos_mercatto?.nome || r.produto || "SEM PRODUTO",
 
@@ -523,7 +523,7 @@ function filtrarRequisicoes(){
   const st=(i.status||'').toUpperCase().trim();const pendente=!validos.includes(st);
   if(fs!=='TODOS'){if(fs==='PENDENTE'&&!pendente)return false;if(fs!=='PENDENTE'&&st!==fs)return false;}
   if(fi&&!i.item.toLowerCase().includes(fi))return false;if(fsol&&i.solicitante!==fsol)return false;if(fset&&i.setor!==fset)return false;
-  const dataItem=parseData((i.dataHora||'').split(' ')[0]);
+  const dataItem = new Date(i.dataHoraRaw);
   if(dataItem&&(din||df)){if(din&&dataItem<din)return false;if(df&&dataItem>df)return false;}
   return true;
  });
