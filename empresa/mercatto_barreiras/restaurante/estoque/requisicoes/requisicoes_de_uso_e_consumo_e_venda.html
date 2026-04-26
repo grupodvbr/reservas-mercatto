@@ -494,7 +494,8 @@ if(error){
 }
 
 dadosRequisicoes = (data || []).map(r => ({
-  index: r.id,
+index: r.id,
+produto_id: r.produto_id,
 dataHoraRaw: r.created_at, // ✅ NOVO
 dataHora: formatarDataHora(r.created_at),
   // 🔥 AQUI É A MUDANÇA IMPORTANTE
@@ -625,41 +626,94 @@ async function atualizarStatus(i, st){
 
   try {
 
-    const resposta = await sb
-      .from("mercatto_requisicoes")
-      .update(payload)
-      .eq("id", i)
-      .select(); // 🔥 IMPORTANTE
+const resposta = await sb
+  .from("mercatto_requisicoes")
+  .update(payload)
+  .eq("id", i)
+  .select();
 
-    console.log("📡 Resposta COMPLETA:", resposta);
+const { data, error } = resposta;
 
-    const { data, error } = resposta;
+if(error){
+  console.error("❌ ERRO SUPABASE:", error);
+  mostrarAlerta("Erro ao atualizar");
+  return;
+}
 
-    if(error){
-      console.error("❌ ERRO SUPABASE:", error);
-      mostrarAlerta("Erro ao atualizar");
-      return;
-    }
+if(!data || data.length === 0){
+  console.warn("⚠️ NENHUM REGISTRO FOI ATUALIZADO");
+  return;
+}
 
-    if(!data || data.length === 0){
-      console.warn("⚠️ NENHUM REGISTRO FOI ATUALIZADO");
+console.log("✅ ATUALIZADO COM SUCESSO:", data);
 
-      console.warn("👉 Possíveis causas:");
-      console.warn("- ID não existe no banco");
-      console.warn("- RLS bloqueando");
-      console.warn("- Campo id diferente");
+// 🔥 PEGA ITEM E STATUS ANTERIOR
+const it = dadosRequisicoes.find(r=>r.index==i);
+const statusAnterior = (it?.status || '').toUpperCase();
+const quantidade = parseFloat(it?.qtd) || 0;
+const produto_id = it?.produto_id;
 
-      return;
-    }
+// 🔥 ATUALIZA STATUS LOCAL
+if(it) it.status = st;
 
-    console.log("✅ ATUALIZADO COM SUCESSO:", data);
+// ===============================
+// 🔥 REGRAS DE ESTOQUE
+// ===============================
 
-    const it = dadosRequisicoes.find(r=>r.index==i);
-    if(it) it.status = st;
+// ✅ SAÍDA (ENTREGUE)
+if(st === "ENTREGUE" && statusAnterior !== "ENTREGUE"){
 
-    filtrarRequisicoes();
+  await sb.rpc("baixar_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
 
-    mostrarAlerta("Status atualizado!");
+  await sb.from("movimentacoes_estoque").insert([{
+    produto_id,
+    tipo: "SAIDA",
+    quantidade,
+    origem: "REQUISICAO"
+  }]);
+}
+
+// ✅ ENTRADA (RECEBIDA)
+if(st === "RECEBIDA" && statusAnterior !== "RECEBIDA"){
+
+  await sb.rpc("entrada_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
+
+  await sb.from("movimentacoes_estoque").insert([{
+    produto_id,
+    tipo: "ENTRADA",
+    quantidade,
+    origem: "COMPRA"
+  }]);
+}
+
+// 🔁 ESTORNO (quando volta de ENTREGUE)
+if(statusAnterior === "ENTREGUE" && st !== "ENTREGUE"){
+
+  await sb.rpc("entrada_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
+
+  await sb.from("movimentacoes_estoque").insert([{
+    produto_id,
+    tipo: "ESTORNO",
+    quantidade,
+    origem: "REVERSAO"
+  }]);
+}
+
+// 🔄 REFRESH
+filtrarRequisicoes();
+mostrarAlerta("Status atualizado!");
+
+
+    
 
   } catch (e){
     console.error("🔥 ERRO GERAL:", e);
