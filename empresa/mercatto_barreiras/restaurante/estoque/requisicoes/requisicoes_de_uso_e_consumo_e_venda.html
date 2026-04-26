@@ -465,9 +465,9 @@ const { data, error } = await sb
 .from("mercatto_requisicoes")
 .select(`
   *,
-produtos_mercatto (
-  nome
-)
+  produtos_mercatto!fk_produto (
+    nome
+  )
 `)
 .order("created_at", { ascending: false })
 .limit(100);
