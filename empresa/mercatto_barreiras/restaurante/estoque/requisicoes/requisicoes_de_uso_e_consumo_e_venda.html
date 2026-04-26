@@ -461,12 +461,15 @@ if(localStorage.getItem("tema")==="dark"){document.body.classList.add("dark");do
 async function carregarRequisicoes(){
  document.getElementById("overlay-carregando").style.display="flex";
 
-
-  
 const { data, error } = await sb
 .from("mercatto_requisicoes")
-.select("*")
-.order("created_at", { ascending: false }) // ou criado_em se for o seu caso
+.select(`
+  *,
+  produtos_mercatto (
+    nome
+  )
+`)
+.order("created_at", { ascending: false })
 .limit(100);
 
 if(error){
@@ -478,8 +481,11 @@ if(error){
 
 dadosRequisicoes = (data || []).map(r => ({
   index: r.id,
-  dataHora: formatarDataHora(r.created_at), // ou criado_em
-  item: r.produto,
+  dataHora: formatarDataHora(r.created_at),
+
+  // 🔥 AQUI É A MUDANÇA IMPORTANTE
+  item: r.produtos_mercatto?.nome || "SEM PRODUTO",
+
   unidade: r.unidade,
   qtd: parseInt(r.quantidade),
   setor: r.setor,
@@ -488,11 +494,18 @@ dadosRequisicoes = (data || []).map(r => ({
   status: r.status || "PENDENTE"
 }));
 
+ preencherFiltros();
+ filtrarRequisicoes();
 
-  
- preencherFiltros();filtrarRequisicoes();
  document.getElementById("overlay-carregando").style.display="none";
 }
+
+
+
+
+
+
+  
 function preencherFiltros(){
  const setores=[...new Set(dadosRequisicoes.map(r=>r.setor).filter(Boolean))];
  document.getElementById("filtroSetor").innerHTML='<option value="">Todos os Setores</option>'+setores.map(s=>`<option>${s}</option>`).join('');
