@@ -519,14 +519,35 @@ function filtrarRequisicoes(){
  fsol=document.getElementById('filtroSolicitante').value,fset=document.getElementById('filtroSetor').value,
  din=parseData(document.getElementById('dataInicio').value),df=parseData(document.getElementById('dataFim').value),
  modo=document.getElementById('filtroExibicao').value,validos=['COMPRADO','RECEBIDA','CONFERIDA','ENTREGUE','NEGADO'];
- const filtrados=dadosRequisicoes.filter(i=>{
-  const st=(i.status||'').toUpperCase().trim();const pendente=!validos.includes(st);
-  if(fs!=='TODOS'){if(fs==='PENDENTE'&&!pendente)return false;if(fs!=='PENDENTE'&&st!==fs)return false;}
-  if(fi&&!i.item.toLowerCase().includes(fi))return false;if(fsol&&i.solicitante!==fsol)return false;if(fset&&i.setor!==fset)return false;
+
+
+  
+const filtrados=dadosRequisicoes.filter(i=>{
+
+  const st = (i.status || 'PENDENTE').toUpperCase().trim();
+
+  if(fs !== 'TODOS' && st !== fs) return false;
+
+  if(fi && !i.item.toLowerCase().includes(fi)) return false;
+  if(fsol && i.solicitante !== fsol) return false;
+  if(fset && i.setor !== fset) return false;
+
   const dataItem = new Date(i.dataHoraRaw);
-  if(dataItem&&(din||df)){if(din&&dataItem<din)return false;if(df&&dataItem>df)return false;}
+
+  if(din && dataItem < din) return false;
+  if(df && dataItem > df) return false;
+
   return true;
- });
+});
+
+
+
+
+
+
+
+
+  
  renderizarTabela(filtrados,modo);atualizarResumo();
 }
 function renderizarTabela(lista,modo='setor'){
