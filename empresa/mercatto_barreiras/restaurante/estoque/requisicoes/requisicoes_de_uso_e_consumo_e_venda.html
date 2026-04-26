@@ -521,12 +521,20 @@ function filtrarRequisicoes(){
  modo=document.getElementById('filtroExibicao').value,validos=['COMPRADO','RECEBIDA','CONFERIDA','ENTREGUE','NEGADO'];
 
 
-  
-const filtrados=dadosRequisicoes.filter(i=>{
 
-  const st = (i.status || 'PENDENTE').toUpperCase().trim();
 
-  if(fs !== 'TODOS' && st !== fs) return false;
+
+
+
+const filtrados = dadosRequisicoes.filter(i => {
+
+  const st = (i.status || '').toUpperCase().trim();
+  const pendente = !['COMPRADO','RECEBIDA','CONFERIDA','ENTREGUE','NEGADO'].includes(st);
+
+  if(fs !== 'TODOS'){
+    if(fs === 'PENDENTE' && !pendente) return false;
+    if(fs !== 'PENDENTE' && st !== fs) return false;
+  }
 
   if(fi && !i.item.toLowerCase().includes(fi)) return false;
   if(fsol && i.solicitante !== fsol) return false;
@@ -539,7 +547,6 @@ const filtrados=dadosRequisicoes.filter(i=>{
 
   return true;
 });
-
 
 
 
