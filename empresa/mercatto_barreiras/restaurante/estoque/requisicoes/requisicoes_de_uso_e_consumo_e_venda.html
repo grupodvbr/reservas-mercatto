@@ -636,44 +636,43 @@ async function atualizarStatus(i, st){
     console.log("🔁 DE:", statusAnterior, "➡️ PARA:", novoStatus);
 
     // ===============================
-    // 🔥 REGRAS DE ESTOQUE
-    // ===============================
+// 🔥 REGRAS DE ESTOQUE (CORRIGIDO)
+// ===============================
 
-    // ✅ SAÍDA
-    if(statusAnterior !== "ENTREGUE" && novoStatus === "ENTREGUE"){
+// 📉 SAÍDA → só executa UMA VEZ
+if(
+  ["PENDENTE","RECEBIDA","CONFERIDA","COMPRADO"].includes(statusAnterior)
+  && novoStatus === "ENTREGUE"
+){
+  console.log("📉 BAIXA CONTROLADA");
 
-      console.log("📉 BAIXANDO ESTOQUE");
+  await sb.rpc("baixar_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
+}
 
-      await sb.rpc("baixar_estoque", {
-        p_produto: produto_id,
-        p_qtd: quantidade
-      });
+// 📈 ENTRADA → só quando compra vira recebida
+if(statusAnterior === "COMPRADO" && novoStatus === "RECEBIDA"){
 
-    }
+  console.log("📈 ENTRADA CONTROLADA");
 
-    // ✅ ENTRADA
-    if(statusAnterior !== "RECEBIDA" && novoStatus === "RECEBIDA"){
+  await sb.rpc("entrada_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
+}
 
-      console.log("📈 ENTRADA DE ESTOQUE");
+// ♻️ ESTORNO → só quando volta de ENTREGUE
+if(statusAnterior === "ENTREGUE" && novoStatus !== "ENTREGUE"){
 
-      await sb.rpc("entrada_estoque", {
-        p_produto: produto_id,
-        p_qtd: quantidade
-      });
+  console.log("♻️ ESTORNO CONTROLADO");
 
-    }
-
-    // 🔁 ESTORNO
-    if(statusAnterior === "ENTREGUE" && novoStatus !== "ENTREGUE"){
-
-      console.log("♻️ ESTORNANDO ESTOQUE");
-
-      await sb.rpc("entrada_estoque", {
-        p_produto: produto_id,
-        p_qtd: quantidade
-      });
-
-    }
+  await sb.rpc("entrada_estoque", {
+    p_produto: produto_id,
+    p_qtd: quantidade
+  });
+}
 
     // ===============================
     // 🔥 PREPARA PAYLOAD
