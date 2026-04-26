@@ -874,20 +874,50 @@ async function excluirUsuario(id){
   let estoqueGlobal = [];
 
 async function abrirEstoque(){
+
   document.getElementById("popupEstoque").style.display="flex";
   document.body.style.overflow="hidden";
 
-  const { data, error } = await sb
+  // 🔹 busca produtos
+  const { data: produtos } = await sb
     .from("produtos_mercatto")
-    .select("*")
-    .order("nome");
+    .select("*");
 
-  if(error){
-    console.error(error);
-    return;
-  }
+  // 🔹 busca movimentações
+  const { data: mov } = await sb
+    .from("mercatto_requisicoes")
+    .select("*");
 
-  estoqueGlobal = data || [];
+  const mapa = {};
+
+  (produtos || []).forEach(p=>{
+mapa[p.id] = {
+  id: p.id,
+  nome: p.nome,
+  atual: parseFloat(p.estoque_inicial) || 0,
+  minimo: parseFloat(p.estoque_minimo) || 0,
+  maximo: parseFloat(p.estoque_maximo) || 0
+};
+  });
+
+  (mov || []).forEach(m=>{
+    if(!mapa[m.produto_id]) return;
+
+    const qtd = parseFloat(m.quantidade) || 0;
+
+    // 🔥 ENTRADA
+    if(["COMPRADO","RECEBIDA"].includes(m.status)){
+      mapa[m.produto_id].atual += qtd;
+    }
+
+    // 🔥 SAÍDA
+    if(m.status === "ENTREGUE"){
+      mapa[m.produto_id].atual -= qtd;
+    }
+  });
+
+  estoqueGlobal = Object.values(mapa);
+
   renderEstoque(estoqueGlobal);
 }
 
@@ -897,19 +927,62 @@ function fecharEstoque(){
 }
 
 function renderEstoque(lista){
-  const html = lista.map(p => `
-    <div onclick="verMovimentacao('${p.id}','${p.nome}')" style="
-      padding:10px;
-      border-radius:10px;
-      margin-bottom:6px;
-      background:var(--cinza);
-      cursor:pointer;
-      display:flex;
-      justify-content:space-between;
-    ">
-      <b>${p.nome}</b>
-    </div>
-  `).join("");
+
+  const html = lista.map(p=>{
+
+    let cor = "#22c55e"; // verde
+
+    if(p.atual <= p.minimo) cor = "#ef4444"; // vermelho
+    else if(p.atual >= p.maximo) cor = "#f59e0b"; // amarelo
+
+    return `
+      <div onclick="verMovimentacao('${p.id}','${p.nome}')" style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:14px;
+        border-radius:14px;
+        margin-bottom:10px;
+        background:linear-gradient(135deg,#0f172a,#020617);
+        color:#fff;
+        cursor:pointer;
+        border-left:6px solid ${cor};
+      ">
+
+        <!-- NOME -->
+        <div style="font-size:14px;font-weight:600;">
+          ${p.nome}
+        </div>
+
+        <!-- NUMEROS -->
+        <div style="
+          display:flex;
+          gap:18px;
+          font-size:11px;
+          text-align:center;
+        ">
+
+          <div>
+            <div style="opacity:.6">Atual</div>
+            <div style="font-size:14px;font-weight:700">${p.atual}</div>
+          </div>
+
+          <div>
+            <div style="opacity:.6">Min</div>
+            <div>${p.minimo}</div>
+          </div>
+
+          <div>
+            <div style="opacity:.6">Max</div>
+            <div>${p.maximo}</div>
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
 
   document.getElementById("listaEstoque").innerHTML = html;
 }
