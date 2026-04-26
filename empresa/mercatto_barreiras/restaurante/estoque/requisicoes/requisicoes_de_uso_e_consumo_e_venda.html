@@ -894,7 +894,7 @@ async function abrirEstoque(){
 mapa[p.id] = {
   id: p.id,
   nome: p.nome,
-  atual: parseFloat(p.estoque_inicial) || 0,
+  atual: parseFloat(p.estoque) || 0,
   minimo: parseFloat(p.estoque_minimo) || 0,
   maximo: parseFloat(p.estoque_maximo) || 0
 };
