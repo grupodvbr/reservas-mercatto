@@ -171,11 +171,10 @@ recognition.onresult = (event) => {
     return
   }
 
-  if(!ativo){
-    log("⛔ Ignorado (não ativado)")
-    return
-  }
-
+if(!ativo){
+  log("🟡 Auto ativando (modo contínuo)")
+  ativo = true
+}
   // 🔥 ACUMULA TEXTO
   textoBuffer = textoAtual
 
