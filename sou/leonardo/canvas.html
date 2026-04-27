@@ -1230,41 +1230,58 @@ const res = await fetch("/api/admin-agente", {
 
     console.log("[OTTO] 📥 Resposta:", data.resposta)
 
-    mostrarRespostaOtto(data.resposta)
+    addMensagem(data.resposta, "bot")
 
   }catch(e){
     console.log("[OTTO] ❌ Falha:", e.message)
     mostrarRespostaOtto("Erro de conexão")
   }
 
-}function mostrarRespostaOtto(texto){
-
-  let el = document.getElementById("ottoResposta")
-
-  if(!el){
-    el = document.createElement("div")
-    el.id = "ottoResposta"
-
-    el.style.position = "absolute"
-    el.style.bottom = "80px"
-    el.style.left = "50%"
-    el.style.transform = "translateX(-50%)"
-    el.style.background = "rgba(0,0,0,0.7)"
-    el.style.padding = "20px"
-    el.style.borderRadius = "12px"
-    el.style.color = "#fff"
-    el.style.maxWidth = "600px"
-    el.style.textAlign = "center"
-    el.style.fontSize = "16px"
-
-    document.getElementById("ottoOverlay").appendChild(el)
-  }
-
-  el.innerText = texto
+}
+  
+ function fecharOtto(){
+  document.getElementById("ottoOverlay").style.display = "none"
+  ottoAtivo = false
 }
 
+function addMensagem(texto, tipo="bot"){
 
+  const chat = document.getElementById("ottoChat")
 
+  const msg = document.createElement("div")
+
+  msg.style.padding = "10px"
+  msg.style.borderRadius = "10px"
+  msg.style.maxWidth = "80%"
+  msg.style.fontSize = "14px"
+
+  if(tipo === "user"){
+    msg.style.background = "#2563eb"
+    msg.style.alignSelf = "flex-end"
+  }else{
+    msg.style.background = "#0f172a"
+    msg.style.alignSelf = "flex-start"
+  }
+
+  msg.innerText = texto
+
+  chat.appendChild(msg)
+
+  chat.scrollTop = chat.scrollHeight
+}
+
+function enviarOttoManual(){
+
+  const input = document.getElementById("ottoInput")
+  const texto = input.value
+
+  if(!texto) return
+
+  addMensagem(texto, "user")
+  input.value = ""
+
+  perguntarOtto(texto)
+}
 
 
 
@@ -1301,7 +1318,7 @@ const res = await fetch("/api/admin-agente", {
   </div>
 
 </div>
-<!-- ================= OTTO OVERLAY ================= -->
+<!-- ================= OTTO CHAT POPUP ================= -->
 <div id="ottoOverlay" style="
   position:fixed;
   top:0;
@@ -1311,58 +1328,85 @@ const res = await fetch("/api/admin-agente", {
   display:none;
   align-items:center;
   justify-content:center;
-  background:rgba(0,0,0,0.85);
-  backdrop-filter: blur(10px);
-  z-index:99999;
-">
-
-  <div id="ottoAura"></div>
-
-</div>
-
-<!-- ================= POPUP SENHA ================= -->
-<div id="ottoSenha" style="
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,0.7);
+  background:rgba(0,0,0,0.6);
   z-index:99999;
 ">
 
   <div style="
+    width:95%;
+    max-width:420px;
+    height:80vh;
     background:#020617;
-    padding:30px;
-    border-radius:14px;
-    width:300px;
-    text-align:center;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
     border:1px solid #1e293b;
   ">
 
-    <h3 style="margin-bottom:15px">🔐 Ativar OTTO</h3>
-
-    <input id="senhaOtto" type="password" placeholder="Digite a senha"
-      style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:10px">
-
-    <button onclick="validarSenhaOtto()" style="
-      width:100%;
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#22c55e;
-      color:#000;
+    <!-- HEADER -->
+    <div style="
+      padding:12px;
+      background:#020617;
+      border-bottom:1px solid #1e293b;
       font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Ativar
-    </button>
+      OTTO • Assistente
+      <button onclick="fecharOtto()" style="
+        background:none;
+        border:none;
+        color:#fff;
+        font-size:18px;
+        cursor:pointer;
+      ">✕</button>
+    </div>
+
+    <!-- CHAT -->
+    <div id="ottoChat" style="
+      flex:1;
+      padding:12px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    "></div>
+
+    <!-- INPUT -->
+    <div style="
+      padding:10px;
+      border-top:1px solid #1e293b;
+      display:flex;
+      gap:8px;
+    ">
+      <input id="ottoInput" placeholder="Digite ou fale..."
+        style="
+          flex:1;
+          padding:10px;
+          border-radius:8px;
+          border:none;
+          background:#0f172a;
+          color:#fff;
+        "
+        onkeydown="if(event.key==='Enter') enviarOttoManual()"
+      >
+
+      <button onclick="enviarOttoManual()" style="
+        padding:10px 14px;
+        border:none;
+        border-radius:8px;
+        background:#22c55e;
+        color:#000;
+        font-weight:800;
+      ">
+        Enviar
+      </button>
+    </div>
 
   </div>
 </div>
-
   
 </body>
 </html>
