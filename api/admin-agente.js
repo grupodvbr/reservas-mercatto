@@ -1759,8 +1759,11 @@ if(resumoDia.empresa){
 
 
       
-faturamento: Number(resumoDia.faturamento || 0),
-faturamento_mes: faturamentoMesTotal,
+faturamento_dia: Number(resumoDia.faturamento || 0),
+faturamento: faturamentoMesTotal,
+
+
+      
       vendas: Number(resumoDia.vendas || 0),
       ticket_medio: Number(resumoDia.ticket_medio || 0),
       meta: metaInfo?.meta || 0,
