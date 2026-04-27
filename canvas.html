@@ -17,12 +17,7 @@
   --sub:#94a3b8;
 }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Inter;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter;}
 
 body{
   background:var(--bg);
@@ -32,28 +27,15 @@ body{
   height:100vh;
 }
 
-/* HEADER */
 header{
   padding:16px;
   background:rgba(15,23,42,0.8);
   backdrop-filter:blur(10px);
   display:flex;
-  align-items:center;
   justify-content:space-between;
   border-bottom:1px solid #1e293b;
 }
 
-header h1{
-  font-size:18px;
-  font-weight:800;
-}
-
-header span{
-  color:var(--sub);
-  font-size:12px;
-}
-
-/* CHAT */
 #chat{
   flex:1;
   overflow:auto;
@@ -67,49 +49,32 @@ header span{
   max-width:75%;
   padding:14px;
   border-radius:14px;
-  font-size:14px;
-  line-height:1.4;
 }
 
-.user{
-  background:var(--secondary);
-  align-self:flex-end;
-}
+.user{background:var(--secondary);align-self:flex-end;}
+.bot{background:var(--card);}
 
-.bot{
-  background:var(--card);
-  align-self:flex-start;
-}
-
-/* FOOTER */
 footer{
   padding:12px;
-  border-top:1px solid #1e293b;
   display:flex;
-  align-items:center;
   gap:10px;
 }
 
-#input{
+input{
   flex:1;
   padding:12px;
   border-radius:10px;
   border:none;
-  outline:none;
-  background:#020617;
-  color:white;
 }
 
-#send{
-  background:var(--secondary);
+button{
+  padding:12px;
   border:none;
-  padding:12px 16px;
   border-radius:10px;
+  background:var(--secondary);
   color:white;
-  cursor:pointer;
 }
 
-/* MIC */
 #mic{
   position:fixed;
   bottom:90px;
@@ -122,19 +87,6 @@ footer{
   align-items:center;
   justify-content:center;
   font-size:26px;
-  cursor:pointer;
-  box-shadow:0 10px 25px rgba(0,0,0,0.5);
-}
-
-#status{
-  position:fixed;
-  bottom:160px;
-  right:20px;
-  background:#0f172a;
-  padding:10px 14px;
-  border-radius:10px;
-  font-size:12px;
-  color:var(--sub);
 }
 </style>
 </head>
@@ -142,13 +94,10 @@ footer{
 <body>
 
 <header>
-  <h1>🤖 OTTO</h1>
-  <span>Assistente Inteligente</span>
+  <h2>🤖 OTTO</h2>
 </header>
 
 <div id="chat"></div>
-
-<div id="status">Diga "Otto" para ativar</div>
 
 <div id="mic">🎤</div>
 
@@ -158,11 +107,18 @@ footer{
 </footer>
 
 <script>
+// ================= LOG =================
+function log(msg){
+  console.log(`[OTTO] ${new Date().toLocaleTimeString()} → ${msg}`)
+}
+
+// ================= ELEMENTOS =================
 const chat = document.getElementById("chat")
 const input = document.getElementById("input")
-const status = document.getElementById("status")
 
 let ativo = false
+let textoFinal = ""
+let timeoutFim = null
 
 // ================= CHAT =================
 function addMsg(texto, tipo){
@@ -174,19 +130,24 @@ function addMsg(texto, tipo){
 }
 
 // ================= VOZ =================
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)()
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+const recognition = new SpeechRecognition()
+
 recognition.lang = "pt-BR"
 recognition.continuous = true
-
-
-
-  
-
-let textoFinal = ""
-let timeoutFim = null
-
 recognition.interimResults = true
 
+// 🔥 LOG MICROFONE
+recognition.onstart = () => log("🎧 Microfone iniciado")
+
+recognition.onend = () => {
+  log("🔁 Microfone parou → reiniciando...")
+  setTimeout(()=>recognition.start(),500)
+}
+
+recognition.onerror = (e) => log("❌ Erro voz: " + e.error)
+
+// ================= RESULTADO =================
 recognition.onresult = (event) => {
 
   let parcial = ""
@@ -197,9 +158,8 @@ recognition.onresult = (event) => {
 
   parcial = parcial.toLowerCase()
 
-  console.log("🎤", parcial)
+  log("🎤 Captado: " + parcial)
 
-  // 🔥 ATIVA COM OTTO
   const acordou =
     parcial.includes("otto") ||
     parcial.includes("oto") ||
@@ -207,38 +167,45 @@ recognition.onresult = (event) => {
 
   if(acordou && !ativo){
     ativo = true
-    status.innerText = "🎧 Pode falar..."
     textoFinal = ""
+    log("🟢 ATIVADO PELO OTTO")
     return
   }
 
-  if(!ativo) return
+  if(!ativo){
+    log("⛔ Ignorado (não ativado)")
+    return
+  }
 
-  // 🔥 GUARDA FRASE
   textoFinal = parcial
 
-  // 🔁 RESET TIMER
-  if(timeoutFim) clearTimeout(timeoutFim)
+  log("🧠 Construindo frase: " + textoFinal)
 
-  // ⏳ ESPERA 4 SEGUNDOS DE SILÊNCIO
+  if(timeoutFim){
+    clearTimeout(timeoutFim)
+    log("⏳ Timer resetado")
+  }
+
   timeoutFim = setTimeout(() => {
 
     let textoLimpo = textoFinal
       .replace(/otto|oto|foto/gi,"")
       .trim()
 
+    log("⌛ Finalizando...")
+
     if(textoLimpo.length < 3){
+      log("⚠️ Muito curto → cancelado")
       ativo = false
       return
     }
 
-    console.log("✅ FRASE FINAL:", textoLimpo)
+    log("✅ FRASE FINAL: " + textoLimpo)
 
     enviarMensagem(textoLimpo)
 
     ativo = false
     textoFinal = ""
-    status.innerText = "Diga 'Otto' novamente"
 
   }, 4000)
 }
@@ -248,29 +215,50 @@ recognition.start()
 // ================= API =================
 async function enviarMensagem(texto){
 
+  log("📤 Enviando → " + texto)
+
   addMsg(texto, "user")
 
-  const res = await fetch("/api/admin-agente", {
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer SEU_ADMIN_TOKEN"
-    },
-    body:JSON.stringify({
-      pergunta: texto,
-      numero: "557798253249"
+  try{
+
+    const res = await fetch("/api/admin-agente", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer SEU_ADMIN_TOKEN"
+      },
+      body:JSON.stringify({
+        pergunta: texto,
+        numero: "557798253249"
+      })
     })
-  })
 
-  const data = await res.json()
+    log("🌐 Status API: " + res.status)
 
-  addMsg(data.resposta, "bot")
+    if(!res.ok){
+      const erro = await res.text()
+      log("❌ API erro: " + erro)
+      addMsg("Erro: " + erro, "bot")
+      return
+    }
 
-  falar(data.resposta)
+    const data = await res.json()
+
+    log("📥 Resposta recebida")
+
+    addMsg(data.resposta, "bot")
+
+    falar(data.resposta)
+
+  }catch(e){
+    log("❌ Falha conexão: " + e.message)
+    addMsg("Erro conexão", "bot")
+  }
 }
 
-// ================= VOZ RESPOSTA =================
+// ================= VOZ =================
 function falar(texto){
+  log("🔊 Falando resposta")
   const msg = new SpeechSynthesisUtterance(texto)
   msg.lang = "pt-BR"
   speechSynthesis.speak(msg)
@@ -290,10 +278,11 @@ input.addEventListener("keypress", e=>{
   }
 })
 
-// ================= BOTÃO MIC =================
+// ================= MIC =================
 document.getElementById("mic").onclick = () => {
   ativo = true
-  status.innerText = "🎧 Pode falar..."
+  textoFinal = ""
+  log("🎤 Ativado manualmente")
 }
 </script>
 
