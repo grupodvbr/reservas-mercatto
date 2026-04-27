@@ -429,21 +429,23 @@ const { data: pausaBot } = await supabase
 .eq("telefone", cliente)
 .maybeSingle()
 
+let botPausado = false
+
 if(pausaBot?.pausado){
 
 // pausa permanente
 if(!pausaBot.pausado_ate){
-console.log("BOT PAUSADO PERMANENTEMENTE PARA:",cliente)
-return res.status(200).end()
+console.log("BOT PAUSADO PERMANENTE:",cliente)
+botPausado = true
 }
 
 // pausa temporária
 const agora = new Date()
 const pausaAte = new Date(pausaBot.pausado_ate)
 
-if(agora < pausaAte){
+if(pausaAte && agora < pausaAte){
 console.log("BOT PAUSADO ATÉ:",pausaBot.pausado_ate)
-return res.status(200).end()
+botPausado = true
 }
 
 }
@@ -1306,6 +1308,11 @@ CATEGORIA: ${item.tipo || "geral"}
 
   
 /* ================= OPENAI ================= */
+
+if(botPausado){
+console.log("MODO MANUAL - IA BLOQUEADA")
+return res.status(200).end()
+}
 
 try{
 
