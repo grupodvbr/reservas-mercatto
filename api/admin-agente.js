@@ -1704,9 +1704,8 @@ try{
     )
 
     if(empresaMes){
-      faturamentoMesTotal =
-        Number(empresaMes.faturamento_mes || 0) +
-        Number(resumoDia.faturamento || 0)
+faturamentoMesTotal =
+  Number(empresaMes?.faturamento_mes || 0)
     }
 
   }else{
