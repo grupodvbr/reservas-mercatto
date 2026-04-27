@@ -178,23 +178,69 @@ const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognit
 recognition.lang = "pt-BR"
 recognition.continuous = true
 
+
+
+  
+
+let textoFinal = ""
+let timeoutFim = null
+
+recognition.interimResults = true
+
 recognition.onresult = (event) => {
-  const texto = event.results[event.results.length - 1][0].transcript.toLowerCase()
 
-  console.log("🎤", texto)
+  let parcial = ""
 
-  // ATIVA COM OTTO
-  if(texto.includes("otto")){
+  for(let i = event.resultIndex; i < event.results.length; i++){
+    parcial += event.results[i][0].transcript
+  }
+
+  parcial = parcial.toLowerCase()
+
+  console.log("🎤", parcial)
+
+  // 🔥 ATIVA COM OTTO
+  const acordou =
+    parcial.includes("otto") ||
+    parcial.includes("oto") ||
+    parcial.includes("foto")
+
+  if(acordou && !ativo){
     ativo = true
     status.innerText = "🎧 Pode falar..."
+    textoFinal = ""
     return
   }
 
   if(!ativo) return
 
-  enviarMensagem(texto)
-  ativo = false
-  status.innerText = "Diga 'Otto' novamente"
+  // 🔥 GUARDA FRASE
+  textoFinal = parcial
+
+  // 🔁 RESET TIMER
+  if(timeoutFim) clearTimeout(timeoutFim)
+
+  // ⏳ ESPERA 4 SEGUNDOS DE SILÊNCIO
+  timeoutFim = setTimeout(() => {
+
+    let textoLimpo = textoFinal
+      .replace(/otto|oto|foto/gi,"")
+      .trim()
+
+    if(textoLimpo.length < 3){
+      ativo = false
+      return
+    }
+
+    console.log("✅ FRASE FINAL:", textoLimpo)
+
+    enviarMensagem(textoLimpo)
+
+    ativo = false
+    textoFinal = ""
+    status.innerText = "Diga 'Otto' novamente"
+
+  }, 4000)
 }
 
 recognition.start()
