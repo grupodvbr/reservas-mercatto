@@ -14,7 +14,6 @@
   --primary:#22c55e;
   --secondary:#2563eb;
   --text:#ffffff;
-  --sub:#94a3b8;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter;}
@@ -137,11 +136,10 @@ recognition.lang = "pt-BR"
 recognition.continuous = true
 recognition.interimResults = true
 
-// 🔥 LOG MICROFONE
 recognition.onstart = () => log("🎧 Microfone iniciado")
 
 recognition.onend = () => {
-  log("🔁 Microfone parou → reiniciando...")
+  log("🔁 Reiniciando microfone...")
   setTimeout(()=>recognition.start(),500)
 }
 
@@ -160,10 +158,11 @@ recognition.onresult = (event) => {
 
   log("🎤 Captado: " + parcial)
 
+  // 🔥 ATIVAÇÃO REAL (SEM "foto")
   const acordou =
     parcial.includes("otto") ||
-    parcial.includes("oto") ||
-    parcial.includes("foto")
+    parcial.includes("otô") ||
+    parcial.includes("o to")
 
   if(acordou && !ativo){
     ativo = true
@@ -179,7 +178,7 @@ recognition.onresult = (event) => {
 
   textoFinal = parcial
 
-  log("🧠 Construindo frase: " + textoFinal)
+  log("🧠 Construindo: " + textoFinal)
 
   if(timeoutFim){
     clearTimeout(timeoutFim)
@@ -189,14 +188,14 @@ recognition.onresult = (event) => {
   timeoutFim = setTimeout(() => {
 
     let textoLimpo = textoFinal
-      .replace(/otto|oto|foto/gi,"")
+      .replace(/otto|otô|o to/gi,"")
       .trim()
 
     log("⌛ Finalizando...")
 
+    // 🔥 NÃO DESATIVA SE FOR RUÍDO
     if(textoLimpo.length < 3){
-      log("⚠️ Muito curto → cancelado")
-      ativo = false
+      log("⚠️ Ruído ignorado, continua ouvindo")
       return
     }
 
@@ -215,7 +214,7 @@ recognition.start()
 // ================= API =================
 async function enviarMensagem(texto){
 
-  log("📤 Enviando → " + texto)
+  log("📤 Enviando: " + texto)
 
   addMsg(texto, "user")
 
@@ -233,7 +232,7 @@ async function enviarMensagem(texto){
       })
     })
 
-    log("🌐 Status API: " + res.status)
+    log("🌐 Status: " + res.status)
 
     if(!res.ok){
       const erro = await res.text()
@@ -258,7 +257,7 @@ async function enviarMensagem(texto){
 
 // ================= VOZ =================
 function falar(texto){
-  log("🔊 Falando resposta")
+  log("🔊 Falando")
   const msg = new SpeechSynthesisUtterance(texto)
   msg.lang = "pt-BR"
   speechSynthesis.speak(msg)
