@@ -1217,6 +1217,29 @@ const API_CUPONS = "https://benefits-jan-buddy-density.trycloudflare.com"
 
 if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
   console.log("📅 DATA FINAL USADA:", dataFiltro)
+// ================= RELATORIO ANALITICO COMPLETO (NOVO) =================
+if(
+  texto.includes("relatorio analitico") &&
+  !texto.includes("completo")
+){
+
+  if(NIVEL !== 0){
+    return res.json({
+      resposta: "⛔ Apenas administradores podem acessar"
+    })
+  }
+
+  console.log("📊 ANALÍTICO COMPLETO DISPARADO:", dataFiltro)
+
+  await executarRelatorioAnaliticoCompleto(dataFiltro, numero)
+
+  return res.json({
+    resposta: `📊 Relatório analítico completo enviado por empresa (${dataFiltro})`
+  })
+}
+
+
+  
   try{
 
     console.log("🔥 CONSULTA INTELIGENTE DE VENDAS")
