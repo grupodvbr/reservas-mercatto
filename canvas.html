@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>OTTO • Assistente</title>
+<title>OTTO • Assistente Inteligente</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
@@ -13,7 +13,8 @@
   --card:#0f172a;
   --primary:#22c55e;
   --secondary:#2563eb;
-  --text:#fff;
+  --text:#ffffff;
+  --sub:#94a3b8;
 }
 
 *{
@@ -25,93 +26,51 @@
 
 body{
   background:var(--bg);
-  color:white;
-  overflow:hidden;
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
 }
 
-/* ================= AURORA ================= */
-
-#aurora{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  opacity:0;
-  transition:opacity 0.5s;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(34,197,94,0.3), transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(37,99,235,0.3), transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(168,85,247,0.2), transparent 50%);
-  filter: blur(60px);
-  animation: auroraMove 8s infinite alternate ease-in-out;
+/* HEADER */
+header{
+  padding:16px;
+  background:rgba(15,23,42,0.8);
+  backdrop-filter:blur(10px);
+  display:flex;
+  justify-content:space-between;
 }
 
-@keyframes auroraMove{
-  0%{ transform:scale(1) translate(0,0) }
-  100%{ transform:scale(1.2) translate(40px,-40px) }
-}
-
-#aurora.active{
-  opacity:1;
-}
-
-/* ================= BOLA ================= */
-
-#orb{
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(0);
-  width:200px;
-  height:200px;
-  border-radius:50%;
-  background:radial-gradient(circle,#22c55e,#2563eb);
-  filter:blur(30px);
-  transition:all 0.4s ease;
-  z-index:1;
-}
-
-#orb.active{
-  transform:translate(-50%,-50%) scale(1);
-}
-
-/* ================= CHAT ================= */
-
+/* CHAT */
 #chat{
-  position:absolute;
-  inset:0;
-  z-index:2;
-  padding:20px;
+  flex:1;
   overflow:auto;
+  padding:20px;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
 
 .msg{
-  max-width:70%;
+  max-width:75%;
   padding:14px;
-  border-radius:12px;
+  border-radius:14px;
 }
 
 .user{
-  background:#2563eb;
+  background:var(--secondary);
   align-self:flex-end;
 }
 
 .bot{
-  background:#0f172a;
+  background:var(--card);
 }
 
-/* ================= INPUT ================= */
-
+/* FOOTER */
 footer{
-  position:absolute;
-  bottom:0;
-  width:100%;
-  display:flex;
   padding:10px;
+  display:flex;
   gap:10px;
-  z-index:3;
 }
 
 input{
@@ -123,12 +82,13 @@ input{
 
 button{
   padding:12px;
-  border:none;
   border-radius:10px;
-  background:#2563eb;
+  border:none;
+  background:var(--secondary);
   color:white;
 }
 
+/* MIC */
 #mic{
   position:fixed;
   bottom:80px;
@@ -136,68 +96,59 @@ button{
   width:70px;
   height:70px;
   border-radius:50%;
-  background:#22c55e;
+  background:var(--primary);
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:30px;
-  z-index:3;
+}
+
+#status{
+  position:fixed;
+  bottom:150px;
+  right:20px;
+  background:#0f172a;
+  padding:10px;
+  border-radius:10px;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="aurora"></div>
-<div id="orb"></div>
+<header>
+  <h2>🤖 OTTO</h2>
+  <span>Assistente Inteligente</span>
+</header>
 
 <div id="chat"></div>
+
+<div id="status">Diga "Otto" para ativar</div>
 
 <div id="mic">🎤</div>
 
 <footer>
-  <input id="input" placeholder="Digite..." />
+  <input id="input" placeholder="Digite ou fale..." />
   <button id="send">Enviar</button>
 </footer>
 
 <script>
 const chat = document.getElementById("chat")
 const input = document.getElementById("input")
-const aurora = document.getElementById("aurora")
-const orb = document.getElementById("orb")
+const status = document.getElementById("status")
 
 let ativo = false
-let audioLiberado = false
-
-// 🔥 LIBERA AUDIO
-document.body.onclick = () => {
-  audioLiberado = true
-}
-
-// ================= VISUAL =================
-function ativarVisual(){
-  aurora.classList.add("active")
-  orb.classList.add("active")
-}
-
-function desativarVisual(){
-  aurora.classList.remove("active")
-  orb.classList.remove("active")
-}
+let textoFinal = ""
+let timeoutFim = null
 
 // ================= CHAT =================
-function addMsg(t, tipo){
-  const d = document.createElement("div")
-  d.className = "msg " + tipo
-  d.innerText = t
-  chat.appendChild(d)
+function addMsg(texto, tipo){
+  const div = document.createElement("div")
+  div.className = "msg " + tipo
+  div.innerText = texto
+  chat.appendChild(div)
   chat.scrollTop = chat.scrollHeight
-}
-
-// ================= BEEP =================
-function beep(){
-  if(!audioLiberado) return
-  new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play().catch(()=>{})
 }
 
 // ================= VOZ =================
@@ -208,86 +159,126 @@ recognition.lang = "pt-BR"
 recognition.continuous = true
 recognition.interimResults = true
 
-recognition.onresult = (e)=>{
-  let texto = ""
+recognition.onresult = (event) => {
 
-  for(let i=e.resultIndex;i<e.results.length;i++){
-    texto += e.results[i][0].transcript.toLowerCase()
+  let parcial = ""
+
+  for(let i = event.resultIndex; i < event.results.length; i++){
+    parcial += event.results[i][0].transcript
   }
 
-  console.log("🎤", texto)
+  parcial = parcial.toLowerCase()
+
+  console.log("🎤", parcial)
 
   const acordou =
-    texto.includes("otto") ||
-    texto.includes("oto") ||
-    texto.includes("otô") ||
-    texto.includes("foto")
+    parcial.includes("otto") ||
+    parcial.includes("oto") ||
+    parcial.includes("foto")
 
   if(acordou && !ativo){
     ativo = true
-    ativarVisual()
-    beep()
+    status.innerText = "🎧 Pode falar..."
+    textoFinal = ""
     return
   }
 
   if(!ativo) return
 
-  texto = texto.replace(/otto|oto|foto|otô/gi,"").trim()
+  textoFinal = parcial
 
-  if(texto.length < 3) return
+  if(timeoutFim){
+    clearTimeout(timeoutFim)
+  }
 
-  enviar(texto)
-  ativo = false
-  desativarVisual()
+  timeoutFim = setTimeout(() => {
+
+    let textoLimpo = textoFinal
+      .replace(/otto|oto|foto/gi,"")
+      .trim()
+
+    if(textoLimpo.length < 3){
+      ativo = false
+      return
+    }
+
+    console.log("✅ FRASE FINAL:", textoLimpo)
+
+    enviarMensagem(textoLimpo)
+
+    ativo = false
+    textoFinal = ""
+    status.innerText = "Diga 'Otto' novamente"
+
+  }, 4000)
 }
 
-recognition.onend = ()=>{
+recognition.onend = () => {
   setTimeout(()=>recognition.start(),500)
 }
 
 recognition.start()
 
 // ================= API =================
-async function enviar(texto){
+async function enviarMensagem(texto){
 
-  addMsg(texto,"user")
+  addMsg(texto, "user")
 
-  const res = await fetch("/api/admin-agente",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer mercatto_admin_2026"
-    },
-    body:JSON.stringify({
-      pergunta:texto,
-      numero:"557798253249"
+  try{
+
+    const res = await fetch("/api/admin-agente", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer SEU_ADMIN_TOKEN"
+      },
+      body:JSON.stringify({
+        pergunta: texto,
+        numero: "557798253249"
+      })
     })
-  })
 
-  const data = await res.json()
+    if(!res.ok){
+      addMsg("❌ erro de acesso", "bot")
+      return
+    }
 
-  addMsg(data.resposta,"bot")
-  falar(data.resposta)
+    const data = await res.json()
+
+    addMsg(data.resposta, "bot")
+
+    falar(data.resposta)
+
+  }catch(e){
+    addMsg("❌ erro conexão", "bot")
+  }
 }
 
-// ================= VOZ =================
-function falar(t){
-  if(!audioLiberado) return
-  const msg = new SpeechSynthesisUtterance(t)
+// ================= VOZ RESPOSTA =================
+function falar(texto){
+  const msg = new SpeechSynthesisUtterance(texto)
   msg.lang = "pt-BR"
   speechSynthesis.speak(msg)
 }
 
 // ================= INPUT =================
-document.getElementById("send").onclick=()=>{
-  enviar(input.value)
-  input.value=""
+document.getElementById("send").onclick = () => {
+  if(input.value.trim()){
+    enviarMensagem(input.value)
+    input.value = ""
+  }
 }
 
-document.getElementById("mic").onclick=()=>{
-  ativo=true
-  ativarVisual()
-  beep()
+input.addEventListener("keypress", e=>{
+  if(e.key === "Enter"){
+    document.getElementById("send").click()
+  }
+})
+
+// ================= MIC =================
+document.getElementById("mic").onclick = () => {
+  ativo = true
+  status.innerText = "🎧 Pode falar..."
 }
 </script>
 
