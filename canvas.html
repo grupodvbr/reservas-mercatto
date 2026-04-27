@@ -285,6 +285,32 @@ document.getElementById("mic").onclick = () => {
   textoBuffer = ""
   log("🎤 Ativado manualmente")
 }
+
+
+
+
+
+// ================= RECEBER DO PAINEL =================
+window.addEventListener("message", (event) => {
+
+  if(event.data.tipo === "pergunta"){
+
+    const texto = event.data.texto
+
+    log("📥 Recebido do painel: " + texto)
+
+    enviarMensagem(texto) // 🔥 USA SUA FUNÇÃO REAL
+
+  }
+
+})
+
+
+
+
+
+
+  
 </script>
 
 </body>
