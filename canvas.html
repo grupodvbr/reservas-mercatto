@@ -204,25 +204,37 @@ async function enviarMensagem(texto){
 
   addMsg(texto, "user")
 
-  const res = await fetch("/api/admin-agente", {
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer mercatto_admin_2026"
-    },
-    body:JSON.stringify({
-      pergunta: texto,
-      numero: "557798253249"
+  try{
+
+    const res = await fetch("/api/admin-agente", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer mercatto_admin_2026"
+      },
+      body:JSON.stringify({
+        pergunta: texto,
+        numero: "557798253249"
+      })
     })
-  })
 
-  const data = await res.json()
+    if(!res.ok){
+      const erro = await res.text()
+      addMsg("❌ Erro: " + erro, "bot")
+      return
+    }
 
-  addMsg(data.resposta, "bot")
+    const data = await res.json()
 
-  falar(data.resposta)
+    addMsg(data.resposta, "bot")
+
+    falar(data.resposta)
+
+  }catch(e){
+    addMsg("❌ Falha na conexão", "bot")
+    console.error(e)
+  }
 }
-
 // ================= VOZ RESPOSTA =================
 function falar(texto){
   const msg = new SpeechSynthesisUtterance(texto)
