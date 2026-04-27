@@ -1128,27 +1128,48 @@ if(SpeechRecognition){
     setTimeout(()=>recognition.start(), 500)
   }
 
-  recognition.onresult = (event) => {
+ recognition.onresult = (event) => {
 
-    let texto = ""
+  let texto = ""
 
-    for(let i = event.resultIndex; i < event.results.length; i++){
-      texto += event.results[i][0].transcript
-    }
+  for(let i = event.resultIndex; i < event.results.length; i++){
+    texto += event.results[i][0].transcript
+  }
 
-    texto = texto.toLowerCase()
+  texto = texto.toLowerCase()
 
-    console.log("[OTTO] 🎤", texto)
-// ================= EXECUTAR PERGUNTA =================
-if(ottoAtivo){
+  console.log("[OTTO] 🎤", texto)
 
-  // evita mandar lixo muito curto
-clearTimeout(window.ottoTimer)
+  // 🔥 ATIVAR
+  if(texto.includes("ativar sistema otto")){
+    console.log("[OTTO] 🔐 Abrindo popup")
+    abrirSenhaOtto()
+    return
+  }
 
-window.ottoTimer = setTimeout(()=>{
-  console.log("[OTTO] ⌛ Enviando após silêncio")
-  perguntarOtto(texto)
-}, 2000)
+  // 🔴 DESATIVAR
+  if(texto.includes("desativar sistema otto")){
+    console.log("[OTTO] 🔴 Desativando")
+    document.getElementById("ottoOverlay").style.display = "none"
+    ottoAtivo = false
+    return
+  }
+
+  // 🧠 EXECUTAR COM OTTO ATIVO
+  if(ottoAtivo){
+
+    clearTimeout(window.ottoTimer)
+
+    window.ottoTimer = setTimeout(()=>{
+      console.log("[OTTO] ⌛ Silêncio → enviando")
+      perguntarOtto(texto)
+    }, 2000)
+
+  }
+
+}
+
+  
 
   
     console.log("[OTTO] 🧠 Pergunta detectada:", texto)
