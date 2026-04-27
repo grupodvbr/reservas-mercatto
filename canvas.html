@@ -1,1 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>OTTO • Assistente Inteligente</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#0f172a;
+  --primary:#22c55e;
+  --secondary:#2563eb;
+  --text:#ffffff;
+  --sub:#94a3b8;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+/* HEADER */
+header{
+  padding:16px;
+  background:rgba(15,23,42,0.8);
+  backdrop-filter:blur(10px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #1e293b;
+}
+
+header h1{
+  font-size:18px;
+  font-weight:800;
+}
+
+header span{
+  color:var(--sub);
+  font-size:12px;
+}
+
+/* CHAT */
+#chat{
+  flex:1;
+  overflow:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.msg{
+  max-width:75%;
+  padding:14px;
+  border-radius:14px;
+  font-size:14px;
+  line-height:1.4;
+}
+
+.user{
+  background:var(--secondary);
+  align-self:flex-end;
+}
+
+.bot{
+  background:var(--card);
+  align-self:flex-start;
+}
+
+/* FOOTER */
+footer{
+  padding:12px;
+  border-top:1px solid #1e293b;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#input{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  outline:none;
+  background:#020617;
+  color:white;
+}
+
+#send{
+  background:var(--secondary);
+  border:none;
+  padding:12px 16px;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
+}
+
+/* MIC */
+#mic{
+  position:fixed;
+  bottom:90px;
+  right:20px;
+  width:65px;
+  height:65px;
+  border-radius:50%;
+  background:var(--primary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  cursor:pointer;
+  box-shadow:0 10px 25px rgba(0,0,0,0.5);
+}
+
+#status{
+  position:fixed;
+  bottom:160px;
+  right:20px;
+  background:#0f172a;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  color:var(--sub);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🤖 OTTO</h1>
+  <span>Assistente Inteligente</span>
+</header>
+
+<div id="chat"></div>
+
+<div id="status">Diga "Otto" para ativar</div>
+
+<div id="mic">🎤</div>
+
+<footer>
+  <input id="input" placeholder="Digite ou fale..." />
+  <button id="send">Enviar</button>
+</footer>
+
+<script>
+const chat = document.getElementById("chat")
+const input = document.getElementById("input")
+const status = document.getElementById("status")
+
+let ativo = false
+
+// ================= CHAT =================
+function addMsg(texto, tipo){
+  const div = document.createElement("div")
+  div.className = "msg " + tipo
+  div.innerText = texto
+  chat.appendChild(div)
+  chat.scrollTop = chat.scrollHeight
+}
+
+// ================= VOZ =================
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)()
+recognition.lang = "pt-BR"
+recognition.continuous = true
+
+recognition.onresult = (event) => {
+  const texto = event.results[event.results.length - 1][0].transcript.toLowerCase()
+
+  console.log("🎤", texto)
+
+  // ATIVA COM OTTO
+  if(texto.includes("otto")){
+    ativo = true
+    status.innerText = "🎧 Pode falar..."
+    return
+  }
+
+  if(!ativo) return
+
+  enviarMensagem(texto)
+  ativo = false
+  status.innerText = "Diga 'Otto' novamente"
+}
+
+recognition.start()
+
+// ================= API =================
+async function enviarMensagem(texto){
+
+  addMsg(texto, "user")
+
+  const res = await fetch("/api/admin-agente", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer SEU_ADMIN_TOKEN"
+    },
+    body:JSON.stringify({
+      pergunta: texto,
+      numero: "557798253249"
+    })
+  })
+
+  const data = await res.json()
+
+  addMsg(data.resposta, "bot")
+
+  falar(data.resposta)
+}
+
+// ================= VOZ RESPOSTA =================
+function falar(texto){
+  const msg = new SpeechSynthesisUtterance(texto)
+  msg.lang = "pt-BR"
+  speechSynthesis.speak(msg)
+}
+
+// ================= INPUT =================
+document.getElementById("send").onclick = () => {
+  if(input.value.trim()){
+    enviarMensagem(input.value)
+    input.value = ""
+  }
+}
+
+input.addEventListener("keypress", e=>{
+  if(e.key === "Enter"){
+    document.getElementById("send").click()
+  }
+})
+
+// ================= BOTÃO MIC =================
+document.getElementById("mic").onclick = () => {
+  ativo = true
+  status.innerText = "🎧 Pode falar..."
+}
+</script>
+
+</body>
+</html>
