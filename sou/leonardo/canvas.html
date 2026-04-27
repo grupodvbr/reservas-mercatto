@@ -1407,6 +1407,47 @@ function enviarOttoManual(){
 
   </div>
 </div>
-  
+  <!-- ================= POPUP SENHA OTTO ================= -->
+<div id="ottoSenha" style="
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.7);
+  z-index:99999;
+">
+
+  <div style="
+    background:#020617;
+    padding:30px;
+    border-radius:14px;
+    width:300px;
+    text-align:center;
+    border:1px solid #1e293b;
+  ">
+
+    <h3 style="margin-bottom:15px">🔐 Ativar OTTO</h3>
+
+    <input id="senhaOtto" type="password" placeholder="Digite a senha"
+      style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:10px">
+
+    <button onclick="validarSenhaOtto()" style="
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#22c55e;
+      color:#000;
+      font-weight:800;
+    ">
+      Ativar
+    </button>
+
+  </div>
+</div>
 </body>
 </html>
