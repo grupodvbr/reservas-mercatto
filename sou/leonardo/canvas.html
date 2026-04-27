@@ -1139,7 +1139,25 @@ if(SpeechRecognition){
     texto = texto.toLowerCase()
 
     console.log("[OTTO] 🎤", texto)
+// ================= EXECUTAR PERGUNTA =================
+if(ottoAtivo){
 
+  // evita mandar lixo muito curto
+clearTimeout(window.ottoTimer)
+
+window.ottoTimer = setTimeout(()=>{
+  console.log("[OTTO] ⌛ Enviando após silêncio")
+  perguntarOtto(texto)
+}, 2000)
+
+  
+    console.log("[OTTO] 🧠 Pergunta detectada:", texto)
+
+    perguntarOtto(texto)
+
+  }
+
+}
     // 🔥 COMANDO PRINCIPAL
     if(texto.includes("ativar sistema otto")){
 
@@ -1189,7 +1207,68 @@ function validarSenhaOtto(){
   }
 }
 
+async function perguntarOtto(texto){
 
+  console.log("[OTTO] 📤 Enviando:", texto)
+
+  try{
+
+    const res = await fetch("https://reservas-mercatto.vercel.app/api/admin-agente", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer 848663639"
+      },
+      body: JSON.stringify({
+        pergunta: texto,
+        numero: "557798253249"
+      })
+    })
+
+    console.log("[OTTO] 🌐 Status:", res.status)
+
+    if(!res.ok){
+      const erro = await res.text()
+      console.log("[OTTO] ❌ Erro:", erro)
+      return mostrarRespostaOtto("Erro: " + erro)
+    }
+
+    const data = await res.json()
+
+    console.log("[OTTO] 📥 Resposta:", data.resposta)
+
+    mostrarRespostaOtto(data.resposta)
+
+  }catch(e){
+    console.log("[OTTO] ❌ Falha:", e.message)
+    mostrarRespostaOtto("Erro de conexão")
+  }
+
+}function mostrarRespostaOtto(texto){
+
+  let el = document.getElementById("ottoResposta")
+
+  if(!el){
+    el = document.createElement("div")
+    el.id = "ottoResposta"
+
+    el.style.position = "absolute"
+    el.style.bottom = "80px"
+    el.style.left = "50%"
+    el.style.transform = "translateX(-50%)"
+    el.style.background = "rgba(0,0,0,0.7)"
+    el.style.padding = "20px"
+    el.style.borderRadius = "12px"
+    el.style.color = "#fff"
+    el.style.maxWidth = "600px"
+    el.style.textAlign = "center"
+    el.style.fontSize = "16px"
+
+    document.getElementById("ottoOverlay").appendChild(el)
+  }
+
+  el.innerText = texto
+}
 
 
 
