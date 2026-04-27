@@ -1160,10 +1160,10 @@ if(SpeechRecognition){
 
     clearTimeout(window.ottoTimer)
 
-window.ottoTimer = setTimeout(()=>{
-  console.log("[OTTO] ⌛ Enviando para canvas")
-  enviarParaCanvas(texto)
-}, 2000)
+    window.ottoTimer = setTimeout(()=>{
+      console.log("[OTTO] ⌛ Silêncio → enviando")
+      perguntarOtto(texto)
+    }, 2000)
 
   }
 
@@ -1185,39 +1185,109 @@ function validarSenhaOtto(){
 
   const senha = document.getElementById("senhaOtto").value
 
+  // 🔐 SUA SENHA
   if(senha === "Otto"){
 
     document.getElementById("ottoSenha").style.display = "none"
-
-    const overlay = document.getElementById("ottoOverlay")
-    overlay.style.display = "block"
+    document.getElementById("ottoOverlay").style.display = "flex"
 
     ottoAtivo = true
 
     console.log("🚀 OTTO ATIVADO")
-
-    // 🔥 manda primeira mensagem automática
-    setTimeout(()=>{
-      enviarParaCanvas("OTTO iniciado")
-    }, 500)
 
   }else{
     alert("Senha incorreta")
   }
 }
 
-function enviarParaCanvas(texto){
+async function perguntarOtto(texto){
 
-  const frame = document.getElementById("ottoFrame")
+  console.log("[OTTO] 📤 Enviando:", texto)
 
-  if(!frame) return console.log("❌ iframe não encontrado")
+  try{
 
-  frame.contentWindow.postMessage({
-    tipo: "pergunta",
-    texto: texto
-  }, "*")
+const res = await fetch("/api/admin-agente", {
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json",
+    "Authorization":"Bearer mercatto_admin_2026"
+  },
+      body: JSON.stringify({
+        pergunta: texto,
+        numero: "557798253249"
+      })
+    })
+
+    console.log("[OTTO] 🌐 Status:", res.status)
+
+    if(!res.ok){
+      const erro = await res.text()
+      console.log("[OTTO] ❌ Erro:", erro)
+      return mostrarRespostaOtto("Erro: " + erro)
+    }
+
+    const data = await res.json()
+
+    console.log("[OTTO] 📥 Resposta:", data.resposta)
+
+    addMensagem(data.resposta, "bot")
+
+  }catch(e){
+    console.log("[OTTO] ❌ Falha:", e.message)
+    mostrarRespostaOtto("Erro de conexão")
+  }
 
 }
+  
+ function fecharOtto(){
+  document.getElementById("ottoOverlay").style.display = "none"
+  ottoAtivo = false
+}
+
+function addMensagem(texto, tipo="bot"){
+
+  const chat = document.getElementById("ottoChat")
+
+  const msg = document.createElement("div")
+
+  msg.style.padding = "10px"
+  msg.style.borderRadius = "10px"
+  msg.style.maxWidth = "80%"
+  msg.style.fontSize = "14px"
+
+  if(tipo === "user"){
+    msg.style.background = "#2563eb"
+    msg.style.alignSelf = "flex-end"
+  }else{
+    msg.style.background = "#0f172a"
+    msg.style.alignSelf = "flex-start"
+  }
+
+  msg.innerText = texto
+
+  chat.appendChild(msg)
+
+  chat.scrollTop = chat.scrollHeight
+}
+
+function enviarOttoManual(){
+
+  const input = document.getElementById("ottoInput")
+  const texto = input.value
+
+  if(!texto) return
+
+  addMensagem(texto, "user")
+  input.value = ""
+
+  perguntarOtto(texto)
+}
+
+
+
+
+
+  
 
   
 </script>
@@ -1248,7 +1318,7 @@ function enviarParaCanvas(texto){
   </div>
 
 </div>
-<!-- ================= OTTO CANVAS ================= -->
+<!-- ================= OTTO CHAT POPUP ================= -->
 <div id="ottoOverlay" style="
   position:fixed;
   top:0;
@@ -1256,25 +1326,87 @@ function enviarParaCanvas(texto){
   width:100%;
   height:100%;
   display:none;
-  background:#000;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.6);
   z-index:99999;
 ">
 
-  <iframe 
-    id="ottoFrame"
-    src="canvas.html"
-    style="
-      width:100%;
-      height:100%;
-      border:none;
+  <div style="
+    width:95%;
+    max-width:420px;
+    height:80vh;
+    background:#020617;
+    border-radius:16px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid #1e293b;
+  ">
+
+    <!-- HEADER -->
+    <div style="
+      padding:12px;
+      background:#020617;
+      border-bottom:1px solid #1e293b;
+      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-  </iframe>
+      OTTO • Assistente
+      <button onclick="fecharOtto()" style="
+        background:none;
+        border:none;
+        color:#fff;
+        font-size:18px;
+        cursor:pointer;
+      ">✕</button>
+    </div>
 
+    <!-- CHAT -->
+    <div id="ottoChat" style="
+      flex:1;
+      padding:12px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    "></div>
+
+    <!-- INPUT -->
+    <div style="
+      padding:10px;
+      border-top:1px solid #1e293b;
+      display:flex;
+      gap:8px;
+    ">
+      <input id="ottoInput" placeholder="Digite ou fale..."
+        style="
+          flex:1;
+          padding:10px;
+          border-radius:8px;
+          border:none;
+          background:#0f172a;
+          color:#fff;
+        "
+        onkeydown="if(event.key==='Enter') enviarOttoManual()"
+      >
+
+      <button onclick="enviarOttoManual()" style="
+        padding:10px 14px;
+        border:none;
+        border-radius:8px;
+        background:#22c55e;
+        color:#000;
+        font-weight:800;
+      ">
+        Enviar
+      </button>
+    </div>
+
+  </div>
 </div>
-
-
-
-  
   <!-- ================= POPUP SENHA OTTO ================= -->
 <div id="ottoSenha" style="
   position:fixed;
