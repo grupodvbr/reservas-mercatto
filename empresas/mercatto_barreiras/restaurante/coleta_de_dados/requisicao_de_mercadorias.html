@@ -215,7 +215,7 @@ const user = usuario.value.toUpperCase();
 const { data, error } = await sb
 .from("usuarios_do_sistema")
 .select("*")
-.eq("usuario", user)
+.eq("usuario", user.usuario)
 .eq("senha", senha.value)
 .single();
 
@@ -239,7 +239,7 @@ const user = JSON.parse(saved);
 const { data } = await sb
 .from("usuarios_do_sistema")
 .select("*")
-.eq("usuario", user)
+.eq("usuario", user.usuario)
 .single();
 
 if(!data || data.senha !== user.senha){
