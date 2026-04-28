@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Conferência de Lançamentos F360 X DDA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 20px;
+      border-bottom: 2px solid #ccc;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    header img {
+      height: 40px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.6em;
+      font-weight: bold;
+    }
+    .topo-fixo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background: #f8f8f8;
+      position: sticky;
+      top: 62px;
+      z-index: 999;
+      border-bottom: 1px solid #ddd;
+    }
+    .topo-fixo label,
+    .topo-fixo input[type="file"] {
+      display: none;
+    }
+    .topo-fixo button {
+      padding: 6px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .topo-fixo .limpar {
+      background-color: #dc3545;
+    }
+    .topo-fixo small {
+      font-size: 10px;
+      color: #fff;
+      max-width: 120px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    main {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      height: calc(100vh - 160px);
+      box-sizing: border-box;
+    }
+    .coluna {
+      flex: 1;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+    .coluna-header {
+      padding: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      background: #fff;
+      flex-shrink: 0;
+    }
+    .coluna-scroll {
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .card {
+      border: 2px solid #ccc;
+      border-left: 5px solid orange;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+    .match {
+      border-left-color: green;
+      background: #e9fbe9;
+    }
+    .valor {
+      font-weight: bold;
+    }
+    #totais {
+      padding: 10px 20px;
+      font-weight: bold;
+      background: #fff;
+      border-top: 1px solid #ccc;
+    }
+    #qtdeConciliado {
+      color: green;
+    }
+    #qtdePendente {
+      color: orange;
+    }
+    #valorConciliado {
+      background: green;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    #valorPendente {
+      background: orange;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://static.wixstatic.com/media/d830b0_8cec50a98bbf4775814dbfa5386585e8~mv2.png" alt="Logo CB Systems" />
+    <h1>Conferência de Lançamentos F360 X DDA</h1>
+  </header>
+
+  <div class="topo-fixo">
+    <input type="file" id="contas" accept=".xlsx,.xls" onchange="mostrarArquivo('contas')" />
+    <button onclick="document.getElementById('contas').click()" id="btnExcel">
+      <div>Escolher Arquivo Excel</div>
+      <small id="nomeExcel"></small>
+    </button>
+
+    <input type="file" id="dda" accept="application/pdf" multiple onchange="mostrarArquivo('dda')" />
+    <button onclick="document.getElementById('dda').click()" id="btnPDF">
+      <div>Escolher Arquivo PDF</div>
+      <small id="nomePDF"></small>
+    </button>
+
+    <button onclick="conciliar()">Comparar</button>
+    <button class="limpar" onclick="limparHistorico()">Limpar Histórico</button>
+  </div>
+
+  <main>
+    <div class="coluna">
+      <div class="coluna-header">Contas a pagar F360</div>
+      <div class="coluna-scroll" id="sistema"></div>
+    </div>
+    <div class="coluna">
+      <div class="coluna-header">Boletos no DDA</div>
+      <div class="coluna-scroll" id="banco"></div>
+    </div>
+  </main>
+
+  <div id="totais">
+    Conciliados: <span id="qtdeConciliado">0</span> |
+    Pendentes: <span id="qtdePendente">0</span> |
+    Valor Conciliado: <span id="valorConciliado">R$ 0,00</span> |
+    Valor Pendente: <span id="valorPendente">R$ 0,00</span>
+  </div>
+
+<script>
+  function mostrarArquivo(tipo) {
+    const input = document.getElementById(tipo);
+    let nomes = '';
+
+    if (tipo === 'dda') {
+      nomes = Array.from(input.files).map(f => f.name).join(', ');
+      document.getElementById('nomePDF').innerText = nomes;
+    } else {
+      nomes = input.files.length ? input.files[0].name : '';
+      document.getElementById('nomeExcel').innerText = nomes;
+    }
+  }
+
+  function limparHistorico() {
+    localStorage.removeItem('contas');
+    localStorage.removeItem('dda');
+    location.reload();
+  }
+
+  function salvarLocal(nome, dados) {
+    localStorage.setItem(nome, JSON.stringify(dados));
+  }
+
+  function lerLocal(nome) {
+    return JSON.parse(localStorage.getItem(nome) || '[]');
+  }
+
+  function lerContas(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const workbook = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      const resultados = [];
+      for (let i = 1; i < data.length; i++) {
+        const linha = data[i];
+        if (!linha || linha.length < 9) continue;
+        const valor = parseFloat(linha[8]);
+        const fornecedor = linha[4] || '';
+        const dataLanc = linha[6] || '';
+        const cod = linha[1] || '';
+        if (!isNaN(valor)) {
+          resultados.push({ valor: valor.toFixed(2), fornecedor, data: dataLanc, cod });
+        }
+      }
+      salvarLocal('contas', resultados);
+      callback(resultados);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function lerPDFs(files, callbackFinal) {
+    let resultados = [];
+    let arquivosLidos = 0;
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const typedarray = new Uint8Array(this.result);
+        pdfjsLib.getDocument({ data: typedarray }).promise.then(function (pdf) {
+          let allText = '';
+          let promises = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            promises.push(
+              pdf.getPage(i).then(page => page.getTextContent().then(tc => {
+                const strings = tc.items.map(item => item.str);
+                allText += strings.join('\n') + '\n';
+              }))
+            );
+          }
+          Promise.all(promises).then(function () {
+            const linhas = allText.split('\n');
+            linhas.forEach((l, i) => {
+              const match = l.match(/(\d{1,3}(?:\.\d{3})*,\d{2})$/);
+              if (match) {
+                const valorStr = match[1].replace(/\./g, '').replace(',', '.');
+                const valor = parseFloat(valorStr);
+                if (!isNaN(valor)) {
+                  const data = (linhas[i - 1] || '').trim();
+                  const fornecedor = (linhas[i - 2] || '').trim();
+                  resultados.push({ valor: valor.toFixed(2), fornecedor, data });
+                }
+              }
+            });
+            arquivosLidos++;
+            if (arquivosLidos === files.length) {
+              salvarLocal('dda', resultados);
+              callbackFinal(resultados);
+            }
+          });
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  }
+
+  function conciliar() {
+    const fileContas = document.getElementById('contas').files[0];
+    const filesDDA = document.getElementById('dda').files;
+    if (!fileContas || !filesDDA.length) {
+      alert("Selecione os dois arquivos.");
+      return;
+    }
+    lerContas(fileContas, dadosContas => {
+      lerPDFs(filesDDA, dadosDDA => mostrarConciliacao(dadosContas, dadosDDA));
+    });
+  }
+
+  function mostrarConciliacao(dadosContas, dadosDDA) {
+    dadosContas.sort((a, b) => parseFloat(a.valor) - parseFloat(b.valor));
+    dadosDDA.sort((a, b) => parseFloat(a.valor) - parseFloat(b.valor));
+
+    const usadosDDA = new Array(dadosDDA.length).fill(false);
+    const sistemaDiv = document.getElementById('sistema');
+    const bancoDiv = document.getElementById('banco');
+    sistemaDiv.innerHTML = '';
+    bancoDiv.innerHTML = '';
+
+    let conciliados = 0;
+    let valorConciliado = 0;
+
+    const conciliadosContas = [];
+    const naoConciliadosContas = [];
+    dadosContas.forEach(conta => {
+      let index = dadosDDA.findIndex((dda, i) => !usadosDDA[i] && dda.valor === conta.valor);
+      if (index !== -1) {
+        usadosDDA[index] = true;
+        conciliados++;
+        valorConciliado += parseFloat(conta.valor);
+        conciliadosContas.push(conta);
+      } else {
+        naoConciliadosContas.push(conta);
+      }
+    });
+
+    [...conciliadosContas, ...naoConciliadosContas].forEach(conta => {
+      const match = conciliadosContas.includes(conta);
+      const card = `<div class="card ${match ? 'match' : ''}">
+        <div class="valor">${parseFloat(conta.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+        <div>${conta.cod || ''}</div>
+        <div>${conta.fornecedor}</div>
+      </div>`;
+      sistemaDiv.innerHTML += card;
+    });
+
+    const conciliadosDDA = [];
+    const naoConciliadosDDA = [];
+    dadosDDA.forEach((dda, i) => {
+      if (usadosDDA[i]) {
+        conciliadosDDA.push(dda);
+      } else {
+        naoConciliadosDDA.push(dda);
+      }
+    });
+
+    [...conciliadosDDA, ...naoConciliadosDDA].forEach(dda => {
+      const match = conciliadosDDA.includes(dda);
+      const card = `<div class="card ${match ? 'match' : ''}">
+        <div class="valor">${parseFloat(dda.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} - ${dda.data || ''}</div>
+        <div>${dda.fornecedor || ''}</div>
+      </div>`;
+      bancoDiv.innerHTML += card;
+    });
+
+    const pendentes = dadosContas.length - conciliados;
+    const valorPendente = dadosContas.reduce((acc, el) => acc + parseFloat(el.valor), 0) - valorConciliado;
+
+    document.getElementById("qtdeConciliado").innerText = conciliados;
+    document.getElementById("qtdePendente").innerText = pendentes;
+    document.getElementById("valorConciliado").innerText = valorConciliado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById("valorPendente").innerText = valorPendente.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  window.onload = function () {
+    const contas = lerLocal('contas');
+    const dda = lerLocal('dda');
+    if (contas.length && dda.length) mostrarConciliacao(contas, dda);
+  }
+</script>
