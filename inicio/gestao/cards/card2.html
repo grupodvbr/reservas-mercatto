@@ -2,63 +2,115 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Resumo Reservas</title>
+<title>Reservas • Resumo</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+
 body{
   margin:0;
   font-family:Inter;
   background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100%;
 }
 
 .box{
   width:100%;
   height:100%;
+  padding:12px;
   display:flex;
   flex-direction:column;
-  justify-content:center;
-  padding:16px;
-  gap:14px;
+  gap:10px;
 }
 
-.linha{
-  border-bottom:1px solid #eee;
-  padding-bottom:10px;
+/* TOPO */
+.top{
+  display:flex;
+  justify-content:space-between;
 }
 
-.titulo{
+.title{
   font-size:11px;
   color:#6b7280;
 }
 
-.valor{
+.total{
   font-size:22px;
   font-weight:800;
-  color:#111827;
 }
 
-.ok{ color:#16a34a }
-.warn{ color:#f59e0b }
-.danger{ color:#ef4444 }
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:6px;
+}
 
-.data{
-  font-size:12px;
+.mini{
+  background:#f9fafb;
+  border-radius:8px;
+  padding:6px;
+  text-align:center;
+}
+
+.mini span{
+  font-size:10px;
   color:#6b7280;
+}
+
+.mini b{
+  font-size:14px;
+}
+
+/* CORES */
+.ok{color:#16a34a}
+.warn{color:#f59e0b}
+.danger{color:#ef4444}
+
+/* TABELA */
+.table{
+  margin-top:6px;
+  border-top:1px solid #eee;
+  padding-top:6px;
+}
+
+.row{
+  display:grid;
+  grid-template-columns:50px 1fr 50px 60px 70px;
+  font-size:11px;
+  padding:4px 0;
+  border-bottom:1px solid #f1f1f1;
+  align-items:center;
+}
+
+.head{
+  font-weight:700;
+  color:#6b7280;
+}
+
+.status{
+  padding:2px 6px;
+  border-radius:6px;
+  font-size:10px;
+  text-align:center;
+}
+
+.s-pendente{background:#fff7ed;color:#ea580c}
+.s-confirmada{background:#eff6ff;color:#2563eb}
+.s-concluida{background:#ecfdf5;color:#16a34a}
+.s-cancelada{background:#fef2f2;color:#dc2626}
+
+.footer{
+  font-size:10px;
+  color:#6b7280;
+  text-align:right;
 }
 
 </style>
 </head>
 <body>
 
-<div class="box" id="conteudo">
-  Carregando...
-</div>
+<div class="box" id="conteudo">Carregando...</div>
 
 <script>
 
@@ -67,12 +119,10 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
 
-// 🔥 AJUSTA FUSO CORRETO
 function hojeBR(){
-  const agora = new Date()
-  const offset = agora.getTimezoneOffset() * 60000
-  const local = new Date(agora - offset)
-  return local.toISOString().slice(0,10)
+  const d = new Date()
+  const offset = d.getTimezoneOffset()*60000
+  return new Date(d - offset).toISOString().slice(0,10)
 }
 
 async function carregar(){
@@ -83,77 +133,86 @@ async function carregar(){
     .from("reservas_mercatto")
     .select("*")
 
-  if(!data){
-    document.getElementById("conteudo").innerHTML = "Erro"
-    return
-  }
-
-  // 🔥 FILTROS
-  const hojeReservas = data.filter(r=>{
+  const hojeReservas = (data || []).filter(r=>{
     if(!r.datahora) return false
-
     const d = new Date(r.datahora)
     const local = new Date(d.getTime() - d.getTimezoneOffset()*60000)
     return local.toISOString().slice(0,10) === hoje
   })
 
+  // ordenar por hora
+  hojeReservas.sort((a,b)=> new Date(a.datahora) - new Date(b.datahora))
+
   const total = hojeReservas.length
+  const pessoas = hojeReservas.reduce((a,b)=>a+Number(b.pessoas||0),0)
 
-  const confirmadas = hojeReservas.filter(r=>r.status === "Confirmada").length
-  const pendentes = hojeReservas.filter(r=>r.status === "Pendente").length
-  const concluidas = hojeReservas.filter(r=>r.status === "Concluída").length
+  const confirmadas = hojeReservas.filter(r=>r.status==="Confirmada").length
+  const pendentes = hojeReservas.filter(r=>r.status==="Pendente").length
+  const concluidas = hojeReservas.filter(r=>r.status==="Concluída").length
 
-  const pessoas = hojeReservas.reduce((acc,r)=> acc + Number(r.pessoas || 0),0)
+  // tabela (limita pra não estourar o card)
+  const linhas = hojeReservas.slice(0,8).map(r=>{
 
-  // 🔥 PRÓXIMA RESERVA
-  const futuras = hojeReservas
-    .filter(r=> new Date(r.datahora) > new Date())
-    .sort((a,b)=> new Date(a.datahora) - new Date(b.datahora))
+    const d = new Date(r.datahora)
+    const hora = d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
 
-  let proxima = "--"
-  if(futuras.length){
-    const d = new Date(futuras[0].datahora)
-    proxima = d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})
-  }
+    const statusClass = (r.status || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,'')
+
+    return `
+      <div class="row">
+        <div>${hora}</div>
+        <div>${r.nome || "-"}</div>
+        <div>${r.pessoas || 0}</div>
+        <div>${r.mesa || "-"}</div>
+        <div class="status s-${statusClass}">${r.status || "-"}</div>
+      </div>
+    `
+  }).join("")
 
   document.getElementById("conteudo").innerHTML = `
 
-    <div class="linha">
-      <div class="titulo">Reservas Hoje</div>
-      <div class="valor">${total}</div>
+    <div class="top">
+      <div>
+        <div class="title">Reservas Hoje</div>
+        <div class="total">${total}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="title">Pessoas</div>
+        <div class="total">${pessoas}</div>
+      </div>
     </div>
 
-    <div class="linha">
-      <div class="titulo">Pessoas</div>
-      <div class="valor">${pessoas}</div>
+    <div class="grid">
+      <div class="mini"><span>Confirmadas</span><b class="ok">${confirmadas}</b></div>
+      <div class="mini"><span>Pendentes</span><b class="warn">${pendentes}</b></div>
+      <div class="mini"><span>Concluídas</span><b>${concluidas}</b></div>
     </div>
 
-    <div class="linha">
-      <div class="titulo">Confirmadas</div>
-      <div class="valor ok">${confirmadas}</div>
+    <div class="table">
+
+      <div class="row head">
+        <div>Hora</div>
+        <div>Nome</div>
+        <div>P</div>
+        <div>Local</div>
+        <div>Status</div>
+      </div>
+
+      ${linhas || `<div class="row"><div>--</div><div>Sem reservas</div></div>`}
+
     </div>
 
-    <div class="linha">
-      <div class="titulo">Pendentes</div>
-      <div class="valor warn">${pendentes}</div>
-    </div>
-
-    <div class="linha">
-      <div class="titulo">Concluídas</div>
-      <div class="valor">${concluidas}</div>
-    </div>
-
-    <div>
-      <div class="titulo">Próxima Reserva</div>
-      <div class="valor">${proxima}</div>
-      <div class="data">${hoje.split("-").reverse().join("/")}</div>
+    <div class="footer">
+      ${hoje.split("-").reverse().join("/")}
     </div>
 
   `
 }
 
-// 🔄 auto refresh
-setInterval(carregar, 10000)
+setInterval(carregar,10000)
 carregar()
 
 </script>
