@@ -359,116 +359,6 @@ body.dark .card-status span {
   border:1px solid #dc3545 !important;
   box-shadow:0 0 0 2px rgba(220,53,69,.2);
 }
-
-
-
-.user-card{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:10px;
-  background:var(--bg);
-  border:1px solid #ddd;
-  transition:.2s;
-}
-
-.user-card:hover{
-  transform:translateY(-2px);
-  box-shadow:0 6px 18px rgba(0,0,0,.1);
-}
-
-.user-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.user-avatar{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  background:linear-gradient(135deg,#3b82f6,#2563eb);
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700;
-}
-
-.user-info{
-  display:flex;
-  flex-direction:column;
-}
-
-.user-nome{
-  font-weight:700;
-  font-size:14px;
-}
-
-.user-meta{
-  font-size:11px;
-  color:#666;
-}
-
-.user-right{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.status{
-  font-size:10px;
-  padding:4px 8px;
-  border-radius:6px;
-  font-weight:700;
-}
-
-.status.on{
-  background:#d4edda;
-  color:#155724;
-}
-
-.status.off{
-  background:#f8d7da;
-  color:#721c24;
-}
-
-.btn-status{
-  border:none;
-  padding:5px 8px;
-  border-radius:6px;
-  font-size:11px;
-  cursor:pointer;
-  background:#333;
-  color:#fff;
-}
-
-.btn-edit{
-  border:none;
-  background:#ffc107;
-  padding:5px 7px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.btn-del{
-  border:none;
-  background:#dc3545;
-  color:#fff;
-  padding:5px 7px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-
-
-
-
-
-
-
   
 </style>
 </head>
@@ -957,7 +847,7 @@ async function carregarUsuarios(){
 
   const { data, error } = await sb
     .from("usuarios_do_sistema") // 🔥 NOME CERTO
-    .select("id, nome, setor, cargo, ativo");
+    .select("id, nome, setor, cargo");
 
   if(error){
     console.error("Erro ao buscar usuários:", error);
@@ -970,42 +860,27 @@ async function carregarUsuarios(){
     return;
   }
 
-const html = data.map(u => {
-
-  const ativo = u.ativo === true;
-
-  return `
-  <div class="user-card ${ativo ? 'ativo' : 'inativo'}">
-
-    <div class="user-left">
-      <div class="user-avatar">${u.nome?.charAt(0) || "U"}</div>
-
-      <div class="user-info">
-        <div class="user-nome">${u.nome}</div>
-        <div class="user-meta">
-          ${u.setor || "Sem setor"} • ${u.cargo || ""}
-        </div>
-      </div>
-    </div>
-
-    <div class="user-right">
-
-      <div class="status ${ativo ? 'on' : 'off'}">
-        ${ativo ? 'ATIVO' : 'INATIVO'}
+  const html = data.map(u => `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+      border-bottom:1px solid #ccc;
+      padding:6px;
+    ">
+      <div>
+        <b>${u.nome}</b><br>
+        <small>${u.setor || "Sem setor"} - ${u.cargo || ""}</small>
       </div>
 
-      <button onclick="toggleAtivo('${u.id}', ${ativo})" class="btn-status">
-        ${ativo ? 'Desativar' : 'Ativar'}
-      </button>
-
-      <button onclick="editarUsuario('${u.id}','${u.nome}','${u.setor || ""}')" class="btn-edit">✏️</button>
-      <button onclick="excluirUsuario('${u.id}')" class="btn-del">🗑️</button>
-
+      <div>
+        <button onclick="editarUsuario('${u.id}','${u.nome}','${u.setor || ""}')">✏️</button>
+        <button onclick="excluirUsuario('${u.id}')">🗑️</button>
+      </div>
     </div>
+  `).join("");
 
-  </div>
-  `;
-}).join("");
   document.getElementById("listaUsuarios").innerHTML = html;
 }
 
@@ -1285,24 +1160,7 @@ function getFiltrados(){
   });
 }
 
-async function toggleAtivo(id, atual){
 
-  const novo = !atual;
-
-  const { error } = await sb
-    .from("usuarios_do_sistema")
-    .update({ ativo: novo })
-    .eq("id", id);
-
-  if(error){
-    console.error(error);
-    mostrarAlerta("Erro ao atualizar status");
-    return;
-  }
-
-  mostrarAlerta("Status atualizado!");
-  carregarUsuarios();
-}
 
   
 </script>
