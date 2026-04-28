@@ -349,74 +349,78 @@ listaProdutos.innerHTML="";
 /* ENVIAR */
 async function enviar(){
 
-if(!produto.value || !quantidade.value){
-alert("Preencha os campos");
-return;
+  if(!produto.value || !quantidade.value){
+    alert("Preencha os campos");
+    return;
+  }
+
+  overlay.style.display="flex";
+
+  const nome = produto.value.toUpperCase();
+
+  // 🔎 BUSCAR PRODUTO NO ESTOQUE
+  const { data: prod } = await sb
+    .from("mercatto_estoque")
+    .select("id, produto")
+    .eq("produto", nome)
+    .maybeSingle();
+
+  if(!prod){
+    overlay.style.display="none";
+    alert("Produto não encontrado no estoque");
+    return;
+  }
+
+  // ✅ INSERIR NA TABELA CORRETA
+  const { error } = await sb
+    .from("mercatto_requisicoes")
+    .insert({
+      produto_id: prod.id,
+      produto: prod.produto,
+      quantidade: parseInt(quantidade.value),
+      unidade: unidade,
+      setor: dadosUsuario.setor,
+      solicitante: dadosUsuario.nome,
+      observacoes: obs.value,
+      status: "PENDENTE"
+    });
+
+  overlay.style.display="none";
+
+  if(error){
+    console.log(error);
+    alert("Erro ao salvar requisição");
+    return;
+  }
+
+  limparCampos();
+  carregarHistorico();
 }
-
-overlay.style.display="flex";
-
-const nome=produto.value.toUpperCase();
-
-/* produto */
-let { data: existente } = await sb
-.from("produtos_para_requisicao")
-.select("*")
-.eq("nome", nome)
-.maybeSingle();
-
-let produto_id;
-
-if(!existente){
-const { data: novo } = await sb
-.from("produtos_para_requisicao")
-.insert({ nome })
-.select()
-.maybeSingle();
-
-produto_id = novo.id;
-}else{
-produto_id = existente.id;
-}
-
-/* requisicao */
-await sb.from("requisicoes").insert({
-produto:nome,
-produto_id,
-quantidade: parseInt(quantidade.value),
-unidade,
-setor:dadosUsuario.setor,
-usuario:usuarioAtual,
-observacoes:obs.value,
-status:"PENDENTE"
-});
-
-overlay.style.display="none";
-
-limparCampos();
-carregarHistorico();
-}
-
 /* HISTÓRICO */
 async function carregarHistorico(){
 
-const { data } = await sb
-.from("requisicoes")
-.select("*")
-.eq("usuario", usuarioAtual)
-.order("created_at",{ascending:false})
-.limit(20);
+  const { data, error } = await sb
+    .from("mercatto_requisicoes")
+    .select("*")
+    .eq("solicitante", dadosUsuario.nome) // 👈 importante
+    .order("created_at",{ascending:false})
+    .limit(20);
 
-tabela.innerHTML="";
+  if(error){
+    console.log(error);
+    return;
+  }
 
-(data||[]).forEach(r=>{
-tabela.innerHTML+=`
-<tr>
-<td>${r.produto}</td>
-<td>${r.quantidade}</td>
-<td>${r.status}</td>
-</tr>`;
-});
+  tabela.innerHTML="";
+
+  (data||[]).forEach(r=>{
+    tabela.innerHTML+=`
+    <tr>
+      <td>${r.produto}</td>
+      <td>${r.quantidade}</td>
+      <td>${r.status}</td>
+    </tr>`;
+  });
 }
 
 /* LIMPAR */
