@@ -891,19 +891,48 @@ async function salvar(consumoPara){
     }
 
     if (tipo === "CONSUMO" && produtoNome !== "CONSUMO AUTORIZADO") {
-      alert("Tipo CONSUMO é reservado apenas para CONSUMO AUTORIZADO.");
+// ❌
+alert("Tipo CONSUMO é reservado apenas para CONSUMO AUTORIZADO.");
+
+// ✅
+abrirPopup({
+  tipo:"erro",
+  titulo:"Operação inválida",
+  mensagem:"Tipo CONSUMO é permitido apenas para consumo autorizado."
+});
+      
+      
+      
       hideSaving();
       return;
     }
 
     if(!produtoNome || pesoBruto <= 0){
-      alert("Preencha tudo");
+// ❌
+alert("Preencha tudo");
+
+// ✅
+abrirPopup({
+  tipo:"aviso",
+  titulo:"Campos obrigatórios",
+  mensagem:"Preencha todos os campos antes de salvar."
+});
+      
       hideSaving();
       return;
     }
 
     if(tara > pesoBruto){
-      alert("Tara não pode ser maior que o peso bruto");
+// ❌
+alert("Tara não pode ser maior que o peso bruto");
+
+// ✅
+abrirPopup({
+  tipo:"erro",
+  titulo:"Valor inválido",
+  mensagem:"A tara não pode ser maior que o peso bruto."
+});
+      
       hideSaving();
       return;
     }
@@ -931,16 +960,58 @@ async function salvar(consumoPara){
 
       const totalDisponivel = totalMontagem + totalReposicao - totalRetirada;
 
+
+
+
+
+
+      
       // ❌ nunca teve lançamento
       if (!historico || historico.length === 0) {
-        alert("❌ Não existe montagem ou reposição para este item.");
+// ❌
+alert("❌ Não existe montagem ou reposição para este item.");
+
+// ✅
+abrirPopup({
+  tipo:"erro",
+  titulo:"Sem estoque",
+  mensagem:"Não existe montagem ou reposição para este item."
+});
+
+        
+        abrirPopup({
+  tipo:"erro",
+  titulo:"Sem estoque",
+  mensagem:"Não existe montagem ou reposição para este item."
+});
+
+
+        
         hideSaving();
         return;
       }
 
+
+
+
+
+
+
+
+
+      
       // ❌ nunca teve entrada
       if ((totalMontagem + totalReposicao) <= 0) {
-        alert("❌ Não existe montagem ou reposição para retirada.");
+// ❌
+alert("❌ Não existe montagem ou reposição para retirada.");
+
+// ✅
+abrirPopup({
+  tipo:"erro",
+  titulo:"Sem estoque",
+  mensagem:"Não existe saldo de montagem ou reposição."
+});
+        
         hideSaving();
         return;
       }
@@ -954,7 +1025,16 @@ async function salvar(consumoPara){
 
       // ❌ saldo zerado
       if (totalDisponivel <= 0) {
-        alert("❌ Item sem saldo disponível.");
+// ❌
+alert("❌ Item sem saldo disponível.");
+
+// ✅
+abrirPopup({
+  tipo:"erro",
+  titulo:"Sem saldo",
+  mensagem:"Este item não possui saldo disponível."
+});
+        
         hideSaving();
         return;
       }
