@@ -214,9 +214,9 @@ async function login(){
   const pass = senha.value;
 
   const { data, error } = await sb
-    .from("usuarios")
-    .select("username, senha") // 👈 nomes reais da tabela
-    .eq("username", user)      // 👈 aqui também
+    .from("usuarios_do_sistema")
+    .select('"usuario","senha"') // 👈 IMPORTANTE (com aspas)
+    .eq("usuario", user)
     .maybeSingle();
 
   if(error){
@@ -246,7 +246,7 @@ if(!saved) return false;
 const user = JSON.parse(saved);
 
 const { data } = await sb
-.from("usuarios")
+.from("usuarios_do_sistema")
 .select("*")
 .eq("id", user.id)
 .single();
