@@ -215,13 +215,13 @@ async function login(){
 
   const { data, error } = await sb
     .from("usuarios")
-    .select("*")
-    .eq("nome", user) // ✅ AQUI O TRECHO CORRETO
+    .select("usuario, senha, ativo, nome, setor")
+    .eq("usuario", user)
     .maybeSingle();
 
   if(error){
     console.log(error);
-    alert("Erro na consulta");
+    alert("Erro ao buscar usuário");
     return;
   }
 
@@ -240,6 +240,7 @@ async function login(){
     return;
   }
 
+  // LOGIN OK
   localStorage.setItem("user_data", JSON.stringify(data));
   init();
 }
