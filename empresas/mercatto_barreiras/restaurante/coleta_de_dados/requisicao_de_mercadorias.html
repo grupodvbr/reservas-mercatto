@@ -210,18 +210,18 @@ let dadosUsuario=null;
 /* LOGIN */
 async function login(){
 
-  const user = usuario.value.toUpperCase();
+  const user = usuario.value;
   const pass = senha.value;
 
   const { data, error } = await sb
     .from("usuarios")
-    .select("usuario, senha")
+    .select('"usuario","senha"') // 👈 IMPORTANTE (com aspas)
     .eq("usuario", user)
     .maybeSingle();
 
   if(error){
     console.log(error);
-    alert("Erro ao buscar usuário");
+    alert("Erro no banco");
     return;
   }
 
@@ -237,7 +237,6 @@ async function login(){
 
   alert("Login OK");
 }
-
 /* VALIDAR SESSÃO */
 async function validarSessao(){
 
