@@ -216,7 +216,7 @@ async function login(){
   const { data, error } = await sb
     .from("usuarios")
     .select("*")
-    .eq("usuario", user) // ✅ CORRIGIDO AQUI
+    .eq("nome", user) // ✅ AQUI O TRECHO CORRETO
     .maybeSingle();
 
   if(error){
@@ -240,7 +240,6 @@ async function login(){
     return;
   }
 
-  // ✅ login ok
   localStorage.setItem("user_data", JSON.stringify(data));
   init();
 }
