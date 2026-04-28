@@ -845,35 +845,43 @@ function fecharUsuarios(){
 
 async function carregarUsuarios(){
 
- const usuarios = [...new Set(
-   dadosRequisicoes
-     .map(r => r.solicitante)
-     .filter(Boolean)
- )];
+  const { data, error } = await sb
+    .from("usuarios")
+    .select("id, nome, setor, cargo");
 
- if(usuarios.length === 0){
-  document.getElementById("listaUsuarios").innerHTML = "Nenhum usuário encontrado";
-  return;
- }
+  if(error){
+    console.error("Erro ao buscar usuários:", error);
+    document.getElementById("listaUsuarios").innerHTML = "Erro ao carregar";
+    return;
+  }
 
- const html = usuarios.map(nome => `
-   <div style="
-     display:flex;
-     justify-content:space-between;
-     align-items:center;
-     margin-bottom:6px;
-     border-bottom:1px solid #ccc;
-     padding:6px;
-   ">
-     <div>
-       <b>${nome}</b>
-       <br>
-       <small>Usuário do sistema</small>
-     </div>
-   </div>
- `).join("");
+  if(!data || data.length === 0){
+    document.getElementById("listaUsuarios").innerHTML = "Nenhum usuário encontrado";
+    return;
+  }
 
- document.getElementById("listaUsuarios").innerHTML = html;
+  const html = data.map(u => `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+      border-bottom:1px solid #ccc;
+      padding:6px;
+    ">
+      <div>
+        <b>${u.nome}</b><br>
+        <small>${u.setor || "Sem setor"} - ${u.cargo || ""}</small>
+      </div>
+
+      <div>
+        <button onclick="editarUsuario('${u.id}','${u.nome}','${u.setor || ""}')">✏️</button>
+        <button onclick="excluirUsuario('${u.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("listaUsuarios").innerHTML = html;
 }
 
 async function salvarUsuario(){
