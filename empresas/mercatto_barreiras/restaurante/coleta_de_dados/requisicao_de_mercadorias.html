@@ -213,18 +213,16 @@ async function login(){
 const user = document.getElementById("usuario").value.toUpperCase();
 const pass = document.getElementById("senha").value;
 
-const { data } = await sb
+const { data, error } = await sb
 .from("usuarios_do_sistema")
 .select("usuario, senha, setor, nivel_acesso, ativo, nome")
-.eq("usuario", user) // ✅ só filtra usuário
+.eq("usuario", user)
 .maybeSingle();
 
-// valida senha no JS
-if(!data || data.senha !== pass){
+if(error || !data || data.senha !== pass){
 alert("Usuário ou senha inválidos");
 return;
 }
-
 
 
 // BLOQUEIO
