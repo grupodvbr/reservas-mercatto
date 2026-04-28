@@ -846,8 +846,8 @@ function fecharUsuarios(){
 async function carregarUsuarios(){
 
   const { data, error } = await sb
-    .from("usuarios") // ✅ PADRÃO CORRETO
-    .select("id, nome, setor, cargo, senha"); // ✅ AGORA TRAZ SENHA
+    .from("usuarios")
+    .select("id, usuario, senha, setor, cargo"); // 🔥 SEM nome
 
   if(error){
     console.error("Erro ao buscar usuários:", error);
@@ -870,15 +870,18 @@ async function carregarUsuarios(){
       padding:6px;
     ">
       <div>
-        <b>${u.nome}</b><br>
+        <!-- 🔥 USA usuario -->
+        <b>${u.usuario}</b><br>
+
         <small>${u.setor || "Sem setor"} - ${u.cargo || ""}</small><br>
 
-        <!-- 🔥 SENHA AGORA APARECE -->
-        <small style="color:#dc3545">Senha: ${u.senha || "—"}</small>
+        <small style="color:#dc3545">
+          Senha: ${u.senha || "—"}
+        </small>
       </div>
 
       <div>
-        <button onclick="editarUsuario('${u.id}','${u.nome}','${u.setor || ""}')">✏️</button>
+        <button onclick="editarUsuario('${u.id}','${u.usuario}','${u.setor || ""}')">✏️</button>
         <button onclick="excluirUsuario('${u.id}')">🗑️</button>
       </div>
     </div>
