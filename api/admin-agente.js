@@ -1058,7 +1058,7 @@ let dadosExternos = {}
 
 try{
 
-  const API = "https://democracy-thesaurus-forms-roland.trycloudflare.com"
+  const API = "https://benefits-jan-buddy-density.trycloudflare.com"
 
   const [dia, mes, analitico] = await Promise.all([
     fetch(`${API}/resumo-dia?data=${dataFiltro}`).then(r=>r.json()),
@@ -1213,7 +1213,7 @@ function toBR(dataISO){
 
 
 
-const API_CUPONS = "https://democracy-thesaurus-forms-roland.trycloudflare.com"
+const API_CUPONS = "https://benefits-jan-buddy-density.trycloudflare.com"
 
 if(tipoConsulta === "vendas" || tipoConsulta === "relatorio"){
   console.log("📅 DATA FINAL USADA:", dataFiltro)
@@ -1704,17 +1704,18 @@ try{
     )
 
     if(empresaMes){
-faturamentoMesTotal =
-  Number(empresaMes?.faturamento_mes || 0)
+      faturamentoMesTotal =
+        Number(empresaMes.faturamento_mes || 0) +
+        Number(resumoDia.faturamento || 0)
     }
 
   }else{
 
-faturamentoMesTotal =
-  dataMes.empresas.reduce(
-    (acc, e) => acc + Number(e.faturamento_mes || 0),
-    0
-  )
+    faturamentoMesTotal =
+      dataMes.empresas.reduce(
+        (acc, e) => acc + Number(e.faturamento_mes || 0),
+        0
+      ) + Number(resumoDia.faturamento || 0)
 
   }
 
@@ -1734,20 +1735,9 @@ faturamentoMesTotal =
   
 
 // 🔥 cálculo correto da meta
-let metaInfo = null
-
-if(resumoDia.empresa){
-  metaInfo = calcularMeta(resumoDia.empresa, faturamentoMesTotal)
-}else{
-
-  const SOMA_METAS = Object.values(METAS)
-    .reduce((acc, m) => acc + (m.prata || 0), 0)
-
-  metaInfo = {
-    meta: SOMA_METAS,
-    percentual: (faturamentoMesTotal / SOMA_METAS) * 100
-  }
-}
+const metaInfo = resumoDia.empresa
+  ? calcularMeta(resumoDia.empresa, faturamentoMesTotal)
+  : null
 
     
 
@@ -1756,20 +1746,11 @@ if(resumoDia.empresa){
     content: "RESUMO_CUPONS_DIA:\n" + JSON.stringify({
       data: resumoDia.data,
       empresa: resumoDia.empresa || "GERAL",
-
-
-      
-faturamento_dia: Number(resumoDia.faturamento || 0),
-faturamento: faturamentoMesTotal,
-
-
-      
+      faturamento: Number(resumoDia.faturamento || 0),
       vendas: Number(resumoDia.vendas || 0),
       ticket_medio: Number(resumoDia.ticket_medio || 0),
       meta: metaInfo?.meta || 0,
-      percentual_meta: metaInfo
-  ? (faturamentoMesTotal / metaInfo.meta) * 100
-  : 0
+      percentual_meta: metaInfo?.percentual || 0
     })
   })
 
@@ -2201,7 +2182,7 @@ let dataMes = null
 
 try {
 
-  const API_CUPONS = "https://democracy-thesaurus-forms-roland.trycloudflare.com"
+  const API_CUPONS = "https://benefits-jan-buddy-density.trycloudflare.com"
 
   const hoje = new Date(
     new Date().toLocaleString("en-US",{ timeZone:"America/Bahia" })
