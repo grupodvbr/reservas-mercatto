@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Sistemas • DV</title>
+<title>Dashboard Corporativo • DV</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
 :root{
-  --bg:#020617;
-  --card:#0f172a;
-  --border:#1e293b;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --sub:#6b7280;
   --primary:#2563eb;
-  --text:#ffffff;
-  --sub:#94a3b8;
+  --success:#16a34a;
 }
 
 *{
@@ -26,7 +27,7 @@
 }
 
 body{
-  background:linear-gradient(180deg,#020617,#020617 60%,#020617);
+  background:var(--bg);
   color:var(--text);
   height:100vh;
   display:flex;
@@ -35,23 +36,50 @@ body{
 
 /* ===== HEADER ===== */
 header{
-  padding:18px 24px;
-  background:rgba(15,23,42,0.7);
-  backdrop-filter:blur(10px);
+  height:64px;
+  background:#ffffff;
   border-bottom:1px solid var(--border);
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
+  padding:0 24px;
 }
 
-header h1{
-  font-size:20px;
-  font-weight:800;
+.header-left{
+  display:flex;
+  flex-direction:column;
 }
 
-header span{
-  font-size:13px;
+.header-left h1{
+  font-size:18px;
+  font-weight:700;
+}
+
+.header-left span{
+  font-size:12px;
   color:var(--sub);
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size:13px;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:var(--success);
+  font-weight:600;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  background:var(--success);
+  border-radius:50%;
 }
 
 /* ===== GRID ===== */
@@ -66,58 +94,50 @@ header span{
 
 /* ===== CARD ===== */
 .card{
-  background:linear-gradient(180deg,#0f172a,#020617);
+  background:var(--card);
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:12px;
   overflow:hidden;
-  position:relative;
-  transition:0.3s;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 4px 12px rgba(0,0,0,0.04);
+  transition:0.25s;
 }
 
 .card:hover{
-  transform:translateY(-4px) scale(1.01);
-  border-color:var(--primary);
-  box-shadow:0 0 20px rgba(37,99,235,0.25);
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.08);
 }
 
-/* glow top */
-.card::before{
-  content:"";
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:2px;
-  background:linear-gradient(90deg,transparent,var(--primary),transparent);
-  opacity:0.6;
+/* topo do card */
+.card-header{
+  height:36px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:12px;
+  font-weight:600;
+  color:var(--sub);
+  border-bottom:1px solid var(--border);
+}
+
+.card-header strong{
+  color:var(--text);
+  font-weight:600;
 }
 
 /* iframe */
 .card iframe{
-  width:100%;
-  height:100%;
+  flex:1;
   border:none;
-}
-
-/* label */
-.card-title{
-  position:absolute;
-  top:10px;
-  left:12px;
-  font-size:12px;
-  font-weight:600;
-  background:rgba(0,0,0,0.4);
-  padding:4px 10px;
-  border-radius:6px;
-  backdrop-filter:blur(6px);
-  color:#fff;
+  background:#fff;
 }
 
 /* ===== RESPONSIVO ===== */
 @media(max-width:1200px){
   .dashboard{
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: auto;
   }
 }
 
@@ -138,87 +158,61 @@ header span{
 <body>
 
 <header>
-  <h1>📊 Painel de Sistemas</h1>
-  <span id="hora"></span>
+  <div class="header-left">
+    <h1>Dashboard Operacional</h1>
+    <span>Sistemas Integrados • Grupo DV</span>
+  </div>
+
+  <div class="header-right">
+    <div class="status">
+      <div class="dot"></div>
+      Online
+    </div>
+    <div id="dataHora"></div>
+  </div>
 </header>
 
 <div class="dashboard">
 
-  <!-- CARD 1 -->
-  <div class="card">
-    <div class="card-title">Sistema 01</div>
-    <iframe src="gestao/cards/card1.html"></iframe>
-  </div>
-
-  <!-- CARD 2 -->
-  <div class="card">
-    <div class="card-title">Sistema 02</div>
-    <iframe src="gestao/cards/card2.html"></iframe>
-  </div>
-
-  <!-- CARD 3 -->
-  <div class="card">
-    <div class="card-title">Sistema 03</div>
-    <iframe src="gestao/cards/card3.html"></iframe>
-  </div>
-
-  <!-- CARD 4 -->
-  <div class="card">
-    <div class="card-title">Sistema 04</div>
-    <iframe src="gestao/cards/card4.html"></iframe>
-  </div>
-
-  <!-- CARD 5 -->
-  <div class="card">
-    <div class="card-title">Sistema 05</div>
-    <iframe src="gestao/cards/card5.html"></iframe>
-  </div>
-
-  <!-- CARD 6 -->
-  <div class="card">
-    <div class="card-title">Sistema 06</div>
-    <iframe src="gestao/cards/card6.html"></iframe>
-  </div>
-
-  <!-- CARD 7 -->
-  <div class="card">
-    <div class="card-title">Sistema 07</div>
-    <iframe src="gestao/cards/card7.html"></iframe>
-  </div>
-
-  <!-- CARD 8 -->
-  <div class="card">
-    <div class="card-title">Sistema 08</div>
-    <iframe src="gestao/cards/card8.html"></iframe>
-  </div>
-
-  <!-- CARD 9 -->
-  <div class="card">
-    <div class="card-title">Sistema 09</div>
-    <iframe src="gestao/cards/card9.html"></iframe>
-  </div>
-
-  <!-- CARD 10 -->
-  <div class="card">
-    <div class="card-title">Sistema 10</div>
-    <iframe src="gestao/cards/card10.html"></iframe>
-  </div>
+  <!-- CARDS -->
+  <script>
+    for(let i=1;i<=10;i++){
+      document.write(`
+        <div class="card">
+          <div class="card-header">
+            <strong>Sistema ${i}</strong>
+            <span>#0${i}</span>
+          </div>
+          <iframe src="gestao/cards/card${i}.html"></iframe>
+        </div>
+      `)
+    }
+  </script>
 
 </div>
 
 <script>
-// ===== HORA AO VIVO =====
-function atualizarHora(){
+// ===== DATA + HORA =====
+function atualizarDataHora(){
   const agora = new Date()
-  const hora = agora.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
+
+  const data = agora.toLocaleDateString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
   })
-  document.getElementById("hora").innerText = hora
+
+  const hora = agora.toLocaleTimeString("pt-BR", {
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit"
+  })
+
+  document.getElementById("dataHora").innerText = `${data} • ${hora}`
 }
-setInterval(atualizarHora,1000)
-atualizarHora()
+
+setInterval(atualizarDataHora,1000)
+atualizarDataHora()
 </script>
 
 </body>
