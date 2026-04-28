@@ -119,8 +119,8 @@ let total = 0
 // nunca deixa negativo
 if(total < 0) total = 0
     // 🔥 DATA FORMATADA
-    const dataFormatada = new Date(ultimaData)
-      .toLocaleDateString("pt-BR")
+const [ano, mes, dia] = ultimaData.split("-")
+const dataFormatada = `${dia}/${mes}/${ano}`
 
     html += `
       <div style="margin-bottom:16px">
