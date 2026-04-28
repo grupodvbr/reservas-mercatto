@@ -2,103 +2,130 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Painel de Usuários • Mercatto</title>
+<title>Usuários do Sistema</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
-  --bg:#0b1220;
-  --card:#111827;
-  --border:#1f2937;
-  --text:#fff;
-  --muted:#9ca3af;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
   --primary:#22c55e;
   --danger:#ef4444;
   --blue:#2563eb;
 }
 
 *{box-sizing:border-box;font-family:Inter}
-body{margin:0;background:var(--bg);color:var(--text)}
 
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
 .header{
   position:fixed;
   top:0;left:0;right:0;
-  background:#020617;
-  padding:16px;
+  background:#ffffff;
+  padding:18px;
   font-size:20px;
   font-weight:800;
   border-bottom:1px solid var(--border);
   z-index:10;
 }
 
+/* CONTAINER */
 .container{
-  padding:90px 15px 20px;
-  max-width:1200px;
+  padding:95px 16px 20px;
+  max-width:1100px;
   margin:auto;
 }
 
+/* FILTROS */
 .filtros{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
-  margin-bottom:15px;
+  margin-bottom:20px;
 }
 
 input,select{
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
   border:1px solid var(--border);
-  background:var(--card);
-  color:#fff;
+  background:#fff;
+  color:#000;
+  font-size:14px;
 }
 
+/* CARD */
 .card{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:14px;
-  padding:14px;
-  margin-bottom:10px;
+  padding:16px;
+  margin-bottom:12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   flex-wrap:wrap;
+  transition:.2s;
+}
+
+.card:hover{
+  box-shadow:0 10px 20px rgba(0,0,0,.05);
 }
 
 .nome{
   font-weight:700;
+  font-size:16px;
 }
 
 .mini{
-  font-size:12px;
+  font-size:13px;
   color:var(--muted);
 }
 
+/* STATUS */
+.status{
+  font-weight:600;
+  font-size:13px;
+}
+
+.ativo{color:var(--primary)}
+.inativo{color:var(--danger)}
+
+/* BOTÕES */
 .botoes{
   display:flex;
   gap:8px;
+  margin-top:8px;
 }
 
 button{
   border:none;
-  padding:8px 12px;
-  border-radius:8px;
+  padding:9px 14px;
+  border-radius:10px;
   cursor:pointer;
   font-weight:600;
+  font-size:13px;
 }
 
 .aprovar{background:var(--primary);color:#000}
 .editar{background:var(--blue);color:#fff}
-.desativar{background:var(--danger);color:#fff}
 
 /* MODAL */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.4);
   display:none;
   align-items:center;
   justify-content:center;
@@ -106,13 +133,17 @@ button{
 }
 
 .modalBox{
-  background:#020617;
+  background:#fff;
   padding:20px;
-  border-radius:14px;
+  border-radius:16px;
   width:95%;
   max-width:500px;
   max-height:90vh;
   overflow:auto;
+}
+
+.modal h2{
+  margin-top:0;
 }
 
 .modal input, .modal select{
@@ -120,17 +151,13 @@ button{
   margin-bottom:10px;
 }
 
-.modal h2{
-  margin-top:0;
-}
-
 .salvar{
   width:100%;
   background:var(--primary);
   color:#000;
   font-weight:800;
+  margin-top:10px;
 }
-
 </style>
 </head>
 
@@ -163,10 +190,10 @@ button{
 
     <h2>Editar Usuário</h2>
 
-    <input id="nome">
-    <input id="email">
-    <input id="telefone">
-    <input id="cargo">
+    <input id="nome" placeholder="Nome">
+    <input id="email" placeholder="Email">
+    <input id="telefone" placeholder="Telefone">
+    <input id="cargo" placeholder="Cargo">
     
     <select id="empresa">
       <option>MERCATTO DELICIA</option>
@@ -206,7 +233,13 @@ async function carregar(){
     .select("*")
     .order("criado_em",{ascending:false})
 
-  dados = data
+  dados = data.map(u => ({
+    ...u,
+    links: typeof u.links === "string" 
+      ? JSON.parse(u.links.replace(/""/g,'"')) 
+      : u.links
+  }))
+
   render()
 }
 
@@ -231,14 +264,17 @@ function render(){
           <div class="nome">${u.nome}</div>
           <div class="mini">${u.cargo} • ${u.empresa}</div>
           <div class="mini">${u.email || ''}</div>
+          <div class="status ${u.ativo ? 'ativo':'inativo'}">
+            ${u.ativo ? '● Ativo' : '● Inativo'}
+          </div>
         </div>
 
         <div class="botoes">
           <button class="aprovar" onclick="toggle('${u.id}',${u.ativo})">
-            ${u.ativo ? 'Ativo' : 'Aprovar'}
+            ${u.ativo ? 'Desativar' : 'Ativar'}
           </button>
 
-          <button class="editar" onclick='abrir(${JSON.stringify(u)})'>
+          <button class="editar" onclick="abrir('${u.id}')">
             Editar
           </button>
         </div>
@@ -247,7 +283,7 @@ function render(){
   })
 }
 
-// 🔥 ATIVAR / DESATIVAR
+// 🔥 TOGGLE
 async function toggle(id,ativo){
   await supabase
     .from("usuarios_do_sistema")
@@ -258,8 +294,10 @@ async function toggle(id,ativo){
 }
 
 // 🔥 ABRIR MODAL
-function abrir(u){
+function abrir(id){
+  const u = dados.find(x => x.id === id)
   atual = u
+
   modal.style.display = "flex"
 
   nome.value = u.nome || ""
