@@ -213,19 +213,32 @@ async function login(){
 const user = document.getElementById("usuario").value.toUpperCase();
 const pass = document.getElementById("senha").value;
 
+if(!user || !pass){
+alert("Preencha usuário e senha");
+return;
+}
+
 const { data, error } = await sb
 .from("usuarios_do_sistema")
-.select("*")
-.eq("usuario", user) // ✅ CORRETO
+.select("usuario, senha, setor, nivel_acesso, ativo, nome")
+.eq("usuario", user)
 .eq("senha", pass)
 .single();
 
 if(error || !data){
-alert("Login inválido");
+alert("Usuário ou senha inválidos");
 return;
 }
 
+// 🔴 BLOQUEIO POR ATIVO
+if(!data.ativo){
+alert("Usuário inativo. Procure o administrador.");
+return;
+}
+
+// SALVA SESSÃO
 localStorage.setItem("user_data", JSON.stringify(data));
+
 init();
 }
 
@@ -239,12 +252,12 @@ const user = JSON.parse(saved);
 
 const { data } = await sb
 .from("usuarios_do_sistema")
-.select("*")
-.eq("usuario", user.usuario) // aqui está certo porque user é objeto do localStorage
+.select("usuario, senha, setor, nivel_acesso, ativo")
+.eq("usuario", user.usuario)
 .single();
 
- 
-if(!data || data.senha !== user.senha){
+// ❌ inválido ou inativo
+if(!data || data.senha !== user.senha || !data.ativo){
 logout();
 return false;
 }
@@ -261,9 +274,11 @@ appArea.classList.remove("hidden");
 
 const saved = JSON.parse(localStorage.getItem("user_data"));
 
-usuarioAtual = saved.nome;
+// 👉 CONTROLE
+usuarioAtual = saved.usuario;
 dadosUsuario = saved;
 
+// 👉 EXIBIÇÃO
 solicitante.value = saved.nome;
 setor.innerHTML = `<option>${saved.setor}</option>`;
 
