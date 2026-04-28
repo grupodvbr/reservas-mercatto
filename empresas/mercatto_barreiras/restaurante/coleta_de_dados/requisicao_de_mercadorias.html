@@ -309,27 +309,36 @@ document.getElementById("u"+u).classList.add("active");
 }
 
 /* BUSCA */
-produto.onkeyup=async()=>{
+produto.onkeyup = async () => {
 
-const q=produto.value.toUpperCase();
+  const q = produto.value.toUpperCase();
 
-if(q.length<2){
-listaProdutos.innerHTML="";
-return;
-}
+  if(q.length < 2){
+    listaProdutos.innerHTML = "";
+    return;
+  }
 
-const { data } = await sb
-.from("produtos_para_requisicao")
-.select("*")
-.ilike("nome", `%${q}%`)
-.limit(10);
+  const { data, error } = await sb
+    .from("mercatto_estoque")
+    .select("produto")
+    .ilike("produto", `%${q}%`)
+    .eq("ativo", true)
+    .eq("empresa", "MERCATTO DELICIA") // 👈 importante
+    .limit(10);
 
-listaProdutos.innerHTML="";
+  if(error){
+    console.log(error);
+    return;
+  }
 
-(data||[]).forEach(p=>{
-listaProdutos.innerHTML+=`
-<div class="item" onclick="selectProduto('${p.nome}')">${p.nome}</div>`;
-});
+  listaProdutos.innerHTML = "";
+
+  (data || []).forEach(p => {
+    listaProdutos.innerHTML += `
+      <div class="item" onclick="selectProduto('${p.produto}')">
+        ${p.produto}
+      </div>`;
+  });
 };
 
 function selectProduto(nome){
