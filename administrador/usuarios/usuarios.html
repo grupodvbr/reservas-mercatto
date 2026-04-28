@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Usuários do Sistema</title>
+<title>Painel de Usuários</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
-  --bg:#f8fafc;
+  --bg:#f1f5f9;
   --card:#ffffff;
   --border:#e2e8f0;
   --text:#0f172a;
@@ -21,19 +21,15 @@
   --blue:#2563eb;
 }
 
+/* RESET */
 *{box-sizing:border-box;font-family:Inter}
-
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-}
+body{margin:0;background:var(--bg);color:var(--text)}
 
 /* HEADER */
 .header{
   position:fixed;
   top:0;left:0;right:0;
-  background:#ffffff;
+  background:#fff;
   padding:18px;
   font-size:20px;
   font-weight:800;
@@ -61,8 +57,6 @@ input,select{
   border-radius:12px;
   border:1px solid var(--border);
   background:#fff;
-  color:#000;
-  font-size:14px;
 }
 
 /* CARD */
@@ -79,57 +73,36 @@ input,select{
   transition:.2s;
 }
 
-.card:hover{
-  box-shadow:0 10px 20px rgba(0,0,0,.05);
-}
+.card:hover{box-shadow:0 8px 20px rgba(0,0,0,.05)}
 
-.nome{
-  font-weight:700;
-  font-size:16px;
-}
+.nome{font-weight:700}
+.mini{font-size:13px;color:var(--muted)}
 
-.mini{
-  font-size:13px;
-  color:var(--muted);
-}
-
-/* STATUS */
-.status{
-  font-weight:600;
-  font-size:13px;
-}
-
+.status{font-weight:600}
 .ativo{color:var(--primary)}
 .inativo{color:var(--danger)}
 
-/* BOTÕES */
-.botoes{
-  display:flex;
-  gap:8px;
-  margin-top:8px;
-}
+.botoes{display:flex;gap:8px;margin-top:8px}
 
 button{
   border:none;
-  padding:9px 14px;
+  padding:8px 12px;
   border-radius:10px;
   cursor:pointer;
   font-weight:600;
-  font-size:13px;
 }
 
-.aprovar{background:var(--primary);color:#000}
+.aprovar{background:var(--primary)}
 .editar{background:var(--blue);color:#fff}
 
 /* MODAL */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.4);
+  background:rgba(0,0,0,.5);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:20;
 }
 
 .modalBox{
@@ -138,45 +111,45 @@ button{
   border-radius:16px;
   width:95%;
   max-width:500px;
-  max-height:90vh;
-  overflow:auto;
 }
 
-.modal h2{
-  margin-top:0;
+/* LOADER */
+.loader{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
 }
 
-.modal input, .modal select{
-  width:100%;
-  margin-bottom:10px;
-}
-
-.salvar{
-  width:100%;
-  background:var(--primary);
-  color:#000;
-  font-weight:800;
-  margin-top:10px;
+/* TOAST */
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#111;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:10px;
+  display:none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  👥 Usuários do Sistema
-</div>
+<div class="header">👥 Usuários</div>
 
 <div class="container">
 
   <div class="filtros">
     <input id="busca" placeholder="Buscar nome...">
-    
     <select id="empresaFiltro">
       <option value="">Todas Empresas</option>
       <option>MERCATTO DELICIA</option>
       <option>VILLA GOURMET</option>
-      <option>EMPORIO MERCATTO</option>
     </select>
   </div>
 
@@ -184,41 +157,23 @@ button{
 
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modalBox">
-
-    <h2>Editar Usuário</h2>
-
+    <h3>Editar</h3>
     <input id="nome" placeholder="Nome">
     <input id="email" placeholder="Email">
     <input id="telefone" placeholder="Telefone">
-    <input id="cargo" placeholder="Cargo">
-    
-    <select id="empresa">
-      <option>MERCATTO DELICIA</option>
-      <option>VILLA GOURMET</option>
-      <option>EMPORIO MERCATTO</option>
-    </select>
-
-    <select id="sexo">
-      <option>Masculino</option>
-      <option>Feminino</option>
-      <option>Outro</option>
-    </select>
-
-    <input type="date" id="nascimento">
-    <input type="date" id="admissao">
-
-    <button class="salvar" onclick="salvar()">Salvar</button>
-
+    <button onclick="salvar()">Salvar</button>
   </div>
 </div>
 
+<div class="loader" id="loader">Carregando...</div>
+<div class="toast" id="toast"></div>
+
 <script>
 
-// 🔥 CONFIG
-const supabase = supabase.createClient(
+// 🔥 SUPABASE (corrigido)
+const sb = supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 )
@@ -226,52 +181,56 @@ const supabase = supabase.createClient(
 let dados = []
 let atual = null
 
-// 🔥 CARREGAR
+function showLoader(v){ loader.style.display = v ? "flex":"none" }
+
+function toastMsg(msg){
+  toast.innerText = msg
+  toast.style.display = "block"
+  setTimeout(()=>toast.style.display="none",2000)
+}
+
+// 🔥 LOAD
 async function carregar(){
-  const {data} = await supabase
+  showLoader(true)
+
+  const {data,error} = await sb
     .from("usuarios_do_sistema")
     .select("*")
-    .order("criado_em",{ascending:false})
 
-  dados = data.map(u => ({
-    ...u,
-    links: typeof u.links === "string" 
-      ? JSON.parse(u.links.replace(/""/g,'"')) 
-      : u.links
-  }))
+  if(error){ toastMsg("Erro ao carregar"); return }
 
+  dados = data
   render()
+
+  showLoader(false)
 }
 
 // 🔥 RENDER
 function render(){
-  const busca = document.getElementById("busca").value.toLowerCase()
-  const empresa = document.getElementById("empresaFiltro").value
+  const busca = buscaInput.value.toLowerCase()
+  const empresa = empresaFiltro.value
 
-  const lista = document.getElementById("lista")
-  lista.innerHTML = ""
+  lista.innerHTML=""
 
   dados
-  .filter(u => 
+  .filter(u =>
     (!busca || u.nome?.toLowerCase().includes(busca)) &&
     (!empresa || u.empresa === empresa)
   )
-  .forEach(u => {
-
+  .forEach(u=>{
     lista.innerHTML += `
       <div class="card">
         <div>
           <div class="nome">${u.nome}</div>
-          <div class="mini">${u.cargo} • ${u.empresa}</div>
-          <div class="mini">${u.email || ''}</div>
-          <div class="status ${u.ativo ? 'ativo':'inativo'}">
-            ${u.ativo ? '● Ativo' : '● Inativo'}
+          <div class="mini">${u.cargo || ''}</div>
+          <div class="status ${u.ativo?'ativo':'inativo'}">
+            ${u.ativo?'● Ativo':'● Inativo'}
           </div>
         </div>
 
         <div class="botoes">
           <button class="aprovar" onclick="toggle('${u.id}',${u.ativo})">
-            ${u.ativo ? 'Desativar' : 'Ativar'}
+            ${u.ativo?'Desativar':'Ativar'}
           </button>
 
           <button class="editar" onclick="abrir('${u.id}')">
@@ -285,57 +244,46 @@ function render(){
 
 // 🔥 TOGGLE
 async function toggle(id,ativo){
-  await supabase
-    .from("usuarios_do_sistema")
-    .update({ativo: !ativo})
+  await sb.from("usuarios_do_sistema")
+    .update({ativo:!ativo})
     .eq("id",id)
 
+  toastMsg("Atualizado")
   carregar()
 }
 
-// 🔥 ABRIR MODAL
+// 🔥 MODAL
 function abrir(id){
-  const u = dados.find(x => x.id === id)
-  atual = u
+  atual = dados.find(x=>x.id===id)
+  modal.style.display="flex"
 
-  modal.style.display = "flex"
-
-  nome.value = u.nome || ""
-  email.value = u.email || ""
-  telefone.value = u.telefone || ""
-  cargo.value = u.cargo || ""
-  empresa.value = u.empresa || ""
-  sexo.value = u.sexo || "Masculino"
-  nascimento.value = u.data_nascimento || ""
-  admissao.value = u.data_admissao || ""
+  nome.value = atual.nome || ""
+  email.value = atual.email || ""
+  telefone.value = atual.telefone || ""
 }
 
 // 🔥 SALVAR
 async function salvar(){
-  await supabase
-    .from("usuarios_do_sistema")
+  showLoader(true)
+
+  await sb.from("usuarios_do_sistema")
     .update({
-      nome: nome.value,
-      email: email.value,
-      telefone: telefone.value,
-      cargo: cargo.value,
-      empresa: empresa.value,
-      sexo: sexo.value,
-      data_nascimento: nascimento.value,
-      data_admissao: admissao.value,
-      atualizado_em: new Date()
+      nome:nome.value,
+      email:email.value,
+      telefone:telefone.value
     })
     .eq("id",atual.id)
 
-  modal.style.display = "none"
+  modal.style.display="none"
+  toastMsg("Salvo com sucesso")
   carregar()
 }
 
-// 🔥 FILTROS
-busca.oninput = render
+// 🔥 EVENTS
+const buscaInput = document.getElementById("busca")
+buscaInput.oninput = render
 empresaFiltro.onchange = render
 
-// 🔥 INIT
 carregar()
 
 </script>
