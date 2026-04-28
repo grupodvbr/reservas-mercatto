@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Financeiro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:#fff;
+}
+
+.box{
+  width:100%;
+  height:100%;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+/* TOPO */
+.top{
+  display:flex;
+  justify-content:space-between;
+}
+
+.kpi span{
+  font-size:10px;
+  color:#6b7280;
+}
+
+.kpi b{
+  font-size:18px;
+  font-weight:800;
+}
+
+/* FATURAMENTO */
+.valor{
+  font-size:22px;
+  font-weight:900;
+  color:#16a34a;
+  margin-top:4px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:6px;
+}
+
+.card-mini{
+  background:#f9fafb;
+  border-radius:8px;
+  padding:6px;
+  text-align:center;
+}
+
+.card-mini span{
+  font-size:9px;
+  color:#6b7280;
+}
+
+.card-mini b{
+  font-size:13px;
+}
+
+/* METAS */
+.metas{
+  display:flex;
+  justify-content:space-around;
+  margin-top:6px;
+}
+
+.bola{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:700;
+}
+
+.bola::before{
+  content:"";
+  position:absolute;
+  width:28px;
+  height:28px;
+  background:#fff;
+  border-radius:50%;
+}
+
+.bola span{
+  position:relative;
+}
+
+.prata{
+  background:conic-gradient(#c0c0c0 var(--p), #e5e7eb 0);
+}
+
+.ouro{
+  background:conic-gradient(#d4af37 var(--p), #e5e7eb 0);
+}
+
+/* FOOTER */
+.footer{
+  font-size:10px;
+  color:#6b7280;
+  text-align:right;
+}
+
+</style>
+</head>
+<body>
+
+<div class="box" id="conteudo">Carregando...</div>
+
+<script>
+
+// 🔥 CONFIG
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+)
+
+let API_URL = ""
+let API_MES = ""
+let METAS = {}
+
+// 🔥 FORMAT
+const brl = v => Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})
+
+// 🔥 MAP
+function map(nome){
+  nome = (nome || "").toUpperCase()
+
+  if(nome.includes("DELICIA")) return "DELICIA"
+  if(nome.includes("VILLA")) return "VILLA"
+  if(nome.includes("PADARIA")) return "PADARIA"
+  if(nome.includes("EMPORIO")) return "EMPORIO"
+  if(nome.includes("RESTAURANTE")) return "RESTAURANTE"
+
+  return nome
+}
+
+// 🔥 CONFIG API
+async function carregarConfig(){
+  const { data } = await sb.from("url_api").select("*")
+
+  data.forEach(i=>{
+    if(i.tipo === "resumo_dia") API_URL = i.url
+    if(i.tipo === "resumo_mes") API_MES = i.url
+  })
+}
+
+// 🔥 METAS
+async function carregarMetas(){
+  const { data } = await sb.from("metas_empresas").select("*")
+
+  data.forEach(m=>{
+    METAS[map(m.empresa)] = {
+      prata: Number(m.meta_prata||0),
+      ouro: Number(m.meta_ouro||0)
+    }
+  })
+}
+
+// 🔥 PROCESS
+function process(d){
+  let total=0, vendas=0
+
+  d.empresas.forEach(e=>{
+    total += Number(e.faturamento||0)
+    vendas += Number(e.vendas||0)
+  })
+
+  return { total, vendas }
+}
+
+// 🔥 LOAD
+async function carregar(){
+
+  const res = await fetch(API_URL)
+  const data = await res.json()
+
+  const resMes = await fetch(API_MES)
+  const dataMes = await resMes.json()
+
+  const hoje = process(data)
+  const mes = process(dataMes)
+
+  const totalMes = mes.total + hoje.total
+  const ticket = hoje.vendas ? hoje.total / hoje.vendas : 0
+
+  // metas gerais (somadas)
+  let metaPrata=0, metaOuro=0
+
+  Object.values(METAS).forEach(m=>{
+    metaPrata += m.prata
+    metaOuro += m.ouro
+  })
+
+  const pct1 = Math.min((totalMes/metaPrata)*100,100)
+  const pct2 = Math.min((totalMes/metaOuro)*100,100)
+
+  document.getElementById("conteudo").innerHTML = `
+
+    <div>
+
+      <div class="top">
+        <div class="kpi">
+          <span>Faturamento Hoje</span>
+          <div class="valor">${brl(hoje.total)}</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card-mini">
+          <span>Vendas</span>
+          <b>${hoje.vendas}</b>
+        </div>
+
+        <div class="card-mini">
+          <span>Ticket</span>
+          <b>${brl(ticket)}</b>
+        </div>
+
+        <div class="card-mini">
+          <span>Mês</span>
+          <b>${brl(totalMes)}</b>
+        </div>
+
+        <div class="card-mini">
+          <span>Média/dia</span>
+          <b>${brl(totalMes/30)}</b>
+        </div>
+      </div>
+
+      <div class="metas">
+        <div class="bola prata" style="--p:${pct1}%">
+          <span>${pct1.toFixed(0)}%</span>
+        </div>
+
+        <div class="bola ouro" style="--p:${pct2}%">
+          <span>${pct2.toFixed(0)}%</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      Atualizado agora
+    </div>
+
+  `
+}
+
+async function init(){
+  await carregarConfig()
+  await carregarMetas()
+  carregar()
+  setInterval(carregar,5000)
+}
+
+init()
+
+</script>
+
+</body>
+</html>
