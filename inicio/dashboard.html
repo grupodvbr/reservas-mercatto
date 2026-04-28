@@ -1,251 +1,224 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Sistemas • DV</title>
 
-<title>Dashboard Operacional</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+:root{
+  --bg:#020617;
+  --card:#0f172a;
+  --border:#1e293b;
+  --primary:#2563eb;
+  --text:#ffffff;
+  --sub:#94a3b8;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter;
+}
 
 body{
-  background:#f1f5f9;
+  background:linear-gradient(180deg,#020617,#020617 60%,#020617);
+  color:var(--text);
   height:100vh;
-  overflow:hidden;
-}
-
-.header{
-  height:56px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 16px;
-  border-bottom:1px solid #e5e7eb;
-}
-
-.container{
-  position:absolute;
-  top:56px;
-  bottom:0;
-  left:0;
-  right:0;
-  overflow:auto;
-  padding:14px;
   display:flex;
   flex-direction:column;
-  gap:14px;
 }
 
-.card{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.05);
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.kpi{
-  background:#f8fafc;
-  padding:14px;
-  border-radius:12px;
-}
-
-.kpi-title{font-size:11px;color:#64748b}
-.kpi-value{font-size:20px;font-weight:800}
-
-.row{
+/* ===== HEADER ===== */
+header{
+  padding:18px 24px;
+  background:rgba(15,23,42,0.7);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
   display:flex;
   justify-content:space-between;
-  padding:8px 0;
+  align-items:center;
+}
+
+header h1{
+  font-size:20px;
+  font-weight:800;
+}
+
+header span{
   font-size:13px;
-  border-bottom:1px solid #f1f5f9;
+  color:var(--sub);
 }
 
-.loading{
-  text-align:center;
-  padding:30px;
-  font-size:14px;
-  color:#64748b;
+/* ===== GRID ===== */
+.dashboard{
+  flex:1;
+  padding:20px;
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap:16px;
 }
 
-.error{
-  color:red;
+/* ===== CARD ===== */
+.card{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-4px) scale(1.01);
+  border-color:var(--primary);
+  box-shadow:0 0 20px rgba(37,99,235,0.25);
+}
+
+/* glow top */
+.card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--primary),transparent);
+  opacity:0.6;
+}
+
+/* iframe */
+.card iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+/* label */
+.card-title{
+  position:absolute;
+  top:10px;
+  left:12px;
   font-size:12px;
-  margin-top:10px;
+  font-weight:600;
+  background:rgba(0,0,0,0.4);
+  padding:4px 10px;
+  border-radius:6px;
+  backdrop-filter:blur(6px);
+  color:#fff;
+}
+
+/* ===== RESPONSIVO ===== */
+@media(max-width:1200px){
+  .dashboard{
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+  }
+}
+
+@media(max-width:768px){
+  .dashboard{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width:500px){
+  .dashboard{
+    grid-template-columns: 1fr;
+  }
 }
 
 </style>
 </head>
-
 <body>
 
-<div class="header">
-  <b>Dashboard Operacional</b>
-  <span id="status">● carregando</span>
-</div>
+<header>
+  <h1>📊 Painel de Sistemas</h1>
+  <span id="hora"></span>
+</header>
 
-<div class="container">
+<div class="dashboard">
 
+  <!-- CARD 1 -->
   <div class="card">
-    <div class="grid">
-      <div class="kpi"><div class="kpi-title">Hoje</div><div class="kpi-value" id="hoje">--</div></div>
-      <div class="kpi"><div class="kpi-title">Mês</div><div class="kpi-value" id="mes">--</div></div>
-      <div class="kpi"><div class="kpi-title">Buffet Hoje</div><div class="kpi-value" id="buffet">--</div></div>
-      <div class="kpi"><div class="kpi-title">Pico</div><div class="kpi-value" id="pico">--</div></div>
-    </div>
+    <div class="card-title">Sistema 01</div>
+    <iframe src="gestao/cards/card1.html"></iframe>
   </div>
 
+  <!-- CARD 2 -->
   <div class="card">
-    <b>Empresas</b>
-    <div id="empresas" class="loading">Carregando...</div>
+    <div class="card-title">Sistema 02</div>
+    <iframe src="gestao/cards/card2.html"></iframe>
   </div>
 
+  <!-- CARD 3 -->
   <div class="card">
-    <b>Status</b>
-    <div id="statusBox"></div>
+    <div class="card-title">Sistema 03</div>
+    <iframe src="gestao/cards/card3.html"></iframe>
   </div>
 
-  <div id="erro" class="error"></div>
+  <!-- CARD 4 -->
+  <div class="card">
+    <div class="card-title">Sistema 04</div>
+    <iframe src="gestao/cards/card4.html"></iframe>
+  </div>
+
+  <!-- CARD 5 -->
+  <div class="card">
+    <div class="card-title">Sistema 05</div>
+    <iframe src="gestao/cards/card5.html"></iframe>
+  </div>
+
+  <!-- CARD 6 -->
+  <div class="card">
+    <div class="card-title">Sistema 06</div>
+    <iframe src="gestao/cards/card6.html"></iframe>
+  </div>
+
+  <!-- CARD 7 -->
+  <div class="card">
+    <div class="card-title">Sistema 07</div>
+    <iframe src="gestao/cards/card7.html"></iframe>
+  </div>
+
+  <!-- CARD 8 -->
+  <div class="card">
+    <div class="card-title">Sistema 08</div>
+    <iframe src="gestao/cards/card8.html"></iframe>
+  </div>
+
+  <!-- CARD 9 -->
+  <div class="card">
+    <div class="card-title">Sistema 09</div>
+    <iframe src="gestao/cards/card9.html"></iframe>
+  </div>
+
+  <!-- CARD 10 -->
+  <div class="card">
+    <div class="card-title">Sistema 10</div>
+    <iframe src="gestao/cards/card10.html"></iframe>
+  </div>
 
 </div>
 
 <script>
-
-// 🔥 CLIENTE CORRETO (SEM CONFLITO)
-const db = supabase.createClient(
-"https://dxkszikemntfusfyrzos.supabase.co",
-"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
-);
-
-// 🔥 DATA SEGURA
-function hoje(){
-  const d=new Date();
-  return d.toISOString().slice(0,10);
+// ===== HORA AO VIVO =====
+function atualizarHora(){
+  const agora = new Date()
+  const hora = agora.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  })
+  document.getElementById("hora").innerText = hora
 }
-
-function inicioMes(){
-  const d=new Date();
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-01";
-}
-
-// 🔥 TABELAS
-const tabelas = [
-  {nome:"Mercatto", tabela:"reservas_mercatto"},
-  {nome:"Villa", tabela:"reservas_villa"},
-  {nome:"Delícia", tabela:"reservas_delicia"}
-];
-
-async function carregar(){
-
-  try{
-
-    document.getElementById("status").innerText="● carregando";
-
-    let totalHoje=0,totalMes=0;
-    let empresasHTML="";
-    let statusMap={};
-    let horas={};
-
-    for(const t of tabelas){
-
-      const { data, error } = await db.from(t.tabela).select("status,datahora");
-
-      if(error){
-        console.error(error);
-        document.getElementById("erro").innerText = error.message;
-        continue;
-      }
-
-      if(!data) continue;
-
-      const hojeData = data.filter(r=>r.datahora?.startsWith(hoje()));
-      const mesData = data.filter(r=>r.datahora>=inicioMes());
-
-      totalHoje += hojeData.length;
-      totalMes += mesData.length;
-
-      empresasHTML += `
-        <div class="row">
-          <span>${t.nome}</span>
-          <span>${hojeData.length}</span>
-        </div>
-      `;
-
-      hojeData.forEach(r=>{
-        const s=r.status||"Sem status";
-        statusMap[s]=(statusMap[s]||0)+1;
-
-        const h=r.datahora?.substring(11,13);
-        horas[h]=(horas[h]||0)+1;
-      });
-    }
-
-    // BUFFET
-    const { data: buffet } = await db.from("buffet_lancamentos").select("data");
-
-    const buffetHoje = buffet?.filter(b=>b.data===hoje()) || [];
-
-    // PICO
-    let pico="--",max=0;
-    Object.keys(horas).forEach(h=>{
-      if(horas[h]>max){
-        max=horas[h];
-        pico=h+":00";
-      }
-    });
-
-    // STATUS HTML
-    let statusHTML="";
-    Object.keys(statusMap).forEach(s=>{
-      statusHTML+=`
-        <div class="row">
-          <span>${s}</span>
-          <span>${statusMap[s]}</span>
-        </div>
-      `;
-    });
-
-    // UI
-    document.getElementById("hoje").innerText=totalHoje;
-    document.getElementById("mes").innerText=totalMes;
-    document.getElementById("buffet").innerText=buffetHoje.length;
-    document.getElementById("pico").innerText=pico;
-
-    document.getElementById("empresas").innerHTML=empresasHTML || "Sem dados";
-    document.getElementById("statusBox").innerHTML=statusHTML || "Sem status";
-
-    document.getElementById("status").innerText="● atualizado";
-
-    console.log("✅ carregado com sucesso");
-
-  }catch(e){
-
-    console.error(e);
-    document.getElementById("erro").innerText = "Erro geral: "+e.message;
-
-  }
-
-}
-
-// 🔥 LOAD
-carregar();
-
-// 🔥 AUTO
-setInterval(carregar,20000);
-
+setInterval(atualizarHora,1000)
+atualizarHora()
 </script>
 
 </body>
