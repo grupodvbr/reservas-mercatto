@@ -329,6 +329,95 @@ button.ghost{
   }
 
 }
+
+
+.popup-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.55);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+}
+
+.popup-overlay.active{
+  opacity:1;
+  pointer-events:all;
+}
+
+.popup-box{
+  width:100%;
+  max-width:360px;
+  background:#fff;
+  border-radius:22px;
+  padding:26px 22px;
+  text-align:center;
+  box-shadow:0 30px 80px rgba(0,0,0,.25);
+  transform:translateY(40px) scale(.95);
+  opacity:0;
+  transition:.3s;
+}
+
+.popup-overlay.active .popup-box{
+  transform:translateY(0) scale(1);
+  opacity:1;
+}
+
+.popup-icon{
+  font-size:48px;
+  margin-bottom:10px;
+}
+
+.popup-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+
+.popup-message{
+  font-size:14px;
+  color:#6b7280;
+  margin-bottom:18px;
+  line-height:1.4;
+}
+
+.popup-btn{
+  width:100%;
+  height:46px;
+  border-radius:12px;
+  border:none;
+  font-weight:800;
+  font-size:14px;
+  background:#ff6a00;
+  color:#fff;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.popup-btn:hover{
+  background:#ea580c;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 </style>
 </head>
 
@@ -1322,6 +1411,57 @@ function atualizarPreviewEdit(){
   document.getElementById("previewEdit").innerHTML =
     `Líquido: <b>${formatPeso(liquido)} kg</b>`;
 }
+
+
+
+function abrirPopup({ tipo="erro", titulo="Atenção", mensagem="" }){
+
+  const popup = document.getElementById("popup");
+  const icon = document.getElementById("popupIcon");
+  const title = document.getElementById("popupTitle");
+  const msg = document.getElementById("popupMessage");
+
+  title.innerText = titulo;
+  msg.innerText = mensagem;
+
+  // 🎨 estilo por tipo
+  if(tipo === "erro"){
+    icon.innerHTML = "❌";
+    icon.style.color = "#dc2626";
+  }
+
+  if(tipo === "sucesso"){
+    icon.innerHTML = "✅";
+    icon.style.color = "#16a34a";
+  }
+
+  if(tipo === "aviso"){
+    icon.innerHTML = "⚠️";
+    icon.style.color = "#d97706";
+  }
+
+  popup.classList.add("active");
+}
+
+function fecharPopup(){
+  document.getElementById("popup").classList.remove("active");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 </script>
 <!-- OVERLAY DE SALVAMENTO -->
@@ -1342,6 +1482,34 @@ function atualizarPreviewEdit(){
     <b>Salvando...</b>
   </div>
 </div>
+
+<div id="popup" class="popup-overlay">
+  <div class="popup-box" id="popupBox">
+
+    <div class="popup-icon" id="popupIcon">⚠️</div>
+
+    <div class="popup-title" id="popupTitle">Atenção</div>
+
+    <div class="popup-message" id="popupMessage">
+      Mensagem aqui
+    </div>
+
+    <button class="popup-btn" onclick="fecharPopup()">
+      OK, entendi
+    </button>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+  
 </body>
 
 
