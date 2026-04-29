@@ -534,7 +534,10 @@ function gerarAvatar(nome){
 /* ===== TIME ===== */
 function hora(d){
 
-  const data = new Date(d)
+  if(!d) return ""
+
+  // 🔥 força UTC + evita erro de parsing
+  const data = new Date(d.replace(" ", "T") + "Z")
 
   return new Intl.DateTimeFormat("pt-BR",{
     timeZone:"America/Bahia",
@@ -543,48 +546,35 @@ function hora(d){
   }).format(data)
 
 }
-
-/* 🔥 CORREÇÃO: REMOVE 3 HORAS */
-return new Intl.DateTimeFormat("pt-BR",{
-  timeZone:"America/Bahia",
-  hour:"2-digit",
-  minute:"2-digit"
-}).format(data)
-
-}
   
 function dataLabel(d){
 
+  if(!d) return ""
 
-// 🔥 trata os dois formatos (Supabase + local)
-let data = new Date(d)
-// formatter padrão (comparação)
-const formatter = new Intl.DateTimeFormat("en-CA",{
-  timeZone:"America/Bahia",
-  year:"numeric",
-  month:"2-digit",
-  day:"2-digit"
-})
+  const data = new Date(d.replace(" ", "T") + "Z")
 
-const hoje = formatter.format(new Date())
-const dataMsg = formatter.format(data)
+  const formatter = new Intl.DateTimeFormat("en-CA",{
+    timeZone:"America/Bahia",
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit"
+  })
 
-// HOJE
-if(dataMsg === hoje) return "HOJE"
+  const hoje = formatter.format(new Date())
+  const dataMsg = formatter.format(data)
 
-// ONTEM
-const ontemDate = new Date()
-ontemDate.setDate(ontemDate.getDate()-1)
+  if(dataMsg === hoje) return "HOJE"
 
-const ontem = formatter.format(ontemDate)
+  const ontemDate = new Date()
+  ontemDate.setDate(ontemDate.getDate()-1)
 
-if(dataMsg === ontem) return "ONTEM"
+  const ontem = formatter.format(ontemDate)
 
-// PADRÃO (data normal)
-return new Intl.DateTimeFormat("pt-BR",{
-  timeZone:"America/Bahia"
-}).format(data)
+  if(dataMsg === ontem) return "ONTEM"
 
+  return new Intl.DateTimeFormat("pt-BR",{
+    timeZone:"America/Bahia"
+  }).format(data)
 }
 /* ===== SCROLL ===== */
 function scrollBottom(){
