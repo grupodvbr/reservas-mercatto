@@ -952,7 +952,7 @@ const temp = {
 id: tempId,
 mensagem:texto,
 created_at:new Date().toLocaleString("sv-SE").replace("T"," "),
-  role:"assistant",
+role:"assistant",
 status:"sent"
 }
 
@@ -962,10 +962,6 @@ scrollBottom()
 msg.value=""
 msg.style.height = "20px"
 
-
-
-
-  
 /* MIDIA */
 let media=null
 let tipo="texto"
@@ -1004,7 +1000,7 @@ body:JSON.stringify({
 
 const messageId = send?.message_id
 
-/* 🔥 SALVAR NO SUPABASE (FALTAVA ISSO) */
+/* SALVA */
 const { data, error } = await db
   .from("conversas_whatsapp")
   .insert({
@@ -1020,6 +1016,10 @@ const { data, error } = await db
   .select()
   .single()
 
+if(error){
+  console.error("ERRO AO SALVAR:", error)
+}
+
 if(data?.id){
   const tempEl = document.getElementById(tempId)
 
@@ -1032,16 +1032,15 @@ if(data?.id){
 arquivo = null
 preview.style.display = "none"
 
+}
+
+
+
+
 
 
 
   
-
-/* ===== START ===== */
-iniciar()
-
-setInterval(atualizarSilencioso, 5000)
-
 function abrirTemplates(){
   const menu = document.getElementById("menuTemplates")
   menu.style.display = menu.style.display === "flex" ? "none" : "flex"
@@ -1302,7 +1301,8 @@ document.addEventListener('touchend', function (event) {
   lastTouchEnd = now;
 }, false);
 
-  
+  iniciar()
+setInterval(atualizarSilencioso, 5000)
 </script>
 
 </body>
