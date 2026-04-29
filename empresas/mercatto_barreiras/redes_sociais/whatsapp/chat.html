@@ -500,116 +500,81 @@ let canal = null
 let arquivo = null
 let ultimaDataRender = null
 
-
-async function carregarNomeCliente(){
-
-  if(!telefone) return
-
-  const {data} = await db
-    .from("memoria_clientes")
-    .select("nome")
-    .eq("telefone", telefone)
-    .single()
-
-  let nome = data?.nome || telefone
-
-  const el = document.getElementById("nomeCliente")
-
-  if(el){
-    el.innerText = nome
-  }
-
-}
-function gerarAvatar(nome){
-
-  let iniciais = nome
-    .split(" ")
-    .slice(0,2)
-    .map(n => n[0])
-    .join("")
-    .toUpperCase()
-
-  document.getElementById("avatar").innerText = iniciais
-}
-/* ===== TIME ===== */
-function hora(d){
-
-let data
-
-if(d.includes("Z")){
-  data = new Date(d)
-}else{
-  data = new Date(d.replace(" ", "T"))
+function resetDataRender(){
+  ultimaDataRender = null
 }
 
-/* 🔥 CORREÇÃO: REMOVE 3 HORAS */
-data.setHours(data.getHours() - 3)
+async function carregarMais(){
 
-return new Intl.DateTimeFormat("pt-BR",{
-  hour:"2-digit",
-  minute:"2-digit"
-}).format(data)
+if(loading || !oldestDate) return
+loading = true
 
-}
-  
-function dataLabel(d){
+const {data} = await db
+.from("conversas_whatsapp")
+.select("*")
+.eq("telefone",telefone)
+.lt("created_at",oldestDate)
+.order("created_at",{ascending:false})
+.limit(20)
 
-let data
-
-// 🔥 trata os dois formatos (Supabase + local)
-if(d.includes("Z")){
-  data = new Date(d) // UTC
-}else{
-  data = new Date(d.replace(" ", "T")) // banco local
+if(!data || data.length===0){
+loading=false
+return
 }
 
-// formatter padrão (comparação)
-const formatter = new Intl.DateTimeFormat("en-CA",{
-  timeZone:"America/Bahia",
-  year:"numeric",
-  month:"2-digit",
-  day:"2-digit"
-})
+oldestDate = data[data.length - 1]?.created_at
 
-const hoje = formatter.format(new Date())
-const dataMsg = formatter.format(data)
+const alturaAntes = msgs.scrollHeight
 
-// HOJE
-if(dataMsg === hoje) return "HOJE"
+/* 🔥 CORREÇÃO */
+resetDataRender()
 
-// ONTEM
-const ontemDate = new Date()
-ontemDate.setDate(ontemDate.getDate()-1)
+data.reverse().forEach(m=>render(m,true))
 
-const ontem = formatter.format(ontemDate)
+const alturaDepois = msgs.scrollHeight
+msgs.scrollTop += (alturaDepois - alturaAntes)
 
-if(dataMsg === ontem) return "ONTEM"
-
-// PADRÃO (data normal)
-return new Intl.DateTimeFormat("pt-BR",{
-  timeZone:"America/Bahia"
-}).format(data)
-
-}
-/* ===== SCROLL ===== */
-function scrollBottom(){
-  requestAnimationFrame(() => {
-    msgs.scrollTop = msgs.scrollHeight
-  })
-  scrollBtn.style.display="none"
+loading=false
 }
 
+/* 🔥 SCROLL CORRIGIDO */
 msgs.addEventListener("scroll",()=>{
+
 if(msgs.scrollTop < msgs.scrollHeight - msgs.clientHeight - 200){
 scrollBtn.style.display="flex"
 }else{
 scrollBtn.style.display="none"
 }
-if(msgs.scrollTop < 50){
+
+/* 🔥 CORREÇÃO */
+if(msgs.scrollTop < 100){
 carregarMais()
 }
+
 })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 function notificar(m){
 
