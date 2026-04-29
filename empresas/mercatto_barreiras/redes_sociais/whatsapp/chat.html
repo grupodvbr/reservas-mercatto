@@ -534,12 +534,14 @@ function gerarAvatar(nome){
 /* ===== TIME ===== */
 function hora(d){
 
-let data
+  const data = new Date(d)
 
-if(d.includes("Z")){
-  data = new Date(d)
-}else{
-  data = new Date(d.replace(" ", "T"))
+  return new Intl.DateTimeFormat("pt-BR",{
+    timeZone:"America/Bahia",
+    hour:"2-digit",
+    minute:"2-digit"
+  }).format(data)
+
 }
 
 /* 🔥 CORREÇÃO: REMOVE 3 HORAS */
@@ -553,15 +555,9 @@ return new Intl.DateTimeFormat("pt-BR",{
   
 function dataLabel(d){
 
-let data
 
 // 🔥 trata os dois formatos (Supabase + local)
-if(d.includes("Z")){
-  data = new Date(d) // UTC
-}else{
-  data = new Date(d.replace(" ", "T")) // banco local
-}
-
+let data = new Date(d)
 // formatter padrão (comparação)
 const formatter = new Intl.DateTimeFormat("en-CA",{
   timeZone:"America/Bahia",
@@ -888,7 +884,7 @@ async function atualizarSilencioso(){
   }
 
   /* NORMAL */
-data.reverse().forEach(m=>{
+data.forEach(m=>{
 
 const id = m.id || m.message_id || (m.created_at + "-" + m.role)
 
