@@ -420,9 +420,7 @@ button:hover{
 
   <div id="blocos"></div>
 
-  <button onclick="addBloco()" style="margin-top:10px">
-    + Adicionar Horário
-  </button>
+
 
 </div>
 
@@ -762,22 +760,6 @@ render()
 
 let horarios = []
 
-function addBloco(){
-  const id = Date.now()
-
-const html = `
-  <div class="item" id="bloco-${id}">
-    <span>Entrada</span>
-    <input type="time" id="inicio-${id}">
-    <span>Saída</span>
-    <input type="time" id="fim-${id}">
-    <button onclick="remover(${id})">✕</button>
-  </div>
-`
-
-
-  blocos.innerHTML += html
-}
 
 function remover(id){
   document.getElementById(`bloco-${id}`).remove()
@@ -794,22 +776,7 @@ function validarConflito(lista){
   return false
 }
 
-function coletarHorarios(){
-  const blocos = document.querySelectorAll("[id^='bloco-']")
-  let lista = []
 
-  blocos.forEach(b=>{
-    const id = b.id.split("-")[1]
-    const inicio = document.getElementById(`inicio-${id}`).value
-    const fim = document.getElementById(`fim-${id}`).value
-
-    if(inicio && fim){
-      lista.push({inicio,fim})
-    }
-  })
-
-  return lista
-}
 
 async function salvarEscala(){
 
@@ -911,9 +878,8 @@ for(const h of lista){
   dataEl.innerText = formatarDataBR(data)
 }
 
-  function abrirEdicao(){
+function abrirEdicao(){
   document.getElementById("formEscala").style.display = "block"
-  blocos.innerHTML = ""
 }
 
 
