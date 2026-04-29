@@ -1033,8 +1033,7 @@ async function gerarPDF(){
     orientation: "landscape"
   })
 
-  // 🔥 LOGO (troca pela sua URL)
-  const logo = "https://i.imgur.com/your-logo.png"
+  const logoUrl = "https://i.imgur.com/8Km9tLL.png"
 
   // HEADER
   doc.setFont("helvetica","bold")
@@ -1046,51 +1045,52 @@ async function gerarPDF(){
 
   // LOGO
   try{
-    const img = await fetch(logo).then(r=>r.blob())
-    const reader = new FileReader()
-    reader.readAsDataURL(img)
-    reader.onload = () => {
-      doc.addImage(reader.result, "PNG", 240, 8, 40, 15)
-      montarTabela()
-    }
-  }catch{
-    montarTabela()
-  }
+    const response = await fetch(logoUrl)
+    const blob = await response.blob()
 
-  function montarTabela(){
-
-    let y = 30
-
-    const lista = escalas.filter(e => e.data === dataSelecionada)
-
-    let agrupado = {}
-
-    lista.forEach(e=>{
-      if(!agrupado[e.setor]) agrupado[e.setor] = []
-      agrupado[e.setor].push(e)
+    const base64 = await new Promise((resolve)=>{
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.readAsDataURL(blob)
     })
 
-    for(const setor in agrupado){
+    doc.addImage(base64, "PNG", 240, 8, 40, 15)
 
-      doc.setFontSize(12)
-      doc.setFont("helvetica","bold")
-      doc.text(setor, 14, y)
-
-      y += 6
-
-      doc.setFont("helvetica","normal")
-
-      agrupado[setor].forEach(e=>{
-        doc.text(`${e.nome}`, 14, y)
-        doc.text(`${e.entrada} - ${e.saida}`, 120, y)
-        y += 6
-      })
-
-      y += 6
-    }
-
-    doc.save(`escala-${dataSelecionada}.pdf`)
+  }catch(e){
+    console.log("Erro ao carregar logo")
   }
+
+  let y = 35
+
+  const lista = escalas.filter(e => e.data === dataSelecionada)
+
+  let agrupado = {}
+
+  lista.forEach(e=>{
+    if(!agrupado[e.setor]) agrupado[e.setor] = []
+    agrupado[e.setor].push(e)
+  })
+
+  for(const setor in agrupado){
+
+    doc.setFontSize(12)
+    doc.setFont("helvetica","bold")
+    doc.text(setor, 14, y)
+
+    y += 6
+
+    doc.setFont("helvetica","normal")
+
+    agrupado[setor].forEach(e=>{
+      doc.text(e.nome, 14, y)
+      doc.text(`${e.entrada} - ${e.saida}`, 120, y)
+      y += 6
+    })
+
+    y += 6
+  }
+
+  doc.save(`escala-${dataSelecionada}.pdf`)
 }
 
 
