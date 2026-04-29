@@ -799,7 +799,7 @@ async function salvarEscala(){
     return
   }
 
-  // 🔥 EDITAR
+  // EDITAR
   if(escalaEditando){
 
     const { error } = await sb
@@ -825,7 +825,7 @@ async function salvarEscala(){
     return
   }
 
-  // 🔥 NOVO
+  // NOVO
   const { error } = await sb
     .from("escala_funcionarios")
     .insert({
@@ -850,42 +850,8 @@ async function salvarEscala(){
   render()
 }
 
-  // 🔥 NOVA ESCALA
- const entrada = document.getElementById("entrada").value
-const saida = document.getElementById("saida").value
-
-if(!entrada || !saida){
-  alert("Preencha entrada e saída")
-  return
-}
-
-
 
   
-  const dataBase = dataSelecionada
-
-const { error } = await sb
-  .from("escala_funcionarios")
-  .insert({
-    funcionario_id: f.id,
-    nome: f.nome,
-    data: dataBase,
-    entrada: entrada,
-    saida: saida,
-    setor: f.setor,
-    empresa: "MERCATTO DELICIA",
-    agenda_sessao: document.getElementById("agendaSessao").value,
-    atualizado_em: new Date().toISOString()
-  })
-
-if(error){
-  console.error("ERRO:", error)
-  alert("Já existe escala nesse horário!")
-  return
-}
-  fechar()
-  render()
-}
   function abrir(data){
   dataSelecionada = data
 
