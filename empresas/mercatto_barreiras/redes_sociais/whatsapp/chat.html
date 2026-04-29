@@ -553,18 +553,17 @@ loading=false
 msgs.addEventListener("scroll",()=>{
 
 if(msgs.scrollTop < msgs.scrollHeight - msgs.clientHeight - 200){
-scrollBtn.style.display="flex"
+  scrollBtn.style.display="flex"
 }else{
-scrollBtn.style.display="none"
+  scrollBtn.style.display="none"
 }
 
-/* 🔥 CORREÇÃO */
+/* DISPARO CORRETO */
 if(msgs.scrollTop < 100){
-carregarMais()
+  carregarMais()
 }
 
 })
-
 
 
 
