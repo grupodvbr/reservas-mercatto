@@ -536,14 +536,18 @@ function hora(d){
 
   if(!d) return ""
 
-  // 🔥 força UTC + evita erro de parsing
-  const data = new Date(d.replace(" ", "T") + "Z")
+  // 🔥 quebra em partes (100% preciso)
+  const [date, time] = d.split(" ")
+  const [year, month, day] = date.split("-")
+  const [h, m, s] = time.split(":")
 
-  return new Intl.DateTimeFormat("pt-BR",{
-    timeZone:"America/Bahia",
+  // 🔥 cria data LOCAL correta
+  const data = new Date(year, month - 1, day, h, m, s)
+
+  return data.toLocaleTimeString("pt-BR",{
     hour:"2-digit",
     minute:"2-digit"
-  }).format(data)
+  })
 
 }
   
@@ -734,8 +738,21 @@ const {data} = await db
 
 if(!data) return
 
-data.forEach(m=>render(m))
+data
+.sort((a,b)=>{
 
+  const da = new Date(a.created_at.replace(" ", "T"))
+  const db = new Date(b.created_at.replace(" ", "T"))
+
+  if(da.getTime() === db.getTime()){
+    return (a.id || "").localeCompare(b.id || "")
+  }
+
+  return da - db
+})
+.forEach(m=>render(m))
+
+  
 // 🔥 PEGA O MAIS ANTIGO
 oldestDate = data[0]?.created_at
 
@@ -874,8 +891,20 @@ async function atualizarSilencioso(){
   }
 
   /* NORMAL */
-data.forEach(m=>{
+data
+.sort((a,b)=>{
 
+  const da = new Date(a.created_at.replace(" ", "T"))
+  const db = new Date(b.created_at.replace(" ", "T"))
+
+  if(da.getTime() === db.getTime()){
+    return (a.id || "").localeCompare(b.id || "")
+  }
+
+  return da - db
+})
+.forEach(m=>{
+  
 const id = m.id || m.message_id || (m.created_at + "-" + m.role)
 
     if(!mensagensIds.has(id)){
