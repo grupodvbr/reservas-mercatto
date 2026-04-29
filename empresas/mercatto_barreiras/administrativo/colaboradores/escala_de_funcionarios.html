@@ -1008,7 +1008,7 @@ async function gerarPDFMes(){
   const startX = 10
   const startY = 30
   const boxW = 40
-  const boxH = 30
+  const boxH = 45
 
   const dias = new Date(ano, mes+1, 0).getDate()
 
@@ -1035,15 +1035,24 @@ async function gerarPDFMes(){
     const lista = escalas.filter(e => e.data === dataStr)
 
     doc.setFont("helvetica","normal")
-    doc.setFontSize(7)
+    doc.setFontSize(5.5)
 
     let linhaY = y + 10
 
     lista.forEach(e=>{
-      const texto = `${e.nome} (${e.entrada}-${e.saida})`
-      doc.text(texto.substring(0,22), x+2, linhaY)
-      linhaY += 4
-    })
+const nomeCurto = e.nome.split(" ")[0]
+const texto = `${nomeCurto} (${e.entrada.slice(0,5)})`
+
+const linhas = doc.splitTextToSize(texto, boxW - 4)
+
+linhas.forEach(linha=>{
+  if(linhaY < y + boxH - 2){
+    doc.text(linha, x+2, linhaY)
+    linhaY += 3
+  }
+})
+
+      
 
     col++
 
