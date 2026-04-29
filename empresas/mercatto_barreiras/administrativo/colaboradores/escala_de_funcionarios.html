@@ -367,22 +367,29 @@ button:hover{
   <button onclick="abrirCadastro()">+ Funcionário</button>
 
   <!-- 🔥 SELECT AQUI -->
-  <select id="agendaSessao" onchange="render()" style="
-    padding:8px 12px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    font-weight:600;
-    background:#fff;
-    cursor:pointer;
-  ">
-    <option value="GERAL">GERAL</option>
-    <option value="COZINHA">COZINHA</option>
-    <option value="SALAO">SALÃO</option>
-    <option value="EVENTO">EVENTO</option>
-  </select>
+ <select id="agendaSessao" onchange="render()" style="
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-weight:600;
+  background:#fff;
+  cursor:pointer;
+">
+  <option value="GERAL">GERAL</option>
+  <option value="COZINHA">COZINHA</option>
+  <option value="SALAO">SALÃO</option>
+  <option value="EVENTO">EVENTO</option>
+</select>
 
-  <button onclick="mesProximo()">▶</button>
+<!-- 🔥 BOTÃO NOVO AQUI -->
+<button onclick="gerarPDFMes()" style="
+  background:#111;
+  color:#fff;
+">
+  📄 PDF Mês
+</button>
 
+<button onclick="mesProximo()">▶</button>
 </div>
 
 
@@ -436,11 +443,6 @@ button:hover{
     <div class="lista" id="preview"></div>
 
 <div class="actions">
-
-  <button onclick="gerarPDF()" class="btn" style="background:#111;color:#fff">
-    📄 Gerar PDF
-  </button>
-
   <button class="btn cancel" onclick="fechar()">Cancelar</button>
   <button class="btn save" onclick="salvarEscala()">Salvar</button>
 
@@ -955,12 +957,7 @@ function editarEscala(id){
   document.getElementById("saida").value = e.saida
 }
 
-async function gerarPDF(){
-
-  if(!dataSelecionada){
-    alert("Selecione um dia primeiro")
-    return
-  }
+async function gerarPDFMes(){
 
   const { jsPDF } = window.jspdf
 
@@ -970,13 +967,19 @@ async function gerarPDF(){
 
   const logoUrl = "https://i.imgur.com/8Km9tLL.png"
 
+  const ano = dataAtual.getFullYear()
+  const mes = dataAtual.getMonth()
+
+  const nomeMes = dataAtual.toLocaleString("pt-BR",{month:"long",year:"numeric"})
+  const sessao = document.getElementById("agendaSessao").value
+
   // HEADER
   doc.setFont("helvetica","bold")
   doc.setFontSize(18)
-  doc.text("ESCALA DE FUNCIONÁRIOS", 14, 15)
+  doc.text(`ESCALA - ${sessao}`, 14, 15)
 
   doc.setFontSize(11)
-  doc.text(dataEl.innerText, 14, 22)
+  doc.text(nomeMes.toUpperCase(), 14, 22)
 
   // LOGO
   try{
@@ -992,48 +995,59 @@ async function gerarPDF(){
     doc.addImage(base64, "PNG", 240, 8, 40, 15)
 
   }catch(e){
-    console.log("Erro ao carregar logo")
+    console.log("Erro logo")
   }
 
-  let y = 35
+  const startX = 10
+  const startY = 30
+  const boxW = 40
+  const boxH = 30
 
-  const lista = escalas.filter(e => e.data === dataSelecionada)
+  const dias = new Date(ano, mes+1, 0).getDate()
 
-  if(lista.length === 0){
-    doc.text("Nenhuma escala cadastrada", 14, y)
-    doc.save(`escala-${dataSelecionada}.pdf`)
-    return
-  }
+  let col = 0
+  let row = 0
 
-  let agrupado = {}
+  for(let i=1;i<=dias;i++){
 
-  lista.forEach(e=>{
-    if(!agrupado[e.setor]) agrupado[e.setor] = []
-    agrupado[e.setor].push(e)
-  })
+    const dataStr = `${ano}-${String(mes+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`
 
-  for(const setor in agrupado){
+    const x = startX + (col * boxW)
+    const y = startY + (row * boxH)
 
-    doc.setFontSize(13)
+    // QUADRADO
+    doc.setDrawColor(200)
+    doc.rect(x, y, boxW, boxH)
+
+    // DIA
+    doc.setFontSize(10)
     doc.setFont("helvetica","bold")
-    doc.text(setor, 14, y)
+    doc.text(String(i), x+2, y+5)
 
-    y += 6
+    // ESCALAS
+    const lista = escalas.filter(e => e.data === dataStr)
 
     doc.setFont("helvetica","normal")
+    doc.setFontSize(7)
 
-    agrupado[setor].forEach(e=>{
-      doc.text(e.nome, 14, y)
-      doc.text(`${e.entrada} - ${e.saida}`, 140, y)
-      y += 6
+    let linhaY = y + 10
+
+    lista.forEach(e=>{
+      const texto = `${e.nome} (${e.entrada}-${e.saida})`
+      doc.text(texto.substring(0,22), x+2, linhaY)
+      linhaY += 4
     })
 
-    y += 6
+    col++
+
+    if(col === 7){
+      col = 0
+      row++
+    }
   }
 
-  doc.save(`escala-${dataSelecionada}.pdf`)
+  doc.save(`escala-${nomeMes}.pdf`)
 }
-
   
 </script>
 <div id="modalUser" class="modal">
