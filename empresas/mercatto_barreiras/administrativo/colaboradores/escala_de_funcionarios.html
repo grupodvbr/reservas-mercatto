@@ -761,23 +761,7 @@ render()
 
 
 
-let horarios = []
 
-
-function remover(id){
-  document.getElementById(`bloco-${id}`).remove()
-}
-
-function validarConflito(lista){
-  const ordenado = lista.sort((a,b)=>a.inicio.localeCompare(b.inicio))
-
-  for(let i=0;i<ordenado.length-1;i++){
-    if(ordenado[i].fim > ordenado[i+1].inicio){
-      return true
-    }
-  }
-  return false
-}
 
 
 
