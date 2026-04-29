@@ -359,36 +359,36 @@ button:hover{
 <body>
 
 <header>
-
-  <!-- ESQUERDA -->
-  <div style="display:flex;align-items:center;gap:10px;">
-    <button onclick="mesAnterior()">◀</button>
-
-    <select id="agendaSessao" onchange="render()" style="
-      padding:8px 12px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      font-weight:600;
-      background:#fff;
-      cursor:pointer;
-    ">
-      <option value="GERAL">GERAL</option>
-      <option value="COZINHA">COZINHA</option>
-      <option value="SALAO">SALÃO</option>
-      <option value="EVENTO">EVENTO</option>
-    </select>
-  </div>
-
-  <!-- CENTRO -->
+  <button onclick="mesAnterior()">◀</button>
   <b id="mes"></b>
+<div style="display:flex;align-items:center;gap:10px;">
 
-  <!-- DIREITA -->
-  <div style="display:flex;align-items:center;gap:10px;">
-    <button onclick="abrirCadastro()">+ Funcionário</button>
-    <button onclick="mesProximo()">▶</button>
-  </div>
+  <button onclick="abrirCadastro()">+ Funcionário</button>
 
+  <!-- 🔥 SELECT AQUI -->
+  <select id="agendaSessao" onchange="render()" style="
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    font-weight:600;
+    background:#fff;
+    cursor:pointer;
+  ">
+    <option value="GERAL">GERAL</option>
+    <option value="COZINHA">COZINHA</option>
+    <option value="SALAO">SALÃO</option>
+    <option value="EVENTO">EVENTO</option>
+  </select>
+
+  <button onclick="mesProximo()">▶</button>
+
+</div>
+
+
+
+  
 </header>
+
 
 
 
@@ -399,53 +399,30 @@ button:hover{
 <div id="modal" class="modal">
   <div class="box">
 
-<div style="margin-bottom:20px">
-
-  <!-- TITULO -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-    
-    <div>
-      <div style="font-size:12px;color:#6b7280;font-weight:600">
-        ESCALA DO DIA
-      </div>
-      <div id="data" style="font-size:22px;font-weight:800"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 id="data"></h3>
+      <input type="date" id="dataManual">
     </div>
 
-    <button onclick="fechar()" style="
-      background:#e5e7eb;
-      color:#111;
-      padding:6px 10px;
-      border-radius:8px;
-    ">✕</button>
+<button onclick="abrirEdicao()" style="margin-bottom:10px">
+  + Adicionar Escala
+</button>
 
+<div id="formEscala" style="display:none">
+
+  <div class="field">
+    <label>Funcionário</label>
+    <select id="funcionario"></select>
   </div>
 
-  <!-- LINHA PRINCIPAL -->
-  <div style="display:flex;gap:10px;align-items:center">
+  <div id="blocos"></div>
 
-    <input id="dataManual" placeholder="dd/mm/aaaa" style="
-      padding:10px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      font-size:14px;
-      width:160px;
-      text-align:center;
-      font-weight:600;
-    ">
-
-    <button onclick="abrirEdicao()" style="
-      background:var(--primary);
-      padding:10px 16px;
-      border-radius:10px;
-      font-size:14px;
-      font-weight:600;
-    ">
-      + Adicionar
-    </button>
-
-  </div>
+  <button onclick="addBloco()" style="margin-top:10px">
+    + Adicionar Horário
+  </button>
 
 </div>
+
     <div class="lista" id="preview"></div>
 
     <div class="actions">
@@ -687,8 +664,7 @@ function abrirVisual(data){
   preview.innerHTML = html
 
   modal.style.display="flex"
-const d = new Date(data)
-dataEl.innerText = d.toLocaleDateString("pt-BR")
+  dataEl.innerText = data
 }
 function fechar(){ modal.style.display="none" }
 
@@ -861,15 +837,8 @@ async function salvarEscala(){
     return
   }
 
-let dataBase = dataSelecionada
+  const dataBase = dataManual.value || dataSelecionada
 
-if(dataManual.value){
-  const [dia, mes, ano] = dataManual.value.split("/")
-  dataBase = `${ano}-${mes}-${dia}`
-}
-
-
-  
 for(const h of lista){
 
   const { error } = await sb
@@ -926,9 +895,8 @@ for(const h of lista){
   preview.innerHTML = html
 
   modal.style.display="flex"
-const d = new Date(data)
-dataEl.innerText = d.toLocaleDateString("pt-BR")
-  }
+  dataEl.innerText = data
+}
 
   function abrirEdicao(){
   document.getElementById("formEscala").style.display = "block"
@@ -1012,21 +980,7 @@ function editarEscala(id){
   `
 }
 
-const dataManualInput = document.getElementById("dataManual")
 
-dataManualInput.addEventListener("input", (e)=>{
-  let v = e.target.value.replace(/\D/g,"")
-
-  if(v.length > 8) v = v.slice(0,8)
-
-  if(v.length >= 5){
-    v = v.replace(/(\d{2})(\d{2})(\d+)/, "$1/$2/$3")
-  } else if(v.length >= 3){
-    v = v.replace(/(\d{2})(\d+)/, "$1/$2")
-  }
-
-  e.target.value = v
-})
 
 
 
