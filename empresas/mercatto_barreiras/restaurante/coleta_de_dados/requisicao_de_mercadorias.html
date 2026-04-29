@@ -199,8 +199,8 @@ display:none;
 
 <script>
 const sb = supabase.createClient(
- "https://dxkszikemntfusfyrzos.supabase.co",
- "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+ "https://ehxrrpsiksceljmhsfxk.supabase.co",
+ "sb_publishable_Jm2ZQKzPS3gNPCKSjFAmYQ_WNMYwF1j"
 );
 
 let unidade="UN";
@@ -210,41 +210,24 @@ let dadosUsuario=null;
 /* LOGIN */
 async function login(){
 
-  const user = usuario.value.trim().toUpperCase();
-  const pass = senha.value;
+const user = usuario.value.toUpperCase();
 
-  const { data, error } = await sb
-    .from("usuarios_do_sistema") // 👈 TABELA DO SISTEMA
-    .select("id, usuario, senha, nome, setor")
-    .eq("usuario", user)
-    .maybeSingle();
+const { data, error } = await sb
+.from("usuarios")
+.select("*")
+.eq("nome", user)
+.eq("senha", senha.value)
+.single();
 
-  if(error){
-    console.log(error);
-    alert("Erro no banco");
-    return;
-  }
-
-  if(!data){
-    alert("Usuário não encontrado");
-    return;
-  }
-
-  if(data.senha !== pass){
-    alert("Senha incorreta");
-    return;
-  }
-
-  // salva sessão
-  localStorage.setItem("user_data", JSON.stringify(data));
-
-  // entra no sistema
-  init();
+if(error || !data){
+alert("Login inválido");
+return;
 }
 
+localStorage.setItem("user_data", JSON.stringify(data));
+init();
+}
 
-
- 
 /* VALIDAR SESSÃO */
 async function validarSessao(){
 
@@ -254,7 +237,7 @@ if(!saved) return false;
 const user = JSON.parse(saved);
 
 const { data } = await sb
-.from("usuarios_do_sistema")
+.from("usuarios")
 .select("*")
 .eq("id", user.id)
 .single();
@@ -271,22 +254,20 @@ return true;
 /* INIT */
 async function init(){
 
-  loginArea.classList.add("hidden");
-  appArea.classList.remove("hidden");
+loginArea.classList.add("hidden");
+appArea.classList.remove("hidden");
 
-  const saved = JSON.parse(localStorage.getItem("user_data"));
+const saved = JSON.parse(localStorage.getItem("user_data"));
 
-  usuarioAtual = saved.nome;
-  dadosUsuario = saved;
+usuarioAtual = saved.nome;
+dadosUsuario = saved;
 
-  solicitante.value = saved.nome;
+solicitante.value = saved.nome;
+setor.innerHTML = `<option>${saved.setor}</option>`;
 
-  // 👇 AGORA FUNCIONA
-  setor.innerHTML = `<option>${saved.setor}</option>`;
+setUnidade("UN");
 
-  setUnidade("UN");
-
-  carregarHistorico();
+carregarHistorico();
 }
 
 /* AUTO LOGIN */
@@ -309,43 +290,29 @@ document.getElementById("u"+u).classList.add("active");
 }
 
 /* BUSCA */
-produto.onkeyup = async () => {
+produto.onkeyup=async()=>{
 
-  const q = produto.value.trim();
+const q=produto.value.toUpperCase();
 
-  if(q.length < 1){
-    listaProdutos.innerHTML = "";
-    return;
-  }
+if(q.length<2){
+listaProdutos.innerHTML="";
+return;
+}
 
-  const { data, error } = await sb
-    .from("mercatto_estoque")
-    .select("produto, saldo, empresa")
-    .ilike("produto", `%${q}%`)
-    .limit(10);
+const { data } = await sb
+.from("produtos_para_requisicao")
+.select("*")
+.ilike("nome", `%${q}%`)
+.limit(10);
 
-  if(error){
-    console.log(error);
-    return;
-  }
+listaProdutos.innerHTML="";
 
-  listaProdutos.innerHTML = "";
-
-  (data || []).forEach(p => {
-    listaProdutos.innerHTML += `
-      <div class="item" onclick="selectProduto('${p.produto}')">
-        ${p.produto}
-        <span style="float:right;opacity:.6">
-          ${p.saldo > 0 ? "🟢" : "🔴"}
-        </span>
-      </div>
-    `;
-  });
+(data||[]).forEach(p=>{
+listaProdutos.innerHTML+=`
+<div class="item" onclick="selectProduto('${p.nome}')">${p.nome}</div>`;
+});
 };
 
-
-
- 
 function selectProduto(nome){
 produto.value=nome;
 listaProdutos.innerHTML="";
@@ -354,78 +321,74 @@ listaProdutos.innerHTML="";
 /* ENVIAR */
 async function enviar(){
 
-  if(!produto.value || !quantidade.value){
-    alert("Preencha os campos");
-    return;
-  }
-
-  overlay.style.display="flex";
-
-  const nome = produto.value.trim().toUpperCase();
-
-  const { data: prod, error: erroBusca } = await sb
-    .from("mercatto_estoque")
-    .select("id, produto")
-    .ilike("produto", `%${nome}%`)
-    .maybeSingle();
-
-  if(erroBusca || !prod){
-    console.log(erroBusca);
-    overlay.style.display="none";
-    alert("Produto não encontrado");
-    return;
-  }
-
-  const { error: erroInsert } = await sb
-    .from("mercatto_requisicoes")
-    .insert({
-      produto_id: prod.id, // 👈 AQUI É A CORREÇÃO
-      produto: prod.produto,
-      quantidade: parseInt(quantidade.value),
-      unidade: unidade,
-      setor: dadosUsuario.setor,
-      solicitante: dadosUsuario.nome,
-      observacoes: obs.value,
-      status: "PENDENTE"
-    });
-
-  if(erroInsert){
-    console.log(erroInsert);
-    overlay.style.display="none";
-    alert("Erro ao salvar");
-    return;
-  }
-
-  overlay.style.display="none";
-
-  limparCampos();
-  carregarHistorico();
+if(!produto.value || !quantidade.value){
+alert("Preencha os campos");
+return;
 }
+
+overlay.style.display="flex";
+
+const nome=produto.value.toUpperCase();
+
+/* produto */
+let { data: existente } = await sb
+.from("produtos_para_requisicao")
+.select("*")
+.eq("nome", nome)
+.maybeSingle();
+
+let produto_id;
+
+if(!existente){
+const { data: novo } = await sb
+.from("produtos_para_requisicao")
+.insert({ nome })
+.select()
+.maybeSingle();
+
+produto_id = novo.id;
+}else{
+produto_id = existente.id;
+}
+
+/* requisicao */
+await sb.from("requisicoes").insert({
+produto:nome,
+produto_id,
+quantidade: parseInt(quantidade.value),
+unidade,
+setor:dadosUsuario.setor,
+usuario:usuarioAtual,
+observacoes:obs.value,
+status:"PENDENTE"
+});
+
+overlay.style.display="none";
+
+limparCampos();
+carregarHistorico();
+}
+
 /* HISTÓRICO */
 async function carregarHistorico(){
 
-  const { data, error } = await sb
-    .from("mercatto_requisicoes")
-    .select("*")
-    .eq("solicitante", dadosUsuario.nome) // 👈 importante
-    .order("created_at",{ascending:false})
-    .limit(20);
+const { data } = await sb
+.from("requisicoes")
+.select("*")
+.eq("usuario", usuarioAtual)
+.order("created_at",{ascending:false})
+.limit(20);
 
-  if(error){
-    console.log(error);
-    return;
-  }
+tabela.innerHTML="";
 
-  tabela.innerHTML="";
-
-  (data||[]).forEach(r=>{
-    tabela.innerHTML+=`
-    <tr>
-      <td>${r.produto}</td>
-      <td>${r.quantidade}</td>
-      <td>${r.status}</td>
-    </tr>`;
-  });
+(data||[]).forEach(r=>{
+tabela.innerHTML+=`
+<tr>
+<td>${r.produto}</td>
+<td>${r.quantidade}</td>
+<td>${r.status}</td>
+</tr>`;
+});
 }
 
 /* LIMPAR */
