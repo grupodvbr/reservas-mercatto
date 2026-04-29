@@ -608,11 +608,10 @@ async function render(){
 function abrirVisual(data){
   dataSelecionada = data
 
-  // ✅ MOSTRA DATA NO TOPO (FORMATO BR)
+  // DATA NO TOPO
   dataEl.innerText = formatarDataBR(data)
 
-  // LIMPA FORM
-  blocos.innerHTML = ""
+  // ESCONDE FORM
   document.getElementById("formEscala").style.display = "none"
 
   const lista = escalas.filter(e => e.data === data)
@@ -644,27 +643,21 @@ function abrirVisual(data){
                 padding:6px 8px;
                 border-radius:8px;
                 font-size:12px;
-              ">
-                ✏️
-              </button>
+              ">✏️</button>
 
               <button onclick="excluirEscala('${e.id}')" style="
                 background:#ef4444;
                 padding:6px 8px;
                 border-radius:8px;
                 font-size:12px;
-              ">
-                🗑️
-              </button>
+              ">🗑️</button>
 
               <button onclick="abrirUser('${e.funcionario_id}')" style="
                 background:#111827;
                 padding:6px 8px;
                 border-radius:8px;
                 font-size:12px;
-              ">
-                👁
-              </button>
+              ">👁</button>
 
             </div>
           </div>
@@ -674,10 +667,12 @@ function abrirVisual(data){
   }
 
   preview.innerHTML = html
-
-  // ✅ ABRE MODAL
   modal.style.display = "flex"
 }
+
+
+
+  
 
   
 function formatarDataBR(data){
@@ -788,29 +783,72 @@ function validarConflito(lista){
 
 async function salvarEscala(){
 
-  const f = funcionarios.find(x=>x.id == funcionario.value)
+  const funcionarioId = document.getElementById("funcionario").value
+  const f = funcionarios.find(x => x.id == funcionarioId)
 
-  // 🔥 SE ESTIVER EDITANDO
+  if(!f){
+    alert("Selecione um funcionário")
+    return
+  }
+
+  const entrada = document.getElementById("entrada").value
+  const saida = document.getElementById("saida").value
+
+  if(!entrada || !saida){
+    alert("Preencha entrada e saída")
+    return
+  }
+
+  // 🔥 EDITAR
   if(escalaEditando){
 
-    const entrada = document.getElementById("editEntrada").value
-    const saida = document.getElementById("editSaida").value
-
-    await sb
+    const { error } = await sb
       .from("escala_funcionarios")
       .update({
+        funcionario_id: f.id,
+        nome: f.nome,
         entrada,
         saida,
         atualizado_em: new Date().toISOString()
       })
       .eq("id", escalaEditando)
 
-    escalaEditando = null
+    if(error){
+      console.error(error)
+      alert("Erro ao atualizar")
+      return
+    }
 
+    escalaEditando = null
     fechar()
     render()
     return
   }
+
+  // 🔥 NOVO
+  const { error } = await sb
+    .from("escala_funcionarios")
+    .insert({
+      funcionario_id: f.id,
+      nome: f.nome,
+      data: dataSelecionada,
+      entrada,
+      saida,
+      setor: f.setor,
+      empresa: "MERCATTO DELICIA",
+      agenda_sessao: document.getElementById("agendaSessao").value,
+      atualizado_em: new Date().toISOString()
+    })
+
+  if(error){
+    console.error(error)
+    alert("Já existe escala nesse horário!")
+    return
+  }
+
+  fechar()
+  render()
+}
 
   // 🔥 NOVA ESCALA
  const entrada = document.getElementById("entrada").value
@@ -882,6 +920,12 @@ if(error){
 
 function abrirEdicao(){
   document.getElementById("formEscala").style.display = "block"
+
+  // limpa campos
+  document.getElementById("entrada").value = ""
+  document.getElementById("saida").value = ""
+
+  escalaEditando = null
 }
 
 
@@ -949,20 +993,10 @@ function editarEscala(id){
 
   document.getElementById("formEscala").style.display = "block"
 
-  funcionario.value = e.funcionario_id
-
-  blocos.innerHTML = `
-    <div class="item">
-      <span>Entrada</span>
-      <input type="time" id="editEntrada" value="${e.entrada}">
-      <span>Saída</span>
-      <input type="time" id="editSaida" value="${e.saida}">
-    </div>
-  `
+  document.getElementById("funcionario").value = e.funcionario_id
+  document.getElementById("entrada").value = e.entrada
+  document.getElementById("saida").value = e.saida
 }
-
-
-
 
 
 
