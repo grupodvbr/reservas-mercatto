@@ -418,8 +418,16 @@ button:hover{
     <select id="funcionario"></select>
   </div>
 
-  <div id="blocos"></div>
+<div class="item" style="margin-top:10px">
+  <span>Entrada</span>
+  <input type="time" id="entrada">
 
+  <span>Saída</span>
+  <input type="time" id="saida">
+</div>
+
+
+  
 
 
 </div>
@@ -805,18 +813,17 @@ async function salvarEscala(){
   }
 
   // 🔥 NOVA ESCALA
-  const lista = coletarHorarios()
+ const entrada = document.getElementById("entrada").value
+const saida = document.getElementById("saida").value
 
-  if(lista.length === 0){
-    alert("Adicione pelo menos um horário")
-    return
-  }
+if(!entrada || !saida){
+  alert("Preencha entrada e saída")
+  return
+}
 
-  if(validarConflito(lista)){
-    alert("Existe conflito de horários!")
-    return
-  }
 
+
+  
   const dataBase = dataSelecionada
 
 for(const h of lista){
@@ -827,8 +834,8 @@ for(const h of lista){
     funcionario_id: f.id,
     nome: f.nome,
     data: dataBase,
-    entrada: h.inicio,
-    saida: h.fim,
+    entrada: entrada,
+saida: saida,
     setor: f.setor,
     empresa: "MERCATTO DELICIA",
     agenda_sessao: document.getElementById("agendaSessao").value, // 🔥 NOVO
