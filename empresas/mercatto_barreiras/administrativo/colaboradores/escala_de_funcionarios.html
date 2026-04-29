@@ -969,7 +969,8 @@ async function gerarPDFMes(){
   const { jsPDF } = window.jspdf
 
   const doc = new jsPDF({
-    orientation: "landscape"
+    orientation: "landscape",
+    unit: "mm"
   })
 
   const ano = dataAtual.getFullYear()
@@ -982,16 +983,16 @@ async function gerarPDFMes(){
   ========================= */
 
   doc.setFont("helvetica","bold")
-  doc.setFontSize(18)
-  doc.text(`ESCALA - ${sessao}`, 14, 15)
+  doc.setFontSize(16)
+  doc.text(`ESCALA - ${sessao}`, 10, 10)
 
-  doc.setFontSize(11)
-  doc.text(nomeMes.toUpperCase(), 14, 22)
+  doc.setFontSize(10)
+  doc.text(nomeMes.toUpperCase(), 10, 16)
 
   const startX = 10
-  const startY = 30
-  const boxW = 40
-  const boxH = 45
+  const startY = 20
+  const boxW = 38
+  const boxH = 38
 
   const dias = new Date(ano, mes+1, 0).getDate()
 
@@ -1005,24 +1006,23 @@ async function gerarPDFMes(){
     const x = startX + (col * boxW)
     const y = startY + (row * boxH)
 
-    doc.setDrawColor(200)
     doc.rect(x, y, boxW, boxH)
 
-    doc.setFontSize(10)
+    doc.setFontSize(9)
     doc.setFont("helvetica","bold")
-    doc.text(String(i), x+2, y+5)
+    doc.text(String(i), x+2, y+4)
 
     const lista = escalas.filter(e => e.data === dataStr)
 
     doc.setFont("helvetica","normal")
-    doc.setFontSize(5)
+    doc.setFontSize(4.5)
 
-    let linhaY = y + 9
+    let linhaY = y + 8
 
     lista.slice(0,30).forEach(e=>{
       if(linhaY < y + boxH - 2){
-        doc.text(e.nome.substring(0,25), x+2, linhaY)
-        linhaY += 2.5
+        doc.text(e.nome.substring(0,22), x+2, linhaY)
+        linhaY += 2.2
       }
     })
 
@@ -1034,68 +1034,75 @@ async function gerarPDFMes(){
   }
 
   /* =========================
-     PAGINA 2 - TABELA
+     PAGINA 2 - TABELA AJUSTADA
   ========================= */
 
   doc.addPage()
 
-  doc.setFontSize(16)
   doc.setFont("helvetica","bold")
-  doc.text("RELATÓRIO DE ESCALA", 14, 15)
+  doc.setFontSize(14)
+  doc.text("RELATÓRIO DE ESCALA", 10, 10)
 
-  doc.setFontSize(10)
-  doc.text(nomeMes.toUpperCase(), 14, 22)
+  doc.setFontSize(9)
+  doc.text(nomeMes.toUpperCase(), 10, 15)
 
-  // pegar funcionarios únicos
+  // MAPA DE DADOS
   const mapa = {}
 
   escalas.forEach(e=>{
     if(!mapa[e.nome]){
       mapa[e.nome] = {}
     }
-    mapa[e.nome][e.data] = `${e.entrada}-${e.saida}`
+
+    // 🔥 FORMATA HORA (SEM SEGUNDOS)
+    const entrada = e.entrada.slice(0,5)
+    const saida = e.saida.slice(0,5)
+
+    mapa[e.nome][e.data] = `${entrada}-${saida}`
   })
 
   const nomes = Object.keys(mapa)
 
-  let y = 30
-  let x = 10
+  let y = 20
+  const startNomeX = 10
+  const startDiasX = 60
 
-  const colWidth = 20
+  const colWidth = 6 // 🔥 CHAVE PRA CABER 31 DIAS
 
-  // HEADER DIAS
+  /* HEADER DIAS */
   doc.setFontSize(6)
   doc.setFont("helvetica","bold")
 
   for(let d=1; d<=dias; d++){
-    doc.text(String(d), x + 60 + (d * colWidth), y)
+    doc.text(String(d), startDiasX + (d * colWidth), y)
   }
 
-  y += 5
+  y += 4
 
   doc.setFont("helvetica","normal")
 
   nomes.forEach(nome=>{
 
-    if(y > 180){
+    if(y > 190){
       doc.addPage()
-      y = 20
+      y = 15
     }
 
-    // nome
-    doc.text(nome.substring(0,25), x, y)
+    // NOME
+    doc.setFontSize(6)
+    doc.text(nome.substring(0,30), startNomeX, y)
 
-    // dias
+    // DIAS
     for(let d=1; d<=dias; d++){
 
       const dataStr = `${ano}-${String(mes+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`
 
       const valor = mapa[nome][dataStr] || "-"
 
-      doc.text(valor, x + 60 + (d * colWidth), y)
+      doc.text(valor, startDiasX + (d * colWidth), y)
     }
 
-    y += 5
+    y += 4
   })
 
   doc.save(`escala-${nomeMes}.pdf`)
