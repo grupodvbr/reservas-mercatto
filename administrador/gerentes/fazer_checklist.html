@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Execução Checklist</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+font-family:Inter;
+background:#f1f5f9;
+}
+
+/* LOGIN */
+.login{
+padding:20px;
+}
+
+input{
+width:100%;
+padding:14px;
+margin-bottom:10px;
+border-radius:10px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:#fff;
+font-weight:bold;
+}
+
+/* APP */
+.app{
+display:none;
+}
+
+.header{
+background:#020617;
+color:#fff;
+padding:15px;
+text-align:center;
+}
+
+.data{
+text-align:center;
+font-weight:bold;
+padding:10px;
+}
+
+/* TAREFAS */
+.lista{
+padding:10px;
+}
+
+.card{
+background:#fff;
+padding:15px;
+border-radius:12px;
+margin-bottom:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.05);
+}
+
+.hora{
+font-weight:bold;
+font-size:14px;
+color:#2563eb;
+}
+
+.tarefa{
+font-size:15px;
+margin-top:5px;
+}
+
+.status{
+margin-top:5px;
+font-size:12px;
+}
+
+.ok{color:green}
+.atraso{color:red}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+<h2>Login</h2>
+
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+
+<button onclick="entrar()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+
+<div class="header" id="nome"></div>
+
+<div class="data" id="data"></div>
+
+<div class="lista" id="lista"></div>
+
+</div>
+
+<script>
+const sb = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let usuario = null;
+let dataAtual = new Date();
+
+// LOGIN
+async function entrar(){
+
+const u = user.value.toUpperCase();
+const p = pass.value;
+
+const { data } = await sb
+.from("usuarios_do_sistema")
+.select("*")
+.eq("usuario", u)
+.maybeSingle();
+
+if(!data || data.senha != p){
+alert("Erro login");
+return;
+}
+
+usuario = data.usuario;
+
+login.style.display="none";
+app.style.display="block";
+
+nome.innerText = data.nome;
+
+carregar();
+}
+
+// CARREGAR TAREFAS
+async function carregar(){
+
+const dataStr = dataAtual.toISOString().split("T")[0];
+document.getElementById("data").innerText = dataStr;
+
+const { data } = await sb
+.from("agenda_checklist")
+.select("*")
+.eq("data", dataStr);
+
+let tarefas = (data || []).filter(t=>{
+
+// tarefa compartilhada
+if(t.usuario.includes(",")){
+return t.usuario.split(",").includes(usuario);
+}
+
+// tarefa normal
+return t.usuario == usuario;
+
+});
+
+// ordenar por horário
+tarefas.sort((a,b)=>{
+return (a.hora_inicio || "").localeCompare(b.hora_inicio || "");
+});
+
+render(tarefas);
+}
+
+// RENDER
+function render(tarefas){
+
+lista.innerHTML="";
+
+tarefas.forEach(t=>{
+
+const agora = new Date();
+const fim = new Date(`${dataAtual.toISOString().split("T")[0]}T${t.hora_fim}`);
+
+let status = agora > fim ? "Atrasado" : "Dentro";
+
+lista.innerHTML += `
+<div class="card">
+<div class="hora">${t.hora_inicio} - ${t.hora_fim}</div>
+<div class="tarefa">${t.tarefa} ${t.obrigatorio_foto ? '📎' : ''}</div>
+<div class="status ${status=='Atrasado'?'atraso':'ok'}">${status}</div>
+</div>
+`;
+
+});
+}
+
+// SWIPE
+let startX=0;
+
+document.addEventListener("touchstart", e=>{
+startX = e.touches[0].clientX;
+});
+
+document.addEventListener("touchend", e=>{
+let endX = e.changedTouches[0].clientX;
+
+if(endX - startX > 50){
+dataAtual.setDate(dataAtual.getDate()-1);
+carregar();
+}
+
+if(startX - endX > 50){
+dataAtual.setDate(dataAtual.getDate()+1);
+carregar();
+}
+});
+</script>
+
+</body>
+</html>
