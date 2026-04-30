@@ -368,15 +368,18 @@ listaTarefas.innerHTML="";
 
 data.forEach(t=>{
 listaTarefas.innerHTML+=`
-<div class="item" onclick="add('${t.tarefa}')">
-${t.tarefa}
+<div class="item" onclick="add('${t.tarefa}', ${t.obrigatorio_foto})">
+${t.tarefa} ${t.obrigatorio_foto ? '📎' : ''}
 </div>
 `;
 });
 };
 
-function add(t){
-tempTarefa=t;
+function add(t, obrigatorio){
+tempTarefa = {
+tarefa: t,
+obrigatorio_foto: obrigatorio
+};
 modal.style.display="flex";
 }
 
@@ -386,8 +389,15 @@ function confirmar(){
 const inicio = document.getElementById("inicio").value;
 const fim = document.getElementById("fim").value;
 
-tarefas.push({tarefa:tempTarefa,inicio,fim});
+tarefas.push({
+tarefa: tempTarefa.tarefa,
+inicio,
+fim,
+obrigatorio_foto: tempTarefa.obrigatorio_foto
+});
 
+
+  
 modal.style.display="none";
 render();
 }
@@ -407,7 +417,7 @@ const status = agora > fim ? "Atrasado" : "Dentro";
 
 tabela.innerHTML+=`
 <tr>
-<td>${t.tarefa}</td>
+<td>${t.tarefa} ${t.obrigatorio_foto ? '📎' : ''}</td>
 <td>${t.inicio}</td>
 <td>${t.fim}</td>
 <td>${status}</td>
@@ -433,7 +443,8 @@ tarefa:t.tarefa,
 data:dataAgenda,
 hora_inicio:t.inicio,
 hora_fim:t.fim,
-status_execucao:"pendente"
+status_execucao:"pendente",
+obrigatorio_foto: t.obrigatorio_foto
 }));
 
 await sb.from("agenda_checklist").insert(inserts);
@@ -501,7 +512,7 @@ tbody.innerHTML = "";
 
 tbody.innerHTML += `
 <tr>
-<td>${t.tarefa}</td>
+<td>${t.tarefa} ${t.obrigatorio_foto ? '📎' : ''}</td>
 <td>${t.hora_inicio || '-'}</td>
 <td>${t.hora_fim || '-'}</td>
 <td>${t.status_execucao || '-'}</td>
