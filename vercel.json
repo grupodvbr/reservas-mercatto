@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/admin-agente?cron=true",
+      "path": "/api/admin-agente",
       "schedule": "0 8 * * *"
     }
   ]
