@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotação Completa</title>
+<title>Cotação</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,73 +14,97 @@ body{
   padding:20px;
 }
 
+.container{
+  max-width:900px;
+  margin:auto;
+}
+
 .box{
   background:#fff;
-  padding:15px;
+  padding:20px;
   border-radius:12px;
-  margin-bottom:15px;
+  margin-bottom:20px;
   box-shadow:0 5px 20px rgba(0,0,0,.08);
 }
 
-input,select{
-  padding:8px;
+input{
+  padding:10px;
   margin:5px;
-  border-radius:6px;
+  border-radius:8px;
   border:1px solid #ccc;
 }
 
 button{
-  padding:8px 12px;
+  padding:10px 15px;
   border:none;
-  border-radius:6px;
+  border-radius:8px;
   background:#2563eb;
   color:#fff;
   cursor:pointer;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+  margin-top:20px;
 }
 
-th,td{
-  border:1px solid #ddd;
-  padding:8px;
-  text-align:center;
+.card h3{
+  margin:0 0 10px;
 }
 
-th{
-  background:#2563eb;
-  color:#fff;
+.item{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>💰 Cotação</h2>
+<div class="container">
+
+<h2>💰 Nova Cotação</h2>
 
 <div class="box">
-<input id="nomeCotacao" placeholder="Nome">
-<button onclick="criarCotacao()">Criar</button>
+
+<input id="nome" placeholder="Nome da Cotação">
+
+<br>
+
+<label>Data da Cotação:</label>
+<input id="dataCotacao" type="date">
+
+<br>
+
+<label>Data de Hoje:</label>
+<input id="dataHoje" disabled>
+
+<br><br>
+
+<button onclick="criar()">Criar Cotação</button>
+
 </div>
 
-<div class="box">
+<div id="areaItens" class="box" style="display:none">
+
+<h3>Itens</h3>
+
+<div class="item">
 <input id="produto" placeholder="Produto">
 <input id="qtd" type="number" placeholder="Qtd">
-<button onclick="addItem()">Adicionar Item</button>
+<button onclick="addItem()">Adicionar</button>
 </div>
 
-<div class="box">
-<select id="fornecedor"></select>
-<button onclick="addFornecedor()">+ Fornecedor</button>
+<div id="listaItens"></div>
+
 </div>
 
-<div class="box">
-<table>
-<thead id="head"></thead>
-<tbody id="body"></tbody>
-</table>
+<div id="resumo"></div>
+
 </div>
 
 <script>
@@ -92,133 +116,135 @@ const sb = supabase.createClient(
 
 let cotacaoId = null;
 let itens = [];
-let fornecedores = [];
 
-// ===============================
-// 🔥 CRIAR COTAÇÃO
-// ===============================
-async function criarCotacao(){
+// DATA HOJE FORMATADA
+function formatarDataHoje(){
+  const d = new Date();
+  const dia = String(d.getDate()).padStart(2,'0');
+  const mes = String(d.getMonth()+1).padStart(2,'0');
+  const ano = d.getFullYear();
 
-  const nome = nomeCotacao.value;
-
-  const { data } = await sb
-    .from("cotacoes")
-    .insert([{ nome, data: new Date() }])
-    .select();
-
-  cotacaoId = data[0].id;
-
-  alert("Cotação criada!");
+  return `${dia}/${mes}/${ano}`;
 }
 
-// ===============================
-// 🔥 ADICIONAR ITEM
-// ===============================
-async function addItem(){
+dataHoje.value = formatarDataHoje();
 
-  const { data } = await sb
-    .from("cotacoes_itens")
+// =====================
+// CRIAR COTAÇÃO
+// =====================
+async function criar(){
+
+  const nome = document.getElementById("nome").value;
+  const dataCotacao = document.getElementById("dataCotacao").value;
+
+  const { data, error } = await sb
+    .from("cotacoes")
     .insert([{
-      cotacao_id: cotacaoId,
-      produto: produto.value,
-      quantidade: qtd.value
+      nome,
+      data_cotacao: dataCotacao,
+      itens: []
     }])
     .select();
 
-  itens.push(data[0]);
-
-  render();
-}
-
-// ===============================
-// 🔥 CARREGAR FORNECEDORES
-// ===============================
-async function carregarFornecedores(){
-
-  const { data } = await sb.from("fornecedores").select("*");
-
-  fornecedor.innerHTML =
-    data.map(f=>`<option value="${f.id}">${f.nome}</option>`).join("");
-}
-
-// ===============================
-// 🔥 ADD FORNECEDOR NA TELA
-// ===============================
-function addFornecedor(){
-
-  const id = fornecedor.value;
-  const nome = fornecedor.options[fornecedor.selectedIndex].text;
-
-  fornecedores.push({id,nome});
-
-  render();
-}
-
-// ===============================
-// 🔥 RENDER TABELA
-// ===============================
-async function render(){
-
-  // HEAD
-  let headHTML = `<tr><th>Produto</th><th>Qtd</th>`;
-
-  fornecedores.forEach(f=>{
-    headHTML += `<th>${f.nome}</th>`;
-  });
-
-  headHTML += `</tr>`;
-
-  head.innerHTML = headHTML;
-
-  // BODY
-  let bodyHTML = "";
-
-  for(const item of itens){
-
-    bodyHTML += `<tr>
-      <td>${item.produto}</td>
-      <td>${item.quantidade}</td>
-    `;
-
-    for(const f of fornecedores){
-
-      const { data } = await sb
-        .from("cotacoes_precos")
-        .select("*")
-        .eq("item_id", item.id)
-        .eq("fornecedor_id", f.id);
-
-      const preco = data[0]?.preco || "";
-
-      bodyHTML += `
-      <td>
-        <input type="number"
-        value="${preco}"
-        onchange="salvarPreco('${item.id}','${f.id}',this.value)">
-      </td>`;
-    }
-
-    bodyHTML += `</tr>`;
+  if(error){
+    alert("Erro ao criar");
+    return;
   }
 
-  body.innerHTML = bodyHTML;
+  cotacaoId = data[0].id;
+
+  areaItens.style.display = "block";
+
+  renderResumo(data[0]);
 }
 
-// ===============================
-// 🔥 SALVAR PREÇO
-// ===============================
-async function salvarPreco(item, fornecedor, valor){
+// =====================
+// ADD ITEM
+// =====================
+async function addItem(){
 
-  await sb.from("cotacoes_precos").upsert([{
-    cotacao_id: cotacaoId,
-    item_id: item,
-    fornecedor_id: fornecedor,
-    preco: valor
-  }]);
+  const prod = produto.value;
+  const quantidade = qtd.value;
+
+  if(!prod || !quantidade){
+    alert("Preencha!");
+    return;
+  }
+
+  itens.push({
+    produto: prod,
+    quantidade: Number(quantidade)
+  });
+
+  await salvarItens();
+
+  produto.value = "";
+  qtd.value = "";
+
+  renderLista();
+  carregarResumo();
 }
 
-// ===============================
-carregarFornecedores();
+// =====================
+// SALVAR JSON
+// =====================
+async function salvarItens(){
+
+  await sb
+    .from("cotacoes")
+    .update({
+      itens: itens,
+      atualizado_em: new Date()
+    })
+    .eq("id", cotacaoId);
+}
+
+// =====================
+// RENDER LISTA
+// =====================
+function renderLista(){
+
+  listaItens.innerHTML = itens.map(i=>`
+    <div>- ${i.produto} (${i.quantidade})</div>
+  `).join("");
+}
+
+// =====================
+// RESUMO
+// =====================
+async function carregarResumo(){
+
+  const { data } = await sb
+    .from("cotacoes")
+    .select("*")
+    .eq("id", cotacaoId)
+    .single();
+
+  renderResumo(data);
+}
+
+function renderResumo(d){
+
+  resumo.innerHTML = `
+    <div class="card">
+      <h3>${d.nome}</h3>
+
+      <p><b>📅 Data Cotação:</b> ${d.data_cotacao || "-"}</p>
+      <p><b>📆 Criado em:</b> ${formatarDataHoje()}</p>
+      <p><b>📦 Itens:</b> ${d.itens?.length || 0}</p>
+      <p><b>📊 Status:</b> ${d.status}</p>
+
+      <button onclick="realizar()">Realizar</button>
+    </div>
+  `;
+}
+
+// =====================
+// REALIZAR (futuro)
+// =====================
+function realizar(){
+  alert("Próxima etapa: abrir tela de cotação tipo Excel");
+}
 
 </script>
 
