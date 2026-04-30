@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Licitações</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#eef2f7;
+  --card:#ffffff;
+  --azul:#0b1e39;
+  --azul-escuro:#091627;
+  --muted:#6f7883;
+  --danger:#dc2626;
+  --radius:22px;
+  --shadow:0 8px 28px rgba(0,0,0,.12);
+  --line:#e5e7eb;
+  --pendente:#ffbf00;
+  --futura:#0077ff;
+  --andamento:#ff7f11;
+  --finalizada:#00b36b;
+  --suspensa:#d7263d;
+}
+
+/* BASE */
+body{
+  margin:0;
+  padding:40px;
+  background:var(--bg);
+  font-family:"Inter",sans-serif;
+  color:var(--azul);
+}
+.titulo{
+  font-size:44px;
+  font-weight:800;
+  margin-bottom:30px;
+  letter-spacing:-0.5px;
+}
+
+/* BUSCA */
+.topo{
+  margin-bottom:24px;
+  position:relative;
+  max-width:440px;
+}
+.input{
+  width:100%;
+  padding:14px 45px 14px 20px;
+  border-radius:14px;
+  border:1px solid #ccd2d9;
+  background:white url('https://cdn-icons-png.flaticon.com/512/622/622669.png') no-repeat right 15px center / 20px;
+  font-size:15px;
+  transition:.2s;
+}
+.input:focus{ border-color:var(--azul); outline:none; }
+
+/* FILTROS */
+.filtros{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:28px;
+}
+.chip{
+  padding:10px 22px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #ccd2d9;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+.chip:hover{ background:#e9edf2; }
+.chip.ativo{ background:var(--azul); color:white; }
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(370px,1fr));
+  gap:28px;
+}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:26px;
+  border:1px solid #eaecef;
+  box-shadow:var(--shadow);
+  transition:.3s ease;
+}
+.card:hover{ transform:translateY(-6px); box-shadow:0 10px 30px rgba(0,0,0,.15); }
+.card h3{
+  font-size:22px;
+  font-weight:800;
+  color:var(--azul-escuro);
+  margin-bottom:14px;
+}
+.info-block{
+  margin-top:10px;
+  padding:14px 16px;
+  background:#f8fafc;
+  border-radius:14px;
+  border:1px solid #e3e6ea;
+}
+.info-line{
+  font-size:14.5px;
+  margin-bottom:6px;
+}
+
+/* STATUS */
+.badge{
+  padding:8px 16px;
+  border-radius:12px;
+  font-size:12.5px;
+  font-weight:700;
+  margin-top:14px;
+  display:inline-block;
+}
+.st-PENDENTE{ background:var(--pendente); color:#fff; }
+.st-FUTURA{ background:var(--futura); color:#fff; }
+.st-EM_ANDAMENTO{ background:var(--andamento); color:#fff; }
+.st-FINALIZADA{ background:var(--finalizada); color:#fff; }
+.st-SUSPENSA{ background:var(--suspensa); color:#fff; }
+
+/* AÇÕES */
+.card-actions{
+  margin-top:22px;
+  display:flex;
+  gap:14px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+select{
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #ccd2d9;
+  font-size:14px;
+  cursor:pointer;
+}
+.btn{
+  padding:12px 20px;
+  background:var(--azul);
+  color:white;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:600;
+  transition:.2s;
+}
+.btn:hover{ background:#132a4d; }
+
+/* OVERLAY */
+#overlayLoad{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+  backdrop-filter:blur(6px);
+}
+.loader{
+  width:70px; height:70px;
+  border-radius:50%;
+  border:7px solid #ddd;
+  border-top:7px solid var(--azul);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{ to{transform:rotate(360deg);} }
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  justify-content:center;
+  align-items:flex-start;
+  padding-top:40px;
+  z-index:300;
+}
+.box{
+  width:92%;
+  max-width:1250px;
+  background:white;
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  max-height:88vh;
+  display:flex;
+  flex-direction:column;
+}
+.modal-head{
+  padding:24px 30px;
+  border-bottom:1px solid var(--line);
+  background:white;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.closeBtn{
+  float:right;
+  padding:8px 16px;
+  background:var(--danger);
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.modal-search{
+  margin-top:12px;
+  padding:11px 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  width:300px;
+}
+.modal-body{
+  padding:16px 30px;
+  overflow:auto;
+  background:#f9fafc;
+}
+.modal-foot{
+  padding:20px 30px;
+  background:white;
+  border-top:1px solid var(--line);
+  font-size:20px;
+  font-weight:800;
+  position:sticky;
+  bottom:0;
+  text-align:right;
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:18px;
+}
+.table th{
+  padding:12px;
+  background:#eef2f7;
+  cursor:pointer;
+}
+.table td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+}
+</style>
+</head>
+
+<body>
+<div id="overlayLoad"><div class="loader"></div></div>
+
+<h1 class="titulo">Licitações</h1>
+
+<div class="topo">
+  <input id="busca" class="input" placeholder="Buscar licitação...">
+</div>
+
+<div class="filtros" id="filtros">
+  <div class="chip ativo" data-status="TODOS">Todos</div>
+  <div class="chip" data-status="PENDENTE">Pendente</div>
+  <div class="chip" data-status="FUTURA">Futura</div>
+  <div class="chip" data-status="EM ANDAMENTO">Em andamento</div>
+  <div class="chip" data-status="FINALIZADA">Finalizada</div>
+  <div class="chip" data-status="SUSPENSA">Suspensa</div>
+</div>
+
+<div class="grid" id="lista"></div>
+
+<!-- MODAL -->
+<div class="modal" id="modalItens">
+  <div class="box">
+    <div class="modal-head">
+      <button class="closeBtn" onclick="fecharModal()">Fechar</button>
+      <h2 id="tituloItens"></h2>
+      <h4 id="subItens" style="color:var(--muted); margin-top:-4px"></h4>
+      <input id="buscarItem" class="modal-search" placeholder="Buscar item…">
+    </div>
+    <div class="modal-body">
+      <table class="table" id="tbItens">
+        <thead>
+          <tr>
+            <th onclick="ordenar(0)">Item TR</th>
+            <th onclick="ordenar(1)">Descrição</th>
+            <th onclick="ordenar(2)">Unid.</th>
+            <th onclick="ordenar(3)">Máx</th>
+            <th onclick="ordenar(4)">Mín</th>
+            <th onclick="ordenar(5)">Valor Unit.</th>
+            <th onclick="ordenar(6)">Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="modal-foot" id="totalGeral"></div>
+  </div>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwg9ZmsZpisEOI3J_3D0rS-Wwn0-dUD4yLVwxa7Yi1_pm0PAuu_HS3d7cB7Z5p0Il8s/exec";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+let licitacoes = [], filtro="TODOS", busca="", itensModal=[], ordemAsc=true;
+
+function showOverlay(){ $('#overlayLoad').style.display="flex"; }
+function hideOverlay(){ $('#overlayLoad').style.display="none"; }
+
+function formatMoney(v){ return "R$ "+Number(v).toLocaleString("pt-BR",{minimumFractionDigits:4,maximumFractionDigits:4}); }
+
+function render(){
+  const lista = $('#lista');
+  const dados = licitacoes.filter(l =>
+    (filtro==="TODOS" || l.status===filtro) &&
+    (
+      l.instituicao?.toUpperCase().includes(busca.toUpperCase()) ||
+      l.codigo?.toUpperCase().includes(busca.toUpperCase()) ||
+      l.criterio?.toUpperCase().includes(busca.toUpperCase()) ||
+      l.modo?.toUpperCase().includes(busca.toUpperCase()) ||
+      String(l.valorBR)?.includes(busca)
+    )
+  );
+  if(dados.length===0){ lista.innerHTML="<p style='color:#6f7883'>Nenhuma licitação encontrada…</p>"; return; }
+
+  lista.innerHTML=dados.map(l=>`
+  <div class="card">
+    <h3>${l.instituicao}</h3>
+    <div class="info-block">
+      <div class="info-line"><b>Código:</b> ${l.codigo}</div>
+      <div class="info-line"><b>Data:</b> ${l.dataSessaoBR}</div>
+      <div class="info-line"><b>Valor:</b> ${formatMoney(l.valorBR)}</div>
+      <div class="info-line"><b>Critério:</b> ${l.criterio}</div>
+      <div class="info-line"><b>Modo:</b> ${l.modo}</div>
+    </div>
+    <div class="badge st-${l.status.replace(" ","_").toUpperCase()}">${l.status}</div>
+    <div class="card-actions">
+      <select onchange="alterarStatus('${l.codigo}', this.value)">
+        <option value="">Status…</option>
+        <option value="PENDENTE">Pendente</option>
+        <option value="FUTURA">Futura</option>
+        <option value="EM ANDAMENTO">Em andamento</option>
+        <option value="FINALIZADA">Finalizada</option>
+        <option value="SUSPENSA">Suspensa</option>
+      </select>
+      <button class="btn" onclick="verItens('${l.codigo}','${l.instituicao}')">Ver itens</button>
+    </div>
+  </div>`).join('');
+}
+
+async function alterarStatus(codigo, novoStatus){
+  if(!novoStatus){alert("Selecione um status válido.");return;}
+  showOverlay();
+  const payload={action:"updateLicitacao",codigo,status:novoStatus};
+  const r=await fetch(API,{method:"POST",body:JSON.stringify(payload)});
+  const j=await r.json(); hideOverlay();
+  if(j.ok){alert("Status atualizado!");carregar();}else alert("Erro ao atualizar.");
+}
+
+async function verItens(codigo,nome){
+  showOverlay();
+  $('#tituloItens').innerText="Itens da Licitação";
+  $('#subItens').innerText=nome;
+  const r=await fetch(`${API}?action=getItens&codigo=${codigo}`);
+  const j=await r.json();
+  itensModal=j.itens;
+  renderItensTabela(itensModal);
+  hideOverlay();
+  $('#modalItens').style.display="flex";
+}
+
+function fecharModal(){ $('#modalItens').style.display="none"; }
+
+function renderItensTabela(lista){
+  const tb=$('#tbItens tbody');
+  tb.innerHTML="";
+  let total=0;
+  lista.forEach(it=>{
+    const t=it.valorUnit*it.quantMin; total+=t;
+    tb.innerHTML+=`
+    <tr>
+      <td>${it.itemTR}</td>
+      <td>${it.especificacao}</td>
+      <td>${it.unidade}</td>
+      <td>${it.quantMax}</td>
+      <td>${it.quantMin}</td>
+      <td>${formatMoney(it.valorUnit)}</td>
+      <td><b>${formatMoney(t)}</b></td>
+    </tr>`;
+  });
+  $('#totalGeral').innerText="TOTAL: "+formatMoney(total);
+}
+
+/* 🔍 Busca dentro do modal */
+$('#buscarItem').addEventListener('input',e=>{
+  const termo=e.target.value.toLowerCase();
+  const filtrados=itensModal.filter(it=>
+    it.especificacao.toLowerCase().includes(termo)||
+    it.itemTR.toString().includes(termo)||
+    it.unidade.toLowerCase().includes(termo)
+  );
+  renderItensTabela(filtrados);
+});
+
+function ordenar(i){
+  ordemAsc=!ordemAsc;
+  itensModal.sort((a,b)=>{
+    const A=Object.values(a)[i],B=Object.values(b)[i];
+    if(typeof A==="number")return ordemAsc?A-B:B-A;
+    return ordemAsc?String(A).localeCompare(String(B)):String(B).localeCompare(String(A));
+  });
+  renderItensTabela(itensModal);
+}
+
+async function carregar(){
+  showOverlay();
+  const r=await fetch(`${API}?action=listLicitacoes`);
+  const j=await r.json();
+  licitacoes=j;
+  render();
+  hideOverlay();
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  carregar();
+  $('#busca').addEventListener('input',e=>{busca=e.target.value;render();});
+  $$('#filtros .chip').forEach(ch=>{
+    ch.addEventListener('click',()=>{
+      $$('#filtros .chip').forEach(x=>x.classList.remove('ativo'));
+      ch.classList.add('ativo');
+      filtro=ch.dataset.status;
+      render();
+    });
+  });
+});
+</script>
+</body>
+</html>

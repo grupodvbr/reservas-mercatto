@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LICITAR</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================= */
+:root {
+  --azul: #0b1e39;
+  --azul-claro: #152c4d;
+  --dourado: #c9a86c;
+  --shadow: 0 8px 25px rgba(0,0,0,0.25);
+}
+
+/* Reset */
+* {
+  margin:0; padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body {
+  background:#f2f4f7;
+  height:100vh;
+  display:flex;
+  overflow:hidden;
+}
+
+/* =============================
+   SPLASH SCREEN
+============================= */
+#splash {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:var(--azul);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999999;
+  flex-direction:column;
+  animation: fadeOut 1.2s ease forwards;
+  animation-delay: 2.3s;
+}
+
+/* Nome com efeito shine */
+#splash h1 {
+  font-size:60px;
+  color:white;
+  letter-spacing:6px;
+  opacity:0;
+  animation: fadeInUp 1.1s ease forwards;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Efeito shine */
+#splash h1::after {
+  content:"";
+  position:absolute;
+  top:0;
+  left:-150%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255,255,255,0.55) 50%,
+      transparent 100%
+  );
+  animation: shineMove 2.3s ease-in-out forwards;
+  animation-delay:0.4s;
+}
+
+/* Shine passando */
+@keyframes shineMove {
+  0% { left:-150%; }
+  100% { left:150%; }
+}
+
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(30px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity:1; }
+  to { opacity:0; visibility:hidden; }
+}
+
+/* =============================
+   SIDEBAR
+============================= */
+#sidebar {
+  width:260px;
+  background:var(--azul);
+  color:white;
+  padding:25px 15px;
+  height:100vh;
+  transition:0.3s ease;
+  position:relative;
+  box-shadow:4px 0 12px rgba(0,0,0,0.4);
+}
+
+#sidebar.minimized {
+  width:75px;
+}
+
+#toggleSidebar {
+  position:absolute;
+  top:20px;
+  right:-15px;
+  width:36px; height:36px;
+  background:var(--dourado);
+  color:white;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  font-weight:bold;
+}
+
+/* título lateral */
+.sidebar-title {
+  font-size:24px;
+  font-weight:600;
+  margin-bottom:20px;
+  letter-spacing:2px;
+  transition:0.2s;
+}
+
+#sidebar.minimized .sidebar-title {
+  opacity:0;
+  pointer-events:none;
+}
+
+/* itens */
+.nav-item {
+  padding:14px 12px;
+  border-radius:10px;
+  background:var(--azul-claro);
+  margin-bottom:12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  transition:0.2s;
+}
+
+.nav-item:hover {
+  background:#1d3c63;
+  transform:translateX(3px);
+}
+
+.nav-text {
+  transition:0.2s ease;
+}
+
+#sidebar.minimized .nav-text {
+  opacity:0;
+  pointer-events:none;
+}
+
+/* =============================
+   CONTEÚDO
+============================= */
+#content {
+  flex:1;
+  padding:35px;
+  overflow-y:auto;
+}
+
+#content h1 {
+  font-size:32px;
+  margin-bottom:25px;
+}
+
+/* =============================
+   CARDS
+============================= */
+.cards {
+  display:flex;
+  gap:25px;
+  flex-wrap:wrap;
+}
+
+.card {
+  width:200px;
+  background:white;
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+  cursor:pointer;
+  box-shadow:0 8px 22px rgba(0,0,0,0.15);
+  transition:0.2s ease-in-out;
+}
+
+.card:hover {
+  transform:translateY(-6px);
+}
+
+.card img {
+  width:120px;
+  height:120px;
+  margin-bottom:12px;
+  object-fit:contain;
+}
+
+/* iframe */
+#iframePage {
+  width:100%;
+  height:87vh;
+  border:none;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1>LICITAR</h1>
+</div>
+
+<script>
+// REMOVE O SPLASH PARA SEMPRE
+setTimeout(() => {
+  document.getElementById("splash").remove();
+}, 2600);
+</script>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+
+  <div id="toggleSidebar" onclick="toggleMenu()">☰</div>
+
+  <div class="sidebar-title">LICITAR</div>
+
+  <div class="nav-item" onclick="loadPage()">
+    🏠 <span class="nav-text">Página Inicial</span>
+  </div>
+
+  <div class="nav-item" onclick="loadIframe('comparacao.html')">
+    📦 <span class="nav-text">Itens</span>
+  </div>
+
+  <div class="nav-item" onclick="loadIframe('documentos.html')">
+    📁 <span class="nav-text">Documentação</span>
+  </div>
+
+  <div class="nav-item" onclick="loadIframe('licitacoes.html')">
+    📊 <span class="nav-text">Licitações</span>
+  </div>
+
+  <div class="nav-item" onclick="loadIframe('pagina4.html')">
+    ⚙️ <span class="nav-text">Configurações</span>
+  </div>
+
+</div>
+
+<!-- CONTEÚDO -->
+<div id="content">
+
+  <div id="homeSection">
+    <h1>Sistema de Licitações</h1>
+
+    <div class="cards">
+
+      <div class="card" onclick="window.open('https://www.gov.br/compras/pt-br', '_blank')">
+        <img src="https://raw.githubusercontent.com/grupodvbr/cotacao/main/paste/Design%20sem%20nome%20(28).png">
+        <p>Compras.gov</p>
+      </div>
+
+      <div class="card" onclick="window.open('https://minha.effecti.com.br/#/', '_blank')">
+        <img src="https://raw.githubusercontent.com/grupodvbr/cotacao/main/paste/Design%20sem%20nome%20(29).png">
+        <p>Effecti</p>
+      </div>
+
+    </div>
+  </div>
+
+  <iframe id="iframePage"></iframe>
+
+</div>
+
+<script>
+/* recolher menu */
+function toggleMenu(){
+  document.getElementById("sidebar").classList.toggle("minimized");
+}
+
+/* abrir páginas */
+function loadIframe(url){
+  homeSection.style.display="none";
+  iframePage.style.display="block";
+  iframePage.src = url;
+}
+
+function loadPage(){
+  homeSection.style.display="block";
+  iframePage.style.display="none";
+}
+</script>
+
+</body>
+</html>
