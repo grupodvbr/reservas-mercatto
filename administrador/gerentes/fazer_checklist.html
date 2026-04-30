@@ -3,113 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Execução Checklist</title>
+<title>Checklist Execução</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{
-margin:0;
-font-family:Inter;
-background:#f1f5f9;
-}
+body{margin:0;font-family:Inter;background:#f1f5f9}
 
-/* LOGIN */
-.login{
-padding:20px;
-}
-
-input{
-width:100%;
-padding:14px;
-margin-bottom:10px;
-border-radius:10px;
-border:1px solid #ccc;
-}
-
-button{
-width:100%;
-padding:14px;
-border:none;
-border-radius:10px;
-background:#2563eb;
-color:#fff;
-font-weight:bold;
-}
-
-/* APP */
-.app{
-display:none;
-}
-
+/* HEADER */
 .header{
 background:#020617;
 color:#fff;
 padding:15px;
-text-align:center;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
-.data{
-text-align:center;
-font-weight:bold;
-padding:10px;
+.add{
+background:#22c55e;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
 }
 
-/* TAREFAS */
-.lista{
-padding:10px;
-}
+/* LISTA */
+.lista{padding:10px}
 
 .card{
 background:#fff;
 padding:15px;
 border-radius:12px;
 margin-bottom:10px;
-box-shadow:0 5px 15px rgba(0,0,0,0.05);
 }
 
-.hora{
-font-weight:bold;
-font-size:14px;
-color:#2563eb;
+.btn{
+margin-top:8px;
+padding:10px;
+border:none;
+border-radius:8px;
+width:100%;
+cursor:pointer;
 }
 
-.tarefa{
-font-size:15px;
-margin-top:5px;
-}
-
-.status{
-margin-top:5px;
-font-size:12px;
-}
+.finalizar{background:#2563eb;color:#fff}
+.anexo{background:#f59e0b;color:#fff}
 
 .ok{color:green}
 .atraso{color:red}
+
+/* MODAL */
+.modal{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,.5);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.box{
+background:#fff;
+padding:20px;
+border-radius:10px;
+width:90%;
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin-top:5px;
+margin-bottom:10px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div class="login" id="login">
-<h2>Login</h2>
-
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-
-<button onclick="entrar()">Entrar</button>
+<div class="header">
+<div id="nome"></div>
+<div class="add" onclick="abrirAdd()">＋</div>
 </div>
 
-<!-- APP -->
-<div class="app" id="app">
+<div id="lista" class="lista"></div>
 
-<div class="header" id="nome"></div>
+<!-- MODAL ADD -->
+<div class="modal" id="modalAdd">
+<div class="box">
+<h3>Nova Tarefa</h3>
 
-<div class="data" id="data"></div>
+<input id="tarefaNova" placeholder="Tarefa">
+<input id="usuariosNova" placeholder="Usuários (ex: NALBERT,IVANIO)">
+<input type="time" id="inicioNova">
+<input type="time" id="fimNova">
 
-<div class="lista" id="lista"></div>
+<button onclick="salvarNova()">Salvar</button>
+</div>
+</div>
 
+<!-- MODAL FINALIZAR -->
+<div class="modal" id="modalFinal">
+<div class="box">
+<h3>Finalizar</h3>
+
+<textarea id="obs"></textarea>
+<button onclick="confirmarFinal()">Confirmar</button>
+</div>
 </div>
 
 <script>
@@ -118,110 +118,147 @@ const sb = supabase.createClient(
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let usuario = null;
-let dataAtual = new Date();
+let usuario="NALBERT";
+let tarefas=[];
+let tarefaAtual=null;
 
-// LOGIN
-async function entrar(){
-
-const u = user.value.toUpperCase();
-const p = pass.value;
-
-const { data } = await sb
-.from("usuarios_do_sistema")
-.select("*")
-.eq("usuario", u)
-.maybeSingle();
-
-if(!data || data.senha != p){
-alert("Erro login");
-return;
-}
-
-usuario = data.usuario;
-
-login.style.display="none";
-app.style.display="block";
-
-nome.innerText = data.nome;
-
-carregar();
-}
-
-// CARREGAR TAREFAS
+// CARREGAR
 async function carregar(){
 
-const dataStr = dataAtual.toISOString().split("T")[0];
-document.getElementById("data").innerText = dataStr;
+const hoje = new Date().toISOString().split("T")[0];
 
 const { data } = await sb
 .from("agenda_checklist")
 .select("*")
-.eq("data", dataStr);
+.eq("data", hoje);
 
-let tarefas = (data || []).filter(t=>{
-
-// tarefa compartilhada
+tarefas = data.filter(t=>{
 if(t.usuario.includes(",")){
 return t.usuario.split(",").includes(usuario);
 }
-
-// tarefa normal
-return t.usuario == usuario;
-
+return t.usuario==usuario;
 });
 
-// ordenar por horário
-tarefas.sort((a,b)=>{
-return (a.hora_inicio || "").localeCompare(b.hora_inicio || "");
-});
-
-render(tarefas);
+render();
 }
 
 // RENDER
-function render(tarefas){
+function render(){
 
 lista.innerHTML="";
 
 tarefas.forEach(t=>{
 
 const agora = new Date();
-const fim = new Date(`${dataAtual.toISOString().split("T")[0]}T${t.hora_fim}`);
+const fim = new Date(`${new Date().toISOString().split("T")[0]}T${t.hora_fim}`);
 
-let status = agora > fim ? "Atrasado" : "Dentro";
+const status = agora > fim ? "Atrasado" : "Dentro";
 
-lista.innerHTML += `
+lista.innerHTML+=`
 <div class="card">
-<div class="hora">${t.hora_inicio} - ${t.hora_fim}</div>
-<div class="tarefa">${t.tarefa} ${t.obrigatorio_foto ? '📎' : ''}</div>
-<div class="status ${status=='Atrasado'?'atraso':'ok'}">${status}</div>
+<div><b>${t.hora_inicio} - ${t.hora_fim}</b></div>
+<div>${t.tarefa} ${t.obrigatorio_foto?'📎':''}</div>
+<div class="${status=='Atrasado'?'atraso':'ok'}">${status}</div>
+
+${t.obrigatorio_foto && !t.anexo_url ? `<button class="btn anexo" onclick="upload('${t.id}')">Anexar</button>`:''}
+
+${t.status_execucao!='concluido' ? `<button class="btn finalizar" onclick="finalizar('${t.id}')">Finalizar</button>`:''}
 </div>
 `;
-
 });
 }
 
-// SWIPE
-let startX=0;
+// FINALIZAR
+function finalizar(id){
+tarefaAtual=id;
+modalFinal.style.display="flex";
+}
 
-document.addEventListener("touchstart", e=>{
-startX = e.touches[0].clientX;
-});
+// CONFIRMAR FINAL
+async function confirmarFinal(){
 
-document.addEventListener("touchend", e=>{
-let endX = e.changedTouches[0].clientX;
+const observacao = obs.value;
 
-if(endX - startX > 50){
-dataAtual.setDate(dataAtual.getDate()-1);
+const { data } = await sb
+.from("agenda_checklist")
+.select("*")
+.eq("id", tarefaAtual)
+.single();
+
+if(data.obrigatorio_foto && !data.anexo_url){
+alert("Precisa anexar foto");
+return;
+}
+
+await sb.from("agenda_checklist")
+.update({
+status_execucao:"concluido",
+observacao,
+concluido_em:new Date()
+})
+.eq("id", tarefaAtual);
+
+modalFinal.style.display="none";
 carregar();
 }
 
-if(startX - endX > 50){
-dataAtual.setDate(dataAtual.getDate()+1);
+// UPLOAD
+async function upload(id){
+
+const input = document.createElement("input");
+input.type="file";
+
+input.onchange = async e=>{
+const file = e.target.files[0];
+
+const path = `${id}_${Date.now()}.jpg`;
+
+await sb.storage
+.from("anexos_checklist")
+.upload(path, file);
+
+const { data } = sb.storage
+.from("anexos_checklist")
+.getPublicUrl(path);
+
+await sb.from("agenda_checklist")
+.update({ anexo_url: data.publicUrl })
+.eq("id", id);
+
+carregar();
+};
+
+input.click();
+}
+
+// ADD
+function abrirAdd(){
+modalAdd.style.display="flex";
+}
+
+async function salvarNova(){
+
+const tarefa = tarefaNova.value;
+const usuarios = usuariosNova.value;
+const inicio = inicioNova.value;
+const fim = fimNova.value;
+
+const hoje = new Date().toISOString().split("T")[0];
+
+await sb.from("agenda_checklist").insert({
+tarefa,
+usuario:usuarios,
+data:hoje,
+hora_inicio:inicio,
+hora_fim:fim
+});
+
+modalAdd.style.display="none";
 carregar();
 }
-});
+
+// INIT
+carregar();
 </script>
 
 </body>
