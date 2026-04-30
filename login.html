@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>OTTO Login</title>
+<title>OTTO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
@@ -20,48 +20,64 @@ body{
   overflow:hidden;
 }
 
-/* FUNDO ANIMADO */
+/* FUNDO PREMIUM */
 .bg{
   position:absolute;
   width:100%;
   height:100%;
-  background: radial-gradient(circle at 30% 30%, #2563eb33, transparent),
-              radial-gradient(circle at 70% 70%, #6366f133, transparent);
-  animation:move 8s infinite alternate;
+  background:
+    radial-gradient(circle at 20% 30%, #3b82f633, transparent),
+    radial-gradient(circle at 80% 70%, #6366f133, transparent);
+  animation:move 10s infinite alternate;
 }
 
 @keyframes move{
   0%{transform:scale(1)}
-  100%{transform:scale(1.2)}
+  100%{transform:scale(1.3)}
 }
 
-/* CARD LOGIN */
+/* CARD */
 .card{
   position:relative;
   z-index:2;
-  width:340px;
-  padding:30px;
-  background:#0f172a;
-  border-radius:18px;
-  box-shadow:0 20px 50px rgba(0,0,0,.6);
+  width:360px;
+  padding:35px;
+  border-radius:20px;
+
+  background:rgba(15,23,42,.8);
+  backdrop-filter:blur(15px);
+
+  box-shadow:0 25px 60px rgba(0,0,0,.6);
+
   text-align:center;
+
+  animation:fadeIn .6s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(20px)}
+  to{opacity:1; transform:translateY(0)}
 }
 
 /* LOGO */
 .logo{
-  font-size:28px;
-  font-weight:800;
+  font-size:30px;
+  font-weight:900;
   color:#3b82f6;
-  margin-bottom:20px;
+  margin-bottom:25px;
 }
 
 /* INPUT */
+.input{
+  position:relative;
+  margin:10px 0;
+}
+
 input{
   width:100%;
-  padding:12px;
-  margin:10px 0;
+  padding:14px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   background:#1e293b;
   color:#fff;
   font-size:14px;
@@ -70,26 +86,36 @@ input{
 /* BOTAO */
 button{
   width:100%;
-  padding:12px;
-  margin-top:10px;
+  padding:14px;
+  margin-top:15px;
   border:none;
-  border-radius:10px;
-  background:#2563eb;
+  border-radius:12px;
+
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
   color:#fff;
   font-weight:700;
+
   cursor:pointer;
   transition:.2s;
 }
 
 button:hover{
-  background:#1d4ed8;
+  transform:scale(1.02);
+}
+
+/* LOADING */
+.loading{
+  display:none;
+  margin-top:10px;
+  color:#94a3b8;
+  font-size:13px;
 }
 
 /* ERRO */
 .erro{
-  color:#ef4444;
-  font-size:12px;
   margin-top:10px;
+  font-size:13px;
+  color:#ef4444;
 }
 </style>
 </head>
@@ -101,11 +127,17 @@ button:hover{
 <div class="card">
   <div class="logo">OTTO</div>
 
-  <input id="usuario" placeholder="Usuário">
-  <input id="senha" type="password" placeholder="Senha">
+  <div class="input">
+    <input id="usuario" placeholder="Usuário">
+  </div>
+
+  <div class="input">
+    <input id="senha" type="password" placeholder="Senha">
+  </div>
 
   <button onclick="login()">Entrar</button>
 
+  <div class="loading" id="loading">Verificando...</div>
   <div class="erro" id="erro"></div>
 </div>
 
@@ -113,44 +145,55 @@ button:hover{
 
 <script>
 const supabaseClient = supabase.createClient(
-  "https://mblvyircwsaxaslklzky.supabase.co",
-  "sb_publishable_oN2CuBzXHaUF7NHYS_M7aw_tBqVeD-x"
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
 async function login(){
 
-  const usuario = document.getElementById("usuario").value;
-  const senha = document.getElementById("senha").value;
+  const usuario = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value.trim();
 
-  const { data, error } = await supabaseClient
-    .from("usuarios_do_sistema")
-    .select("*")
-    .eq("usuario", usuario)
-    .eq("senha", senha)
-    .eq("ativo", true)
-    .single();
+  const erro = document.getElementById("erro");
+  const loading = document.getElementById("loading");
 
-  if(error || !data){
-    document.getElementById("erro").innerText = "Usuário ou senha inválidos";
-    return;
+  erro.innerText = "";
+  loading.style.display = "block";
+
+  try{
+
+    const { data, error } = await supabaseClient
+      .from("usuarios_do_sistema")
+      .select("*")
+      .eq("usuario", usuario)
+      .eq("senha", senha)
+      .eq("ativo", true)
+      .maybeSingle();
+
+    if(error || !data){
+      throw new Error("Usuário ou senha inválidos");
+    }
+
+    // 🔥 BLOQUEIO
+    if(data.nivel_acesso == 0){
+      throw new Error("Acesso bloqueado");
+    }
+
+    // SALVA
+    localStorage.setItem("usuarioLogado", JSON.stringify(data));
+
+    // ANIMAÇÃO
+    document.body.style.opacity = "0";
+
+    setTimeout(()=>{
+      location.href = "index.html";
+    },400);
+
+  }catch(err){
+    erro.innerText = err.message;
   }
 
-  // 🔥 BLOQUEIO NIVEL 0
-  if(data.nivel_acesso == 0){
-    document.getElementById("erro").innerText = "Sem acesso ao sistema";
-    return;
-  }
-
-  // SALVA SESSÃO
-  localStorage.setItem("usuarioLogado", JSON.stringify(data));
-
-  // ANIMAÇÃO DE ENTRADA
-  document.body.style.transition = "0.5s";
-  document.body.style.opacity = "0";
-
-  setTimeout(()=>{
-    location.href = "index.html";
-  },500);
+  loading.style.display = "none";
 }
 </script>
 
