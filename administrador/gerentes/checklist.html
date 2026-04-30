@@ -4,100 +4,52 @@
 <meta charset="UTF-8">
 <title>Agenda Checklist</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{font-family:Inter;margin:0;background:#f1f5f9}
-header{background:#020617;color:#fff;padding:15px;font-size:20px}
-.container{padding:20px}
+body{font-family:Inter;margin:0;background:#f1f5f9;padding:20px}
+.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:15px}
 
-.card{
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:20px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.05);
-}
-
-input{
-  padding:10px;
-  width:100%;
-  border:1px solid #ccc;
-  border-radius:6px;
-  margin-bottom:10px;
-}
-
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.btn-add{background:#22c55e;color:#fff}
-.btn-remove{background:#ef4444;color:#fff}
-.btn-save{background:#3b82f6;color:#fff;width:100%}
+input{width:100%;padding:10px;margin-top:5px;border:1px solid #ccc;border-radius:6px}
 
 .lista{
-  max-height:200px;
-  overflow:auto;
-  border:1px solid #ccc;
+border:1px solid #ccc;
+max-height:150px;
+overflow:auto;
+margin-top:5px;
 }
 
 .item{
-  padding:10px;
-  cursor:pointer;
+padding:10px;
+cursor:pointer;
 }
-.item:hover{background:#e2e8f0}
+.item:hover{background:#eee}
 
-table{width:100%;border-collapse:collapse}
-td,th{padding:10px;border-bottom:1px solid #ddd;text-align:center}
-th{background:#f8fafc}
+table{width:100%;margin-top:10px;border-collapse:collapse}
+td,th{border:1px solid #ddd;padding:6px;text-align:center}
 
-.modal{
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal-box{
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-}
+button{padding:8px 10px;border:none;border-radius:6px;cursor:pointer}
 </style>
 </head>
 
 <body>
 
-<header>Agenda Checklist</header>
-
-<div class="container">
-
-<!-- USUARIO -->
 <div class="card">
-<h3>Selecionar Funcionário</h3>
+<h3>Selecionar Usuário</h3>
 
-<input type="text" id="buscaUsuario" placeholder="Buscar usuário...">
-<div class="lista" id="listaUsuarios"></div>
+<input id="buscaUsuario" placeholder="Digite o nome...">
+<div id="listaUsuarios" class="lista"></div>
 
 <input type="date" id="data">
 </div>
 
-<!-- TAREFAS -->
 <div class="card">
-<h3>Buscar Tarefas</h3>
+<h3>Buscar Tarefa</h3>
 
-<input type="text" id="buscaTarefa" placeholder="Buscar tarefa...">
-<div class="lista" id="listaTarefas"></div>
+<input id="buscaTarefa" placeholder="Digite tarefa...">
+<div id="listaTarefas" class="lista"></div>
 </div>
 
-<!-- PLANILHA -->
 <div class="card">
 <h3>Agenda</h3>
 
@@ -111,176 +63,161 @@ th{background:#f8fafc}
 <th></th>
 </tr>
 </thead>
-
 <tbody id="tabela"></tbody>
 </table>
 
-<button class="btn-save" onclick="salvar()">Salvar</button>
-
+<button onclick="salvar()">Salvar</button>
 </div>
 
-</div>
+<!-- MODAL -->
+<div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+<div style="background:#fff;padding:20px;border-radius:10px;width:250px">
 
-<!-- MODAL HORARIO -->
-<div class="modal" id="modal">
-<div class="modal-box">
-<h3>Definir Horário</h3>
-
+<h4>Horário</h4>
 <input type="time" id="inicio">
 <input type="time" id="fim">
 
-<button class="btn-add" onclick="confirmarHorario()">Confirmar</button>
+<button onclick="confirmar()">OK</button>
 
 </div>
 </div>
 
 <script>
-const client = supabase.createClient(
-  "https://dxkszikemntfusfyrzos.supabase.co",
-  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+const sb = supabase.createClient(
+"https://dxkszikemntfusfyrzos.supabase.co",
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let usuarioSelecionado = null;
-let tarefas = [];
-let tarefaTemp = null;
+let usuarioSelecionado=null;
+let tarefas=[];
+let tempTarefa=null;
 
-// ================= USUARIOS =================
-document.getElementById('buscaUsuario').addEventListener('input', async e=>{
-  const termo = e.target.value;
+// 🔎 BUSCAR USUARIO (IGUAL SEU SISTEMA)
+buscaUsuario.onkeyup = async ()=>{
 
-  const { data } = await client
-    .from('usuarios')
-    .select('*')
-    .ilike('nome', `%${termo}%`);
+const q = buscaUsuario.value;
 
-  const lista = document.getElementById('listaUsuarios');
-  lista.innerHTML = '';
-
-  data.forEach(u=>{
-    const div = document.createElement('div');
-    div.className='item';
-    div.innerText = u.nome + ' ('+u.setor+')';
-
-    div.onclick = ()=>{
-      usuarioSelecionado = u.usuario;
-      document.getElementById('buscaUsuario').value = u.nome;
-      lista.innerHTML = '';
-    };
-
-    lista.appendChild(div);
-  });
-});
-
-// ================= TAREFAS =================
-document.getElementById('buscaTarefa').addEventListener('input', async e=>{
-  const termo = e.target.value;
-
-  const { data } = await client
-    .from('checklist_mercatto')
-    .select('*')
-    .ilike('tarefa', `%${termo}%`);
-
-  const lista = document.getElementById('listaTarefas');
-  lista.innerHTML = '';
-
-  data.forEach(t=>{
-    const div = document.createElement('div');
-    div.className='item';
-    div.innerText = t.tarefa;
-
-    div.onclick = ()=>{
-      tarefaTemp = t.tarefa;
-      abrirModal();
-    };
-
-    lista.appendChild(div);
-  });
-});
-
-// ================= MODAL =================
-function abrirModal(){
-  document.getElementById('modal').style.display='flex';
+if(q.length < 1){
+listaUsuarios.innerHTML="";
+return;
 }
 
-function confirmarHorario(){
-  const inicio = document.getElementById('inicio').value;
-  const fim = document.getElementById('fim').value;
+const { data } = await sb
+.from("usuarios_do_sistema")
+.select("usuario,nome,setor")
+.ilike("nome", `%${q}%`)
+.limit(10);
 
-  tarefas.push({
-    tarefa: tarefaTemp,
-    inicio,
-    fim
-  });
+listaUsuarios.innerHTML="";
 
-  document.getElementById('modal').style.display='none';
-  render();
+data.forEach(u=>{
+listaUsuarios.innerHTML+=`
+<div class="item" onclick="selUser('${u.usuario}','${u.nome}')">
+${u.nome} (${u.setor || 'SEM SETOR'})
+</div>
+`;
+});
+};
+
+function selUser(usuario,nome){
+usuarioSelecionado=usuario;
+buscaUsuario.value=nome;
+listaUsuarios.innerHTML="";
 }
 
-// ================= RENDER =================
+// 🔎 BUSCAR TAREFA
+buscaTarefa.onkeyup = async ()=>{
+
+const q = buscaTarefa.value;
+
+if(q.length < 1){
+listaTarefas.innerHTML="";
+return;
+}
+
+const { data } = await sb
+.from("checklist_mercatto")
+.select("*")
+.ilike("tarefa", `%${q}%`)
+.limit(10);
+
+listaTarefas.innerHTML="";
+
+data.forEach(t=>{
+listaTarefas.innerHTML+=`
+<div class="item" onclick="add('${t.tarefa}')">
+${t.tarefa}
+</div>
+`;
+});
+};
+
+function add(t){
+tempTarefa=t;
+modal.style.display="flex";
+}
+
+// CONFIRMAR HORARIO
+function confirmar(){
+
+const inicio = document.getElementById("inicio").value;
+const fim = document.getElementById("fim").value;
+
+tarefas.push({tarefa:tempTarefa,inicio,fim});
+
+modal.style.display="none";
+render();
+}
+
+// RENDER
 function render(){
-  const tbody = document.getElementById('tabela');
-  tbody.innerHTML='';
 
-  tarefas.forEach((t,i)=>{
+tabela.innerHTML="";
 
-    const agora = new Date();
-    const hoje = agora.toISOString().split('T')[0];
-    const dataFim = new Date(`${hoje}T${t.fim}`);
+tarefas.forEach((t,i)=>{
 
-    let status = agora > dataFim ? 'Atrasado' : 'Dentro';
+const agora = new Date();
+const hoje = agora.toISOString().split("T")[0];
+const fim = new Date(`${hoje}T${t.fim}`);
 
-    const tr = document.createElement('tr');
+const status = agora > fim ? "Atrasado" : "Dentro";
 
-    tr.innerHTML=`
-      <td>${t.tarefa}</td>
-      <td>${t.inicio}</td>
-      <td>${t.fim}</td>
-      <td style="color:${status=='Atrasado'?'red':'green'}">${status}</td>
-      <td><button class="btn-remove" onclick="remover(${i})">X</button></td>
-    `;
-
-    tbody.appendChild(tr);
-  });
+tabela.innerHTML+=`
+<tr>
+<td>${t.tarefa}</td>
+<td>${t.inicio}</td>
+<td>${t.fim}</td>
+<td>${status}</td>
+<td><button onclick="rem(${i})">X</button></td>
+</tr>
+`;
+});
 }
 
-// ================= REMOVER =================
-function remover(i){
-  tarefas.splice(i,1);
-  render();
+function rem(i){
+tarefas.splice(i,1);
+render();
 }
 
-// ================= SALVAR =================
+// SALVAR
 async function salvar(){
 
-  const data = document.getElementById('data').value;
+const dataAgenda = document.getElementById("data").value;
 
-  if(!usuarioSelecionado || tarefas.length == 0){
-    alert('Preencha tudo');
-    return;
-  }
+const inserts = tarefas.map(t=>({
+usuario:usuarioSelecionado,
+tarefa:t.tarefa,
+data:dataAgenda,
+hora_inicio:t.inicio,
+hora_fim:t.fim,
+status_execucao:"pendente"
+}));
 
-  const inserts = tarefas.map(t=>({
-    usuario: usuarioSelecionado,
-    tarefa: t.tarefa,
-    data,
-    hora_inicio: t.inicio,
-    hora_fim: t.fim,
-    status_execucao: 'pendente'
-  }));
+await sb.from("agenda_checklist").insert(inserts);
 
-  const { error } = await client
-    .from('agenda_checklist')
-    .insert(inserts);
-
-  if(error){
-    console.log(error);
-    alert('Erro ao salvar');
-    return;
-  }
-
-  alert('Salvo com sucesso!');
-  tarefas = [];
-  render();
+alert("Salvo!");
+tarefas=[];
+render();
 }
 </script>
 
