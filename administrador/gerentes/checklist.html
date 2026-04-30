@@ -360,7 +360,7 @@ return;
 
 const { data } = await sb
 .from("checklist_mercatto")
-.select("*")
+.select("tarefa, obrigatorio_foto")
 .ilike("tarefa", `%${q}%`)
 .limit(10);
 
