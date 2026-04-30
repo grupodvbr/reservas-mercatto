@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotação Completa</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  font-family:Inter;
+  background:#f5f7fb;
+  padding:20px;
+}
+
+.box{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+
+input,select{
+  padding:8px;
+  margin:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+
+th{
+  background:#2563eb;
+  color:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<h2>💰 Cotação</h2>
+
+<div class="box">
+<input id="nomeCotacao" placeholder="Nome">
+<button onclick="criarCotacao()">Criar</button>
+</div>
+
+<div class="box">
+<input id="produto" placeholder="Produto">
+<input id="qtd" type="number" placeholder="Qtd">
+<button onclick="addItem()">Adicionar Item</button>
+</div>
+
+<div class="box">
+<select id="fornecedor"></select>
+<button onclick="addFornecedor()">+ Fornecedor</button>
+</div>
+
+<div class="box">
+<table>
+<thead id="head"></thead>
+<tbody id="body"></tbody>
+</table>
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let cotacaoId = null;
+let itens = [];
+let fornecedores = [];
+
+// ===============================
+// 🔥 CRIAR COTAÇÃO
+// ===============================
+async function criarCotacao(){
+
+  const nome = nomeCotacao.value;
+
+  const { data } = await sb
+    .from("cotacoes")
+    .insert([{ nome, data: new Date() }])
+    .select();
+
+  cotacaoId = data[0].id;
+
+  alert("Cotação criada!");
+}
+
+// ===============================
+// 🔥 ADICIONAR ITEM
+// ===============================
+async function addItem(){
+
+  const { data } = await sb
+    .from("cotacoes_itens")
+    .insert([{
+      cotacao_id: cotacaoId,
+      produto: produto.value,
+      quantidade: qtd.value
+    }])
+    .select();
+
+  itens.push(data[0]);
+
+  render();
+}
+
+// ===============================
+// 🔥 CARREGAR FORNECEDORES
+// ===============================
+async function carregarFornecedores(){
+
+  const { data } = await sb.from("fornecedores").select("*");
+
+  fornecedor.innerHTML =
+    data.map(f=>`<option value="${f.id}">${f.nome}</option>`).join("");
+}
+
+// ===============================
+// 🔥 ADD FORNECEDOR NA TELA
+// ===============================
+function addFornecedor(){
+
+  const id = fornecedor.value;
+  const nome = fornecedor.options[fornecedor.selectedIndex].text;
+
+  fornecedores.push({id,nome});
+
+  render();
+}
+
+// ===============================
+// 🔥 RENDER TABELA
+// ===============================
+async function render(){
+
+  // HEAD
+  let headHTML = `<tr><th>Produto</th><th>Qtd</th>`;
+
+  fornecedores.forEach(f=>{
+    headHTML += `<th>${f.nome}</th>`;
+  });
+
+  headHTML += `</tr>`;
+
+  head.innerHTML = headHTML;
+
+  // BODY
+  let bodyHTML = "";
+
+  for(const item of itens){
+
+    bodyHTML += `<tr>
+      <td>${item.produto}</td>
+      <td>${item.quantidade}</td>
+    `;
+
+    for(const f of fornecedores){
+
+      const { data } = await sb
+        .from("cotacoes_precos")
+        .select("*")
+        .eq("item_id", item.id)
+        .eq("fornecedor_id", f.id);
+
+      const preco = data[0]?.preco || "";
+
+      bodyHTML += `
+      <td>
+        <input type="number"
+        value="${preco}"
+        onchange="salvarPreco('${item.id}','${f.id}',this.value)">
+      </td>`;
+    }
+
+    bodyHTML += `</tr>`;
+  }
+
+  body.innerHTML = bodyHTML;
+}
+
+// ===============================
+// 🔥 SALVAR PREÇO
+// ===============================
+async function salvarPreco(item, fornecedor, valor){
+
+  await sb.from("cotacoes_precos").upsert([{
+    cotacao_id: cotacaoId,
+    item_id: item,
+    fornecedor_id: fornecedor,
+    preco: valor
+  }]);
+}
+
+// ===============================
+carregarFornecedores();
+
+</script>
+
+</body>
+</html>
