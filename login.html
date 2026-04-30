@@ -1,117 +1,157 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 🔥 SEM ZOOM -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 <title>OTTO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
 <style>
-body{
+*{
   margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter;
+}
+
+/* ===== BODY ===== */
+body{
   height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
   background:#020617;
-  font-family:Inter;
   overflow:hidden;
 }
 
-/* FUNDO PREMIUM */
+/* ===== FUNDO PREMIUM ===== */
 .bg{
   position:absolute;
   width:100%;
   height:100%;
+
   background:
-    radial-gradient(circle at 20% 30%, #3b82f633, transparent),
-    radial-gradient(circle at 80% 70%, #6366f133, transparent);
-  animation:move 10s infinite alternate;
+    radial-gradient(circle at 15% 25%, #3b82f633, transparent),
+    radial-gradient(circle at 85% 75%, #6366f133, transparent);
+
+  animation:float 12s infinite alternate ease-in-out;
 }
 
-@keyframes move{
+@keyframes float{
   0%{transform:scale(1)}
-  100%{transform:scale(1.3)}
+  100%{transform:scale(1.4)}
 }
 
-/* CARD */
+/* ===== CARD ===== */
 .card{
   position:relative;
   z-index:2;
+
   width:360px;
-  padding:35px;
-  border-radius:20px;
+  padding:40px 32px;
 
-  background:rgba(15,23,42,.8);
-  backdrop-filter:blur(15px);
+  border-radius:24px;
 
-  box-shadow:0 25px 60px rgba(0,0,0,.6);
+  background:rgba(15,23,42,.75);
+  backdrop-filter:blur(20px);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,.8),
+    inset 0 0 0 1px rgba(255,255,255,.04);
 
   text-align:center;
 
-  animation:fadeIn .6s ease;
+  animation:enter .6s ease;
 }
 
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(20px)}
-  to{opacity:1; transform:translateY(0)}
+@keyframes enter{
+  from{
+    opacity:0;
+    transform:translateY(40px) scale(.95);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
 }
 
-/* LOGO */
+/* ===== LOGO ===== */
 .logo{
-  font-size:30px;
+  font-size:34px;
   font-weight:900;
-  color:#3b82f6;
-  margin-bottom:25px;
+  letter-spacing:2px;
+
+  background:linear-gradient(90deg,#3b82f6,#6366f1);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+
+  margin-bottom:30px;
 }
 
-/* INPUT */
+/* ===== INPUT ===== */
 .input{
-  position:relative;
-  margin:10px 0;
+  margin-bottom:14px;
 }
 
 input{
   width:100%;
   padding:14px;
+
+  border-radius:14px;
   border:none;
-  border-radius:12px;
+
   background:#1e293b;
   color:#fff;
+
   font-size:14px;
-}
 
-/* BOTAO */
-button{
-  width:100%;
-  padding:14px;
-  margin-top:15px;
-  border:none;
-  border-radius:12px;
-
-  background:linear-gradient(135deg,#2563eb,#4f46e5);
-  color:#fff;
-  font-weight:700;
-
-  cursor:pointer;
   transition:.2s;
 }
 
-button:hover{
-  transform:scale(1.02);
+input:focus{
+  outline:none;
+  background:#0f172a;
+  box-shadow:0 0 0 2px #3b82f6;
 }
 
-/* LOADING */
+/* ===== BOTÃO ===== */
+button{
+  width:100%;
+  padding:15px;
+
+  margin-top:10px;
+
+  border:none;
+  border-radius:14px;
+
+  font-weight:700;
+  color:#fff;
+
+  background:linear-gradient(135deg,#2563eb,#4f46e5);
+
+  cursor:pointer;
+  transition:.25s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 25px rgba(37,99,235,.4);
+}
+
+/* ===== LOADING ===== */
 .loading{
   display:none;
-  margin-top:10px;
-  color:#94a3b8;
+  margin-top:12px;
   font-size:13px;
+  color:#94a3b8;
 }
 
-/* ERRO */
+/* ===== ERRO ===== */
 .erro{
   margin-top:10px;
   font-size:13px;
@@ -125,20 +165,22 @@ button:hover{
 <div class="bg"></div>
 
 <div class="card">
+
   <div class="logo">OTTO</div>
 
   <div class="input">
-    <input id="usuario" placeholder="Usuário">
+    <input id="usuario" placeholder="Usuário" autofocus>
   </div>
 
   <div class="input">
-    <input id="senha" type="password" placeholder="Senha">
+    <input id="senha" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter') login()">
   </div>
 
-  <button onclick="login()">Entrar</button>
+  <button id="btn" onclick="login()">Entrar</button>
 
-  <div class="loading" id="loading">Verificando...</div>
+  <div class="loading" id="loading">Verificando acesso...</div>
   <div class="erro" id="erro"></div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -156,9 +198,12 @@ async function login(){
 
   const erro = document.getElementById("erro");
   const loading = document.getElementById("loading");
+  const btn = document.getElementById("btn");
 
   erro.innerText = "";
   loading.style.display = "block";
+  btn.innerText = "Entrando...";
+  btn.disabled = true;
 
   try{
 
@@ -174,15 +219,15 @@ async function login(){
       throw new Error("Usuário ou senha inválidos");
     }
 
-    // 🔥 BLOQUEIO
-    if(data.nivel_acesso == 0){
-      throw new Error("Acesso bloqueado");
+    // 🔥 AGORA SÓ NIVEL 0 PODE
+    if(data.nivel_acesso != 0){
+      throw new Error("Sem permissão de acesso");
     }
 
-    // SALVA
     localStorage.setItem("usuarioLogado", JSON.stringify(data));
 
-    // ANIMAÇÃO
+    // animação saída
+    document.body.style.transition = "0.4s";
     document.body.style.opacity = "0";
 
     setTimeout(()=>{
@@ -194,6 +239,8 @@ async function login(){
   }
 
   loading.style.display = "none";
+  btn.innerText = "Entrar";
+  btn.disabled = false;
 }
 </script>
 
