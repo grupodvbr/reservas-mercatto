@@ -1159,7 +1159,7 @@ function detectarAtivarOtto(texto){
   ]
 
   const palavrasOtto = [
-    "otto", "oto", "auto", "otio", "ot", "otoo"
+    "Otavio", "otávio", "otav", "ottavio", "ot", "otá"
   ]
 
   const temAtivar = palavrasAtivar.some(p => texto.includes(p))
@@ -1178,7 +1178,7 @@ function detectarDesativarOtto(texto){
   ]
 
   const palavrasOtto = [
-    "otto", "oto", "auto"
+    "otávio", "ottavio", "ottávio"
   ]
 
   return palavrasDesativar.some(p => texto.includes(p)) &&
@@ -1195,7 +1195,7 @@ function detectarDesativarOtto(texto){
 
    
 if(detectarAtivarOtto(texto)){
-  console.log("[OTTO] 🚀 Abrindo Canvas OTTO")
+    console.log("[OTÁVIO] 🚀 Abrindo Canvas OTTÁVIO")
 
   const popup = document.getElementById("popupOverlay")
   const iframe = popup.querySelector("iframe")
@@ -1528,7 +1528,7 @@ function enviarOttoManual(){
     border:1px solid #1e293b;
   ">
 
-    <h3 style="margin-bottom:15px">🔐 Ativar OTTO</h3>
+    <h3 style="margin-bottom:15px">🔐 Ativar OTTÁVIO</h3>
 
     <input id="senhaOtto" type="password" placeholder="Digite a senha"
       style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:10px">
