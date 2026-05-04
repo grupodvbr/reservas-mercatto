@@ -258,9 +258,6 @@ async function init(){
 
   fornecedores = forn;
 
-  fornecedorSelect.innerHTML = forn.map(f=>`
-    <option value="${f.id}">${f.nome}</option>
-  `).join("");
 
   const { data: est } = await sb
     .from("mercatto_estoque")
