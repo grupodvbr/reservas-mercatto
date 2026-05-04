@@ -116,7 +116,10 @@ body{
   height:420px; /* 🔥 maior */
   position:relative;
 }
-
+.chart-wrap canvas{
+  width:100% !important;
+  height:100% !important;
+}
 /* ===== TABELA ===== */
 table{
   width:100%;
@@ -411,17 +414,29 @@ async function carregar(){
     type:"line",
     data:{
       labels:dias,
-      datasets:[{
-        data:valores,
-        pointBackgroundColor:cores,
-        borderColor:"#2563eb",
-        tension:.3
-      }]
+
+
+      
+datasets:[{
+  data:valores,
+  borderColor:"#2563eb",
+  backgroundColor:"rgba(37,99,235,0.08)",
+  fill:true,
+  tension:.4,
+  pointRadius:4,
+  pointHoverRadius:6,
+  pointBackgroundColor:cores
+}]
+
+      
     },
-    options:{
-      plugins:{legend:{display:false}},
-      responsive:true
-    }
+  options:{
+  responsive:true,
+  maintainAspectRatio:false,
+  plugins:{
+    legend:{display:false}
+  }
+}
   });
 
 }
