@@ -595,9 +595,32 @@ tbody.innerHTML = pratosFiltrados.map(([nome,v])=>{
   `;
 }).join("");
 
-  const dias = Object.keys(porDia).sort();
-  const valores = dias.map(d=>porDia[d]);
+const dias = [];
+const valores = [];
+const pontosVermelhos = [];
 
+const inicio = new Date(rangeSelecionado[0]);
+const fim = new Date(rangeSelecionado[1]);
+
+for(let d = new Date(inicio); d <= fim; ){
+
+  const diaISO = d.toISOString().slice(0,10);
+
+  dias.push(diaISO);
+
+  const valor = porDia[diaISO] || 0;
+
+  valores.push(valor);
+
+  pontosVermelhos.push(valor === 0);
+
+  // 🔥 incrementa corretamente
+  d = new Date(d.getTime() + 86400000);
+}
+
+
+
+  
   if(chart) chart.destroy();
 // ===== RESUMO DO PERÍODO (REGRA CORRETA) =====
 const totalProduzido = totalMontado + totalReposto;
@@ -690,18 +713,19 @@ chart = new Chart(document.getElementById("chart"), {
   type: 'line',
   data: {
     labels: dias.map(formatBR),
-    datasets: [{
-      label: 'Total produzido',
-      data: valores,
-      tension: .35,
+   datasets: [{
+  label: 'Total produzido',
+  data: valores,
+  tension: .35,
 
-      // 🔥 tamanho VISUAL da bolinha
-      pointRadius: 4,
-      pointHoverRadius: 6,
+  pointRadius: 4,
+  pointHoverRadius: 6,
+  pointHitRadius: 20,
 
-      // 🔥 área de TOQUE (invisível) – isso que facilita clicar no celular
-      pointHitRadius: 20
-    }]
+  // 🔴 AQUI ESTÁ O QUE FALTAVA
+  pointBackgroundColor: pontosVermelhos.map(v => v ? '#dc2626' : '#2563eb'),
+  pointBorderColor: pontosVermelhos.map(v => v ? '#dc2626' : '#2563eb')
+}]
   },
   options: {
     responsive: true,
