@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cotação Estilo Excel</title>
+<title>Cotação Inteligente PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -21,25 +21,17 @@ body{
   margin-bottom:15px;
 }
 
-select,button{
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
 /* TABELA */
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
 th{
   background:#111827;
   color:#fff;
-  padding:12px;
-  font-size:14px;
+  padding:10px;
 }
 
 td{
@@ -48,22 +40,32 @@ td{
   text-align:center;
 }
 
-/* INPUTS */
+/* INPUT */
 input{
-  width:65px;
-  padding:4px;
+  width:80px;
+  padding:5px;
   text-align:center;
 }
 
 /* CORES */
-.verde{ background:#dcfce7; }
-.vermelho{ background:#fee2e2; }
-.laranja{ background:#fef3c7; }
+.verde{background:#dcfce7;}
+.vermelho{background:#fee2e2;}
+.laranja{background:#fef3c7;}
 
-/* SUB INFO */
-.unit{
+/* PRODUTO */
+.produto{
+  text-align:left;
+}
+
+.sub{
   font-size:11px;
-  color:#555;
+  color:#666;
+}
+
+/* PREÇO */
+.preco{
+  font-weight:700;
+  margin-top:4px;
 }
 
 </style>
@@ -95,10 +97,12 @@ const id = new URLSearchParams(location.search).get("id");
 let cotacao;
 let fornecedores = [];
 let selecionados = [];
+let estoque = [];
 
 // ================= INIT =================
 async function init(){
 
+  // cotação
   const { data } = await sb
     .from("cotacoes")
     .select("*")
@@ -108,6 +112,7 @@ async function init(){
   cotacao = data;
   titulo.innerText = cotacao.nome;
 
+  // fornecedores
   const { data: forn } = await sb
     .from("fornecedores_mercatto")
     .select("*");
@@ -117,6 +122,13 @@ async function init(){
   fornecedorSelect.innerHTML = forn.map(f=>`
     <option value="${f.id}">${f.nome}</option>
   `).join("");
+
+  // estoque (AQUI ESTÁ O OURO)
+  const { data: est } = await sb
+    .from("mercatto_estoque")
+    .select("*");
+
+  estoque = est;
 
   render();
 }
@@ -142,30 +154,33 @@ function render(){
     <tr>
       <th>Produto</th>
       <th>Qtd</th>
-      ${selecionados.map(f=>`
-        <th>
-          ${getNome(f)}<br>
-          <span class="unit">Preço / Qtd / UN</span>
-        </th>
-      `).join("")}
+      ${selecionados.map(f=>`<th>${getNome(f)}</th>`).join("")}
     </tr>
   `;
 
   tbody.innerHTML = itens.map((i,index)=>{
 
+    const prod = estoque.find(p=>p.produto === i.produto);
+
+    const undCompra = prod?.und_compra || "UN";
+    const qtdUnidades = prod?.qtd_unidades || 1;
+
     let linha = `
       <tr>
-        <td>${i.produto}</td>
+        <td class="produto">
+          ${i.produto}<br>
+          <span class="sub">
+            Compra: ${undCompra} | Contém: ${qtdUnidades} UN
+          </span>
+        </td>
         <td>${i.comprar}</td>
     `;
 
     selecionados.forEach(f=>{
       linha += `
         <td id="cell_${index}_${f}">
-          <input placeholder="Preço" oninput="calc(${index})" id="p_${index}_${f}">
-          <input placeholder="Qtd" oninput="calc(${index})" id="q_${index}_${f}">
-          <input placeholder="UN" oninput="calc(${index})" id="u_${index}_${f}">
-          <div id="r_${index}_${f}" class="unit"></div>
+          <input placeholder="R$" oninput="calc(${index})" id="p_${index}_${f}">
+          <div class="preco" id="r_${index}_${f}"></div>
         </td>
       `;
     });
@@ -179,26 +194,35 @@ function render(){
 // ================= CALC =================
 function calc(index){
 
+  const item = cotacao.itens[index];
+  const prod = estoque.find(p=>p.produto === item.produto);
+
+  const qtdUnidades = prod?.qtd_unidades || 1;
+
   let valores = [];
 
   selecionados.forEach(f=>{
 
-    const preco = Number(document.getElementById(`p_${index}_${f}`).value);
-    const qtd = Number(document.getElementById(`q_${index}_${f}`).value);
+    let preco = document.getElementById(`p_${index}_${f}`).value;
 
-    if(!preco || !qtd) return;
+    // 🔥 MÁSCARA
+    preco = preco.replace(",", ".");
+    preco = Number(preco);
 
-    const unit = preco / qtd;
+    if(!preco) return;
 
-    document.getElementById(`r_${index}_${f}`).innerText = "R$ " + unit.toFixed(2);
+    const custoReal = preco / qtdUnidades;
 
-    valores.push({f, unit});
+    document.getElementById(`r_${index}_${f}`).innerText =
+      "R$ " + custoReal.toFixed(2) + " / UN";
+
+    valores.push({f, custoReal});
   });
 
   if(valores.length < 2) return;
 
-  const menor = Math.min(...valores.map(v=>v.unit));
-  const maior = Math.max(...valores.map(v=>v.unit));
+  const menor = Math.min(...valores.map(v=>v.custoReal));
+  const maior = Math.max(...valores.map(v=>v.custoReal));
 
   valores.forEach(v=>{
 
@@ -206,9 +230,9 @@ function calc(index){
 
     el.classList.remove("verde","vermelho","laranja");
 
-    if(v.unit === menor){
+    if(v.custoReal === menor){
       el.classList.add("verde");
-    } else if(v.unit === maior){
+    } else if(v.custoReal === maior){
       el.classList.add("vermelho");
     } else {
       el.classList.add("laranja");
@@ -221,7 +245,6 @@ function calc(index){
 
 // ================= SALVAR =================
 async function salvar(){
-
   await sb.from("cotacoes").update({
     atualizado_em: new Date()
   }).eq("id", cotacao.id);
