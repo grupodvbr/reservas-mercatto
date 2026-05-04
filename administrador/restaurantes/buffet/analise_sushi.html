@@ -2,8 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Análise Sushi PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Análise Sushi</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -16,11 +19,21 @@ body{
   background:#f6f7fb;
 }
 
+.app{
+  padding:20px;
+}
+
 .card{
   background:#fff;
-  margin:10px;
-  padding:14px;
   border-radius:14px;
+  padding:15px;
+  margin-bottom:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+
+.title{
+  font-size:20px;
+  font-weight:900;
 }
 
 .filters{
@@ -29,7 +42,7 @@ body{
   flex-wrap:wrap;
 }
 
-.filters input, .filters select{
+input{
   padding:10px;
   border-radius:10px;
   border:1px solid #ddd;
@@ -39,56 +52,77 @@ button{
   background:#ff6a00;
   color:#fff;
   border:none;
-  padding:10px;
   border-radius:10px;
+  padding:10px 14px;
   font-weight:800;
+  cursor:pointer;
+}
+
+.chart-wrap{
+  height:220px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:6px;
+  border-bottom:1px solid #eee;
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
+<div class="app">
+
 <div class="card">
-
-<div class="filters">
-
-<select id="empresa">
-  <option value="MERCATTO">Mercatto</option>
-  <option value="VILLA">Villa</option>
-</select>
-
-<input id="range">
-
-<input id="busca" placeholder="Buscar sushi...">
-
-<button onclick="carregar()">Atualizar</button>
-
-</div>
-
+  <div class="title">Análise Sushi</div>
 </div>
 
 <div class="card">
-  <canvas id="grafico"></canvas>
+  <div class="filters">
+    <input id="range" placeholder="Período">
+    <input id="busca" placeholder="Buscar item...">
+  </div>
 </div>
 
 <div class="card">
-  Produção: <b id="prod">0</b><br>
-  Reaproveitamento: <b id="reap">0</b><br>
-  Desperdício: <b id="desp">0</b>
+  <b>Produção por dia</b>
+  <div class="chart-wrap">
+    <canvas id="chart"></canvas>
+  </div>
 </div>
 
 <div class="card">
-<table width="100%">
-<thead>
-<tr>
-<th>Item</th>
-<th>Produção</th>
-<th>Reap</th>
-<th>Desperdício</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
+  <b>Resumo</b>
+
+  <div style="display:flex;gap:10px;margin-top:10px">
+    <div>Produção: <b id="prod">0</b></div>
+    <div>Reaproveitamento: <b id="reap">0</b></div>
+    <div>Desperdício: <b id="desp">0</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <b>Por item</b>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Produção</th>
+        <th>Reaproveitamento</th>
+        <th>Desperdício</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
 </div>
 
 <script>
@@ -98,14 +132,15 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
-let range = [];
+let rangeSelecionado;
 
 flatpickr("#range",{
   mode:"range",
   dateFormat:"Y-m-d",
   onChange:(d)=>{
     if(d.length===2){
-      range = d.map(x=>x.toISOString().slice(0,10));
+      rangeSelecionado = d.map(x=>x.toISOString().slice(0,10));
+      carregar();
     }
   }
 });
@@ -114,94 +149,126 @@ let chart;
 
 async function carregar(){
 
-  const empresa = document.getElementById("empresa").value;
-  const busca = document.getElementById("busca").value.toLowerCase();
+let dados = [];
+let pagina = 0;
 
-  let dados = [];
-  let pagina = 0;
+while(true){
 
-  while(true){
+  const { data, error } = await sb
+    .from("controle_sushi")
+    .select("*")
+    .gte("data_registro", rangeSelecionado[0])
+    .lte("data_registro", rangeSelecionado[1])
+    .range(pagina*1000, (pagina+1)*1000 - 1);
 
-    const { data } = await sb
-      .from("controle_sushi")
-      .select("*")
-      .eq("empresa", empresa)
-      .gte("data_registro", range[0])
-      .lte("data_registro", range[1])
-      .range(pagina*1000, (pagina+1)*1000-1);
-
-    if(!data.length) break;
-
-    dados = dados.concat(data);
-
-    if(data.length < 1000) break;
-
-    pagina++;
+  if(error){
+    console.error(error);
+    return;
   }
 
-  const porItem = {};
-  const porDia = {};
+  if(!data || data.length === 0) break;
 
-  let prod=0,reap=0,desp=0;
+  dados = dados.concat(data);
 
-  dados.forEach(r=>{
+  if(data.length < 1000) break;
 
-    if(busca && !r.nome.toLowerCase().includes(busca)) return;
+  pagina++;
+}
 
-    porItem[r.nome] ||= {p:0,r:0,d:0};
+const porItem = {};
+const porDia = {};
 
-    if(r.tipo==="Produção"){
-      porItem[r.nome].p+=Number(r.quantidade);
-      prod+=Number(r.quantidade);
-    }
+let prod = 0;
+let reap = 0;
+let desp = 0;
 
-    if(r.tipo==="Reaproveitamento"){
-      porItem[r.nome].r+=Number(r.quantidade);
-      reap+=Number(r.quantidade);
-    }
+const busca = document.getElementById("busca").value.toLowerCase();
 
-    if(r.tipo==="Desperdício"){
-      porItem[r.nome].d+=Number(r.quantidade);
-      desp+=Number(r.quantidade);
-    }
+dados.forEach(r=>{
 
-    const dia = r.data_registro;
+  if(busca && !r.nome.toLowerCase().includes(busca)) return;
 
-    if(r.tipo==="Produção"){
-      porDia[dia]=(porDia[dia]||0)+Number(r.quantidade);
-    }
+  porItem[r.nome] ||= {prod:0,reap:0,desp:0};
 
-  });
+  const q = Number(r.quantidade || 0);
 
-  document.getElementById("prod").innerText=prod;
-  document.getElementById("reap").innerText=reap;
-  document.getElementById("desp").innerText=desp;
+  if(r.tipo === "Produção"){
+    porItem[r.nome].prod += q;
+    prod += q;
 
-  // tabela
-  tbody.innerHTML = Object.entries(porItem).map(([n,v])=>`
-    <tr>
-      <td>${n}</td>
-      <td>${v.p}</td>
-      <td>${v.r}</td>
-      <td>${v.d}</td>
-    </tr>
-  `).join("");
+    porDia[r.data_registro] = (porDia[r.data_registro]||0) + q;
+  }
 
-  // grafico
-  const dias = Object.keys(porDia);
-  const valores = Object.values(porDia);
+  if(r.tipo === "Reaproveitamento"){
+    porItem[r.nome].reap += q;
+    reap += q;
+  }
 
-  if(chart) chart.destroy();
+  if(r.tipo === "Desperdício"){
+    porItem[r.nome].desp += q;
+    desp += q;
+  }
 
-  chart = new Chart(document.getElementById("grafico"),{
-    type:'line',
-    data:{
-      labels:dias,
-      datasets:[{data:valores}]
-    }
-  });
+});
+
+document.getElementById("prod").innerText = prod;
+document.getElementById("reap").innerText = reap;
+document.getElementById("desp").innerText = desp;
+
+tbody.innerHTML = Object.entries(porItem)
+.sort((a,b)=>b[1].prod - a[1].prod)
+.map(([nome,v])=>`
+<tr>
+<td><b>${nome}</b></td>
+<td>${v.prod}</td>
+<td>${v.reap}</td>
+<td style="color:red">${v.desp}</td>
+</tr>
+`).join("");
+
+const dias = [];
+const valores = [];
+const cores = [];
+
+let d = new Date(rangeSelecionado[0]);
+const fim = new Date(rangeSelecionado[1]);
+
+while(d <= fim){
+
+  const iso = d.toISOString().slice(0,10);
+
+  const val = porDia[iso] || 0;
+
+  dias.push(iso);
+  valores.push(val);
+
+  cores.push(val === 0 ? "#dc2626" : "#2563eb");
+
+  d = new Date(d.getTime()+86400000);
+}
+
+if(chart) chart.destroy();
+
+chart = new Chart(document.getElementById("chart"),{
+  type:"line",
+  data:{
+    labels:dias,
+    datasets:[{
+      data:valores,
+      pointBackgroundColor:cores,
+      borderColor:"#2563eb",
+      tension:.3
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    responsive:true
+  }
+});
 
 }
+
+document.getElementById("busca").oninput = carregar;
 
 </script>
 
