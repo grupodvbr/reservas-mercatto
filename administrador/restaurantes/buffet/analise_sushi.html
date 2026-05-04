@@ -273,40 +273,49 @@ let chart;
 
 async function carregar(){
 
+
+
 let dados = [];
 let pagina = 0;
+const TAMANHO = 1000;
 
 while(true){
 
+  const from = pagina * TAMANHO;
+  const to = from + TAMANHO - 1;
+
   let query = sb
     .from("controle_sushi")
-    .select("*")
+    .select("*", { count: "exact" }) // 🔥 força supabase trazer tudo
     .gte("data_registro", rangeSelecionado[0])
     .lte("data_registro", rangeSelecionado[1])
-    .range(pagina*1000, (pagina+1)*1000 - 1);
+    .range(from, to);
 
   const empresa = document.getElementById("empresa").value;
 
   if(empresa){
-    query = query.eq("empresa", empresa); // 🔥 só funciona se coluna existir
+    query = query.eq("empresa", empresa);
   }
 
   const { data, error } = await query;
 
   if(error){
-    console.error(error);
+    console.error("ERRO:", error);
     break;
   }
 
-  if(!data || data.length === 0) break;
+  if(!data || data.length === 0){
+    break;
+  }
 
   dados = dados.concat(data);
 
-  if(data.length < 1000) break;
+  if(data.length < TAMANHO){
+    break;
+  }
 
   pagina++;
 }
-
 // ===== PROCESSAMENTO =====
 
 const porItem = {};
