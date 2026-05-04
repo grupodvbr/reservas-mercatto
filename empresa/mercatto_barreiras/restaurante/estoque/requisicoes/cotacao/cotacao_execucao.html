@@ -404,17 +404,34 @@ async function salvar(){
 
   cotacao.itens.forEach((item, index)=>{
 
+    const prod = estoque.find(p=>p.produto === item.produto);
+
+    const qtdUni = prod?.qtd_unidades || 1;
+    const und = prod?.und_compra || "UN";
+
     const linha = {
       produto: item.produto,
-      fornecedores: {}
+      qtd_solicitada: item.comprar,
+      fornecedores: []
     };
 
     selecionados.forEach(f=>{
 
-      const preco = document.getElementById(`p_${index}_${f}`)?.value || null;
+      const precoTotal = Number(
+        document.getElementById(`p_${index}_${f}`)?.value || 0
+      );
 
-      if(preco){
-        linha.fornecedores[f] = preco;
+      if(precoTotal){
+
+        linha.fornecedores.push({
+          fornecedor_id: f,
+          fornecedor_nome: getNome(f),
+          preco_total: precoTotal,
+          quantidade_embalagem: qtdUni,
+          unidade: und,
+          preco_unitario: precoTotal / qtdUni
+        });
+
       }
 
     });
@@ -423,10 +440,13 @@ async function salvar(){
   });
 
   await sb.from("cotacoes").update({
-    itens_cotacao: dados,  // 🔥 NOVO CAMPO JSON
+    itens_cotacao: dados,
     atualizado_em:new Date()
   }).eq("id", cotacao.id);
+
 }
+
+  
 
 /* AUX */
 function getNome(id){
