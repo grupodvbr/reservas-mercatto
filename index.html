@@ -376,37 +376,88 @@ iframe{
 }
 
 .empresa-item{
-  width:46px;
-  height:46px;
+  position:relative;
+
+  width:52px;
+  height:52px;
 
   border-radius:50%;
-  background:#f1f5f9;
+  background:#ffffff;
 
   display:flex;
   align-items:center;
   justify-content:center;
 
   cursor:pointer;
-  transition:.2s;
 
-  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  transition:.3s ease;
+
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
 }
 
+/* LOGO */
 .empresa-item img{
-  width:22px;
-  height:22px;
-  opacity:.8;
+  width:26px;
+  height:26px;
+  object-fit:contain;
+  z-index:2;
+  transition:.3s;
 }
 
+/* BORDA ANIMADA */
+.empresa-item::before{
+  content:"";
+  position:absolute;
+
+  width:100%;
+  height:100%;
+  border-radius:50%;
+
+  border:2px solid transparent;
+
+  background:
+    conic-gradient(
+      from 0deg,
+      var(--primary),
+      transparent 40%
+    );
+
+  mask: radial-gradient(circle, transparent 60%, black 61%);
+  -webkit-mask: radial-gradient(circle, transparent 60%, black 61%);
+
+  opacity:0;
+  transform:rotate(0deg);
+  transition:.4s ease;
+}
+
+/* HOVER */
 .empresa-item:hover{
-  transform:scale(1.1);
-  background:var(--primary);
+  transform:scale(1.12);
 }
 
+/* ATIVA ANIMAÇÃO */
+.empresa-item:hover::before{
+  opacity:1;
+  animation:giroBorda 1.2s linear infinite;
+}
+
+/* NÃO ALTERA A LOGO */
 .empresa-item:hover img{
-  filter:brightness(0) invert(1);
+  transform:scale(1.05);
 }
 
+/* ANIMAÇÃO */
+@keyframes giroBorda{
+  from{
+    transform:rotate(0deg);
+  }
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+
+  
 .menu-float-btn{
   display:none; /* começa escondida */
 
