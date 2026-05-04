@@ -1196,11 +1196,20 @@ function detectarDesativarOtto(texto){
    
 // 🔥 ATIVAR INTELIGENTE
 if(detectarAtivarOtto(texto)){
-  console.log("[OTTO] 🔐 Ativação inteligente detectada")
-  abrirSenhaOtto()
+  console.log("[OTTO] 🚀 Abrindo Canvas OTTO")
+
+  document.getElementById("popupOverlay").style.display = "flex"
+
   return
 }
 
+
+
+
+
+
+
+   
 // 🔴 DESATIVAR INTELIGENTE
 if(detectarDesativarOtto(texto)){
   console.log("[OTTO] 🔴 Desativando")
@@ -1247,8 +1256,7 @@ function validarSenhaOtto(){
   if(senha === "Otto"){
 
     document.getElementById("ottoSenha").style.display = "none"
-    document.getElementById("ottoOverlay").style.display = "flex"
-
+document.getElementById("popupOverlay").style.display = "flex"
     ottoAtivo = true
 
     console.log("🚀 OTTO ATIVADO")
