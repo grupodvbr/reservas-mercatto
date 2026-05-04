@@ -439,13 +439,22 @@ async function salvar(){
     dados.push(linha);
   });
 
-  await sb.from("cotacoes").update({
-    itens_cotacao: dados,
-    atualizado_em:new Date()
-  }).eq("id", cotacao.id);
+  const { error } = await sb
+    .from("cotacoes")
+    .update({
+      itens_cotacao: dados,
+      atualizado_em: new Date()
+    })
+    .eq("id", cotacao.id);
+
+  if(error){
+    console.error("ERRO AO SALVAR:", error);
+    alert("Erro ao salvar no banco");
+  } else {
+    console.log("SALVO COM SUCESSO:", dados);
+  }
 
 }
-
   
 
 /* AUX */
