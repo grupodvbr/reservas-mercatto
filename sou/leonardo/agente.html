@@ -387,12 +387,17 @@ input.addEventListener("keypress", e=>{
 
 // ================= MIC =================
 document.getElementById("mic").onclick = () => {
+
+  if(micLigado){
+    pararMic()
+  }else{
+    iniciarMic()
+  }
+
   ativo = true
   textoBuffer = ""
-  log("🎤 Ativado manualmente")
+
 }
-
-
 
 
 
