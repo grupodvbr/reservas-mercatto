@@ -2,559 +2,289 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastros do Sistema • LICITAR</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fornecedores • Mercatto</title>
 
-<!-- Fonte -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-/* ============================================================
-   TEMA OFICIAL – LICITAR (Azul + Dourado Premium)
-============================================================ */
-:root {
-  --azul: #0b1e39;
-  --azul-claro:#15345c;
-  --azul-hover:#0e2544;
 
-  --dourado:#c9a86c;
-  --dourado-escuro:#b29058;
-
-  --bg:#eef2f7;
-
-  --card-bg: rgba(255,255,255,0.60);
-  --glass-blur: blur(18px);
-
-  --line:#d1d6de;
-  --shadow:0 10px 30px rgba(0,0,0,.14);
-
-  --radius:22px;
-}
-
-/* ============================================================
-   BASE
-============================================================ */
 body{
   margin:0;
-  padding:25px;
-  background:var(--bg);
-  font-family:'Inter', sans-serif;
-  color:#111;
+  font-family:Inter;
+  background:#eef2f7;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:30px;
 }
 
 h1{
   text-align:center;
-  margin:10px 0 40px;
-  font-size:34px;
-  font-weight:800;
-  color:var(--azul);
-  letter-spacing:.5px;
+  margin-bottom:30px;
 }
 
-/* ============================================================
-   GRID
-============================================================ */
-.grid{
-  display:grid;
-  gap:35px;
-  grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));
-}
-
-/* ============================================================
-   CARD PREMIUM
-============================================================ */
+/* CARD */
 .card{
-  background:var(--card-bg);
-  backdrop-filter:var(--glass-blur);
-  border-radius:var(--radius);
-  padding:28px;
-  box-shadow:var(--shadow);
-  border:1px solid rgba(255,255,255,.45);
-  display:flex;
-  flex-direction:column;
-  height:500px;
-  position:relative;
-  animation:fadeIn .5s ease;
-}
-
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(10px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-.card h2{
-  margin:0 0 18px;
-  padding-bottom:10px;
-  border-bottom:3px solid var(--dourado);
-  color:var(--azul);
-  font-size:23px;
-  font-weight:700;
-  letter-spacing:.3px;
-}
-
-/* BOTÕES */
-.card button{
-  width:100%;
-  padding:15px;
-  margin-bottom:14px;
-  background:var(--dourado);
-  color:#fff;
-  border:none;
+  background:#fff;
+  padding:20px;
   border-radius:16px;
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-  transition:.25s;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
-.card button:hover{
-  background:var(--dourado-escuro);
-  transform:translateY(-2px);
+/* HEADER */
+.top-bar{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
 }
 
-/* Pesquisar */
-.search{
-  width:100%;
-  padding:12px 15px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  margin-bottom:15px;
-  font-size:15px;
-  background:white;
-  transition:.2s;
-}
-.search:focus{
-  border-color:var(--dourado);
-  outline:none;
+input{
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
 }
 
-/* Lista com rolagem */
-.scroll-area{
+#busca{
   flex:1;
-  overflow-y:auto;
-  padding-right:6px;
-}
-.scroll-area::-webkit-scrollbar{
-  width:6px;
-}
-.scroll-area::-webkit-scrollbar-thumb{
-  background:#c9ced6;
-  border-radius:6px;
 }
 
-/* ITEM */
-.item{
-  padding:12px 6px;
-  border-bottom:1px solid var(--line);
-  transition:.2s;
+button{
+  padding:12px 18px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
 }
-.item:hover{
-  background:#f4f6fa;
+
+/* LISTA */
+.item{
+  padding:15px;
+  border-bottom:1px solid #eee;
 }
 
 .item-top{
   display:flex;
   justify-content:space-between;
-  color:var(--azul);
   font-weight:600;
 }
+
 .item-sub{
   font-size:13px;
-  margin-top:4px;
-  color:#444;
+  color:#555;
+  margin-top:5px;
 }
 
-.acoes a{
-  color:var(--azul);
-  font-weight:600;
+.actions span{
+  margin-left:10px;
   cursor:pointer;
 }
-.acoes a:hover{
-  color:var(--dourado);
+
+.actions span:hover{
+  color:#2563eb;
 }
 
-/* ============================================================
-   POPUP
-============================================================ */
+/* POPUP */
 .overlay{
   position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,.5);
   display:none;
   justify-content:center;
   align-items:center;
-  background:rgba(0,0,0,.45);
-  backdrop-filter:blur(4px);
 }
 
 .popup{
-  width:92%;
-  max-width:450px;
-  background:white;
-  padding:28px;
-  border-radius:20px;
-  box-shadow:var(--shadow);
-  animation:fadeInUp .35s ease;
+  background:#fff;
+  padding:25px;
+  border-radius:16px;
+  width:350px;
 }
 
-@keyframes fadeInUp{
-  from{opacity:0; transform:translateY(30px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-.popup h3{
-  margin-top:0;
-  color:var(--azul);
-  font-size:22px;
-  font-weight:700;
-  border-left:5px solid var(--dourado);
-  padding-left:10px;
-  margin-bottom:18px;
-}
-
-/* Inputs Popup */
 .popup input{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  font-size:15px;
-  margin-bottom:12px;
-}
-.popup input:focus{
-  border-color:var(--dourado);
-  outline:none;
-}
-
-.btnSalvar{
-  background:var(--azul);
-  color:#fff;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  font-size:16px;
-  font-weight:700;
   width:100%;
   margin-bottom:10px;
 }
-.btnSalvar:hover{
-  background:var(--azul-hover);
-}
 
-.btnClose{
-  background:#555;
-  color:#fff;
-  padding:12px;
-  width:100%;
-  border:none;
-  border-radius:14px;
-}
-
-/* Loading */
-#loading{
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(255,255,255,.8);
-  font-size:22px;
-  font-weight:800;
-  color:var(--azul);
-}
 </style>
 </head>
 
 <body>
 
-<h1>Cadastro Gerais do Sistema</h1>
+<div class="container">
 
-<div id="loading">Salvando...</div>
+<h1>Fornecedores</h1>
 
-<div class="grid">
+<div class="card">
 
-  <!-- CONTAS BANCÁRIAS -->
-  <div class="card">
-    <h2>Contas Bancárias</h2>
-    <button onclick="abrirPopup('contas')">+ Nova Conta</button>
+<div class="top-bar">
+  <input id="busca" placeholder="Buscar fornecedor...">
+  <button onclick="abrir()">+ Novo</button>
+</div>
 
-    <div class="scroll-area">
-      <div id="listaContas"></div>
-    </div>
-  </div>
+<div id="lista"></div>
 
-  <!-- FORNECEDORES -->
-  <div class="card">
-    <h2>Fornecedores</h2>
-    <button onclick="abrirPopup('fornecedores')">+ Novo Fornecedor</button>
-    <input id="buscaFornec" class="search" placeholder="Pesquisar fornecedor..." oninput="filtrar('fornec')">
-
-    <div class="scroll-area">
-      <div id="listaFornec"></div>
-    </div>
-  </div>
-
-  <!-- EMPRESAS -->
-  <div class="card">
-    <h2>Empresas</h2>
-    <button onclick="abrirPopup('empresas')">+ Nova Empresa</button>
-    <input id="buscaEmp" class="search" placeholder="Pesquisar empresa..." oninput="filtrar('emp')">
-
-    <div class="scroll-area">
-      <div id="listaEmpresas"></div>
-    </div>
-  </div>
+</div>
 
 </div>
 
 <!-- POPUP -->
-<div id="popup" class="overlay">
-  <div id="popupContent" class="popup"></div>
+<div id="overlay" class="overlay">
+  <div class="popup">
+
+    <h3 id="titulo">Novo</h3>
+
+    <input id="nome" placeholder="Nome">
+    <input id="cnpj" placeholder="CNPJ">
+    <input id="whatsapp" placeholder="Whatsapp">
+    <input id="cidade" placeholder="Cidade">
+
+    <button onclick="salvar()">Salvar</button>
+    <button onclick="fechar()" style="background:#555;">Cancelar</button>
+
+  </div>
 </div>
 
 <script>
-/* ============================================================
-   API (SEU GAS)
-============================================================ */
-const API = "https://script.google.com/macros/s/AKfycbyen9bySngVpCPDTNK2-P2ls-2qw0d5OKREjwsSMq5h-JnGgPUkCGN9EvBwAjcxEGYc/exec";
 
-let editando=null;
-let editCodigo=null;
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
 
-/* MÁSCARAS */
-function maskCNPJ(v){
-  v=v.replace(/\D/g,"");
-  v=v.replace(/^(\d{2})(\d)/,"$1.$2");
-  v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3");
-  v=v.replace(/\.(\d{3})(\d)/,".$1/$2");
-  v=v.replace(/(\d{4})(\d)/,"$1-$2");
-  return v;
-}
-function maskPhone(v){
-  v=v.replace(/\D/g,"");
-  v=v.replace(/^(\d{2})(\d)/,"($1) $2");
-  v=v.replace(/(\d{5})(\d)/,"$1-$2");
-  return v;
-}
-function onlyNumbers(v){ return v.replace(/\D/g,""); }
-function toUpper(e){ e.value=e.value.toUpperCase(); }
+let editId = null;
 
-/* POPUP */
-function abrirPopup(tipo, dados=null){
-  editando=tipo;
-  editCodigo=dados?dados.codigo:null;
+// ================= LISTAR =================
+async function carregar(){
 
-  let html="";
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*")
+    .order("nome");
 
-  if(tipo==="contas"){
-    html = `
-      <h3>${dados?"Editar Conta":"Cadastrar Conta"}</h3>
-      <input id="banco" placeholder="Banco" value="${dados?.banco||""}" oninput="toUpper(this)">
-      <input id="agencia" placeholder="Agência" value="${dados?.agencia||""}">
-      <input id="conta" placeholder="Conta" value="${dados?.conta||""}">
-      <input id="tipo" placeholder="Tipo (CC/CP)" value="${dados?.tipo||""}">
-      <input id="pix" placeholder="Chave PIX" value="${dados?.pix||""}">
-      <button class="btnSalvar" onclick="salvar()">Salvar</button>
-      <button class="btnClose" onclick="fecharPopup()">Cancelar</button>
-    `;
-  }
-
-  if(tipo==="fornecedores"){
-    html = `
-      <h3>${dados?"Editar Fornecedor":"Cadastrar Fornecedor"}</h3>
-      <input id="nome" placeholder="Nome" value="${dados?.nome||""}" oninput="toUpper(this)">
-      <input id="cnpj" placeholder="CNPJ" maxlength="18" value="${dados?.cnpj||""}" oninput="this.value=maskCNPJ(this.value)">
-      <input id="tel1" placeholder="Whatsapp Principal *" maxlength="16" value="${dados?.tel1||""}" oninput="this.value=maskPhone(this.value)">
-      <input id="tel2" placeholder="Whatsapp Secundário" maxlength="16" value="${dados?.tel2||""}" oninput="this.value=maskPhone(this.value)">
-      <button class="btnSalvar" onclick="salvar()">Salvar</button>
-      <button class="btnClose" onclick="fecharPopup()">Cancelar</button>
-    `;
-  }
-
-  if(tipo==="empresas"){
-    html = `
-      <h3>${dados?"Editar Empresa":"Cadastrar Empresa"}</h3>
-      <input id="nome" placeholder="Nome da Empresa" value="${dados?.nome||""}" oninput="toUpper(this)">
-      <input id="cnpj" placeholder="CNPJ" maxlength="18" value="${dados?.cnpj||""}" oninput="this.value=maskCNPJ(this.value)">
-      <input id="uf" placeholder="UF" maxlength="2" value="${dados?.uf||""}" oninput="toUpper(this)">
-      <button class="btnSalvar" onclick="salvar()">Salvar</button>
-      <button class="btnClose" onclick="fecharPopup()">Cancelar</button>
-    `;
-  }
-
-  popupContent.innerHTML = html;
-  popup.style.display="flex";
+  render(data);
 }
 
-function fecharPopup(){
-  popup.style.display="none";
+// ================= RENDER =================
+function render(data){
+
+  lista.innerHTML = data.map(x=>`
+    <div class="item">
+
+      <div class="item-top">
+        ${x.nome}
+
+        <div class="actions">
+          <span onclick="editar('${x.id}')">✏️</span>
+          <span onclick="excluir('${x.id}')">🗑️</span>
+        </div>
+      </div>
+
+      <div class="item-sub">
+        CNPJ: ${x.cnpj || '-'} • Whats: ${x.whatsapp || '-'} • ${x.cidade || ''}
+      </div>
+
+    </div>
+  `).join("");
 }
 
-/* ============================================================
-   SALVAR
-============================================================ */
+// ================= ABRIR =================
+function abrir(){
+  editId = null;
+  titulo.innerText = "Novo Fornecedor";
+
+  nome.value="";
+  cnpj.value="";
+  whatsapp.value="";
+  cidade.value="";
+
+  overlay.style.display="flex";
+}
+
+// ================= EDITAR =================
+async function editar(id){
+
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  editId = id;
+
+  titulo.innerText = "Editar Fornecedor";
+
+  nome.value = data.nome;
+  cnpj.value = data.cnpj;
+  whatsapp.value = data.whatsapp;
+  cidade.value = data.cidade;
+
+  overlay.style.display="flex";
+}
+
+// ================= SALVAR =================
 async function salvar(){
-  loading.style.display="flex";
 
-  let body={}, rota="";
+  const obj = {
+    nome: nome.value,
+    cnpj: cnpj.value,
+    whatsapp: whatsapp.value,
+    cidade: cidade.value
+  };
 
-  if(editando==="contas"){
-    body={
-      banco:banco.value.trim(),
-      agencia:agencia.value.trim(),
-      conta:conta.value.trim(),
-      tipo:tipo.value.trim(),
-      pix:pix.value.trim()
-    };
-    rota=editCodigo?"updateConta":"addConta";
+  if(editId){
+    await sb.from("fornecedores_mercatto")
+      .update(obj)
+      .eq("id", editId);
+  }else{
+    await sb.from("fornecedores_mercatto")
+      .insert([obj]);
   }
 
-  if(editando==="fornecedores"){
-    let num = onlyNumbers(tel1.value);
-    if(num.length < 10){
-      loading.style.display="none";
-      alert("O WhatsApp principal é obrigatório.");
-      return;
-    }
-
-    body={
-      nome:nome.value.trim(),
-      cnpj:onlyNumbers(cnpj.value.trim()),
-      tel1:num,
-      tel2:onlyNumbers(tel2.value.trim())
-    };
-    rota=editCodigo?"updateFornecedor":"addFornecedor";
-  }
-
-  if(editando==="empresas"){
-    body={
-      nome:nome.value.trim(),
-      cnpj:onlyNumbers(cnpj.value.trim()),
-      uf:uf.value.trim()
-    };
-    rota=editCodigo?"updateEmpresa":"addEmpresa";
-  }
-
-  if(editCodigo) body.codigo=editCodigo;
-
-  const url = `${API}?action=${rota}&${new URLSearchParams(body)}`;
-  const res = await fetch(url).then(r=>r.json());
-
-  loading.style.display="none";
-
-  if(res.ok){
-    fecharPopup();
-    carregarTudo();
-  } else {
-    alert("Erro ao salvar.");
-  }
+  fechar();
+  carregar();
 }
 
-/* ============================================================
-   FILTRAR
-============================================================ */
-function filtrar(tipo){
-  let termo="", itens=[];
+// ================= EXCLUIR =================
+async function excluir(id){
 
-  if(tipo==="fornec"){
-    termo=buscaFornec.value.toLowerCase();
-    itens=document.querySelectorAll("#listaFornec .item");
-  }
-  if(tipo==="emp"){
-    termo=buscaEmp.value.toLowerCase();
-    itens=document.querySelectorAll("#listaEmpresas .item");
-  }
+  if(!confirm("Excluir fornecedor?")) return;
 
-  itens.forEach(x=>{
-    x.style.display = x.innerText.toLowerCase().includes(termo) ? "block" : "none";
-  });
+  await sb
+    .from("fornecedores_mercatto")
+    .delete()
+    .eq("id", id);
+
+  carregar();
 }
 
-/* ============================================================
-   LISTAGEM
-============================================================ */
-async function carregarContas(){
-  let d = await fetch(`${API}?action=getContas`).then(r=>r.json());
-  let html="";
-
-  d.forEach(x=>{
-    html += `
-    <div class="item">
-      <div class="item-top">
-        <span>🏦 ${x.banco} • Ag ${x.agencia} • Conta ${x.conta}</span>
-        <span class="acoes">
-          <a onclick='abrirPopup("contas",${JSON.stringify(x)})'>Editar</a> |
-          <a onclick='excluir("Conta","${x.codigo}")'>Excluir</a>
-        </span>
-      </div>
-      <div class="item-sub">Tipo: ${x.tipo} • PIX: ${x.pix||"-"}</div>
-    </div>`;
-  });
-
-  listaContas.innerHTML = html;
+// ================= FECHAR =================
+function fechar(){
+  overlay.style.display="none";
 }
 
-async function carregarFornecedores(){
-  let d = await fetch(`${API}?action=getFornecedores`).then(r=>r.json());
-  let html="";
+// ================= BUSCA =================
+busca.addEventListener("input", async ()=>{
 
-  d.forEach(x=>{
-    html += `
-    <div class="item">
-      <div class="item-top">
-        <span>🏭 ${x.nome}</span>
-        <span class="acoes">
-          <a onclick='abrirPopup("fornecedores",${JSON.stringify(x)})'>Editar</a> |
-          <a onclick='excluir("Fornecedor","${x.codigo}")'>Excluir</a>
-        </span>
-      </div>
-      <div class="item-sub">CNPJ: ${x.cnpj} • WhatsApp: ${x.tel1}</div>
-    </div>`;
-  });
+  const termo = busca.value.toLowerCase();
 
-  listaFornec.innerHTML = html;
-}
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*");
 
-async function carregarEmpresas(){
-  let d = await fetch(`${API}?action=getEmpresas`).then(r=>r.json());
-  let html="";
+  const filtrado = data.filter(x =>
+    x.nome.toLowerCase().includes(termo)
+  );
 
-  d.forEach(x=>{
-    html += `
-    <div class="item">
-      <div class="item-top">
-        <span>🏢 ${x.nome}</span>
-        <span class="acoes">
-          <a onclick='abrirPopup("empresas",${JSON.stringify(x)})'>Editar</a> |
-          <a onclick='excluir("Empresa","${x.codigo}")'>Excluir</a>
-        </span>
-      </div>
-      <div class="item-sub">CNPJ: ${x.cnpj} • UF: ${x.uf}</div>
-    </div>`;
-  });
+  render(filtrado);
+});
 
-  listaEmpresas.innerHTML = html;
-}
-
-/* ============================================================
-   EXCLUIR
-============================================================ */
-async function excluir(tipo, codigo){
-  if(!confirm("Deseja excluir?")) return;
-  await fetch(`${API}?action=delete${tipo}&codigo=${codigo}`);
-  carregarTudo();
-}
-
-/* ============================================================
-   INICIAR
-============================================================ */
-function carregarTudo(){
-  carregarContas();
-  carregarFornecedores();
-  carregarEmpresas();
-}
-window.onload = carregarTudo;
+carregar();
 
 </script>
 
