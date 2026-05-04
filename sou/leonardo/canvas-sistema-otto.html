@@ -1141,20 +1141,78 @@ if(SpeechRecognition){
   console.log("[OTTO] 🎤", texto)
 
   // 🔥 ATIVAR
-  if(texto.includes("ativar sistema otto")){
-    console.log("[OTTO] 🔐 Abrindo popup")
-    abrirSenhaOtto()
-    return
-  }
+// 🔥 NORMALIZA TEXTO
+function limparTexto(t){
+  return t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos
+}
 
-  // 🔴 DESATIVAR
-  if(texto.includes("desativar sistema otto")){
-    console.log("[OTTO] 🔴 Desativando")
-    document.getElementById("ottoOverlay").style.display = "none"
-    ottoAtivo = false
-    return
-  }
+// 🔥 DETECTAR ATIVAÇÃO (INTELIGENTE)
+function detectarAtivarOtto(texto){
 
+  texto = limparTexto(texto)
+
+  const palavrasAtivar = [
+    "ativar", "ativa", "ativo", "ligar", "abrir", "iniciar"
+  ]
+
+  const palavrasOtto = [
+    "otto", "oto", "auto", "otio", "ot", "otoo"
+  ]
+
+  const temAtivar = palavrasAtivar.some(p => texto.includes(p))
+  const temOtto = palavrasOtto.some(p => texto.includes(p))
+
+  return temAtivar && temOtto
+}
+
+// 🔥 DETECTAR DESATIVAR
+function detectarDesativarOtto(texto){
+
+  texto = limparTexto(texto)
+
+  const palavrasDesativar = [
+    "desativar", "desliga", "parar", "fechar"
+  ]
+
+  const palavrasOtto = [
+    "otto", "oto", "auto"
+  ]
+
+  return palavrasDesativar.some(p => texto.includes(p)) &&
+         palavrasOtto.some(p => texto.includes(p))
+}
+
+
+
+
+
+
+
+
+
+   
+// 🔥 ATIVAR INTELIGENTE
+if(detectarAtivarOtto(texto)){
+  console.log("[OTTO] 🔐 Ativação inteligente detectada")
+  abrirSenhaOtto()
+  return
+}
+
+// 🔴 DESATIVAR INTELIGENTE
+if(detectarDesativarOtto(texto)){
+  console.log("[OTTO] 🔴 Desativando")
+  document.getElementById("ottoOverlay").style.display = "none"
+  ottoAtivo = false
+  return
+}
+
+
+
+
+   
   // 🧠 EXECUTAR COM OTTO ATIVO
   if(ottoAtivo){
 
