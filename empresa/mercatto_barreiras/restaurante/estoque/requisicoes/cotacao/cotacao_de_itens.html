@@ -120,8 +120,8 @@ button{
 }
 
 .top, .container{
-  max-width:1100px;
-  margin:auto;
+  width:100%;
+  max-width:100%;
 }
 
 
@@ -139,7 +139,15 @@ button{
   width:120px;
 }
 
+td:first-child{
+  text-align:left;
+  padding-left:20px;
+}
 
+th:first-child{
+  text-align:left;
+  padding-left:20px;
+}
 
   
 </style>
@@ -187,6 +195,7 @@ button{
 <th>Mín</th>
 <th>Ideal</th>
 <th>Comprar</th>
+<th>Preço</th>
 <th>Resultado</th>
 <th></th>
 </tr>
@@ -289,11 +298,11 @@ function confirmarAdd(){
     return;
   }
 
-  selecionados.push({
-    ...produtoSelecionado,
-    comprar: qtd
-  });
-
+selecionados.push({
+  ...produtoSelecionado,
+  comprar: qtd,
+  preco: produtoSelecionado.preco || null // futuro: última cotação
+});
   // reset
   produtoSelecionado = null;
   document.getElementById("produtoSelecionado").style.display = "none";
@@ -318,9 +327,8 @@ function render(){
 
     return `
     <tr class="${classe}">
-<td>
-  ${d.produto}
-  <br><small>${d.unidade_uso || 'UN'}</small>
+<td style="text-align:left; white-space:nowrap;">
+  ${d.produto} <small style="color:#64748b">(${d.unidade_uso || 'UN'})</small>
 </td>
 
 
@@ -328,13 +336,23 @@ function render(){
       <td>${d.estoque_minimo}</td>
       <td>${d.estoque_ideal}</td>
 
-      <td>
-        <input type="number"
-          value="${d.comprar}"
-          onchange="update(${i}, this.value)">
-      </td>
+     <td>
+  <input type="number"
+    value="${d.comprar}"
+    onchange="update(${i}, this.value)">
+</td>
 
-      <td class="resultado">${resultado}</td>
+<td>
+  ${
+    d.preco 
+    ? `R$ ${Number(d.preco).toFixed(2)}`
+    : `<span style="color:#ef4444; font-weight:600;">Sem cotação</span>`
+  }
+</td>
+
+<td class="resultado">${resultado}</td>
+
+
 
       <td class="remove" onclick="remover(${i})">✖</td>
     </tr>
