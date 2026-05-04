@@ -354,46 +354,53 @@ function calc(index){
 
     let elInput = document.getElementById(`p_${index}_${f}`);
     memoriaInputs[`p_${index}_${f}`] = elInput.value;
+
     let valor = elInput.value.replace(",", ".");
 
-    if(!valor) return;
+    if(valor){
 
-    let preco = Number(valor);
+      let preco = Number(valor);
 
-    if(isNaN(preco)) return;
+      if(!isNaN(preco)){
 
-    const custo = preco / qtdUni;
+        const custo = preco / qtdUni;
 
-    document.getElementById(`r_${index}_${f}`).innerText =
-      "R$ " + custo.toFixed(2);
+        document.getElementById(`r_${index}_${f}`).innerText =
+          "R$ " + custo.toFixed(2);
 
-    valores.push({f, custo});
+        valores.push({f, custo});
+      }
+    }
+
   });
+
+  // 🔥 SALVA SEMPRE (MESMO SEM COMPARAÇÃO)
+  salvar();
 
   if(valores.length < 2) return;
 
   const menor = Math.min(...valores.map(v=>v.custo));
   const maior = Math.max(...valores.map(v=>v.custo));
 
- valores.forEach(v=>{
+  valores.forEach(v=>{
 
-  const el = document.getElementById(`cell_${index}_${v.f}`);
+    const el = document.getElementById(`cell_${index}_${v.f}`);
 
-  el.classList.remove("verde","vermelho","laranja");
+    el.classList.remove("verde","vermelho","laranja");
 
-  if(v.custo === menor){
-    el.classList.add("verde");
-  } else if(v.custo === maior){
-    el.classList.add("vermelho");
-  } else {
-    el.classList.add("laranja");
-  }
+    if(v.custo === menor){
+      el.classList.add("verde");
+    } else if(v.custo === maior){
+      el.classList.add("vermelho");
+    } else {
+      el.classList.add("laranja");
+    }
 
-});
+  });
 
-// 🔥 SALVA SEMPRE
-salvar();
 }
+
+  
 
 /* SALVAR */
 async function salvar(){
@@ -421,8 +428,8 @@ if(!valorInput) return;
 
 const precoTotal = Number(valorInput.replace(",", "."));
 
-if(precoTotal !== null && precoTotal !== ""){
-        linha.fornecedores.push({
+if(!isNaN(precoTotal) && precoTotal > 0){
+  linha.fornecedores.push({
           fornecedor_id: f,
           fornecedor_nome: getNome(f),
           preco_total: precoTotal,
