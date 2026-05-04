@@ -295,14 +295,12 @@ function selecionarProduto(id){
 
   produtoSelecionado = p;
 
-  nomeProduto.innerText = p.produto;
-  unidadeProduto.innerText = p.unidade_uso || 'UN';
+  busca.value = p.produto;
 
-  document.getElementById("produtoSelecionado").style.display = "block";
+  document.getElementById("unidadeSelect").value = p.unidade_uso || 'UN';
 
   resultados.innerHTML = "";
 }
-
 function confirmarAdd(){
 
   if(!produtoSelecionado){
