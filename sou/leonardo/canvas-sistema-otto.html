@@ -23,7 +23,6 @@
   --border:#1e293b;
 }
 
-    
 *{
   box-sizing:border-box;
   margin:0;
@@ -1124,12 +1123,10 @@ if(SpeechRecognition){
 
   recognition.onstart = () => console.log("[OTTO] 🎧 Microfone iniciado")
 
-recognition.onend = () => {
-  console.log("[OTTO] 🔁 Reiniciando...")
-  setTimeout(()=>{
-    try{ recognition.start() }catch(e){}
-  }, 1000)
-}
+  recognition.onend = () => {
+    console.log("[OTTO] 🔁 Reiniciando...")
+    setTimeout(()=>recognition.start(), 500)
+  }
 
  recognition.onresult = (event) => {
 
@@ -1203,7 +1200,7 @@ if(detectarAtivarOtto(texto)){
   const popup = document.getElementById("popupOverlay")
   const iframe = popup.querySelector("iframe")
 
-  iframe.src = "agente.html?t=" + Date.now()
+  iframe.src = "canvas.html?t=" + Date.now()
 
   popup.style.display = "flex"
 
@@ -1244,7 +1241,8 @@ if(detectarDesativarOtto(texto)){
 
   }
 
-recognition.start()
+  recognition.start()
+
 }else{
   console.log("❌ navegador não suporta voz")
 }
@@ -1406,7 +1404,7 @@ function enviarOttoManual(){
 
     <!-- 🔥 AQUI ABRE O CANVAS -->
     <iframe 
-      src="agente.html"
+      src="canvas.html"
       style="
         flex:1;
         border:none;
