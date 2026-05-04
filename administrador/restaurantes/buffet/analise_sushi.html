@@ -253,9 +253,16 @@ const sb = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+function hojeBR(){
+  const d = new Date();
+  return new Date(d.getTime() - 3*60*60*1000).toISOString().slice(0,10);
+}
+
 let rangeSelecionado = [
   new Date(Date.now()-6*86400000).toISOString().slice(0,10),
-function hojeBR(){
+  hojeBR()
+];
+  
   const d = new Date();
   return new Date(d.getTime() - 3*60*60*1000).toISOString().slice(0,10);
 }
@@ -332,8 +339,12 @@ const busca = document.getElementById("busca").value.toLowerCase();
 
 dados.forEach(r=>{
 
-  if(busca && !r.nome.toLowerCase().includes(busca)) return;
+const nome = (r.nome || "").toLowerCase();
 
+if(busca && !nome.includes(busca)) return;
+
+
+  
   porItem[r.nome] ||= {prod:0,reap:0,desp:0};
 
   const q = Number(r.quantidade || 0);
