@@ -9,73 +9,106 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
-/* BASE */
+/* ================= BASE ================= */
 body{
   margin:0;
   font-family:Inter;
   background:#eef2f7;
+  color:#0f172a;
 }
 
+/* ================= HEADER ================= */
 .header{
-  background:#0f172a;
+  background:#020617;
   color:#fff;
-  padding:15px 20px;
+  padding:16px 20px;
+  font-size:16px;
   font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
 }
 
+/* ================= TOPO ================= */
 .top{
   display:flex;
   gap:10px;
-  padding:15px;
+  padding:15px 20px;
   background:#fff;
   border-bottom:1px solid #e5e7eb;
 }
 
-select,button{
-  padding:10px 12px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  font-weight:500;
+select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  min-width:220px;
+  background:#fff;
 }
 
 button{
+  padding:10px 16px;
+  border-radius:10px;
+  border:none;
   background:#2563eb;
   color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
 }
 
+button:hover{
+  background:#1d4ed8;
+}
+
+/* ================= TABELA ================= */
 .table-wrap{
   overflow:auto;
 }
 
 table{
   width:100%;
-  border-collapse:collapse;
+  border-collapse:separate;
+  border-spacing:0;
   background:#fff;
+  table-layout:fixed;
+}
+
+/* HEADER FIXO */
+thead{
+  position:sticky;
+  top:0;
+  z-index:2;
 }
 
 th{
   background:#020617;
   color:#fff;
-  padding:10px;
+  padding:12px;
   font-size:12px;
   font-weight:600;
-}
-
-td{
-  padding:8px;
-  border-bottom:1px solid #eee;
+  border-right:1px solid #111;
   text-align:center;
 }
 
-/* PRODUTO */
+/* CELULAS */
+td{
+  padding:10px;
+  border-bottom:1px solid #e5e7eb;
+  border-right:1px solid #e5e7eb;
+  text-align:center;
+  height:70px;
+  vertical-align:middle;
+}
+
+/* ================= PRODUTO ================= */
 .prod{
   text-align:left;
-  width:260px;
+  width:300px;
+  padding-left:16px;
 }
 
 .prod strong{
   font-size:14px;
+  display:block;
 }
 
 .prod span{
@@ -83,39 +116,67 @@ td{
   color:#64748b;
 }
 
-/* BLOCO FORNECEDOR */
+/* ================= BOX FORNECEDOR ================= */
 .box{
   display:flex;
   flex-direction:column;
-  gap:5px;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
 }
 
-/* INPUTS */
-.row{
-  display:flex;
-  gap:4px;
-}
-
+/* ================= INPUT ================= */
 input{
-  width:70px;
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #ccc;
+  width:100px;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
   text-align:center;
-}
-
-/* RESULTADO */
-.result{
+  font-weight:600;
   font-size:13px;
-  font-weight:700;
+  outline:none;
 }
 
-/* CORES SUAVES */
-.verde{ background:#ecfdf5; }
-.vermelho{ background:#fef2f2; }
-.laranja{ background:#fffbeb; }
+input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
 
-  
+/* ================= RESULTADO ================= */
+.result{
+  font-size:14px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+/* ================= CORES (SUAVE) ================= */
+.verde{
+  background:#ecfdf5;
+}
+
+.vermelho{
+  background:#fef2f2;
+}
+
+.laranja{
+  background:#fffbeb;
+}
+
+/* ================= HOVER ================= */
+tr:hover td{
+  background:#f8fafc;
+}
+
+/* ================= SCROLL ================= */
+::-webkit-scrollbar{
+  height:8px;
+  width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+  background:#cbd5e1;
+  border-radius:6px;
+}
 </style>
 </head>
 
