@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Execução da Cotação</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{font-family:Inter;background:#f1f5f9;padding:20px;}
+
+.top{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+select,button{
+  padding:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+
+th,td{
+  border:1px solid #eee;
+  padding:10px;
+  text-align:center;
+}
+
+input{
+  width:70px;
+}
+
+.melhor{
+  background:#dcfce7;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2 id="titulo"></h2>
+
+<div class="top">
+  <select id="fornecedorSelect"></select>
+  <button onclick="addFornecedor()">+ Fornecedor</button>
+</div>
+
+<table>
+<thead id="thead"></thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<script>
+
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "SUA_PUBLIC_KEY"
+);
+
+const id = new URLSearchParams(location.search).get("id");
+
+let cotacao;
+let fornecedores = [];
+let selecionados = [];
+
+// ================= INIT =================
+async function init(){
+
+  // cotação
+  const { data } = await sb
+    .from("cotacoes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  cotacao = data;
+  titulo.innerText = cotacao.nome;
+
+  // fornecedores
+  const { data: forn } = await sb
+    .from("fornecedores_mercatto")
+    .select("*");
+
+  fornecedores = forn;
+
+  fornecedorSelect.innerHTML = forn.map(f=>`
+    <option value="${f.id}">${f.nome}</option>
+  `).join("");
+
+  render();
+}
+
+// ================= ADD FORNECEDOR =================
+function addFornecedor(){
+
+  const f = fornecedorSelect.value;
+
+  if(selecionados.includes(f)) return;
+
+  selecionados.push(f);
+
+  render();
+}
+
+// ================= RENDER =================
+function render(){
+
+  const itens = cotacao.itens;
+
+  thead.innerHTML = `
+    <tr>
+      <th>Produto</th>
+      <th>Qtd</th>
+      ${selecionados.map(f=>`<th>${getNome(f)}</th>`).join("")}
+    </tr>
+  `;
+
+  tbody.innerHTML = itens.map((i,index)=>{
+
+    let linha = `
+      <tr>
+        <td>${i.produto}</td>
+        <td>${i.comprar}</td>
+    `;
+
+    selecionados.forEach(f=>{
+      linha += `
+        <td>
+          <input placeholder="Preço" onchange="calc(${index})" id="p_${index}_${f}">
+          <input placeholder="Qtd" onchange="calc(${index})" id="q_${index}_${f}">
+          <div id="r_${index}_${f}"></div>
+        </td>
+      `;
+    });
+
+    linha += `</tr>`;
+    return linha;
+
+  }).join("");
+}
+
+// ================= CALC =================
+function calc(index){
+
+  let menor = null;
+  let melhor = null;
+
+  selecionados.forEach(f=>{
+
+    const preco = Number(document.getElementById(`p_${index}_${f}`).value);
+    const qtd = Number(document.getElementById(`q_${index}_${f}`).value);
+
+    if(!preco || !qtd) return;
+
+    const unit = preco / qtd;
+
+    document.getElementById(`r_${index}_${f}`).innerText = unit.toFixed(2);
+
+    if(menor === null || unit < menor){
+      menor = unit;
+      melhor = f;
+    }
+
+  });
+
+  selecionados.forEach(f=>{
+    const el = document.getElementById(`r_${index}_${f}`).parentElement;
+    el.classList.toggle("melhor", f === melhor);
+  });
+
+  salvar();
+}
+
+// ================= SALVAR =================
+async function salvar(){
+
+  await sb.from("cotacoes").update({
+    atualizado_em: new Date()
+  }).eq("id", cotacao.id);
+
+}
+
+// ================= AUX =================
+function getNome(id){
+  return fornecedores.find(f=>f.id===id)?.nome || "";
+}
+
+init();
+
+</script>
+
+</body>
+</html>
