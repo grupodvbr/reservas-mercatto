@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotações Montadas</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:#eef2f7;
+}
+
+.container{
+  padding:20px;
+}
+
+h1{
+  text-align:center;
+}
+
+/* LISTA */
+.lista{
+  max-width:1000px;
+  margin:auto;
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:10px;
+  cursor:pointer;
+  box-shadow:0 5px 15px rgba(0,0,0,.05);
+}
+
+.card:hover{
+  background:#f9fafb;
+}
+
+.status{
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:6px;
+}
+
+.aberto{ background:#fef3c7; }
+.andamento{ background:#dbeafe; }
+.finalizado{ background:#dcfce7; }
+
+/* DETALHE */
+#detalhe{
+  display:none;
+  margin-top:20px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+th{
+  background:#111827;
+  color:#fff;
+  padding:10px;
+}
+
+td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+
+input{
+  width:80px;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+
+.top-actions{
+  margin:10px 0;
+  display:flex;
+  gap:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📊 Cotações Montadas</h1>
+
+<div class="lista" id="lista"></div>
+
+<div id="detalhe">
+
+<h2 id="titulo"></h2>
+
+<div class="top-actions">
+  <button onclick="iniciar()">Iniciar Cotação</button>
+  <button onclick="finalizar()">Finalizar</button>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Produto</th>
+<th>Qtd</th>
+<th>Preço</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody id="body"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let cotacoes = [];
+let atual = null;
+
+// ================= LISTAR =================
+async function carregar(){
+
+  const { data } = await sb
+    .from("cotacoes")
+    .select("*")
+    .order("data_criacao", { ascending:false });
+
+  cotacoes = data;
+
+  lista.innerHTML = data.map(c=>`
+
+    <div class="card" onclick="abrir('${c.id}')">
+
+      <strong>${c.nome}</strong><br>
+
+      <small>${c.data_cotacao}</small><br>
+
+      <span class="status ${
+        c.status === "Em aberto" ? "aberto" :
+        c.status === "Em andamento" ? "andamento" :
+        "finalizado"
+      }">
+        ${c.status}
+      </span>
+
+    </div>
+
+  `).join("");
+}
+
+// ================= ABRIR =================
+function abrir(id){
+
+  atual = cotacoes.find(c => c.id === id);
+
+  titulo.innerText = atual.nome;
+
+  const itens = atual.itens;
+
+  body.innerHTML = itens.map((i,index)=>`
+
+    <tr>
+      <td>${i.produto}</td>
+      <td>${i.comprar}</td>
+
+      <td>
+        <input type="number"
+          value="${i.preco || 0}"
+          onchange="updatePreco(${index}, this.value)">
+      </td>
+
+      <td id="total_${index}">
+        ${ (i.preco || 0) * i.comprar }
+      </td>
+    </tr>
+
+  `).join("");
+
+  detalhe.style.display="block";
+}
+
+// ================= UPDATE PREÇO =================
+function updatePreco(index, valor){
+
+  atual.itens[index].preco = Number(valor);
+
+  const total = valor * atual.itens[index].comprar;
+
+  document.getElementById("total_"+index).innerText = total;
+
+  salvarTempoReal();
+}
+
+// ================= SALVAR REAL TIME =================
+async function salvarTempoReal(){
+
+  await sb
+    .from("cotacoes")
+    .update({
+      itens: atual.itens,
+      atualizado_em: new Date()
+    })
+    .eq("id", atual.id);
+
+}
+
+// ================= STATUS =================
+async function iniciar(){
+
+  await sb
+    .from("cotacoes")
+    .update({ status: "Em andamento" })
+    .eq("id", atual.id);
+
+  carregar();
+}
+
+async function finalizar(){
+
+  await sb
+    .from("cotacoes")
+    .update({ status: "Finalizado" })
+    .eq("id", atual.id);
+
+  carregar();
+}
+
+// ================= INIT =================
+carregar();
+
+</script>
+
+</body>
+</html>
