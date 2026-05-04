@@ -25,16 +25,17 @@ body{
 
 .search{
   display:flex;
+  flex-direction:column;
   gap:10px;
+  max-width:500px;
 }
 
 .search input{
-  flex:1;
+  width:100%;
   padding:12px;
   border-radius:10px;
   border:1px solid #ddd;
 }
-
 .search-results{
   background:#fff;
   border-radius:10px;
@@ -118,6 +119,29 @@ button{
   color:red;
 }
 
+.top, .container{
+  max-width:1100px;
+  margin:auto;
+}
+
+
+.add-area{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.add-area input{
+  flex:1;
+}
+
+.add-area button{
+  width:120px;
+}
+
+
+
+  
 </style>
 </head>
 
@@ -136,7 +160,8 @@ button{
   <small>Unidade: <span id="unidadeProduto"></span></small>
 </div>
 
-<div style="display:flex; gap:10px; margin-top:10px;">
+<div class="add-area">
+  
   <input id="qtdAdd" type="number" placeholder="Quantidade">
   <button onclick="confirmarAdd()">Adicionar</button>
 </div>
