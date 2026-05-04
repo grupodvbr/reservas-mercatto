@@ -2,49 +2,127 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cotação Inteligente PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Execução de Cotação PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
+/* BASE */
 body{
+  margin:0;
   font-family:Inter;
   background:#eef2f7;
-  padding:20px;
+}
+
+/* HEADER */
+.header{
+  position:sticky;
+  top:0;
+  background:#0f172a;
+  color:#fff;
+  padding:15px 20px;
+  z-index:10;
+  box-shadow:0 5px 20px rgba(0,0,0,.2);
+}
+
+.header h2{
+  margin:0;
+  font-size:18px;
 }
 
 /* TOPO */
 .top{
   display:flex;
   gap:10px;
-  margin-bottom:15px;
+  padding:15px 20px;
+  background:#fff;
+  border-bottom:1px solid #ddd;
+}
+
+select,button{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-weight:600;
+}
+
+button{
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
 }
 
 /* TABELA */
+.table-wrap{
+  overflow:auto;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
+  min-width:900px;
+}
+
+/* HEADER FIXO */
+thead{
+  position:sticky;
+  top:60px;
+  z-index:5;
 }
 
 th{
-  background:#111827;
+  background:#020617;
   color:#fff;
-  padding:10px;
+  padding:12px;
+  font-size:13px;
+  border-right:1px solid #111;
 }
 
 td{
-  border:1px solid #eee;
   padding:8px;
+  border-bottom:1px solid #eee;
+  border-right:1px solid #eee;
   text-align:center;
 }
 
-/* INPUT */
+/* PRODUTO */
+.prod{
+  text-align:left;
+  min-width:220px;
+}
+
+.prod strong{
+  display:block;
+}
+
+.sub{
+  font-size:11px;
+  color:#64748b;
+}
+
+/* INPUTS */
+.input-group{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
 input{
-  width:80px;
-  padding:5px;
+  width:100%;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
   text-align:center;
+}
+
+/* RESULTADO */
+.result{
+  font-size:12px;
+  font-weight:700;
 }
 
 /* CORES */
@@ -52,38 +130,26 @@ input{
 .vermelho{background:#fee2e2;}
 .laranja{background:#fef3c7;}
 
-/* PRODUTO */
-.produto{
-  text-align:left;
-}
-
-.sub{
-  font-size:11px;
-  color:#666;
-}
-
-/* PREÇO */
-.preco{
-  font-weight:700;
-  margin-top:4px;
-}
-
 </style>
 </head>
 
 <body>
 
-<h2 id="titulo"></h2>
+<div class="header">
+  <h2 id="titulo"></h2>
+</div>
 
 <div class="top">
   <select id="fornecedorSelect"></select>
   <button onclick="addFornecedor()">+ Fornecedor</button>
 </div>
 
+<div class="table-wrap">
 <table>
 <thead id="thead"></thead>
 <tbody id="tbody"></tbody>
 </table>
+</div>
 
 <script>
 
@@ -99,10 +165,9 @@ let fornecedores = [];
 let selecionados = [];
 let estoque = [];
 
-// ================= INIT =================
+/* INIT */
 async function init(){
 
-  // cotação
   const { data } = await sb
     .from("cotacoes")
     .select("*")
@@ -112,7 +177,6 @@ async function init(){
   cotacao = data;
   titulo.innerText = cotacao.nome;
 
-  // fornecedores
   const { data: forn } = await sb
     .from("fornecedores_mercatto")
     .select("*");
@@ -123,7 +187,6 @@ async function init(){
     <option value="${f.id}">${f.nome}</option>
   `).join("");
 
-  // estoque (AQUI ESTÁ O OURO)
   const { data: est } = await sb
     .from("mercatto_estoque")
     .select("*");
@@ -133,7 +196,7 @@ async function init(){
   render();
 }
 
-// ================= ADD =================
+/* ADD FORNECEDOR */
 function addFornecedor(){
 
   const f = fornecedorSelect.value;
@@ -145,7 +208,7 @@ function addFornecedor(){
   render();
 }
 
-// ================= RENDER =================
+/* RENDER */
 function render(){
 
   const itens = cotacao.itens;
@@ -154,7 +217,9 @@ function render(){
     <tr>
       <th>Produto</th>
       <th>Qtd</th>
-      ${selecionados.map(f=>`<th>${getNome(f)}</th>`).join("")}
+      ${selecionados.map(f=>`
+        <th>${getNome(f)}</th>
+      `).join("")}
     </tr>
   `;
 
@@ -162,16 +227,14 @@ function render(){
 
     const prod = estoque.find(p=>p.produto === i.produto);
 
-    const undCompra = prod?.und_compra || "UN";
-    const qtdUnidades = prod?.qtd_unidades || 1;
+    const und = prod?.und_compra || "UN";
+    const qtdUni = prod?.qtd_unidades || 1;
 
     let linha = `
       <tr>
-        <td class="produto">
-          ${i.produto}<br>
-          <span class="sub">
-            Compra: ${undCompra} | Contém: ${qtdUnidades} UN
-          </span>
+        <td class="prod">
+          <strong>${i.produto}</strong>
+          <span class="sub">Compra: ${und} | ${qtdUni} unidades</span>
         </td>
         <td>${i.comprar}</td>
     `;
@@ -179,8 +242,10 @@ function render(){
     selecionados.forEach(f=>{
       linha += `
         <td id="cell_${index}_${f}">
-          <input placeholder="R$" oninput="calc(${index})" id="p_${index}_${f}">
-          <div class="preco" id="r_${index}_${f}"></div>
+          <div class="input-group">
+            <input placeholder="Preço" oninput="calc(${index})" id="p_${index}_${f}">
+            <div id="r_${index}_${f}" class="result"></div>
+          </div>
         </td>
       `;
     });
@@ -191,13 +256,12 @@ function render(){
   }).join("");
 }
 
-// ================= CALC =================
+/* CALCULO */
 function calc(index){
 
   const item = cotacao.itens[index];
   const prod = estoque.find(p=>p.produto === item.produto);
-
-  const qtdUnidades = prod?.qtd_unidades || 1;
+  const qtdUni = prod?.qtd_unidades || 1;
 
   let valores = [];
 
@@ -205,24 +269,23 @@ function calc(index){
 
     let preco = document.getElementById(`p_${index}_${f}`).value;
 
-    // 🔥 MÁSCARA
     preco = preco.replace(",", ".");
     preco = Number(preco);
 
     if(!preco) return;
 
-    const custoReal = preco / qtdUnidades;
+    const custo = preco / qtdUni;
 
     document.getElementById(`r_${index}_${f}`).innerText =
-      "R$ " + custoReal.toFixed(2) + " / UN";
+      "R$ " + custo.toFixed(2) + " / UN";
 
-    valores.push({f, custoReal});
+    valores.push({f, custo});
   });
 
   if(valores.length < 2) return;
 
-  const menor = Math.min(...valores.map(v=>v.custoReal));
-  const maior = Math.max(...valores.map(v=>v.custoReal));
+  const menor = Math.min(...valores.map(v=>v.custo));
+  const maior = Math.max(...valores.map(v=>v.custo));
 
   valores.forEach(v=>{
 
@@ -230,9 +293,9 @@ function calc(index){
 
     el.classList.remove("verde","vermelho","laranja");
 
-    if(v.custoReal === menor){
+    if(v.custo === menor){
       el.classList.add("verde");
-    } else if(v.custoReal === maior){
+    } else if(v.custo === maior){
       el.classList.add("vermelho");
     } else {
       el.classList.add("laranja");
@@ -243,14 +306,14 @@ function calc(index){
   salvar();
 }
 
-// ================= SALVAR =================
+/* SALVAR */
 async function salvar(){
   await sb.from("cotacoes").update({
-    atualizado_em: new Date()
+    atualizado_em:new Date()
   }).eq("id", cotacao.id);
 }
 
-// ================= AUX =================
+/* AUX */
 function getNome(id){
   return fornecedores.find(f=>f.id===id)?.nome || "";
 }
