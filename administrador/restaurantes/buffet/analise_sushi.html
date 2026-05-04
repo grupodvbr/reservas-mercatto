@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Análise Sushi PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Inter;
+  background:#f6f7fb;
+}
+
+.card{
+  background:#fff;
+  margin:10px;
+  padding:14px;
+  border-radius:14px;
+}
+
+.filters{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.filters input, .filters select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+button{
+  background:#ff6a00;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  font-weight:800;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="filters">
+
+<select id="empresa">
+  <option value="MERCATTO">Mercatto</option>
+  <option value="VILLA">Villa</option>
+</select>
+
+<input id="range">
+
+<input id="busca" placeholder="Buscar sushi...">
+
+<button onclick="carregar()">Atualizar</button>
+
+</div>
+
+</div>
+
+<div class="card">
+  <canvas id="grafico"></canvas>
+</div>
+
+<div class="card">
+  Produção: <b id="prod">0</b><br>
+  Reaproveitamento: <b id="reap">0</b><br>
+  Desperdício: <b id="desp">0</b>
+</div>
+
+<div class="card">
+<table width="100%">
+<thead>
+<tr>
+<th>Item</th>
+<th>Produção</th>
+<th>Reap</th>
+<th>Desperdício</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+  "https://dxkszikemntfusfyrzos.supabase.co",
+  "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let range = [];
+
+flatpickr("#range",{
+  mode:"range",
+  dateFormat:"Y-m-d",
+  onChange:(d)=>{
+    if(d.length===2){
+      range = d.map(x=>x.toISOString().slice(0,10));
+    }
+  }
+});
+
+let chart;
+
+async function carregar(){
+
+  const empresa = document.getElementById("empresa").value;
+  const busca = document.getElementById("busca").value.toLowerCase();
+
+  let dados = [];
+  let pagina = 0;
+
+  while(true){
+
+    const { data } = await sb
+      .from("controle_sushi")
+      .select("*")
+      .eq("empresa", empresa)
+      .gte("data_registro", range[0])
+      .lte("data_registro", range[1])
+      .range(pagina*1000, (pagina+1)*1000-1);
+
+    if(!data.length) break;
+
+    dados = dados.concat(data);
+
+    if(data.length < 1000) break;
+
+    pagina++;
+  }
+
+  const porItem = {};
+  const porDia = {};
+
+  let prod=0,reap=0,desp=0;
+
+  dados.forEach(r=>{
+
+    if(busca && !r.nome.toLowerCase().includes(busca)) return;
+
+    porItem[r.nome] ||= {p:0,r:0,d:0};
+
+    if(r.tipo==="Produção"){
+      porItem[r.nome].p+=Number(r.quantidade);
+      prod+=Number(r.quantidade);
+    }
+
+    if(r.tipo==="Reaproveitamento"){
+      porItem[r.nome].r+=Number(r.quantidade);
+      reap+=Number(r.quantidade);
+    }
+
+    if(r.tipo==="Desperdício"){
+      porItem[r.nome].d+=Number(r.quantidade);
+      desp+=Number(r.quantidade);
+    }
+
+    const dia = r.data_registro;
+
+    if(r.tipo==="Produção"){
+      porDia[dia]=(porDia[dia]||0)+Number(r.quantidade);
+    }
+
+  });
+
+  document.getElementById("prod").innerText=prod;
+  document.getElementById("reap").innerText=reap;
+  document.getElementById("desp").innerText=desp;
+
+  // tabela
+  tbody.innerHTML = Object.entries(porItem).map(([n,v])=>`
+    <tr>
+      <td>${n}</td>
+      <td>${v.p}</td>
+      <td>${v.r}</td>
+      <td>${v.d}</td>
+    </tr>
+  `).join("");
+
+  // grafico
+  const dias = Object.keys(porDia);
+  const valores = Object.values(porDia);
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("grafico"),{
+    type:'line',
+    data:{
+      labels:dias,
+      datasets:[{data:valores}]
+    }
+  });
+
+}
+
+</script>
+
+</body>
+</html>
