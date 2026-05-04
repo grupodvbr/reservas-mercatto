@@ -255,7 +255,12 @@ const sb = supabase.createClient(
 
 let rangeSelecionado = [
   new Date(Date.now()-6*86400000).toISOString().slice(0,10),
-  new Date().toISOString().slice(0,10)
+function hojeBR(){
+  const d = new Date();
+  return new Date(d.getTime() - 3*60*60*1000).toISOString().slice(0,10);
+}
+
+
 ];
 
 flatpickr("#range",{
