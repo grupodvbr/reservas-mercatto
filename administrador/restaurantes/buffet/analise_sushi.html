@@ -269,16 +269,14 @@ function hojeBR(){
   return new Date(d.getTime() - 3*60*60*1000).toISOString().slice(0,10);
 }
 
-let rangeSelecionado = [
-  new Date(Date.now()-6*86400000).toISOString().slice(0,10),
-  hojeBR()
-];
-  
+function hojeBR(){
   const d = new Date();
   return new Date(d.getTime() - 3*60*60*1000).toISOString().slice(0,10);
 }
 
-
+let rangeSelecionado = [
+  new Date(Date.now()-6*86400000).toISOString().slice(0,10),
+  hojeBR()
 ];
 
 flatpickr("#range",{
@@ -309,7 +307,7 @@ while(true){
 
   let query = sb
     .from("controle_sushi")
-    .select("*", { count: "exact" }) // 🔥 força supabase trazer tudo
+.select("*")
     .gte("data_registro", rangeSelecionado[0])
     .lte("data_registro", rangeSelecionado[1])
     .range(from, to);
@@ -356,8 +354,17 @@ if(busca && !nome.includes(busca)) return;
 
 
   
-  porItem[r.nome] ||= {prod:0,reap:0,desp:0};
+const nomeOriginal = r.nome || "SEM NOME";
+const nome = nomeOriginal.toLowerCase();
 
+if(busca && !nome.includes(busca)) return;
+
+porItem[nomeOriginal] ||= {prod:0,reap:0,desp:0};
+
+
+
+
+  
   const q = Number(r.quantidade || 0);
 
   if(r.tipo === "Produção"){
@@ -419,17 +426,9 @@ const cores=[];
 let d = new Date(rangeSelecionado[0]);
 const fim = new Date(rangeSelecionado[1]);
 
-while(d <= fim){
-
 const dias = Object.keys(porDia).sort();
 const valores = dias.map(d => porDia[d]);
 const cores = valores.map(v => v === 0 ? "#dc2626" : "#2563eb");
-
-  
-  dias.push(iso);
-  valores.push(val);
-  cores.push(val===0 ? "#dc2626" : "#2563eb");
-
   d = new Date(d.getTime()+86400000);
 }
 
