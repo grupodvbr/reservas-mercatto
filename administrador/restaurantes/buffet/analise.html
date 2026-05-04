@@ -416,11 +416,16 @@ const searchPrato = document.getElementById("searchPrato");
 const hoje = new Date();
 const seteDiasAtras = new Date(hoje.getTime() - 6*24*60*60*1000);
 
-let rangeSelecionado = [
-  seteDiasAtras.toISOString().slice(0,10),
-  hoje.toISOString().slice(0,10)
-];
+function toBR(date){
+  return date.toLocaleDateString('en-CA', {
+    timeZone: 'America/Bahia'
+  });
+}
 
+let rangeSelecionado = [
+  toBR(new Date(Date.now() - 6*86400000)),
+  toBR(new Date())
+];
 flatpickr("#rangeDatas", {
   mode: "range",
   dateFormat: "Y-m-d",
@@ -430,7 +435,10 @@ flatpickr("#rangeDatas", {
   defaultDate: rangeSelecionado,
   onChange: (datas) => {
     if (datas.length === 2) {
-      rangeSelecionado = datas.map(d => d.toISOString().slice(0,10));
+rangeSelecionado = datas.map(d =>
+  d.toLocaleDateString('en-CA', { timeZone: 'America/Bahia' })
+);
+      
       carregar(); // 🔥 atualiza aqui
     }
   }
@@ -607,8 +615,9 @@ const fim = new Date(rangeSelecionado[1]);
 
 for(let d = new Date(inicio); d <= fim; ){
 
-  const diaISO = d.toISOString().slice(0,10);
-
+const diaISO = d.toLocaleDateString('en-CA', {
+  timeZone: 'America/Bahia'
+});
   dias.push(diaISO);
 
   const valor = porDia[diaISO] || 0;
