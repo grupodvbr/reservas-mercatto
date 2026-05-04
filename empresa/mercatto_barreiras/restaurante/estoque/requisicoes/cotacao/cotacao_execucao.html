@@ -375,23 +375,24 @@ function calc(index){
   const menor = Math.min(...valores.map(v=>v.custo));
   const maior = Math.max(...valores.map(v=>v.custo));
 
-  valores.forEach(v=>{
+ valores.forEach(v=>{
 
-    const el = document.getElementById(`cell_${index}_${v.f}`);
+  const el = document.getElementById(`cell_${index}_${v.f}`);
 
-    el.classList.remove("verde","vermelho","laranja");
+  el.classList.remove("verde","vermelho","laranja");
 
-    if(v.custo === menor){
-      el.classList.add("verde");
-    } else if(v.custo === maior){
-      el.classList.add("vermelho");
-    } else {
-      el.classList.add("laranja");
-    }
+  if(v.custo === menor){
+    el.classList.add("verde");
+  } else if(v.custo === maior){
+    el.classList.add("vermelho");
+  } else {
+    el.classList.add("laranja");
+  }
 
-  });
+});
 
-  salvar();
+// 🔥 SALVA SEMPRE
+salvar();
 }
 
 /* SALVAR */
@@ -418,8 +419,7 @@ async function salvar(){
         document.getElementById(`p_${index}_${f}`)?.value || 0
       );
 
-      if(precoTotal){
-
+if(precoTotal !== null && precoTotal !== ""){
         linha.fornecedores.push({
           fornecedor_id: f,
           fornecedor_nome: getNome(f),
