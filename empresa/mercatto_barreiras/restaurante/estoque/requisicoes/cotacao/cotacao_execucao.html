@@ -123,6 +123,23 @@ td{
   align-items:center;
   justify-content:center;
   gap:6px;
+  width:100%;
+}
+
+.row{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+
+input{
+  width:90px;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #d1d5db;
+  text-align:center;
+  font-weight:600;
+  font-size:13px;
 }
 
 /* ================= INPUT ================= */
@@ -187,7 +204,10 @@ tr:hover td{
 </div>
 
 <div class="top">
-  <select id="fornecedorSelect"></select>
+<input id="buscaFornecedor" placeholder="🔍 Buscar fornecedor..." oninput="filtrarFornecedor()">
+<div id="listaFornecedores" style="background:#fff; border:1px solid #ddd; max-height:150px; overflow:auto;"></div>
+  
+  
   <button onclick="addFornecedor()">+ Fornecedor</button>
 </div>
 
@@ -211,7 +231,7 @@ let cotacao;
 let fornecedores = [];
 let selecionados = [];
 let estoque = [];
-
+let memoriaInputs = {};
 /* INIT */
 async function init(){
 
@@ -244,17 +264,17 @@ async function init(){
 }
 
 /* ADD FORNECEDOR */
-function addFornecedor(){
+function addFornecedor(id){
 
-  const f = fornecedorSelect.value;
+  if(selecionados.includes(id)) return;
 
-  if(selecionados.includes(f)) return;
+  selecionados.push(id);
 
-  selecionados.push(f);
+  listaFornecedores.innerHTML = "";
+  buscaFornecedor.value = "";
 
   render();
 }
-
 /* RENDER */
 function render(){
 
@@ -361,7 +381,31 @@ function calc(index){
 
 /* SALVAR */
 async function salvar(){
+
+  const dados = [];
+
+  cotacao.itens.forEach((item, index)=>{
+
+    const linha = {
+      produto: item.produto,
+      fornecedores: {}
+    };
+
+    selecionados.forEach(f=>{
+
+      const preco = document.getElementById(`p_${index}_${f}`)?.value || null;
+
+      if(preco){
+        linha.fornecedores[f] = preco;
+      }
+
+    });
+
+    dados.push(linha);
+  });
+
   await sb.from("cotacoes").update({
+    itens_cotacao: dados,  // 🔥 NOVO CAMPO JSON
     atualizado_em:new Date()
   }).eq("id", cotacao.id);
 }
@@ -373,6 +417,22 @@ function getNome(id){
 
 init();
 
+
+  function filtrarFornecedor(){
+
+  const termo = buscaFornecedor.value.toLowerCase();
+
+  const filtrados = fornecedores.filter(f =>
+    f.nome.toLowerCase().includes(termo)
+  );
+
+  listaFornecedores.innerHTML = filtrados.map(f=>`
+    <div style="padding:8px; cursor:pointer;"
+      onclick="addFornecedor('${f.id}')">
+      ${f.nome}
+    </div>
+  `).join("");
+}
 </script>
 
 </body>
