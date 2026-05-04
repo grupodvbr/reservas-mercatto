@@ -1193,33 +1193,24 @@ function detectarDesativarOtto(texto){
 
 
 
-   
 if(detectarAtivarOtto(texto)){
-    console.log("[OTÁVIO] 🚀 Abrindo Canvas OTTÁVIO")
+  console.log("[OTÁVIO] 🚀 Abrindo Canvas OTTÁVIO")
 
   const popup = document.getElementById("popupOverlay")
   const iframe = popup.querySelector("iframe")
 
+  popup.style.display = "flex"
+
   iframe.src = "agente.html?t=" + Date.now()
 
-const popup = document.getElementById("popupOverlay")
-const iframe = popup.querySelector("iframe")
+  // 🔥 ESPERA O IFRAME CARREGAR DE VERDADE
+  iframe.onload = () => {
+    console.log("📡 iframe carregado → ligando mic")
+    iframe.contentWindow.postMessage({ tipo:"mic", acao:"on" }, "*")
+  }
 
-iframe.src = "agente.html?t=" + Date.now()
-
-popup.style.display = "flex"
-
-// 🔥 AGORA SIM LIGA O MICROFONE
-setTimeout(()=>{
-  iframe.contentWindow.postMessage({ tipo:"mic", acao:"on" }, "*")
-}, 800)
-
-
-  
   return
 }
-
-
 
 
 
