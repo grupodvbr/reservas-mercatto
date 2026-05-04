@@ -455,8 +455,11 @@ if(rangeSelecionado.length === 2){
   q = q.lte("data", rangeSelecionado[1]);
 }
 
-const { data, error } = await q.order("data",{ascending:true});
-if(error){
+const { data, error } = await q
+  .order("data",{ascending:true})
+  .limit(10000); // 🔥 AQUI resolve 90% do problema
+  
+  if(error){
   console.error("Erro ao carregar buffet_lancamentos:", error);
 }
 
