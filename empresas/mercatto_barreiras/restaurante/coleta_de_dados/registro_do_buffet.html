@@ -383,6 +383,27 @@ button.ghost{
   <button class="primary" onclick="abrirModalSemana()" style="height:42px">
     ⚡ Lançamento Automático
   </button>
+
+<div style="width:100%;margin-top:10px">
+  <input 
+    id="buscaLancamentos"
+    placeholder="🔍 Buscar lançamento..."
+    style="
+      width:100%;
+      height:44px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      padding:0 14px;
+      font-size:14px;
+    "
+  >
+</div>
+
+
+
+
+
+  
 </div>
 
   <div class="card">
@@ -523,7 +544,7 @@ button.ghost{
   const unidadeSelect = document.getElementById("unidade");
   const editQuantidade = document.getElementById("editQuantidade");
 const editTara = document.getElementById("editTara");
-
+const buscaInput = document.getElementById("buscaLancamentos");
   
   /* ================= AJUSTE VISUAL POR UNIDADE ================= */
 
@@ -558,6 +579,17 @@ unidadeSelect.addEventListener("change", () => {
   const btnSalvar = document.getElementById("btnSalvar");
   const btnLimpar = document.getElementById("btnLimpar");
 const empresaSelect = document.getElementById("empresaSelect");
+
+
+const buscaInput = document.getElementById("buscaLancamentos");
+
+buscaInput.addEventListener("input", () => {
+  carregarLancamentos();
+});
+
+
+
+  
   let salvandoAgora = false;
   let modoModal = null;
 const consumoAutorizado = document.getElementById("consumoAutorizado");
@@ -747,8 +779,15 @@ async function carregarLancamentos(){
   }
 
   lista.innerHTML = "";
-  (data || []).forEach(l=>{
-lista.innerHTML += `
+const termo = (buscaInput.value || "").toLowerCase();
+
+(data || [])
+  .filter(l => 
+    l.produto_nome.toLowerCase().includes(termo)
+  )
+  .forEach(l=>{
+    
+    lista.innerHTML += `
   <div class="item" style="padding:14px 14px 16px">
     <div>
 
