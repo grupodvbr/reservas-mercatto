@@ -558,7 +558,11 @@ function salvarContagemLocal(){
   const dados = {};
 
   itens.forEach(item=>{
-    dados[item.id] = Number(item.quantidade_temp || 0);
+
+    if(item.modificado === true){
+      dados[item.id] = Number(item.quantidade_temp || 0);
+    }
+
   });
 
   localStorage.setItem(
@@ -566,7 +570,6 @@ function salvarContagemLocal(){
     JSON.stringify(dados)
   );
 }
-
 function carregarContagemLocal(){
   if(!usuarioLogado) return {};
 
@@ -754,13 +757,21 @@ async function carregarEstoque(){
     
 const contagemSalva = carregarContagemLocal();
 
-itens = (data || []).map(item=>({
-  ...item,
-  quantidade_temp: contagemSalva[item.id] !== undefined
-    ? Number(contagemSalva[item.id])
-    : Number(item.quantidade || item.saldo || 0)
-}));
+itens = (data || []).map(item=>{
 
+  const valorBanco = Number(item.quantidade || item.saldo || 0);
+  const temContagemLocal = contagemSalva[item.id] !== undefined;
+
+  return {
+    ...item,
+    quantidade_original:valorBanco,
+    quantidade_temp:temContagemLocal
+      ? Number(contagemSalva[item.id])
+      : valorBanco,
+    modificado:temContagemLocal
+  };
+
+});
     
 
     renderizar();
@@ -896,12 +907,12 @@ function alterarQtd(id,delta){
   }
 
   item.quantidade_temp = atual;
-salvarContagemLocal();
+  item.modificado = Number(item.quantidade_temp) !== Number(item.quantidade_original);
+
+  salvarContagemLocal();
   renderizar();
 
 }
-
-/* DIGITAR */
 
 function digitarQtd(id,valor){
 
@@ -916,17 +927,21 @@ function digitarQtd(id,valor){
   }
 
   item.quantidade_temp = qtd;
-salvarContagemLocal();
+  item.modificado = Number(item.quantidade_temp) !== Number(item.quantidade_original);
+
+  salvarContagemLocal();
   renderizar();
 
 }
-
 /* SALVAR */
 
 async function salvarTudo(){
 
-  if(!itens.length){
-    aviso("Nenhum item");
+  const modificados = itens.filter(item=>item.modificado === true);
+
+  if(!modificados.length){
+    aviso("Nenhuma alteração para salvar");
+    alert("Nenhuma alteração para salvar.");
     return;
   }
 
@@ -936,7 +951,7 @@ async function salvarTudo(){
 
     let erros = 0;
 
-    for(const item of itens){
+    for(const item of modificados){
 
       const qtd = Number(item.quantidade_temp || 0);
 
@@ -958,27 +973,20 @@ async function salvarTudo(){
 
     loading(false);
 
-if(erros > 0){
+    if(erros > 0){
 
-  alert(`⚠️ Contagem salva, mas teve ${erros} erro(s).`);
+      alert(`⚠️ Foram salvos ${modificados.length - erros} item(ns), mas teve ${erros} erro(s).`);
 
-}else{
+    }else{
 
-  localStorage.removeItem(
-    chaveStorageContagem()
-  );
+      localStorage.removeItem(
+        chaveStorageContagem()
+      );
 
-  alert("✅ Contagem salva com sucesso!");
+      alert(`✅ ${modificados.length} item(ns) salvos com sucesso!`);
 
-}
+    }
 
-
-
-
-
-
-
-    
     await carregarEstoque();
 
   }catch(err){
@@ -996,10 +1004,9 @@ if(erros > 0){
 }
 
 
-
 function limparContagem(){
 
-  if(!confirm("Deseja limpar toda a contagem local?")){
+  if(!confirm("Deseja limpar somente a contagem local não salva?")){
     return;
   }
 
@@ -1009,17 +1016,15 @@ function limparContagem(){
 
   itens = itens.map(item=>({
     ...item,
-    quantidade_temp:0
+    quantidade_temp:Number(item.quantidade_original || item.quantidade || item.saldo || 0),
+    modificado:false
   }));
 
   renderizar();
 
-  aviso("Contagem limpa");
+  aviso("Contagem local limpa");
 
 }
-
-
-
 
 
 
