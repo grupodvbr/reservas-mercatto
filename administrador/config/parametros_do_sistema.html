@@ -68,15 +68,8 @@ input{
   box-shadow:0 10px 25px rgba(0,0,0,.05);
 }
 
-.nome{
-  font-weight:700;
-  font-size:15px;
-}
-
-.mini{
-  font-size:12px;
-  color:var(--muted);
-}
+.nome{font-weight:700;font-size:15px;}
+.mini{font-size:12px;color:var(--muted);}
 
 /* JSON */
 .json{
@@ -95,7 +88,6 @@ input{
   font-size:12px;
   font-weight:600;
 }
-
 .ativo{color:#16a34a}
 .inativo{color:#dc2626}
 
@@ -185,15 +177,26 @@ const sb = window.supabase.createClient(
 let dados=[]
 let editando=null
 
-/* LOAD */
+/* ================= LOAD ================= */
 async function carregar(){
-  const {data} = await sb.from("parametros_sistema").select("*")
+  console.log("📥 CARREGANDO...")
+
+  const {data,error} = await sb.from("parametros_sistema").select("*")
+
+  if(error){
+    console.error("❌ ERRO LOAD:", error)
+    return
+  }
+
+  console.log("✅ DADOS:", data)
+
   dados = data || []
   render()
 }
 
-/* RENDER */
+/* ================= RENDER ================= */
 function render(){
+
   let b = busca.value.toLowerCase()
   let e = empresaFiltro.value.toLowerCase()
   let t = tipoFiltro.value.toLowerCase()
@@ -230,8 +233,10 @@ function render(){
   })
 }
 
-/* NOVO */
+/* ================= NOVO ================= */
 function novo(){
+  console.log("🆕 NOVO")
+
   editando=null
   modal.style.display="flex"
 
@@ -241,8 +246,10 @@ function novo(){
   json.value="{}"
 }
 
-/* EDITAR */
+/* ================= EDITAR ================= */
 function editar(p){
+  console.log("✏️ EDITAR:", p)
+
   editando=p.id
   modal.style.display="flex"
 
@@ -252,19 +259,23 @@ function editar(p){
   json.value=JSON.stringify(p.dados,null,2)
 }
 
-/* FECHAR */
+/* ================= FECHAR ================= */
 function fechar(){
   modal.style.display="none"
 }
 
-/* SALVAR (SILENCIOSO E DIRETO) */
+/* ================= SALVAR ================= */
 async function salvar(){
+
+  console.log("🚀 SALVAR INICIADO")
 
   let dadosJSON
 
   try{
     dadosJSON = JSON.parse(json.value)
-  }catch{
+    console.log("✅ JSON OK")
+  }catch(e){
+    console.error("❌ JSON INVÁLIDO", e)
     return
   }
 
@@ -275,16 +286,22 @@ async function salvar(){
     dados: dadosJSON
   }
 
+  console.log("📦 PAYLOAD:", payload)
+
   let res
 
   if(editando){
+    console.log("✏️ UPDATE:", editando)
+
     res = await sb.from("parametros_sistema")
       .update(payload)
-      .eq("id",editando)
+      .eq("id", editando)
 
     dados = dados.map(d => d.id === editando ? {...d, ...payload} : d)
 
   }else{
+    console.log("🆕 INSERT")
+
     res = await sb.from("parametros_sistema")
       .insert(payload)
       .select()
@@ -292,20 +309,41 @@ async function salvar(){
     dados.unshift(res.data[0])
   }
 
+  console.log("📡 RESPOSTA:", res)
+
+  if(res.error){
+    console.error("❌ ERRO:", res.error)
+    return
+  }
+
+  console.log("✅ SALVO")
+
   fechar()
   render()
 }
 
-/* STATUS */
+/* ================= TOGGLE ================= */
 async function toggle(id,status){
-  await sb.from("parametros_sistema")
+
+  console.log("🔄 TOGGLE:", id)
+
+  let res = await sb.from("parametros_sistema")
     .update({ativo:!status})
     .eq("id",id)
 
+  console.log("📡 RESPOSTA:", res)
+
+  if(res.error){
+    console.error("❌ ERRO:", res.error)
+    return
+  }
+
   dados = dados.map(d => d.id === id ? {...d, ativo:!status} : d)
+
   render()
 }
 
+/* ================= EVENTS ================= */
 busca.oninput=render
 empresaFiltro.oninput=render
 tipoFiltro.oninput=render
