@@ -1041,12 +1041,72 @@ async function abrirResumoRetirada(nomePrato){
 
   const html = Object.entries(porDestino)
     .sort((a,b)=>b[1]-a[1])
-    .map(([destino,kg])=>`
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
-        <b>${destino}</b>
-        <span>${kg.toFixed(3)} KG</span>
+
+
+    
+const PRECO_KG = 104.90;
+
+let totalKg = 0;
+
+const html = Object.entries(porDestino)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([destino,kg])=>{
+
+    totalKg += kg;
+
+    const valor = kg * PRECO_KG;
+
+    const valorFormatado = valor.toLocaleString("pt-BR",{
+      style:"currency",
+      currency:"BRL"
+    });
+
+    return `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        padding:8px 0;
+        border-bottom:1px solid #eee
+      ">
+        <div>
+          <b>${destino}</b>
+          <div style="font-size:11px;color:#64748b">
+            ${kg.toFixed(3)} KG
+          </div>
+        </div>
+
+        <span style="font-weight:800">
+          ${valorFormatado}
+        </span>
       </div>
-    `).join("");
+    `;
+  }).join("");
+
+const totalValor = totalKg * PRECO_KG;
+
+const totalFormatado = totalValor.toLocaleString("pt-BR",{
+  style:"currency",
+  currency:"BRL"
+});
+
+document.getElementById("listaResumoRetirada").innerHTML =
+  html +
+  `
+  <div style="
+    margin-top:12px;
+    padding-top:10px;
+    border-top:2px solid #111;
+    display:flex;
+    justify-content:space-between;
+    font-weight:900;
+    font-size:16px
+  ">
+    <span>Total</span>
+    <span>${totalFormatado}</span>
+  </div>
+  `;
+    
+    .join("");
 
   document.getElementById("tituloResumoRetirada").innerText =
     `📦 Retirada • ${nomePrato}`;
