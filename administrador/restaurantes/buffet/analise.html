@@ -469,11 +469,21 @@ const pageSize = 1000;
 
 while(true){
 
+let todosDados = [];
+let from = 0;
+const pageSize = 1000;
+
+while(true){
+
   const { data, error } = await q
     .order("data",{ascending:true})
     .range(from, from + pageSize - 1);
 
-  if(error) break;
+  if(error){
+    console.error("Erro ao carregar buffet_lancamentos:", error);
+    break;
+  }
+
   if(!data || data.length === 0) break;
 
   todosDados.push(...data);
@@ -486,12 +496,13 @@ while(true){
 const data = todosDados;
 
 
-  
-  
-  if(error){
-  console.error("Erro ao carregar buffet_lancamentos:", error);
-}
 
+
+
+
+
+
+  
 const porPrato = {};
 const porDia = {};
 let totalMontado = 0;
