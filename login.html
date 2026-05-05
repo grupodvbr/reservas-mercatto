@@ -191,9 +191,40 @@ const supabaseClient = supabase.createClient(
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
 );
 
+function getRedirectUrl(){
+
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get("redirect");
+
+  if(!redirect){
+    return "index.html";
+  }
+
+  try{
+
+    const urlLimpa = decodeURIComponent(redirect);
+
+    if(
+      urlLimpa.startsWith("http://") ||
+      urlLimpa.startsWith("https://") ||
+      urlLimpa.startsWith("//")
+    ){
+      return "index.html";
+    }
+
+    return urlLimpa;
+
+  }catch(e){
+
+    return "index.html";
+
+  }
+
+}
+
 async function login(){
 
-  const usuario = document.getElementById("usuario").value.trim();
+  const usuario = document.getElementById("usuario").value.trim().toUpperCase();
   const senha = document.getElementById("senha").value.trim();
 
   const erro = document.getElementById("erro");
@@ -201,6 +232,12 @@ async function login(){
   const btn = document.getElementById("btn");
 
   erro.innerText = "";
+
+  if(!usuario || !senha){
+    erro.innerText = "Informe usuário e senha";
+    return;
+  }
+
   loading.style.display = "block";
   btn.innerText = "Entrando...";
   btn.disabled = true;
@@ -209,7 +246,20 @@ async function login(){
 
     const { data, error } = await supabaseClient
       .from("usuarios_do_sistema")
-      .select("*")
+      .select(`
+        id,
+        usuario,
+        nome,
+        email,
+        empresa,
+        setor,
+        cargo,
+        nivel_acesso,
+        links,
+        ativo,
+        foto_url,
+        agente
+      `)
       .eq("usuario", usuario)
       .eq("senha", senha)
       .eq("ativo", true)
@@ -219,29 +269,57 @@ async function login(){
       throw new Error("Usuário ou senha inválidos");
     }
 
-    // 🔥 AGORA SÓ NIVEL 0 PODE
     if(data.nivel_acesso != 0){
       throw new Error("Sem permissão de acesso");
     }
 
-    localStorage.setItem("usuarioLogado", JSON.stringify(data));
+    localStorage.setItem("usuarioLogado", JSON.stringify({
+      id:data.id,
+      usuario:data.usuario,
+      nome:data.nome,
+      email:data.email,
+      empresa:data.empresa,
+      setor:data.setor,
+      cargo:data.cargo,
+      nivel_acesso:data.nivel_acesso,
+      links:data.links,
+      ativo:data.ativo,
+      foto_url:data.foto_url,
+      agente:data.agente,
+      login_em:new Date().toISOString()
+    }));
 
-    // animação saída
+    await supabaseClient
+      .from("usuarios_do_sistema")
+      .update({
+        ultimo_login:new Date().toISOString()
+      })
+      .eq("id", data.id);
+
     document.body.style.transition = "0.4s";
     document.body.style.opacity = "0";
 
     setTimeout(()=>{
-      location.href = "index.html";
+
+      location.href = getRedirectUrl();
+
     },400);
 
   }catch(err){
+
     erro.innerText = err.message;
+
+  }finally{
+
+    loading.style.display = "none";
+    btn.innerText = "Entrar";
+    btn.disabled = false;
+
   }
 
-  loading.style.display = "none";
-  btn.innerText = "Entrar";
-  btn.disabled = false;
 }
+
+window.login = login;
 </script>
 
 </body>
