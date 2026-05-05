@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Contagem de Estoque</title>
+
+<meta name="theme-color" content="#ff6a00">
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --primary:#ff6a00;
+  --dark:#111827;
+  --bg:#f3f4f6;
+  --card:#fff;
+  --border:#e5e7eb;
+  --muted:#6b7280;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --warning:#f59e0b;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--dark);
+}
+
+.hidden{display:none!important;}
+
+.login{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:linear-gradient(145deg,#111827,#1f2937);
+}
+
+.login-card{
+  width:100%;
+  max-width:390px;
+  background:#fff;
+  border-radius:24px;
+  padding:26px;
+  box-shadow:0 25px 70px rgba(0,0,0,.3);
+}
+
+.logo{
+  width:64px;
+  height:64px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#ff6a00,#fb923c);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:32px;
+  margin-bottom:18px;
+}
+
+h1{
+  margin:0;
+  font-size:24px;
+  font-weight:900;
+}
+
+.sub{
+  margin:8px 0 22px;
+  color:var(--muted);
+  font-size:14px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:800;
+  margin:14px 0 6px;
+}
+
+input{
+  width:100%;
+  height:48px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:0 14px;
+  font-size:16px;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(255,106,0,.15);
+}
+
+button{
+  border:0;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.btn{
+  width:100%;
+  height:50px;
+  border-radius:15px;
+  background:var(--primary);
+  color:#fff;
+  margin-top:20px;
+  font-size:15px;
+}
+
+.app{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.top-title{
+  font-size:16px;
+  font-weight:900;
+}
+
+.top-sub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.exit{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:#fee2e2;
+  color:var(--danger);
+  font-size:20px;
+}
+
+.content{
+  padding:14px;
+  padding-bottom:90px;
+}
+
+.filters{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:12px;
+  display:grid;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.search-box{
+  position:relative;
+}
+
+.search-box i{
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+}
+
+.search-box input{
+  padding-left:40px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.stat{
+  background:#f9fafb;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px;
+}
+
+.stat b{
+  display:block;
+  font-size:18px;
+}
+
+.stat span{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+}
+
+.list{
+  display:grid;
+  gap:10px;
+}
+
+.item{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 6px 20px rgba(0,0,0,.04);
+}
+
+.item-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.produto{
+  font-size:15px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.empresa{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.badge{
+  height:26px;
+  padding:0 10px;
+  border-radius:999px;
+  background:#f3f4f6;
+  font-size:11px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  white-space:nowrap;
+}
+
+.count-row{
+  display:grid;
+  grid-template-columns:46px 1fr 46px;
+  gap:8px;
+  align-items:center;
+}
+
+.count-row button{
+  height:46px;
+  border-radius:14px;
+  font-size:22px;
+  background:#111827;
+  color:#fff;
+}
+
+.count-row input{
+  text-align:center;
+  font-weight:900;
+  font-size:20px;
+}
+
+.details{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.footer-save{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#fff;
+  border-top:1px solid var(--border);
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  z-index:30;
+}
+
+.save-btn{
+  width:100%;
+  height:54px;
+  border-radius:17px;
+  background:linear-gradient(135deg,#ff6a00,#fb923c);
+  color:#fff;
+  font-size:16px;
+  box-shadow:0 14px 35px rgba(255,106,0,.35);
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:88px;
+  transform:translateX(-50%);
+  background:#111827;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:800;
+  z-index:99;
+  display:none;
+}
+
+.loader{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.75);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+
+.spinner{
+  width:46px;
+  height:46px;
+  border:5px solid #fed7aa;
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg);}
+}
+</style>
+</head>
+
+<body>
+
+<section id="loginTela" class="login">
+  <div class="login-card">
+    <div class="logo"><i class="ri-store-2-fill"></i></div>
+    <h1>Contagem de Estoque</h1>
+    <p class="sub">Acesse com usuário e senha cadastrados no sistema.</p>
+
+    <label>Usuário</label>
+    <input id="usuario" placeholder="Ex: ROMIA" autocomplete="username">
+
+    <label>Senha</label>
+    <input id="senha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+
+    <button class="btn" onclick="login()">ENTRAR</button>
+  </div>
+</section>
+
+<section id="appTela" class="app hidden">
+  <header class="topbar">
+    <div>
+      <div class="top-title" id="nomeUsuario">Usuário</div>
+      <div class="top-sub" id="empresaUsuario">Empresa</div>
+    </div>
+    <button class="exit" onclick="sair()"><i class="ri-logout-box-r-line"></i></button>
+  </header>
+
+  <main class="content">
+    <div class="filters">
+      <div class="search-box">
+        <i class="ri-search-line"></i>
+        <input id="busca" placeholder="Buscar produto..." oninput="renderizar()">
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <b id="totalProdutos">0</b>
+          <span>PRODUTOS</span>
+        </div>
+        <div class="stat">
+          <b id="contados">0</b>
+          <span>CONTADOS</span>
+        </div>
+        <div class="stat">
+          <b id="zerados">0</b>
+          <span>ZERADOS</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="lista" class="list"></div>
+  </main>
+
+  <div class="footer-save">
+    <button class="save-btn" onclick="salvarTudo()">
+      <i class="ri-save-3-line"></i> SALVAR CONTAGEM
+    </button>
+  </div>
+</section>
+
+<div id="toast" class="toast"></div>
+<div id="loader" class="loader"><div class="spinner"></div></div>
+
+<script>
+const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+
+const TABELA_USUARIOS = "usuarios_do_sistema";
+const TABELA_ESTOQUE = "estoque_mercatto"; // TROQUE PELO NOME REAL DA SUA TABELA
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let usuarioLogado = null;
+let itens = [];
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+window.addEventListener("load", () => {
+  const salvo = localStorage.getItem("usuario_estoque");
+  if(salvo){
+    usuarioLogado = JSON.parse(salvo);
+    abrirApp();
+  }
+});
+
+function loading(status){
+  document.getElementById("loader").style.display = status ? "flex" : "none";
+}
+
+function aviso(msg){
+  const t = document.getElementById("toast");
+  t.innerText = msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 2400);
+}
+
+async function login(){
+  const usuario = document.getElementById("usuario").value.trim().toUpperCase();
+  const senha = document.getElementById("senha").value.trim();
+
+  if(!usuario || !senha){
+    aviso("Informe usuário e senha.");
+    return;
+  }
+
+  loading(true);
+
+  const { data, error } = await supabase
+    .from(TABELA_USUARIOS)
+    .select("*")
+    .eq("usuario", usuario)
+    .eq("senha", senha)
+    .eq("ativo", true)
+    .limit(1)
+    .maybeSingle();
+
+  if(error){
+    loading(false);
+    aviso("Erro ao acessar.");
+    console.error(error);
+    return;
+  }
+
+  if(!data){
+    loading(false);
+    aviso("Usuário, senha ou acesso inválido.");
+    return;
+  }
+
+  usuarioLogado = data;
+  localStorage.setItem("usuario_estoque", JSON.stringify(data));
+
+  await supabase
+    .from(TABELA_USUARIOS)
+    .update({
+      ultimo_login:new Date().toISOString()
+    })
+    .eq("id", data.id);
+
+  loading(false);
+  abrirApp();
+}
+
+async function abrirApp(){
+  document.getElementById("loginTela").classList.add("hidden");
+  document.getElementById("appTela").classList.remove("hidden");
+
+  document.getElementById("nomeUsuario").innerText = usuarioLogado.nome || usuarioLogado.usuario;
+  document.getElementById("empresaUsuario").innerText = usuarioLogado.empresa || "Sem empresa";
+
+  await carregarEstoque();
+}
+
+async function carregarEstoque(){
+  loading(true);
+
+  const { data, error } = await supabase
+    .from(TABELA_ESTOQUE)
+    .select("*")
+    .eq("empresa", usuarioLogado.empresa)
+    .eq("ativo", true)
+    .order("produto", { ascending:true });
+
+  loading(false);
+
+  if(error){
+    aviso("Erro ao carregar estoque.");
+    console.error(error);
+    return;
+  }
+
+  itens = (data || []).map(i => ({
+    ...i,
+    quantidade_temp: Number(i.quantidade || i.saldo || 0)
+  }));
+
+  renderizar();
+}
+
+function renderizar(){
+  const busca = document.getElementById("busca").value.trim().toUpperCase();
+
+  const filtrados = itens.filter(i =>
+    String(i.produto || "").toUpperCase().includes(busca)
+  );
+
+  document.getElementById("totalProdutos").innerText = itens.length;
+  document.getElementById("contados").innerText = itens.filter(i => Number(i.quantidade_temp) > 0).length;
+  document.getElementById("zerados").innerText = itens.filter(i => Number(i.quantidade_temp) === 0).length;
+
+  const lista = document.getElementById("lista");
+
+  if(!filtrados.length){
+    lista.innerHTML = `
+      <div class="item">
+        <div class="produto">Nenhum produto encontrado</div>
+        <div class="empresa">Verifique a busca ou a empresa do usuário.</div>
+      </div>
+    `;
+    return;
+  }
+
+  lista.innerHTML = filtrados.map(i => `
+    <div class="item">
+      <div class="item-head">
+        <div>
+          <div class="produto">${i.produto || "-"}</div>
+          <div class="empresa">${i.empresa || ""}</div>
+        </div>
+        <div class="badge">${i.unidade || i.und_compra || "UN"}</div>
+      </div>
+
+      <div class="count-row">
+        <button onclick="alterarQtd('${i.id}', -1)">−</button>
+        <input 
+          type="number" 
+          min="0" 
+          value="${Number(i.quantidade_temp || 0)}"
+          onchange="digitarQtd('${i.id}', this.value)"
+        >
+        <button onclick="alterarQtd('${i.id}', 1)">+</button>
+      </div>
+
+      <div class="details">
+        <span>Mín: ${i.estoque_minimo || 0}</span>
+        <span>Ideal: ${i.estoque_ideal || 0}</span>
+        <span>Compra: ${i.und_compra || "-"}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function alterarQtd(id, delta){
+  const item = itens.find(i => i.id === id);
+  if(!item) return;
+
+  let atual = Number(item.quantidade_temp || 0);
+  atual += delta;
+
+  if(atual < 0) atual = 0;
+
+  item.quantidade_temp = atual;
+  renderizar();
+}
+
+function digitarQtd(id, valor){
+  const item = itens.find(i => i.id === id);
+  if(!item) return;
+
+  let qtd = Number(valor || 0);
+  if(qtd < 0) qtd = 0;
+
+  item.quantidade_temp = qtd;
+  renderizar();
+}
+
+async function salvarTudo(){
+  if(!itens.length){
+    aviso("Nenhum item para salvar.");
+    return;
+  }
+
+  loading(true);
+
+  let erros = 0;
+
+  for(const item of itens){
+    const qtd = Number(item.quantidade_temp || 0);
+
+    const { error } = await supabase
+      .from(TABELA_ESTOQUE)
+      .update({
+        quantidade:qtd,
+        saldo:qtd,
+        atualizado_em:new Date().toISOString()
+      })
+      .eq("id", item.id);
+
+    if(error){
+      erros++;
+      console.error("Erro ao salvar", item.produto, error);
+    }
+  }
+
+  loading(false);
+
+  if(erros){
+    aviso(`Salvo com ${erros} erro(s).`);
+  }else{
+    aviso("Contagem salva com sucesso.");
+    await carregarEstoque();
+  }
+}
+
+function sair(){
+  localStorage.removeItem("usuario_estoque");
+  usuarioLogado = null;
+  itens = [];
+  document.getElementById("appTela").classList.add("hidden");
+  document.getElementById("loginTela").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
