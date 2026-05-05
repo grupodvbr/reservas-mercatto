@@ -326,6 +326,15 @@ html, body {
   <i class="ri-file-pdf-2-line"></i> PDF
 </button>
 
+<button type="button" onclick="gerarPDFGeralEmpresas()">
+  <i class="ri-file-pdf-2-line"></i> PDF Geral
+</button>
+
+
+
+
+
+
   
 
 <button type="button" id="btnRetirada40">
@@ -1831,6 +1840,390 @@ async function gerarPDFResumo(){
 }
 
 
+
+
+
+
+
+
+
+
+
+async function gerarPDFGeralEmpresas(){
+
+  const { jsPDF } = window.jspdf;
+
+  const PRECO_KG = 104.90;
+
+  const empresas = [
+    "VILLA",
+    "MERCATTO DELÍCIA",
+    "DELÍCIA GOURMET"
+  ];
+
+  const inicio = rangeSelecionado[0];
+  const fim = rangeSelecionado[1];
+
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  function moeda(valor){
+    return Number(valor || 0).toLocaleString("pt-BR",{
+      style:"currency",
+      currency:"BRL"
+    });
+  }
+
+  function novaPaginaSePrecisar(){
+    if(y > 275){
+      pdf.addPage();
+      y = 18;
+    }
+  }
+
+  let y = 16;
+
+  // ================= CAPA =================
+  pdf.setFillColor(255,106,0);
+  pdf.rect(0,0,210,36,"F");
+
+  pdf.setTextColor(255,255,255);
+  pdf.setFontSize(18);
+  pdf.setFont(undefined,"bold");
+  pdf.text("Relatório Geral do Buffet", 12, 16);
+
+  pdf.setFontSize(10);
+  pdf.setFont(undefined,"normal");
+  pdf.text(`Período: ${formatBR(inicio)} até ${formatBR(fim)}`, 12, 25);
+
+  pdf.setTextColor(17,24,39);
+  y = 48;
+
+  let totalGeralProduzido = 0;
+  let totalGeralRetirado = 0;
+  let totalGeralDesperdicio = 0;
+  let totalGeralVendido = 0;
+
+  for(const empresa of empresas){
+
+    let query = sb
+      .from("buffet_lancamentos")
+      .select("produto_nome, consumo_para_nome, quantidade, tipo, unidade, data")
+      .eq("empresa", empresa);
+
+    if(rangeSelecionado.length === 2){
+      query = query.gte("data", inicio).lte("data", fim);
+    }
+
+    let todosDados = [];
+    let from = 0;
+    const pageSize = 1000;
+
+    while(true){
+      const { data, error } = await query
+        .order("data",{ascending:true})
+        .range(from, from + pageSize - 1);
+
+      if(error){
+        console.error("Erro PDF geral:", error);
+        alert("Erro ao gerar PDF geral.");
+        return;
+      }
+
+      if(!data || data.length === 0) break;
+
+      todosDados.push(...data);
+
+      if(data.length < pageSize) break;
+      from += pageSize;
+    }
+
+    const data = todosDados;
+
+    let produzido = 0;
+    let retirado = 0;
+    let desperdicio = 0;
+
+    const porPrato = {};
+    const porDestino = {};
+    const porDesperdicio = {};
+
+    data.forEach(r=>{
+
+      const prato = r.produto_nome || "SEM NOME";
+      const destino = r.consumo_para_nome || "SEM DESTINO";
+      const qtd = Number(r.quantidade || 0);
+      const tipo = r.tipo;
+
+      porPrato[prato] ||= {
+        MONTAGEM:0,
+        EMPORIO:0,
+        REPOSICAO:0,
+        RETIRADA:0,
+        DEVOLUCAO:0,
+        unidade:r.unidade || "KG"
+      };
+
+      porPrato[prato][tipo] += qtd;
+
+      if(tipo === "MONTAGEM" || tipo === "EMPORIO" || tipo === "REPOSICAO"){
+        produzido += qtd;
+      }
+
+      if(tipo === "RETIRADA"){
+        retirado += qtd;
+
+        porDestino[destino] ||= {
+          total:0,
+          itens:{}
+        };
+
+        porDestino[destino].total += qtd;
+        porDestino[destino].itens[prato] =
+          (porDestino[destino].itens[prato] || 0) + qtd;
+      }
+
+      if(tipo === "DEVOLUCAO"){
+        desperdicio += qtd;
+
+        porDesperdicio[prato] =
+          (porDesperdicio[prato] || 0) + qtd;
+      }
+
+    });
+
+    const vendido = Math.max(0, produzido - retirado - desperdicio);
+    const valorVendido = vendido * PRECO_KG;
+    const valorRetirado = retirado * PRECO_KG;
+    const valorDesperdicio = desperdicio * PRECO_KG;
+
+    totalGeralProduzido += produzido;
+    totalGeralRetirado += retirado;
+    totalGeralDesperdicio += desperdicio;
+    totalGeralVendido += vendido;
+
+    novaPaginaSePrecisar();
+
+    // ================= BLOCO EMPRESA =================
+    pdf.setFillColor(15,23,42);
+    pdf.roundedRect(10, y - 6, 190, 12, 3, 3, "F");
+
+    pdf.setTextColor(255,255,255);
+    pdf.setFontSize(12);
+    pdf.setFont(undefined,"bold");
+    pdf.text(empresa, 14, y + 2);
+
+    y += 16;
+
+    pdf.setTextColor(17,24,39);
+    pdf.setFontSize(9);
+    pdf.setFont(undefined,"bold");
+
+    pdf.text(`Produzido: ${produzido.toFixed(3)} KG`, 12, y);
+    pdf.text(`Retirado: ${retirado.toFixed(3)} KG`, 75, y);
+    pdf.text(`Desperdício: ${desperdicio.toFixed(3)} KG`, 135, y);
+
+    y += 6;
+
+    pdf.text(`Vendido: ${vendido.toFixed(3)} KG`, 12, y);
+    pdf.text(`Valor vendido: ${moeda(valorVendido)}`, 75, y);
+    pdf.text(`Perdas: ${moeda(valorRetirado + valorDesperdicio)}`, 135, y);
+
+    y += 12;
+
+    // ================= RESUMO POR PRATO =================
+    pdf.setFontSize(10);
+    pdf.setFont(undefined,"bold");
+    pdf.setTextColor(255,106,0);
+    pdf.text("Resumo por prato", 12, y);
+
+    y += 6;
+
+    Object.entries(porPrato)
+      .sort((a,b)=>a[0].localeCompare(b[0],"pt-BR"))
+      .forEach(([prato,v])=>{
+
+        novaPaginaSePrecisar();
+
+        const total = v.MONTAGEM + v.EMPORIO + v.REPOSICAO;
+        const vendidoPrato = Math.max(0, total - v.RETIRADA - v.DEVOLUCAO);
+        const valorPrato = vendidoPrato * PRECO_KG;
+
+        pdf.setFontSize(7);
+        pdf.setFont(undefined,"bold");
+        pdf.setTextColor(17,24,39);
+        pdf.text(prato.substring(0,60), 14, y);
+
+        pdf.setFont(undefined,"normal");
+        pdf.setTextColor(71,85,105);
+        pdf.text(`${total.toFixed(3)} KG`, 92, y);
+        pdf.text(`Ret: ${v.RETIRADA.toFixed(3)}`, 120, y);
+        pdf.text(`Desp: ${v.DEVOLUCAO.toFixed(3)}`, 145, y);
+
+        pdf.setTextColor(22,163,74);
+        pdf.text(moeda(valorPrato), 172, y);
+
+        y += 4.8;
+      });
+
+    y += 8;
+
+    // ================= RETIRADAS POR DESTINO =================
+    novaPaginaSePrecisar();
+
+    pdf.setFontSize(10);
+    pdf.setFont(undefined,"bold");
+    pdf.setTextColor(220,38,38);
+    pdf.text("Retiradas por destino", 12, y);
+
+    y += 6;
+
+    Object.entries(porDestino)
+      .sort((a,b)=>b[1].total - a[1].total)
+      .forEach(([destino,info])=>{
+
+        novaPaginaSePrecisar();
+
+        pdf.setFillColor(248,250,252);
+        pdf.roundedRect(12, y - 4, 186, 9, 2, 2, "F");
+
+        pdf.setFontSize(8);
+        pdf.setFont(undefined,"bold");
+        pdf.setTextColor(17,24,39);
+        pdf.text(destino.substring(0,45), 15, y + 2);
+
+        pdf.setTextColor(220,38,38);
+        pdf.text(
+          `${info.total.toFixed(3)} KG • ${moeda(info.total * PRECO_KG)}`,
+          125,
+          y + 2
+        );
+
+        y += 9;
+
+        Object.entries(info.itens)
+          .sort((a,b)=>b[1]-a[1])
+          .forEach(([prato,kg])=>{
+
+            novaPaginaSePrecisar();
+
+            pdf.setFontSize(7);
+            pdf.setFont(undefined,"normal");
+            pdf.setTextColor(71,85,105);
+            pdf.text(prato.substring(0,58), 18, y);
+
+            pdf.text(`${kg.toFixed(3)} KG`, 132, y);
+            pdf.text(moeda(kg * PRECO_KG), 162, y);
+
+            y += 4.5;
+          });
+
+        y += 4;
+      });
+
+    // ================= DESPERDÍCIO =================
+    y += 4;
+    novaPaginaSePrecisar();
+
+    pdf.setFontSize(10);
+    pdf.setFont(undefined,"bold");
+    pdf.setTextColor(180,83,9);
+    pdf.text("Desperdício por prato", 12, y);
+
+    y += 6;
+
+    if(Object.keys(porDesperdicio).length === 0){
+      pdf.setFontSize(8);
+      pdf.setTextColor(100,116,139);
+      pdf.text("Nenhum desperdício registrado no período.", 14, y);
+      y += 8;
+    } else {
+      Object.entries(porDesperdicio)
+        .sort((a,b)=>b[1]-a[1])
+        .forEach(([prato,kg])=>{
+
+          novaPaginaSePrecisar();
+
+          pdf.setFontSize(7);
+          pdf.setFont(undefined,"normal");
+          pdf.setTextColor(71,85,105);
+          pdf.text(prato.substring(0,60), 14, y);
+
+          pdf.setTextColor(180,83,9);
+          pdf.text(`${kg.toFixed(3)} KG`, 132, y);
+          pdf.text(moeda(kg * PRECO_KG), 162, y);
+
+          y += 4.5;
+        });
+    }
+
+    y += 14;
+  }
+
+  // ================= RESUMO GERAL FINAL =================
+  pdf.addPage();
+  y = 18;
+
+  const valorGeralVendido = totalGeralVendido * PRECO_KG;
+  const valorGeralRetirado = totalGeralRetirado * PRECO_KG;
+  const valorGeralDesperdicio = totalGeralDesperdicio * PRECO_KG;
+
+  pdf.setFillColor(255,106,0);
+  pdf.rect(0,0,210,30,"F");
+
+  pdf.setTextColor(255,255,255);
+  pdf.setFontSize(16);
+  pdf.setFont(undefined,"bold");
+  pdf.text("Resumo Geral Consolidado", 12, 15);
+
+  pdf.setFontSize(9);
+  pdf.setFont(undefined,"normal");
+  pdf.text(`${formatBR(inicio)} até ${formatBR(fim)}`, 12, 23);
+
+  y = 45;
+
+  pdf.setTextColor(17,24,39);
+  pdf.setFontSize(12);
+  pdf.setFont(undefined,"bold");
+
+  pdf.text(`Total produzido: ${totalGeralProduzido.toFixed(3)} KG`, 14, y);
+  y += 8;
+
+  pdf.text(`Total retirado: ${totalGeralRetirado.toFixed(3)} KG`, 14, y);
+  pdf.text(`Valor retirado: ${moeda(valorGeralRetirado)}`, 105, y);
+  y += 8;
+
+  pdf.text(`Total desperdício: ${totalGeralDesperdicio.toFixed(3)} KG`, 14, y);
+  pdf.text(`Valor desperdício: ${moeda(valorGeralDesperdicio)}`, 105, y);
+  y += 8;
+
+  pdf.setTextColor(22,163,74);
+  pdf.text(`Total vendido estimado: ${totalGeralVendido.toFixed(3)} KG`, 14, y);
+  pdf.text(`Valor vendido estimado: ${moeda(valorGeralVendido)}`, 105, y);
+
+  y += 14;
+
+  pdf.setTextColor(100,116,139);
+  pdf.setFontSize(8);
+  pdf.setFont(undefined,"normal");
+  pdf.text(
+    `Cálculo: vendido estimado = produzido - retirado - desperdício. Preço usado: ${moeda(PRECO_KG)} por KG.`,
+    14,
+    y
+  );
+
+  pdf.save(`Relatorio_Geral_Buffet_${inicio}_${fim}.pdf`);
+}
+
+
+
+
+
+
+
+
+
+
+  
 
 
   
