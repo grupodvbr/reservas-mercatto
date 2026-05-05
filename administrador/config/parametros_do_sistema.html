@@ -84,14 +84,11 @@ input{
   padding:12px;
   font-family:monospace;
   font-size:12px;
-
   max-height:140px;
-  overflow:auto; /* 🔥 scroll interno */
-
+  overflow:auto;
   line-height:1.5;
 }
 
-/* CORES JSON */
 .key{color:#38bdf8}
 .string{color:#34d399}
 .number{color:#fbbf24}
@@ -152,6 +149,16 @@ textarea{
   font-family:monospace;
 }
 
+/* LOADER */
+.loader{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
 </style>
 </head>
 
@@ -168,12 +175,11 @@ textarea{
 
 <div class="grid" id="lista"></div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modalBox">
-    <h3>Editar</h3>
+    <h3>Editar Parâmetro</h3>
 
-    <input id="nome"><br><br>
+    <input id="nome" placeholder="Nome"><br><br>
     <input id="empresa"><br><br>
     <input id="tipo"><br><br>
 
@@ -185,7 +191,11 @@ textarea{
   </div>
 </div>
 
+<div class="loader" id="loader">Salvando...</div>
+
 <script>
+
+// 🔥 SUPABASE
 const sb = window.supabase.createClient(
   "https://dxkszikemntfusfyrzos.supabase.co",
   "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
@@ -194,6 +204,13 @@ const sb = window.supabase.createClient(
 let dados=[]
 let editando=null
 
+const loader=document.getElementById("loader")
+
+function showLoader(v){
+  loader.style.display=v?"flex":"none"
+}
+
+/* JSON COLOR */
 function colorJSON(obj){
   let json=JSON.stringify(obj,null,2)
   return json
@@ -203,12 +220,21 @@ function colorJSON(obj){
   .replace(/: (true|false)/g,': <span class="boolean">$1</span>')
 }
 
+/* LOAD */
 async function carregar(){
-  const {data}=await sb.from("parametros_sistema").select("*")
+  const {data,error}=await sb.from("parametros_sistema").select("*")
+
+  if(error){
+    console.error(error)
+    alert(error.message)
+    return
+  }
+
   dados=data||[]
   render()
 }
 
+/* RENDER */
 function render(){
   let b=busca.value.toLowerCase()
   let e=empresaFiltro.value.toLowerCase()
@@ -247,9 +273,14 @@ function render(){
   })
 }
 
+/* MODAL */
 function novo(){
   editando=null
   modal.style.display="flex"
+
+  nome.value=""
+  empresa.value=""
+  tipo.value=""
   json.value="{}"
 }
 
@@ -267,36 +298,51 @@ function editar(p){
   json.value=JSON.stringify(p.dados,null,2)
 }
 
+/* SALVAR (CORRIGIDO COMPLETO) */
 async function salvar(){
+
   let dadosJSON
 
   try{
-    dadosJSON=JSON.parse(json.value)
+    dadosJSON = JSON.parse(json.value)
   }catch{
     alert("JSON inválido")
     return
   }
 
-  const payload={
-    nome_parametro:nome.value,
-    empresa:empresa.value,
-    tipo:tipo.value,
-    dados:dadosJSON
+  const payload = {
+    nome_parametro: nome.value,
+    empresa: empresa.value,
+    tipo: tipo.value,
+    dados: dadosJSON
   }
 
+  showLoader(true)
+
+  let res
+
   if(editando){
-    await sb.from("parametros_sistema")
+    res = await sb.from("parametros_sistema")
       .update(payload)
-      .eq("id",editando)
+      .eq("id", editando)
   }else{
-    await sb.from("parametros_sistema")
+    res = await sb.from("parametros_sistema")
       .insert(payload)
+  }
+
+  showLoader(false)
+
+  if(res.error){
+    console.error(res.error)
+    alert(res.error.message)
+    return
   }
 
   fechar()
   carregar()
 }
 
+/* STATUS */
 async function toggle(id,status){
   await sb.from("parametros_sistema")
     .update({ativo:!status})
@@ -305,11 +351,13 @@ async function toggle(id,status){
   carregar()
 }
 
+/* EVENTOS */
 busca.oninput=render
 empresaFiltro.oninput=render
 tipoFiltro.oninput=render
 
 carregar()
+
 </script>
 
 </body>
