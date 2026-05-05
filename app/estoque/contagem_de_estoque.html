@@ -514,8 +514,17 @@ window.addEventListener("load", ()=>{
 /* LOADING */
 
 function loading(status){
-  document.getElementById("loader").style.display =
-  status ? "flex" : "none";
+  const loader = document.getElementById("loader");
+
+  if(!loader) return;
+
+  if(status){
+    loader.style.display = "flex";
+    loader.style.pointerEvents = "all";
+  }else{
+    loader.style.display = "none";
+    loader.style.pointerEvents = "none";
+  }
 }
 
 /* TOAST */
@@ -635,8 +644,6 @@ async function abrirApp(){
 
 async function carregarEstoque(){
 
-  loading(true);
-
   try{
 
     const { data, error } = await db
@@ -654,9 +661,7 @@ async function carregarEstoque(){
 
     itens = (data || []).map(item=>({
       ...item,
-      quantidade_temp:Number(
-        item.quantidade || item.saldo || 0
-      )
+      quantidade_temp:Number(item.quantidade || item.saldo || 0)
     }));
 
     renderizar();
@@ -666,14 +671,9 @@ async function carregarEstoque(){
     console.error("ERRO AO CARREGAR ESTOQUE:", err);
     aviso("Erro ao carregar estoque");
 
-  }finally{
-
-    loading(false);
-
   }
 
 }
-
 /* RENDER */
 
 function renderizar(){
@@ -860,11 +860,9 @@ async function salvarTudo(){
     loading(false);
 
     if(erros > 0){
-      alert(`Contagem salva, mas teve ${erros} erro(s).`);
-      aviso(`Salvo com ${erros} erro(s)`);
+      alert(`⚠️ Contagem salva, mas teve ${erros} erro(s).`);
     }else{
       alert("✅ Contagem salva com sucesso!");
-      aviso("Contagem salva com sucesso");
     }
 
     await carregarEstoque();
@@ -872,11 +870,8 @@ async function salvarTudo(){
   }catch(err){
 
     console.error("ERRO GERAL AO SALVAR:", err);
-
     loading(false);
-
-    alert("❌ Erro ao salvar contagem. Veja o console.");
-    aviso("Erro ao salvar");
+    alert("❌ Erro ao salvar contagem.");
 
   }finally{
 
@@ -885,7 +880,6 @@ async function salvarTudo(){
   }
 
 }
-
 /* SAIR */
 
 function sair(){
