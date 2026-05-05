@@ -3,216 +3,393 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Central de Apps • Mercatto</title>
+<title>App Store DV</title>
 
 <meta name="theme-color" content="#ff6a00">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 
 <style>
 :root{
   --primary:#ff6a00;
   --primary2:#fb923c;
-  --bg:#f4f5f7;
+  --bg:#f5f6f8;
   --card:#ffffff;
   --text:#111827;
   --muted:#6b7280;
   --border:#e5e7eb;
+  --soft:#fff7ed;
   --dark:#111827;
-  --shadow:0 18px 45px rgba(0,0,0,.10);
+  --green:#16a34a;
+  --shadow:0 10px 28px rgba(15,23,42,.08);
 }
 
 *{
-  box-sizing:border-box;
   margin:0;
   padding:0;
+  box-sizing:border-box;
   font-family:Inter,system-ui,sans-serif;
   -webkit-tap-highlight-color:transparent;
 }
 
 body{
-  background:
-    radial-gradient(circle at top left,rgba(255,106,0,.18),transparent 35%),
-    linear-gradient(180deg,#fff,#f4f5f7);
-  color:var(--text);
   min-height:100vh;
+  background:
+    radial-gradient(circle at top left,rgba(255,106,0,.14),transparent 34%),
+    linear-gradient(180deg,#ffffff,#f5f6f8);
+  color:var(--text);
 }
 
 .header{
-  padding:22px 18px 14px;
-  background:rgba(255,255,255,.88);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
   position:sticky;
   top:0;
-  z-index:10;
+  z-index:20;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
 }
 
-.header-top{
+.header-inner{
+  max-width:1180px;
+  margin:auto;
+  padding:15px 16px;
+}
+
+.brand{
   display:flex;
   align-items:center;
-  gap:14px;
+  justify-content:space-between;
+  gap:12px;
 }
 
-.brand-logo{
-  width:54px;
-  height:54px;
-  border-radius:18px;
+.brand-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-icon{
+  width:46px;
+  height:46px;
+  border-radius:16px;
   background:linear-gradient(135deg,#ff6a00,#fb923c);
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
-  font-size:29px;
-  box-shadow:0 14px 28px rgba(255,106,0,.28);
+  font-size:25px;
+  box-shadow:0 12px 25px rgba(255,106,0,.25);
 }
 
-.header h1{
-  font-size:22px;
+.brand h1{
+  font-size:20px;
   font-weight:900;
 }
 
-.header p{
-  font-size:13px;
+.brand p{
+  font-size:12px;
   color:var(--muted);
-  margin-top:4px;
+  margin-top:2px;
+}
+
+.header-btn{
+  height:38px;
+  padding:0 13px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
 }
 
 .container{
-  padding:18px;
   max-width:1180px;
   margin:auto;
+  padding:16px;
 }
 
 .hero{
   background:linear-gradient(135deg,#111827,#1f2937);
-  border-radius:28px;
-  padding:24px;
+  border-radius:26px;
+  padding:22px;
   color:#fff;
-  box-shadow:var(--shadow);
-  margin-bottom:18px;
-  position:relative;
   overflow:hidden;
+  position:relative;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
 }
 
 .hero::after{
   content:"";
   position:absolute;
-  width:220px;
-  height:220px;
+  width:210px;
+  height:210px;
   border-radius:50%;
-  background:rgba(255,106,0,.28);
+  background:rgba(255,106,0,.3);
   right:-70px;
-  top:-80px;
-  filter:blur(4px);
+  top:-85px;
 }
 
 .hero h2{
-  font-size:26px;
+  font-size:24px;
   font-weight:900;
   position:relative;
   z-index:1;
 }
 
 .hero p{
-  font-size:14px;
-  line-height:1.5;
-  opacity:.85;
+  max-width:690px;
+  font-size:13px;
+  line-height:1.55;
+  color:rgba(255,255,255,.78);
   margin-top:8px;
-  max-width:620px;
   position:relative;
   z-index:1;
 }
 
-.apps-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:16px;
-}
-
-.app-card{
-  background:var(--card);
+.filters-card{
+  background:#fff;
   border:1px solid var(--border);
-  border-radius:26px;
-  padding:18px;
-  box-shadow:var(--shadow);
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-}
-
-.app-top{
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
-
-.app-icon{
-  width:72px;
-  height:72px;
   border-radius:24px;
-  object-fit:cover;
-  box-shadow:0 12px 25px rgba(255,106,0,.25);
-  background:#fff7ed;
+  padding:14px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
 }
 
-.app-title h3{
-  font-size:18px;
+.search{
+  position:relative;
+  margin-bottom:12px;
+}
+
+.search i{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+}
+
+.search input{
+  width:100%;
+  height:48px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  padding:0 14px 0 42px;
+  font-size:14px;
+  outline:none;
+}
+
+.search input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(255,106,0,.12);
+}
+
+.filter-title{
+  font-size:11px;
+  font-weight:900;
+  color:#374151;
+  margin:10px 2px 7px;
+  text-transform:uppercase;
+}
+
+.filter-row{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding-bottom:2px;
+}
+
+.chip{
+  height:38px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:#374151;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.chip.active{
+  background:#111827;
+  color:#fff;
+  border-color:#111827;
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.summary-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:14px;
+  box-shadow:0 8px 22px rgba(15,23,42,.05);
+}
+
+.summary-card b{
+  display:block;
+  font-size:22px;
   font-weight:900;
 }
 
-.app-title span{
-  display:inline-flex;
+.summary-card span{
+  display:block;
+  margin-top:3px;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:20px 2px 10px;
+}
+
+.section-title h3{
+  font-size:17px;
+  font-weight:900;
+}
+
+.section-title span{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.apps-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:12px;
+}
+
+.app-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:13px;
+  box-shadow:0 8px 22px rgba(15,23,42,.06);
+  transition:.2s;
+}
+
+.app-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 32px rgba(15,23,42,.1);
+}
+
+.app-head{
+  display:flex;
+  align-items:center;
+  gap:11px;
+}
+
+.app-icon{
+  width:56px;
+  height:56px;
+  border-radius:17px;
+  object-fit:cover;
+  background:#fff7ed;
+  flex:none;
+  box-shadow:0 10px 22px rgba(255,106,0,.18);
+}
+
+.app-name{
+  font-size:14px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.app-company{
+  margin-top:4px;
+  font-size:10.5px;
+  color:var(--primary);
+  font-weight:900;
+}
+
+.status{
   margin-top:6px;
-  padding:5px 9px;
-  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
   background:#ecfdf5;
   color:#15803d;
-  font-size:11px;
+  padding:4px 7px;
+  border-radius:999px;
+  font-size:9.5px;
   font-weight:900;
 }
 
 .app-desc{
+  font-size:12px;
   color:var(--muted);
-  font-size:13px;
-  line-height:1.5;
+  line-height:1.45;
+  margin-top:10px;
+  min-height:52px;
+}
+
+.tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:10px 0;
+}
+
+.tag{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#f3f4f6;
+  font-size:10px;
+  font-weight:900;
+  color:#4b5563;
 }
 
 .actions{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:auto;
+  grid-template-columns:1fr 42px;
+  gap:8px;
+  margin-top:10px;
 }
 
-button,a{
-  text-decoration:none;
+.btn-open{
+  height:40px;
   border:none;
-  cursor:pointer;
-  font-weight:900;
-}
-
-.btn-primary{
-  height:48px;
-  border-radius:16px;
+  border-radius:14px;
   background:linear-gradient(135deg,#ff6a00,#fb923c);
   color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
 }
 
-.btn-secondary{
-  height:48px;
-  border-radius:16px;
+.btn-install{
+  height:40px;
+  border:none;
+  border-radius:14px;
   background:#f3f4f6;
   color:#111827;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.empty{
+  background:#fff;
+  border:1px dashed var(--border);
+  border-radius:22px;
+  padding:24px;
+  text-align:center;
+  color:var(--muted);
+  font-weight:800;
+  grid-column:1/-1;
 }
 
 .modal{
@@ -220,11 +397,11 @@ button,a{
   inset:0;
   background:rgba(17,24,39,.66);
   backdrop-filter:blur(8px);
-  z-index:50;
+  z-index:80;
   display:none;
   align-items:center;
   justify-content:center;
-  padding:16px;
+  padding:12px;
 }
 
 .modal.show{
@@ -233,10 +410,10 @@ button,a{
 
 .modal-box{
   width:100%;
-  max-width:980px;
+  max-width:960px;
   height:90vh;
   background:#fff;
-  border-radius:28px;
+  border-radius:24px;
   overflow:hidden;
   display:flex;
   flex-direction:column;
@@ -244,12 +421,12 @@ button,a{
 }
 
 .modal-header{
-  height:64px;
-  padding:0 14px 0 18px;
+  height:60px;
+  padding:0 12px 0 16px;
+  border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  border-bottom:1px solid var(--border);
 }
 
 .modal-title{
@@ -257,27 +434,45 @@ button,a{
   align-items:center;
   gap:10px;
   font-weight:900;
+  font-size:14px;
 }
 
 .modal-title img{
   width:38px;
   height:38px;
-  border-radius:12px;
+  border-radius:13px;
 }
 
-.close{
-  width:42px;
-  height:42px;
+.modal-actions{
+  display:flex;
+  gap:8px;
+}
+
+.modal-actions button,
+.modal-actions a{
+  width:40px;
+  height:40px;
   border-radius:14px;
+  border:none;
+  background:#f3f4f6;
+  color:#111827;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.modal-actions .close{
   background:#fee2e2;
   color:#dc2626;
-  font-size:20px;
 }
 
 iframe{
+  border:0;
   width:100%;
   flex:1;
-  border:0;
 }
 
 .install-modal{
@@ -285,11 +480,11 @@ iframe{
   inset:0;
   background:rgba(17,24,39,.7);
   backdrop-filter:blur(8px);
-  z-index:70;
+  z-index:100;
   display:none;
   align-items:center;
   justify-content:center;
-  padding:18px;
+  padding:16px;
 }
 
 .install-modal.show{
@@ -298,115 +493,177 @@ iframe{
 
 .install-box{
   width:100%;
-  max-width:520px;
-  max-height:90vh;
+  max-width:560px;
+  max-height:92vh;
   overflow:auto;
   background:#fff;
-  border-radius:30px;
-  padding:22px;
+  border-radius:28px;
+  padding:20px;
   box-shadow:0 30px 90px rgba(0,0,0,.35);
 }
 
 .install-head{
   display:flex;
-  gap:14px;
   align-items:center;
+  gap:12px;
   margin-bottom:14px;
 }
 
 .install-head img{
-  width:64px;
-  height:64px;
-  border-radius:20px;
+  width:58px;
+  height:58px;
+  border-radius:18px;
 }
 
 .install-head h3{
-  font-size:20px;
+  font-size:18px;
   font-weight:900;
 }
 
 .install-head p{
-  font-size:13px;
-  color:var(--muted);
   margin-top:3px;
+  font-size:12px;
+  color:var(--muted);
 }
 
-.install-actions{
+.install-main{
   display:grid;
-  gap:10px;
-  margin:18px 0;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:14px;
 }
 
-.install-btn{
-  height:52px;
-  border-radius:17px;
+.install-main button,
+.install-main a{
+  height:46px;
+  border-radius:15px;
+  border:none;
+  font-size:12px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  text-decoration:none;
+}
+
+.android{
   background:linear-gradient(135deg,#ff6a00,#fb923c);
   color:#fff;
+}
+
+.direct{
+  background:#f3f4f6;
+  color:#111827;
+}
+
+.help-title{
   font-size:15px;
+  font-weight:900;
+  margin:12px 0 8px;
+}
+
+.steps{
+  display:grid;
+  gap:8px;
 }
 
 .step{
   display:flex;
-  gap:12px;
+  gap:10px;
   background:#f9fafb;
   border:1px solid var(--border);
-  border-radius:18px;
-  padding:13px;
-  margin-top:10px;
+  border-radius:17px;
+  padding:11px;
 }
 
-.step-num{
-  width:30px;
-  height:30px;
+.num{
+  width:28px;
+  height:28px;
   border-radius:10px;
   background:#111827;
   color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:13px;
+  font-size:12px;
   font-weight:900;
   flex:none;
 }
 
 .step b{
-  display:block;
-  font-size:14px;
+  font-size:13px;
 }
 
 .step p{
+  font-size:12px;
   color:var(--muted);
-  font-size:13px;
   line-height:1.4;
   margin-top:2px;
 }
 
 .close-install{
   width:100%;
-  height:50px;
-  border-radius:17px;
-  background:#f3f4f6;
+  height:46px;
+  border:none;
+  border-radius:15px;
   margin-top:14px;
+  background:#f3f4f6;
+  font-weight:900;
 }
 
-.note{
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.5;
-  margin-top:12px;
-}
+@media(max-width:640px){
+  .header-inner{
+    padding:14px;
+  }
 
-@media(max-width:600px){
+  .brand h1{
+    font-size:18px;
+  }
+
+  .header-btn{
+    display:none;
+  }
+
+  .container{
+    padding:12px;
+  }
+
+  .hero{
+    padding:18px;
+    border-radius:22px;
+  }
+
   .hero h2{
-    font-size:22px;
+    font-size:21px;
+  }
+
+  .summary{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+
+  .summary-card{
+    padding:12px;
+  }
+
+  .summary-card b{
+    font-size:18px;
+  }
+
+  .summary-card span{
+    font-size:10px;
+  }
+
+  .apps-grid{
+    grid-template-columns:1fr;
   }
 
   .modal-box{
     height:94vh;
-    border-radius:22px;
+    border-radius:20px;
   }
 
-  .actions{
+  .install-main{
     grid-template-columns:1fr;
   }
 }
@@ -416,13 +673,22 @@ iframe{
 <body>
 
 <header class="header">
-  <div class="header-top">
-    <div class="brand-logo">
-      <i class="ri-apps-2-fill"></i>
-    </div>
-    <div>
-      <h1>Central de Apps</h1>
-      <p>Instale e acesse os sistemas do Mercatto</p>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="brand-icon">
+          <i class="ri-store-3-fill"></i>
+        </div>
+        <div>
+          <h1>App Store DV</h1>
+          <p>Sistemas internos do grupo</p>
+        </div>
+      </div>
+
+      <button class="header-btn" onclick="abrirAjudaGeral()">
+        <i class="ri-smartphone-line"></i>
+        Como instalar
+      </button>
     </div>
   </div>
 </header>
@@ -430,12 +696,52 @@ iframe{
 <main class="container">
 
   <section class="hero">
-    <h2>Seus sistemas em formato de aplicativo</h2>
+    <h2>Loja de aplicativos do Grupo DV</h2>
     <p>
-      Escolha um app abaixo para abrir em popup ou instalar na tela inicial do celular.
-      No Android aparece a opção de instalação. No iPhone é necessário adicionar à tela de início pelo Safari.
+      Central para acessar e instalar os sistemas internos como aplicativos PWA.
+      No momento, o app disponível é a Contagem de Estoque do Mercatto Delícia.
     </p>
   </section>
+
+  <section class="filters-card">
+
+    <div class="search">
+      <i class="ri-search-line"></i>
+      <input id="busca" placeholder="Buscar aplicativo, loja, setor ou modalidade..." oninput="renderizarApps()">
+    </div>
+
+    <div class="filter-title">Lojas</div>
+    <div class="filter-row" id="filtroLojas"></div>
+
+    <div class="filter-title">Setores</div>
+    <div class="filter-row" id="filtroSetores"></div>
+
+    <div class="filter-title">Modalidades</div>
+    <div class="filter-row" id="filtroModalidades"></div>
+
+  </section>
+
+  <section class="summary">
+    <div class="summary-card">
+      <b id="totalApps">0</b>
+      <span>APPS</span>
+    </div>
+
+    <div class="summary-card">
+      <b id="totalLojas">0</b>
+      <span>LOJAS</span>
+    </div>
+
+    <div class="summary-card">
+      <b id="totalSetores">0</b>
+      <span>SETORES</span>
+    </div>
+  </section>
+
+  <div class="section-title">
+    <h3>Aplicativos disponíveis</h3>
+    <span id="contadorApps">0 apps</span>
+  </div>
 
   <section class="apps-grid" id="appsGrid"></section>
 
@@ -443,18 +749,30 @@ iframe{
 
 <div class="modal" id="appModal">
   <div class="modal-box">
+
     <div class="modal-header">
       <div class="modal-title">
         <img id="modalIcon" src="">
-        <span id="modalTitle">App</span>
+        <span id="modalTitle">Aplicativo</span>
       </div>
 
-      <button class="close" onclick="fecharApp()">
-        <i class="ri-close-line"></i>
-      </button>
+      <div class="modal-actions">
+        <a id="modalOpenNew" href="#" target="_blank" title="Abrir em nova aba">
+          <i class="ri-external-link-line"></i>
+        </a>
+
+        <button onclick="abrirInstalacaoAppAtual()" title="Instalar">
+          <i class="ri-download-cloud-2-line"></i>
+        </button>
+
+        <button class="close" onclick="fecharApp()" title="Fechar">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
     </div>
 
-    <iframe id="appFrame" src=""></iframe>
+    <iframe id="appFrame"></iframe>
+
   </div>
 </div>
 
@@ -464,63 +782,78 @@ iframe{
     <div class="install-head">
       <img id="installIcon" src="">
       <div>
-        <h3 id="installTitle">Instalar app</h3>
-        <p id="installDesc">Adicione este app à tela inicial.</p>
+        <h3 id="installTitle">Instalar aplicativo</h3>
+        <p id="installDesc">Adicione à tela inicial.</p>
       </div>
     </div>
 
-    <div class="install-actions">
-      <button class="install-btn" id="androidInstallBtn" onclick="instalarAndroid()">
+    <div class="install-main">
+      <button class="android" onclick="instalarAndroid()">
         <i class="ri-download-cloud-2-line"></i>
-        INSTALAR NO ANDROID
+        Instalar no Android
       </button>
 
-      <a class="btn-secondary" id="abrirDireto" href="#" target="_blank">
+      <a class="direct" id="abrirDireto" href="#" target="_blank">
         <i class="ri-external-link-line"></i>
-        ABRIR EM NOVA ABA
+        Abrir app
       </a>
     </div>
 
-    <h3 style="font-size:17px;font-weight:900;margin-top:18px;">
-      Como instalar no iPhone
-    </h3>
+    <div class="help-title">Como instalar no iPhone</div>
 
-    <div class="step">
-      <div class="step-num">1</div>
-      <div>
-        <b>Abra pelo Safari</b>
-        <p>No iPhone, o PWA deve ser aberto no navegador Safari para aparecer como app.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <b>Abra o app pelo Safari</b>
+          <p>No iPhone, toque em “Abrir app” e use o navegador Safari.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <b>Toque no botão de compartilhar</b>
+          <p>É o ícone de quadrado com seta para cima, geralmente na parte inferior do Safari.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div>
+          <b>Escolha “Adicionar à Tela de Início”</b>
+          <p>Role a lista de opções e toque nessa opção.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div>
+          <b>Confirme em “Adicionar”</b>
+          <p>O ícone aparecerá na tela inicial e abrirá como aplicativo PWA.</p>
+        </div>
       </div>
     </div>
 
-    <div class="step">
-      <div class="step-num">2</div>
-      <div>
-        <b>Toque no botão de compartilhar</b>
-        <p>O botão fica na parte inferior do Safari, com o ícone de quadrado e seta para cima.</p>
+    <div class="help-title">Como instalar no Android</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div>
+          <b>Abra pelo Chrome</b>
+          <p>Toque em “Abrir app” e use o Google Chrome.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div>
+          <b>Instale o aplicativo</b>
+          <p>Se aparecer o aviso, toque em “Instalar”. Se não aparecer, toque nos três pontos e depois em “Adicionar à tela inicial”.</p>
+        </div>
       </div>
     </div>
-
-    <div class="step">
-      <div class="step-num">3</div>
-      <div>
-        <b>Escolha “Adicionar à Tela de Início”</b>
-        <p>Depois confirme tocando em “Adicionar”. O app aparecerá junto com os aplicativos do iPhone.</p>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="step-num">4</div>
-      <div>
-        <b>Abra pelo ícone criado</b>
-        <p>Depois disso ele abre em tela cheia, como aplicativo PWA.</p>
-      </div>
-    </div>
-
-    <p class="note">
-      No Android, quando o navegador permitir, o botão “Instalar no Android” instala automaticamente.
-      Se não aparecer, toque nos três pontos do Chrome e escolha “Adicionar à tela inicial”.
-    </p>
 
     <button class="close-install" onclick="fecharInstalacao()">
       FECHAR
@@ -532,35 +865,176 @@ iframe{
 <script>
 const APPS = [
   {
-    id:"estoque",
+    id:"estoque-mercatto",
     nome:"Contagem de Estoque",
-    descricao:"Sistema rápido para contagem de estoque, com salvamento local, atualização por produto alterado e funcionamento como PWA.",
+    empresa:"Mercatto Delícia",
+    setor:"Estoque",
+    modalidade:"Operacional",
+    status:"Disponível",
+    descricao:"Aplicativo PWA para contagem de estoque do Mercatto Delícia, com salvamento local e atualização apenas dos itens modificados.",
     url:"./estoque/contagem_de_estoque.html",
-    icon:"./estoque/icon-512-2.png",
-    status:"PWA DISPONÍVEL"
+    icon:"./estoque/icon-512-2.png"
   }
 ];
 
-let deferredPrompt = null;
-let appSelecionado = null;
+const LOJAS = [
+  "Todas",
+  "Mercatto Delícia",
+  "Villa Gourmet",
+  "M.Kids",
+  "Padaria Delícia",
+  "Delícia Gourmet"
+];
 
-window.addEventListener("beforeinstallprompt", event => {
+const SETORES = [
+  "Todos",
+  "Estoque",
+  "Financeiro",
+  "RH",
+  "Compras",
+  "Vendas",
+  "Atendimento",
+  "Cozinha",
+  "Delivery"
+];
+
+const MODALIDADES = [
+  "Todas",
+  "Operacional",
+  "Gestão",
+  "Relatório",
+  "PWA",
+  "Admin"
+];
+
+let filtroLoja = "Todas";
+let filtroSetor = "Todos";
+let filtroModalidade = "Todas";
+let appAtual = null;
+let deferredPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event=>{
   event.preventDefault();
   deferredPrompt = event;
 });
 
-function renderApps(){
+function normalizar(txt){
+  return String(txt || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"");
+}
+
+function criarChips(){
+
+  document.getElementById("filtroLojas").innerHTML = LOJAS.map(loja=>`
+    <button class="chip ${filtroLoja === loja ? "active" : ""}" onclick="setLoja('${loja}')">
+      ${loja}
+    </button>
+  `).join("");
+
+  document.getElementById("filtroSetores").innerHTML = SETORES.map(setor=>`
+    <button class="chip ${filtroSetor === setor ? "active" : ""}" onclick="setSetor('${setor}')">
+      ${setor}
+    </button>
+  `).join("");
+
+  document.getElementById("filtroModalidades").innerHTML = MODALIDADES.map(mod=>`
+    <button class="chip ${filtroModalidade === mod ? "active" : ""}" onclick="setModalidade('${mod}')">
+      ${mod}
+    </button>
+  `).join("");
+
+}
+
+function setLoja(loja){
+  filtroLoja = loja;
+  criarChips();
+  renderizarApps();
+}
+
+function setSetor(setor){
+  filtroSetor = setor;
+  criarChips();
+  renderizarApps();
+}
+
+function setModalidade(mod){
+  filtroModalidade = mod;
+  criarChips();
+  renderizarApps();
+}
+
+function filtrarApps(){
+
+  const busca = normalizar(document.getElementById("busca").value);
+
+  return APPS.filter(app=>{
+
+    const texto = normalizar(`
+      ${app.nome}
+      ${app.empresa}
+      ${app.setor}
+      ${app.modalidade}
+      ${app.status}
+      ${app.descricao}
+    `);
+
+    const okBusca = !busca || texto.includes(busca);
+    const okLoja = filtroLoja === "Todas" || app.empresa === filtroLoja;
+    const okSetor = filtroSetor === "Todos" || app.setor === filtroSetor;
+    const okMod = filtroModalidade === "Todas" || app.modalidade === filtroModalidade || app.modalidade === "PWA";
+
+    return okBusca && okLoja && okSetor && okMod;
+
+  });
+
+}
+
+function atualizarResumo(appsFiltrados){
+
+  const lojasDisponiveis = new Set(APPS.map(app=>app.empresa));
+  const setoresDisponiveis = new Set(APPS.map(app=>app.setor));
+
+  document.getElementById("totalApps").innerText = APPS.length;
+  document.getElementById("totalLojas").innerText = lojasDisponiveis.size;
+  document.getElementById("totalSetores").innerText = setoresDisponiveis.size;
+
+  document.getElementById("contadorApps").innerText =
+    `${appsFiltrados.length} app${appsFiltrados.length === 1 ? "" : "s"}`;
+
+}
+
+function renderizarApps(){
+
+  const apps = filtrarApps();
   const grid = document.getElementById("appsGrid");
 
-  grid.innerHTML = APPS.map(app => `
-    <div class="app-card">
+  atualizarResumo(apps);
 
-      <div class="app-top">
-        <img class="app-icon" src="${app.icon}" onerror="this.src='${fallbackIcon()}'">
+  if(!apps.length){
+    grid.innerHTML = `
+      <div class="empty">
+        Nenhum aplicativo encontrado para os filtros selecionados.
+      </div>
+    `;
+    return;
+  }
 
-        <div class="app-title">
-          <h3>${app.nome}</h3>
-          <span>${app.status}</span>
+  grid.innerHTML = apps.map(app=>`
+    <article class="app-card">
+
+      <div class="app-head">
+        <img class="app-icon" src="${app.icon}" onerror="this.src=fallbackIcon()">
+
+        <div>
+          <div class="app-name">${app.nome}</div>
+          <div class="app-company">${app.empresa}</div>
+
+          <div class="status">
+            <i class="ri-checkbox-circle-fill"></i>
+            ${app.status}
+          </div>
         </div>
       </div>
 
@@ -568,30 +1042,41 @@ function renderApps(){
         ${app.descricao}
       </div>
 
+      <div class="tags">
+        <span class="tag">${app.setor}</span>
+        <span class="tag">${app.modalidade}</span>
+        <span class="tag">PWA</span>
+      </div>
+
       <div class="actions">
-        <button class="btn-primary" onclick="abrirApp('${app.id}')">
-          <i class="ri-window-fill"></i>
+        <button class="btn-open" onclick="abrirApp('${app.id}')">
           ABRIR
         </button>
 
-        <button class="btn-secondary" onclick="abrirInstalacao('${app.id}')">
+        <button class="btn-install" onclick="abrirInstalacao('${app.id}')">
           <i class="ri-download-cloud-2-line"></i>
-          BAIXAR
         </button>
       </div>
 
-    </div>
+    </article>
   `).join("");
+
 }
 
 function abrirApp(id){
-  const app = APPS.find(a => a.id === id);
+
+  const app = APPS.find(a=>a.id === id);
   if(!app) return;
 
+  appAtual = app;
+
   document.getElementById("modalIcon").src = app.icon;
-  document.getElementById("modalTitle").innerText = app.nome;
+  document.getElementById("modalTitle").innerText = `${app.nome} • ${app.empresa}`;
+  document.getElementById("modalOpenNew").href = app.url;
   document.getElementById("appFrame").src = app.url;
+
   document.getElementById("appModal").classList.add("show");
+
 }
 
 function fecharApp(){
@@ -600,33 +1085,36 @@ function fecharApp(){
 }
 
 function abrirInstalacao(id){
-  const app = APPS.find(a => a.id === id);
+
+  const app = APPS.find(a=>a.id === id);
   if(!app) return;
 
-  appSelecionado = app;
+  appAtual = app;
 
   document.getElementById("installIcon").src = app.icon;
   document.getElementById("installTitle").innerText = `Instalar ${app.nome}`;
-  document.getElementById("installDesc").innerText = app.descricao;
+  document.getElementById("installDesc").innerText = `${app.empresa} • ${app.setor}`;
   document.getElementById("abrirDireto").href = app.url;
 
-  const androidBtn = document.getElementById("androidInstallBtn");
-
-  if(deferredPrompt){
-    androidBtn.style.display = "block";
-  }else{
-    androidBtn.style.display = "block";
-    androidBtn.innerHTML = `<i class="ri-information-line"></i> VER INSTRUÇÕES DE INSTALAÇÃO`;
-  }
-
   document.getElementById("installModal").classList.add("show");
+
+}
+
+function abrirInstalacaoAppAtual(){
+  if(!appAtual) return;
+  abrirInstalacao(appAtual.id);
+}
+
+function abrirAjudaGeral(){
+  abrirInstalacao(APPS[0].id);
 }
 
 function fecharInstalacao(){
-  document.getElementById("installModal").classList.remove("show");      
+  document.getElementById("installModal").classList.remove("show");
 }
 
 async function instalarAndroid(){
+
   if(deferredPrompt){
     deferredPrompt.prompt();
 
@@ -634,21 +1122,20 @@ async function instalarAndroid(){
     deferredPrompt = null;
 
     if(result.outcome === "accepted"){
-      alert("✅ App instalado com sucesso!");
+      alert("✅ Aplicativo instalado com sucesso!");
       fecharInstalacao();
-    }else{
-      alert("Instalação cancelada.");
     }
 
     return;
   }
 
-  alert("No Android, abra este app no Chrome, toque nos três pontos e escolha: Adicionar à tela inicial.");
+  alert("No Android, abra o app no Chrome, toque nos três pontos e escolha “Adicionar à tela inicial” ou “Instalar aplicativo”.");
+
 }
 
 function fallbackIcon(){
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
       <defs>
         <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
           <stop stop-color="#ff6a00"/>
@@ -656,15 +1143,28 @@ function fallbackIcon(){
         </linearGradient>
       </defs>
       <rect width="512" height="512" rx="120" fill="url(#g)"/>
-      <path d="M126 154h260v230H126z" fill="white" opacity=".95"/>
-      <path d="M162 194h188v40H162zm0 72h188v40H162zm0 72h118v40H162z" fill="#111827"/>
-      <circle cx="356" cy="354" r="42" fill="#111827"/>
-      <path d="M337 354l13 13 28-31" stroke="white" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M136 158h240v220H136z" fill="white"/>
+      <path d="M172 198h168v36H172zm0 66h168v36H172zm0 66h108v36H172z" fill="#111827"/>
+      <circle cx="360" cy="356" r="44" fill="#111827"/>
+      <path d="M340 356l14 14 30-34" stroke="white" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   `);
 }
 
-renderApps();
+criarChips();
+renderizarApps();
+
+window.setLoja = setLoja;
+window.setSetor = setSetor;
+window.setModalidade = setModalidade;
+window.renderizarApps = renderizarApps;
+window.abrirApp = abrirApp;
+window.fecharApp = fecharApp;
+window.abrirInstalacao = abrirInstalacao;
+window.fecharInstalacao = fecharInstalacao;
+window.instalarAndroid = instalarAndroid;
+window.abrirInstalacaoAppAtual = abrirInstalacaoAppAtual;
+window.abrirAjudaGeral = abrirAjudaGeral;
 </script>
 
 </body>
