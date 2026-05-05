@@ -24,7 +24,6 @@
   --radius:18px;
   --shadow:0 12px 34px rgba(0,0,0,.10);
 }
-  
 *{box-sizing:border-box;font-family:Inter}
 html, body{
   margin:0;
@@ -464,35 +463,9 @@ if(rangeSelecionado.length === 2){
   q = q.lte("data", rangeSelecionado[1]);
 }
 
-let todos = [];
-let inicio = 0;
-const passo = 1000;
-
-while (true) {
-
-  const { data, error } = await q
-    .order("data", { ascending: true })
-    .range(inicio, inicio + passo - 1);
-
-  if (error) {
-    console.error("Erro ao buscar:", error);
-    break;
-  }
-
-  if (!data || data.length === 0) break;
-
-  todos = todos.concat(data);
-
-  if (data.length < passo) break;
-
-  inicio += passo;
-}
-
-const dataFinal = todos;
-
-
-
-  
+const { data, error } = await q
+  .order("data",{ascending:true})
+  .limit(10000); // 🔥 AQUI resolve 90% do problema
   
   if(error){
   console.error("Erro ao carregar buffet_lancamentos:", error);
@@ -505,7 +478,7 @@ let totalReposto = 0;
 let totalRetirado = 0;
 let totalDesperdicio = 0;
   
-(dataFinal || []).forEach(r=>{
+(data || []).forEach(r=>{
   porPrato[r.produto_nome] ||= {MONTAGEM:0,REPOSICAO:0,RETIRADA:0,DEVOLUCAO:0, UNIDADE:r.unidade};
   porPrato[r.produto_nome][r.tipo] += Number(r.quantidade||0);
 
