@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fornecedores • Mercatto</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:#eef2f7;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:30px;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:30px;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+/* HEADER */
+.top-bar{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+input{
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+#busca{
+  flex:1;
+}
+
+button{
+  padding:12px 18px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+
+/* LISTA */
+.item{
+  padding:15px;
+  border-bottom:1px solid #eee;
+}
+
+.item-top{
+  display:flex;
+  justify-content:space-between;
+  font-weight:600;
+}
+
+.item-sub{
+  font-size:13px;
+  color:#555;
+  margin-top:5px;
+}
+
+.actions span{
+  margin-left:10px;
+  cursor:pointer;
+}
+
+.actions span:hover{
+  color:#2563eb;
+}
+
+/* POPUP */
+.overlay{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.popup{
+  background:#fff;
+  padding:25px;
+  border-radius:16px;
+  width:350px;
+}
+
+.popup input{
+  width:100%;
+  margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Fornecedores</h1>
+
+<div class="card">
+
+<div class="top-bar">
+  <input id="busca" placeholder="Buscar fornecedor...">
+  <button onclick="abrir()">+ Novo</button>
+</div>
+
+<div id="lista"></div>
+
+</div>
+
+</div>
+
+<!-- POPUP -->
+<div id="overlay" class="overlay">
+  <div class="popup">
+
+    <h3 id="titulo">Novo</h3>
+
+    <input id="nome" placeholder="Nome">
+    <input id="cnpj" placeholder="CNPJ">
+    <input id="whatsapp" placeholder="Whatsapp">
+    <input id="cidade" placeholder="Cidade">
+
+    <button onclick="salvar()">Salvar</button>
+    <button onclick="fechar()" style="background:#555;">Cancelar</button>
+
+  </div>
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let editId = null;
+
+// ================= LISTAR =================
+async function carregar(){
+
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*")
+    .order("nome");
+
+  render(data);
+}
+
+// ================= RENDER =================
+function render(data){
+
+  lista.innerHTML = data.map(x=>`
+    <div class="item">
+
+      <div class="item-top">
+        ${x.nome}
+
+        <div class="actions">
+          <span onclick="editar('${x.id}')">✏️</span>
+          <span onclick="excluir('${x.id}')">🗑️</span>
+        </div>
+      </div>
+
+      <div class="item-sub">
+        CNPJ: ${x.cnpj || '-'} • Whats: ${x.whatsapp || '-'} • ${x.cidade || ''}
+      </div>
+
+    </div>
+  `).join("");
+}
+
+// ================= ABRIR =================
+function abrir(){
+  editId = null;
+  titulo.innerText = "Novo Fornecedor";
+
+  nome.value="";
+  cnpj.value="";
+  whatsapp.value="";
+  cidade.value="";
+
+  overlay.style.display="flex";
+}
+
+// ================= EDITAR =================
+async function editar(id){
+
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  editId = id;
+
+  titulo.innerText = "Editar Fornecedor";
+
+  nome.value = data.nome;
+  cnpj.value = data.cnpj;
+  whatsapp.value = data.whatsapp;
+  cidade.value = data.cidade;
+
+  overlay.style.display="flex";
+}
+
+// ================= SALVAR =================
+async function salvar(){
+
+  const obj = {
+    nome: nome.value,
+    cnpj: cnpj.value,
+    whatsapp: whatsapp.value,
+    cidade: cidade.value
+  };
+
+  if(editId){
+    await sb.from("fornecedores_mercatto")
+      .update(obj)
+      .eq("id", editId);
+  }else{
+    await sb.from("fornecedores_mercatto")
+      .insert([obj]);
+  }
+
+  fechar();
+  carregar();
+}
+
+// ================= EXCLUIR =================
+async function excluir(id){
+
+  if(!confirm("Excluir fornecedor?")) return;
+
+  await sb
+    .from("fornecedores_mercatto")
+    .delete()
+    .eq("id", id);
+
+  carregar();
+}
+
+// ================= FECHAR =================
+function fechar(){
+  overlay.style.display="none";
+}
+
+// ================= BUSCA =================
+busca.addEventListener("input", async ()=>{
+
+  const termo = busca.value.toLowerCase();
+
+  const { data } = await sb
+    .from("fornecedores_mercatto")
+    .select("*");
+
+  const filtrado = data.filter(x =>
+    x.nome.toLowerCase().includes(termo)
+  );
+
+  render(filtrado);
+});
+
+carregar();
+
+</script>
+
+</body>
+</html>

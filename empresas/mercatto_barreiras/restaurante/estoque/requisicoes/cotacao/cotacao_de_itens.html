@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Cotação Inteligente</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+  margin:0;
+  font-family:Inter;
+  background:#f1f5f9;
+}
+html, body{
+  overflow-x:hidden;
+}
+
+*{
+  box-sizing:border-box;
+}
+.top{
+  background:#fff;
+  padding:20px;
+  box-shadow:0 5px 20px rgba(0,0,0,.05);
+}
+
+.search{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-width:500px;
+}
+
+.search input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+.search-results{
+  background:#fff;
+  border-radius:10px;
+  margin-top:5px;
+  max-height:200px;
+  overflow:auto;
+  box-shadow:0 10px 20px rgba(0,0,0,.1);
+}
+
+.search-item{
+  padding:12px;
+  cursor:pointer;
+  border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+}
+
+.search-item:hover{
+  background:#f1f5f9;
+}
+
+.search-item small{
+  color:#64748b;
+}
+
+
+  
+
+.container{
+  padding:20px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+th{
+  background:#111827;
+  color:#fff;
+  padding:12px;
+}
+
+td{
+  padding:10px;
+  text-align:center;
+  border-bottom:1px solid #eee;
+}
+
+input{
+  width:80px;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  text-align:center;
+}
+
+.resultado{
+  font-weight:700;
+  color:#2563eb;
+}
+
+.alerta{ background:#fee2e2; }
+.ok{ background:#dcfce7; }
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+
+.remove{
+  cursor:pointer;
+  color:red;
+}
+
+.top, .container{
+  width:100%;
+  max-width:100%;
+}
+
+
+.add-area{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.add-area input{
+  flex:1;
+}
+
+.add-area button{
+  width:120px;
+}
+
+td:first-child{
+  text-align:left;
+  padding-left:20px;
+}
+
+th:first-child{
+  text-align:left;
+  padding-left:20px;
+}
+
+.search-bar{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  width:100%;
+
+  background:#fff;
+  padding:12px;
+  border-radius:12px;
+  box-shadow:0 5px 15px rgba(0,0,0,.05);
+}
+
+.search-bar input:first-child{
+  flex:1;
+}
+
+.search-bar input[type="number"]{
+  width:90px;
+}
+
+.search-bar select{
+  width:90px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  background:#fff;
+}
+
+.search-bar button{
+  width:130px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+
+<h2>📦 Montar Cotação</h2>
+
+<div class="search-bar">
+
+<input id="busca" placeholder="🔍 Buscar produto...">
+<input id="qtdAdd" type="number" value="1">
+
+<select id="unidadeSelect">
+  <option value="UN">UN</option>
+  <option value="CX">CX</option>
+  <option value="KG">KG</option>
+  <option value="LT">LT</option>
+</select>
+
+<button onclick="confirmarAdd()">Adicionar</button>
+
+</div>
+
+
+
+  
+
+<div id="resultados" class="search-results"></div>
+
+</div>
+
+<div class="container">
+
+<table>
+<thead>
+<tr>
+<th>Produto</th>
+<th>Atual</th>
+<th>Mín</th>
+<th>Ideal</th>
+<th>Comprar</th>
+<th>Preço</th>
+<th>Resultado</th>
+<th></th>
+</tr>
+</thead>
+
+<tbody id="body"></tbody>
+
+</table>
+
+<br>
+
+<button onclick="salvar()">Salvar Cotação</button>
+
+</div>
+
+<script>
+
+const sb = supabase.createClient(
+ "https://dxkszikemntfusfyrzos.supabase.co",
+ "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed"
+);
+
+let estoque = [];
+let selecionados = [];
+
+// =====================
+// CARREGAR ESTOQUE
+// =====================
+async function carregar(){
+
+  const { data } = await sb
+    .from("mercatto_estoque")
+    .select("*")
+    .eq("ativo", true);
+
+  estoque = data;
+}
+
+carregar();
+carregarPreCotacao();
+
+
+async function carregarPreCotacao(){
+
+  const { data } = await sb
+    .from("pre_cotacao_mercatto")
+    .select("*")
+    .order("created_at", { ascending:true });
+
+  if(!data) return;
+
+  selecionados = data.map(d => ({
+    id: d.produto_id,
+    produto: d.produto,
+    saldo: d.atual,
+    estoque_minimo: d.minimo,
+    estoque_ideal: d.ideal,
+    comprar: d.quantidade,
+    unidade_uso: d.unidade,
+    preco: d.preco
+  }));
+
+  render();
+}
+
+
+
+
+
+  
+// =====================
+// BUSCA
+// =====================
+function buscar(){
+
+  const termo = busca.value.toLowerCase();
+
+  if(!termo){
+    resultados.innerHTML = "";
+    return;
+  }
+
+  const filtrados = estoque.filter(p =>
+    p.produto.toLowerCase().includes(termo)
+  ).slice(0,10);
+
+resultados.innerHTML = filtrados.map(p=>`
+  <div class="search-item" onclick="selecionarProduto('${p.id}')">
+    <span>${p.produto}</span>
+<small>${p.und_compra || p.unidade || 'UN'}</small>
+
+</div>
+`).join("");
+}
+
+// =====================
+// ADD PRODUTO
+// =====================
+let produtoSelecionado = null;
+
+function selecionarProduto(id){
+
+  const p = estoque.find(x => x.id === id);
+
+  produtoSelecionado = p;
+
+  busca.value = p.produto;
+
+document.getElementById("unidadeSelect").value = p.und_compra || p.unidade || 'UN';
+  
+  resultados.innerHTML = "";
+}
+async function confirmarAdd(){
+
+  if(!produtoSelecionado){
+    alert("Selecione um produto");
+    return;
+  }
+
+  const qtd = Number(qtdAdd.value);
+
+  if(!qtd){
+    alert("Informe quantidade");
+    return;
+  }
+
+  if(selecionados.find(x => x.id === produtoSelecionado.id)){
+    alert("Já adicionado");
+    return;
+  }
+
+const novo = {
+  ...produtoSelecionado,
+  comprar: qtd,
+  unidade_uso: document.getElementById("unidadeSelect").value,
+  qtd_unidades: produtoSelecionado.qtd_unidades || 1,
+  preco: produtoSelecionado.preco || null
+};
+
+selecionados.push(novo);
+
+// 🔥 SALVA NO BANCO
+await sb.from("pre_cotacao_mercatto").insert([{
+  produto: novo.produto,
+  produto_id: novo.id,
+  quantidade: novo.comprar,
+  unidade: novo.unidade_uso,
+  atual: novo.saldo,
+  minimo: novo.estoque_minimo,
+  ideal: novo.estoque_ideal,
+preco: novo.preco,
+qtd_unidades: novo.qtd_unidades
+}]);
+  // reset
+// reset
+produtoSelecionado = null;
+busca.value = "";
+qtdAdd.value = "";
+
+render();
+}
+
+// =====================
+// RENDER
+// =====================
+function render(){
+
+  body.innerHTML = selecionados.map((d,i)=>{
+
+    const resultado = Number(d.saldo) + Number(d.comprar);
+
+    let classe = "";
+    if(resultado < d.estoque_minimo) classe = "alerta";
+    else if(resultado >= d.estoque_ideal) classe = "ok";
+
+    return `
+    <tr class="${classe}">
+<td style="text-align:left; white-space:nowrap;">
+  ${d.produto} <small style="color:#64748b">(${d.unidade_uso || 'UN'}) 
+<small style="color:#94a3b8">
+  ${d.qtd_unidades ? `→ ${d.qtd_unidades} UN` : ''}
+</small></small>
+</td>
+
+
+<td>${d.saldo}</td>
+      <td>${d.estoque_minimo}</td>
+      <td>${d.estoque_ideal}</td>
+
+     <td>
+  <input type="number"
+    value="${d.comprar}"
+    onchange="update(${i}, this.value)">
+</td>
+
+<td>
+  ${
+    d.preco 
+    ? `R$ ${Number(d.preco).toFixed(2)}`
+    : `<span style="color:#ef4444; font-weight:600;">Sem cotação</span>`
+  }
+</td>
+
+<td class="resultado">${resultado}</td>
+
+
+
+      <td class="remove" onclick="remover(${i})">✖</td>
+    </tr>
+    `;
+  }).join("");
+}
+
+// =====================
+function update(i,val){
+  selecionados[i].comprar = Number(val);
+  render();
+}
+
+// =====================
+async function remover(i){
+
+  const item = selecionados[i];
+
+  await sb
+    .from("pre_cotacao_mercatto")
+    .delete()
+    .eq("produto_id", item.id);
+
+  selecionados.splice(i,1);
+
+  render();
+}
+// =====================
+// SALVAR
+// =====================
+async function salvar(){
+
+  if(selecionados.length === 0){
+    alert("Nenhum item");
+    return;
+  }
+
+  const nome = prompt("Nome da cotação:");
+  if(!nome) return;
+
+  const itens = selecionados.map(d=>({
+    produto: d.produto,
+    comprar: d.comprar,
+    atual: d.saldo,
+    minimo: d.estoque_minimo,
+    ideal: d.estoque_ideal,
+    resultado: d.saldo + d.comprar
+  }));
+
+  await sb.from("cotacoes").insert([{
+    nome,
+    data_cotacao: new Date(),
+    itens
+  }]);
+
+  alert("Cotação salva!");
+
+// limpa pré-cotação
+await sb.from("pre_cotacao_mercatto").delete().neq("id", "");
+
+// limpa tela
+selecionados = [];
+render();
+}
+document.getElementById("busca").addEventListener("input", buscar);
+</script>
+
+</body>
+</html>

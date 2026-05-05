@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentos • Sistema</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f5f5f7;
+  --glass:#ffffffaa;
+  --border:#e5e5e7;
+  --shadow:0 6px 20px rgba(0,0,0,0.08);
+  --text:#2b2b2b;
+  --muted:#7c7c7c;
+  --radius:14px;
+}
+
+/* ===== GERAL ===== */
+body{
+  margin:0;
+  padding:20px;
+  background:var(--bg);
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+}
+
+#container{
+  max-width:1250px;
+  background:var(--glass);
+  backdrop-filter:blur(25px) saturate(180%);
+  padding:25px 35px;
+  margin:auto;
+  border-radius:18px;
+  border:1px solid var(--border);
+  animation:fade .4s ease;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:none;}
+}
+
+/* ===== TÍTULO ===== */
+#titulo{
+  text-align:center;
+  margin-bottom:25px;
+  font-size:26px;
+  font-weight:600;
+}
+
+/* ===== BUSCA ===== */
+#busca{
+  width:100%;
+  padding:12px 15px;
+  border-radius:10px;
+  border:1px solid #d0d0d4;
+  background:#fafafa;
+  font-size:15px;
+  transition:.2s;
+}
+
+#busca:focus{
+  background:white;
+  border-color:#007aff;
+  outline:none;
+}
+
+/* ===== BREADCRUMBS ===== */
+#breadcrumbs{
+  margin:15px 0;
+  font-size:15px;
+  color:#666;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar{
+  display:flex;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.btn{
+  padding:10px 18px;
+  border:none;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  color:white;
+  font-size:14px;
+}
+.btn-nova{ background:#007aff; }
+.btn-upload{ background:#6d28d9; }
+.btn-voltar{ background:#5f6368; }
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:22px;
+}
+
+/* CARD */
+.item{
+  background:white;
+  text-align:center;
+  padding:18px 10px;
+  border-radius:var(--radius);
+  cursor:pointer;
+  transition:.2s;
+  border:1px solid #e5e5e7;
+  box-shadow:var(--shadow);
+}
+
+.item:hover{
+  transform:translateY(-4px);
+}
+
+.thumb{
+  width:85px;
+  height:85px;
+  border-radius:10px;
+  object-fit:cover;
+  background:#e5e5e5;
+  margin:auto;
+  display:block;
+}
+
+.itemNome{
+  margin-top:10px;
+  font-size:14px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:500;
+}
+
+/* POPUPS */
+#popupCriar, #popupUpload{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+#popupBox, #uploadBox{
+  background:white;
+  width:90%;
+  max-width:420px;
+  padding:25px;
+  border-radius:var(--radius);
+  border:1px solid #ddd;
+  animation:fade .3s;
+}
+
+.colorRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.colorSelect{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  cursor:pointer;
+  border:2px solid transparent;
+}
+
+.colorSelect.active{
+  border-color:#000;
+}
+
+/* Upload box */
+#dropArea{
+  border:2px dashed #b5b5b5;
+  padding:30px;
+  text-align:center;
+  border-radius:12px;
+  margin-top:15px;
+  background:#fafafa;
+}
+#dropArea.dragover{
+  border-color:#007aff;
+  background:#eef5ff;
+}
+
+/* MODAL PREVIEW */
+#modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:99999;
+}
+
+#modalBox{
+  background:white;
+  padding:25px;
+  border-radius:15px;
+  width:90%;
+  max-width:750px;
+}
+
+#modalPreview{
+  width:100%;
+  height:450px;
+  border:none;
+  border-radius:10px;
+  background:#f2f2f2;
+  margin-top:10px;
+}
+
+/* Skeleton */
+.skeleton{
+  background:#e5e5e5;
+  border-radius:14px;
+  height:150px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="container">
+
+  <h1 id="titulo">GERENCIADOR DE DOCUMENTOS</h1>
+
+  <input id="busca" placeholder="Pesquisar..." onkeyup="pesquisar()">
+
+  <div id="breadcrumbs">📁 Raiz</div>
+
+  <div class="toolbar">
+    <button class="btn btn-nova" onclick="abrirPopupCriar()">📁 Nova Pasta</button>
+    <button class="btn btn-upload" onclick="abrirUpload()">⬆ Upload</button>
+    <button class="btn btn-voltar" onclick="voltarPasta()">⬅ Voltar</button>
+  </div>
+
+  <div id="lista" class="grid"></div>
+
+</div>
+
+
+<!-- POPUP CRIAR PASTA -->
+<div id="popupCriar">
+  <div id="popupBox">
+    <h3>Criar nova pasta</h3>
+
+    <label>Nome:</label>
+    <input id="nomePasta" style="width:100%;padding:10px;margin-top:6px;" type="text">
+
+    <p>Cor:</p>
+    <div class="colorRow">
+      <div class="colorSelect" style="background:#2563eb" data-cor="azul"></div>
+      <div class="colorSelect" style="background:#4caf50" data-cor="verde"></div>
+      <div class="colorSelect" style="background:#facc15" data-cor="amarelo"></div>
+      <div class="colorSelect" style="background:#fb923c" data-cor="laranja"></div>
+      <div class="colorSelect" style="background:#ef4444" data-cor="vermelho"></div>
+      <div class="colorSelect" style="background:#a855f7" data-cor="roxo"></div>
+      <div class="colorSelect" style="background:#737373" data-cor="cinza"></div>
+      <div class="colorSelect" style="background:#000" data-cor="preto"></div>
+      <div class="colorSelect" style="background:#ec4899" data-cor="rosa"></div>
+      <div class="colorSelect" style="background:#8b5e3c" data-cor="marrom"></div>
+    </div>
+
+    <button onclick="criarPasta()" class="btn btn-nova" style="width:100%;margin-top:15px;">Criar</button>
+    <button onclick="fecharPopupCriar()" style="margin-top:10px;border:none;background:#ddd;padding:10px;width:100%;border-radius:10px;">Cancelar</button>
+  </div>
+</div>
+
+
+<!-- POPUP UPLOAD -->
+<div id="popupUpload">
+  <div id="uploadBox">
+
+    <h3>Enviar arquivo</h3>
+
+    <label>Selecione a pasta de destino:</label>
+    <select id="uploadDestino" style="width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc;"></select>
+
+    <div id="dropArea">Arraste arquivos aqui ou clique para selecionar</div>
+
+    <input id="uploadInput" type="file" multiple style="display:none">
+
+    <button onclick="enviarUpload()" class="btn btn-upload" style="width:100%;margin-top:15px;">Enviar</button>
+    <button onclick="fecharUpload()" style="margin-top:10px;border:none;background:#ddd;padding:10px;width:100%;border-radius:10px;">Cancelar</button>
+
+  </div>
+</div>
+
+
+<!-- MODAL PREVIEW -->
+<div id="modal">
+  <div id="modalBox">
+    <button class="btn btn-voltar" onclick="fecharModal()" style="float:right;">Fechar</button>
+    <h2 id="modalTitulo"></h2>
+    <iframe id="modalPreview"></iframe>
+    <button onclick="baixarArquivo()" class="btn btn-upload" style="margin-top:15px;">⬇ Download</button>
+
+    <!-- BOTÃO EXCLUIR -->
+    <button onclick="excluirArquivo()" class="btn" style="margin-left:10px;background:#d9534f;">🗑 Excluir</button>
+
+    <button onclick="navigator.clipboard.writeText(linkAtual)" class="btn btn-nova" style="margin-left:10px;">🔗 Copiar Link</button>
+  </div>
+</div>
+
+
+
+<script>
+
+const API = "https://script.google.com/macros/s/AKfycbxFxMimw5qpX6unOxE_QO08dnzl-zGFKE7WEuhvAK7n7xTIIQD9ygrpegir-Hpz9RwWFg/exec";
+let usuario = localStorage.getItem("usuarioLogado") || "desconhecido";
+
+let dados = [];
+let pastaAtual = "10G18r0S5jDXnrOh96pQybqvfB8OH9Gxp";
+let historicoPastas = ["10G18r0S5jDXnrOh96pQybqvfB8OH9Gxp"];
+let corEscolhida = null;
+let linkAtual = "";
+
+
+/* LOADING */
+window.onload = ()=>{
+  renderSkeleton();
+  carregar();
+};
+
+function renderSkeleton(){
+  let html="";
+  for(let i=0;i<12;i++){
+    html+=`<div class="skeleton"></div>`;
+  }
+  document.getElementById("lista").innerHTML = html;
+}
+
+/* LISTAR */
+async function carregar(){
+  const req = await fetch(API+"?action=listar");
+  dados = await req.json();
+
+  preencherDestinoUpload();
+  mostrarPasta(pastaAtual);
+}
+
+function mostrarPasta(id){
+  pastaAtual = id;
+
+  const nome = dados.find(p=>p.id===id)?.nome || "Raiz";
+  document.getElementById("breadcrumbs").innerHTML = "📁 " + nome;
+
+  const itens = dados.filter(p=>p.pai===id);
+
+  let html = "";
+
+  itens.forEach(item => {
+    if(item.tipo==="pasta"){
+      html += `
+      <div class="item" onclick="entrarPasta('${item.id}')">
+        ${svgCor(item.capa)}
+        <div class="itemNome">${item.nome}</div>
+      </div>`;
+    } else {
+      const thumb = gerarThumbnail(item.url,item.nome);
+      html += `
+      <div class="item"
+        onclick="abrirArquivo('${item.nome}','${item.url}')">
+        ${thumb}
+        <div class="itemNome">${item.nome}</div>
+      </div>`;
+    }
+  });
+
+  document.getElementById("lista").innerHTML = html || "Vazio.";
+}
+
+function svgCor(cor){
+  const cores = {
+    azul:"#4F8CF1", verde:"#60D364", amarelo:"#F8D441",
+    laranja:"#F7A654", vermelho:"#F55D5D", roxo:"#BF6AF7",
+    cinza:"#A5A5A5", preto:"#000", rosa:"#E76BAF", marrom:"#A67C52"
+  };
+
+  return `
+  <img class="thumb" style="object-fit:contain;"
+    src="https://img.icons8.com/fluency-systems-filled/96/${cores[cor] ? cores[cor].replace('#','') : '4F8CF1'}/folder-invoices.png">
+  `;
+}
+
+function gerarThumbnail(url,nome){
+  let ext = nome.split(".").pop().toLowerCase();
+  const imgExt = ["jpg","jpeg","png","gif","webp"];
+  let id = extrairID(url);
+
+  if(imgExt.includes(ext)){
+    return `<img class="thumb" src="https://drive.google.com/uc?export=view&id=${id}">`;
+  }
+
+  return `<img class="thumb" src="https://drive.google.com/thumbnail?id=${id}&sz=w256">`;
+}
+
+function extrairID(link){
+  let m = link.match(/\/d\/(.*?)\//) || link.match(/id=(.*?)(&|$)/);
+  return m ? m[1] : "";
+}
+
+/* NAVEGAÇÃO */
+function entrarPasta(id){
+  historicoPastas.push(id);
+  mostrarPasta(id);
+}
+
+function voltarPasta(){
+  if(historicoPastas.length>1){
+    historicoPastas.pop();
+    mostrarPasta(historicoPastas[historicoPastas.length-1]);
+  }
+}
+
+/* CRIAR PASTA */
+document.querySelectorAll(".colorSelect").forEach(c=>{
+  c.onclick = ()=>{
+    document.querySelectorAll(".colorSelect").forEach(x=>x.classList.remove("active"));
+    c.classList.add("active");
+    corEscolhida = c.dataset.cor;
+  };
+});
+
+function abrirPopupCriar(){
+  document.getElementById("popupCriar").style.display="flex";
+}
+function fecharPopupCriar(){
+  document.getElementById("popupCriar").style.display="none";
+  document.getElementById("nomePasta").value="";
+  corEscolhida=null;
+}
+
+function criarPasta(){
+  const nome = document.getElementById("nomePasta").value.trim();
+  if(!nome) return alert("Digite o nome.");
+  if(!corEscolhida) return alert("Escolha a cor.");
+
+  fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"criarPasta",
+      nome:nome,
+      cor:corEscolhida,
+      usuario:usuario,
+      pai:pastaAtual
+    })
+  }).then(()=>{
+    fecharPopupCriar();
+    carregar();
+  });
+}
+
+/* UPLOAD */
+function abrirUpload(){
+  document.getElementById("popupUpload").style.display="flex";
+}
+function fecharUpload(){
+  document.getElementById("popupUpload").style.display="none";
+}
+
+function preencherDestinoUpload(){
+  const select = document.getElementById("uploadDestino");
+  select.innerHTML="";
+
+  dados.filter(p=>p.tipo==="pasta").forEach(p=>{
+    select.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+  });
+}
+
+const drop = document.getElementById("dropArea");
+
+drop.onclick = ()=> document.getElementById("uploadInput").click();
+drop.ondragover = e=>{
+  e.preventDefault();
+  drop.classList.add("dragover");
+};
+drop.ondragleave = ()=> drop.classList.remove("dragover");
+drop.ondrop = e=>{
+  e.preventDefault();
+  drop.classList.remove("dragover");
+  enviarArquivos(e.dataTransfer.files);
+};
+
+function enviarUpload(){
+  enviarArquivos(document.getElementById("uploadInput").files);
+}
+
+function enviarArquivos(files){
+  const destino = document.getElementById("uploadDestino").value;
+
+  [...files].forEach(file=>{
+    const reader = new FileReader();
+
+    reader.onload = ()=>{
+      const base64 = reader.result.split(",")[1];
+
+      fetch(API,{
+        method:"POST",
+        body:JSON.stringify({
+          action:"upload",
+          base64:base64,
+          mime:file.type,
+          nome:file.name,
+          usuario:usuario,
+          pai:destino
+        })
+      }).then(()=>carregar());
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  fecharUpload();
+}
+
+/* MODAL */
+function abrirArquivo(nome,url){
+  document.getElementById("modalTitulo").innerText = nome;
+  document.getElementById("modalPreview").src = url;
+  linkAtual = url;
+  document.getElementById("modal").style.display="flex";
+}
+
+function fecharModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+function baixarArquivo(){
+  let id = extrairID(linkAtual);
+  if(!id) return;
+
+  let linkDownload = "https://drive.google.com/uc?export=download&id=" + id;
+
+  const a = document.createElement("a");
+  a.href = linkDownload;
+  a.download = "";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/* BUSCA */
+function pesquisar(){
+  const q = document.getElementById("busca").value.toLowerCase().trim();
+
+  if(q === ""){
+    mostrarPasta(pastaAtual);
+    return;
+  }
+
+  const itens = dados.filter(p =>
+    p.nome.toLowerCase().includes(q)
+  );
+
+  let html = "";
+
+  itens.forEach(item=>{
+    if(item.tipo==="pasta"){
+      html += `
+      <div class="item" onclick="entrarPasta('${item.id}')">
+        ${svgCor(item.capa)}
+        <div class="itemNome">${item.nome}</div>
+      </div>`;
+    } else {
+      const thumb = gerarThumbnail(item.url,item.nome);
+      html += `
+      <div class="item" onclick="abrirArquivo('${item.nome}','${item.url}')">
+        ${thumb}
+        <div class="itemNome">${item.nome}</div>
+      </div>`;
+    }
+  });
+
+  document.getElementById("lista").innerHTML =
+    html || "<div style='padding:20px;'>Nenhum resultado encontrado.</div>";
+
+  document.getElementById("breadcrumbs").innerHTML = "🔍 Resultados da busca global";
+}
+
+/* 🔥 EXCLUIR ARQUIVO */
+async function excluirArquivo() {
+  if (!confirm("Tem certeza que deseja excluir este arquivo?")) return;
+
+  let nome = document.getElementById("modalTitulo").innerText;
+  let url = linkAtual;
+
+  await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "excluir",
+      nome: nome,
+      url: url,
+      usuario: usuario
+    })
+  });
+
+  fecharModal();
+  carregar();
+}
+
+</script>
+
+</body>
+</html>
