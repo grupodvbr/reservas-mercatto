@@ -178,7 +178,7 @@ button:active{
   background:rgba(15,23,42,.55);
   backdrop-filter:blur(6px);
   display:none;
-  align-items:flex-end;
+  align-items:center;
   justify-content:center;
   z-index:999;
 }
@@ -187,12 +187,20 @@ button:active{
 .modalBox{
   position:relative;
   background:#fff;
-  width:100%;
-  max-width:540px;
-  height:92vh;
-  border-radius:26px 26px 0 0;
-  padding:22px 18px;
-  overflow-y:auto;
+
+  width:95%;
+  max-width:1000px; /* 🔥 maior */
+
+  height:auto; /* 🔥 remove altura travada */
+  max-height:90vh;
+
+  border-radius:20px;
+  padding:24px;
+
+  overflow:auto;
+  ght:92vh;
+
+
 
   box-shadow:0 -20px 50px rgba(0,0,0,.18);
 
@@ -215,10 +223,9 @@ button:active{
 /* GRID INTERNO */
 .modalGrid{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
 }
-
 /* FULL WIDTH */
 .full{
   grid-column:1/-1;
@@ -494,11 +501,45 @@ function render(){
     (!empresa || u.empresa === empresa)
   )
   .forEach(u=>{
-    lista.innerHTML += `
-      <div class="card">
+
+
+
+    
+lista.innerHTML += `
+  <div class="card">
+
+    <div style="display:flex;align-items:center;gap:10px">
+
+      <div style="
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        overflow:hidden;
+        background:#e5e7eb;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:700;
+        color:#64748b;
+      ">
+        ${
+          u.foto_url 
+          ? `<img src="${u.foto_url}" style="width:100%;height:100%;object-fit:cover">`
+          : u.nome?.charAt(0)
+        }
+      </div>
+
+      <div>
         <div class="nome">${u.nome}</div>
         <div class="mini">${u.cargo || ''}</div>
-        <div class="mini">${u.empresa}</div>
+      </div>
+
+    </div>
+
+<div class="mini" style="font-weight:600;color:#334155">
+  ${u.empresa}
+</div>
+    
 
         <div class="status ${u.ativo?'ativo':'inativo'}">
           ${u.ativo?'● Ativo':'● Inativo'}
