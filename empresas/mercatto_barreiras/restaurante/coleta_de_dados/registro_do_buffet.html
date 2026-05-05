@@ -784,26 +784,6 @@ lista.innerHTML += `
   }
 </div>
 
-        ${
-(l.consumo_para_nome && l.tipo === "RETIRADA") ||
-(l.consumo_autorizado && l.consumo_para_nome)
-          ? `<span style="
-                background:#ede9fe;
-                color:#5b21b6;
-                padding:6px 12px;
-                border-radius:999px;
-                font-size:12px;
-                font-weight:800;
-                display:inline-flex;
-                align-items:center;
-                gap:6px;
-                line-height:1;
-              ">
-                👤 ${l.consumo_para_nome}
-              </span>`
-            : ``
-        }
-      </div>
 
       <!-- META -->
       <div class="meta" style="line-height:1.5; margin-bottom:8px">
