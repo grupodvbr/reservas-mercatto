@@ -301,8 +301,11 @@ async function login(){
 
     setTimeout(()=>{
 
-      location.href = getRedirectUrl();
+location.href = decodeURIComponent(
+  new URLSearchParams(location.search).get("redirect")
+);
 
+      
     },400);
 
   }catch(err){
