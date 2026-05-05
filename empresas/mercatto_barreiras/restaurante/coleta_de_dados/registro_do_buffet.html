@@ -749,12 +749,15 @@ function onProdutoChange(){
   
   async function carregarProdutos(){
     const empresa = empresaSelect.value;
-    const { data } = await sb
-      .from("buffet_produtos")
-      .select("nome")
-      .eq("empresa", empresa)
-      .order("nome");
+const { data } = await sb
+  .from("buffet_produtos")
+  .select("nome")
+  .eq("empresa", empresa)
+  .eq("ativo", true) // 🔥 AQUI
+  .order("nome");
 
+
+    
     const list = document.getElementById("produtosList");
     list.innerHTML = "";
     data?.forEach(p=>{
