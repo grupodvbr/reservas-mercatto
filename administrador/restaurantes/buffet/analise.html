@@ -1040,45 +1040,77 @@ async function abrirResumoRetirada(nomePrato){
   });
 
   // 🔥 PREÇO DO KG
-  const PRECO_KG = 104.90;
+ // 🔥 PREÇO DO KG
+const PRECO_KG = 104.90;
 
-  let totalKg = 0;
+// 🔥 BUSCA PRODUÇÃO REAL
+let produzido = 0;
+let retirado = 0;
+let desperdicio = 0;
 
-  const html = Object.entries(porDestino)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([destino,kg])=>{
+let q2 = sb.from("buffet_lancamentos")
+  .select("tipo, quantidade")
+  .eq("empresa", empresa)
+  .eq("produto_nome", nomePrato);
 
-      totalKg += kg;
+if(rangeSelecionado.length === 2){
+  q2 = q2.gte("data", rangeSelecionado[0]);
+  q2 = q2.lte("data", rangeSelecionado[1]);
+}
 
-      const valor = kg * PRECO_KG;
+const { data: dadosPrato } = await q2;
 
-      const valorFormatado = valor.toLocaleString("pt-BR",{
-        style:"currency",
-        currency:"BRL"
-      });
+(dadosPrato || []).forEach(r=>{
+  const qtd = Number(r.quantidade || 0);
 
-      return `
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          padding:8px 0;
-          border-bottom:1px solid #eee
-        ">
-          <div>
-            <b>${destino}</b>
-            <div style="font-size:11px;color:#64748b">
-              ${kg.toFixed(3)} KG
-            </div>
+  if(r.tipo === "MONTAGEM" || r.tipo === "REPOSICAO") produzido += qtd;
+  if(r.tipo === "RETIRADA") retirado += qtd;
+  if(r.tipo === "DEVOLUCAO") desperdicio += qtd;
+});
+
+// 🔥 VALOR REAL (CORRETO)
+const vendido = produzido - retirado - desperdicio;
+const totalValor = vendido * PRECO_KG;
+
+
+// 🔥 LISTA POR DESTINO (continua igual)
+let totalKg = 0;
+
+const html = Object.entries(porDestino)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([destino,kg])=>{
+
+    totalKg += kg;
+
+    const valor = kg * PRECO_KG;
+
+    const valorFormatado = valor.toLocaleString("pt-BR",{
+      style:"currency",
+      currency:"BRL"
+    });
+
+    return `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        padding:8px 0;
+        border-bottom:1px solid #eee
+      ">
+        <div>
+          <b>${destino}</b>
+          <div style="font-size:11px;color:#64748b">
+            ${kg.toFixed(3)} KG
           </div>
-
-          <span style="font-weight:800">
-            ${valorFormatado}
-          </span>
         </div>
-      `;
-    }).join("");
 
-  const totalValor = totalKg * PRECO_KG;
+        <span style="font-weight:800">
+          ${valorFormatado}
+        </span>
+      </div>
+    `;
+  }).join("");
+
+  
 
   const totalFormatado = totalValor.toLocaleString("pt-BR",{
     style:"currency",
