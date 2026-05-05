@@ -637,29 +637,40 @@ async function carregarEstoque(){
 
   loading(true);
 
-  const { data, error } = await db
-  .from(TABELA_ESTOQUE)
-  .select("*")
-  .eq("empresa", usuarioLogado.empresa)
-  .eq("ativo", true)
-  .order("produto",{ascending:true});
+  try{
 
-  loading(false);
+    const { data, error } = await db
+    .from(TABELA_ESTOQUE)
+    .select("*")
+    .eq("empresa", usuarioLogado.empresa)
+    .eq("ativo", true)
+    .order("produto",{ascending:true});
 
-  if(error){
-    console.error(error);
+    if(error){
+      console.error(error);
+      aviso("Erro ao carregar estoque");
+      return;
+    }
+
+    itens = (data || []).map(item=>({
+      ...item,
+      quantidade_temp:Number(
+        item.quantidade || item.saldo || 0
+      )
+    }));
+
+    renderizar();
+
+  }catch(err){
+
+    console.error("ERRO AO CARREGAR ESTOQUE:", err);
     aviso("Erro ao carregar estoque");
-    return;
+
+  }finally{
+
+    loading(false);
+
   }
-
-  itens = (data || []).map(item=>({
-    ...item,
-    quantidade_temp:Number(
-      item.quantidade || item.saldo || 0
-    )
-  }));
-
-  renderizar();
 
 }
 
@@ -822,49 +833,54 @@ async function salvarTudo(){
 
   loading(true);
 
-  let erros = 0;
+  try{
 
-  for(const item of itens){
+    let erros = 0;
 
-    const qtd = Number(item.quantidade_temp || 0);
+    for(const item of itens){
 
-    const { error } = await db
-    .from(TABELA_ESTOQUE)
-    .update({
-      quantidade:qtd,
-      saldo:qtd,
-      atualizado_em:new Date().toISOString()
-    })
-    .eq("id", item.id);
+      const qtd = Number(item.quantidade_temp || 0);
 
-    if(error){
+      const { error } = await db
+      .from(TABELA_ESTOQUE)
+      .update({
+        quantidade:qtd,
+        saldo:qtd,
+        atualizado_em:new Date().toISOString()
+      })
+      .eq("id", item.id);
 
-      erros++;
-
-      console.error(
-        item.produto,
-        error
-      );
+      if(error){
+        erros++;
+        console.error("Erro ao salvar:", item.produto, error);
+      }
 
     }
 
-  }
+    loading(false);
 
-  loading(false);
+    if(erros > 0){
+      alert(`Contagem salva, mas teve ${erros} erro(s).`);
+      aviso(`Salvo com ${erros} erro(s)`);
+    }else{
+      alert("✅ Contagem salva com sucesso!");
+      aviso("Contagem salva com sucesso");
+    }
 
-  if(erros > 0){
+    await carregarEstoque();
 
-    aviso(
-      `Salvo com ${erros} erro(s)`
-    );
+  }catch(err){
 
-  }else{
+    console.error("ERRO GERAL AO SALVAR:", err);
 
-    aviso(
-      "Contagem salva com sucesso"
-    );
+    loading(false);
 
-    carregarEstoque();
+    alert("❌ Erro ao salvar contagem. Veja o console.");
+    aviso("Erro ao salvar");
+
+  }finally{
+
+    loading(false);
 
   }
 
