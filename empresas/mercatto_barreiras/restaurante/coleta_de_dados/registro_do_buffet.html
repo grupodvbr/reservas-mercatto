@@ -368,7 +368,10 @@ button.ghost{
 <div class="app">
 
   <div class="header">
-    <div class="title">🍽️ Buffet • Mercatto Delícia</div>
+<div class="title" onclick="abrirManual()" style="cursor:pointer">
+  🍽️ Buffet • Mercatto Delícia
+</div>
+    
     <span class="badge">Hoje: <b id="dataHoje"></b></span>
   </div>
 
@@ -1407,6 +1410,21 @@ function atualizarPreviewEdit(){
   document.getElementById("previewEdit").innerHTML =
     `Líquido: <b>${formatPeso(liquido)} kg</b>`;
 }
+
+
+function abrirManual(){
+  window.open(
+    "manuais/buffet.html",
+    "manualBuffet",
+    "width=1000,height=700,resizable=yes,scrollbars=yes"
+  );
+}
+
+
+
+
+
+
   
 </script>
 <!-- OVERLAY DE SALVAMENTO -->
