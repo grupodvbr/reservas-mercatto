@@ -335,7 +335,7 @@ if(!usuarioLogado){
     location.pathname.split("/").pop()
   );
 
-location.href = `login.html?redirect=${paginaAtual}`;
+location.href = `../../../../../../login.html?redirect=${encodeURIComponent(location.pathname)}`;
 }
 
 /* somente nível 0 */
@@ -346,8 +346,7 @@ if(usuarioLogado && usuarioLogado.nivel_acesso != 0){
 
   localStorage.removeItem("usuarioLogado");
 
-location.href = "login.html";
-}
+location.href = "../../../../../../login.html";}
 
 </script>
 
@@ -486,8 +485,7 @@ function sairSistema(){
 
   localStorage.removeItem("usuarioLogado");
 
-location.href = "login.html";
-}
+location.href = "../../../../../../login.html";}
 
 
 
