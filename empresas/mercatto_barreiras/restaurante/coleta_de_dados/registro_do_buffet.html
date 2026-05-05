@@ -624,10 +624,22 @@ consumoAutorizado.closest(".field").style.display = "none";
 produtoInput.addEventListener("input", () => {
   const nome = produtoInput.value.trim().toUpperCase();
 
+  const campoTipo = document.getElementById("tipo").closest(".field");
+
   if (nome === "CONSUMO AUTORIZADO") {
-    consumoAutorizado.checked = true;   // marca internamente
+    consumoAutorizado.checked = true;
+
+    // 🔥 ESCONDE O TIPO
+    campoTipo.style.display = "none";
+
+    // 🔒 já define automaticamente
+    tipoSelect.value = "RETIRADA";
+
   } else {
-    consumoAutorizado.checked = false;  // limpa quando não for consumo autorizado
+    consumoAutorizado.checked = false;
+
+    // 🔥 MOSTRA DE VOLTA
+    campoTipo.style.display = "flex";
   }
 });
 btnSalvar.onclick = () => {
