@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cotações • Mercatto</title>
+<title>Mercatto • Cotações</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
@@ -18,13 +18,13 @@
   --bg:#f3f4f6;
   --card:#ffffff;
   --border:#e5e7eb;
-  --text:#111827;
   --muted:#6b7280;
   --green:#16a34a;
   --red:#dc2626;
   --yellow:#ca8a04;
+  --blue:#2563eb;
   --shadow:0 10px 30px rgba(0,0,0,.08);
-  --radius:18px;
+  --radius:22px;
 }
 
 *{
@@ -36,101 +36,123 @@
 
 body{
   background:var(--bg);
-  color:var(--text);
+  color:#111827;
 }
 
-/* ================= TOPO ================= */
+/* ================= TOP ================= */
 
 .top{
-  background:#fff;
-  padding:20px;
-  border-bottom:1px solid var(--border);
   position:sticky;
   top:0;
   z-index:100;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:18px 24px;
 }
 
 .top-flex{
   display:flex;
-  gap:12px;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
   flex-wrap:wrap;
 }
 
-.top input{
-  flex:1;
-  min-width:220px;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:#fff;
+.top h1{
+  font-size:28px;
 }
 
-.top button{
-  padding:12px 18px;
+.top small{
+  color:var(--muted);
+}
+
+.top-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
   border:none;
-  border-radius:12px;
-  background:var(--primary);
-  color:#fff;
+  padding:13px 18px;
+  border-radius:14px;
   font-weight:700;
   cursor:pointer;
+}
+
+.btn-dark{
+  background:#111827;
+  color:#fff;
+}
+
+.btn-blue{
+  background:#2563eb;
+  color:#fff;
+}
+
+.btn-red{
+  background:#ef4444;
+  color:#fff;
 }
 
 /* ================= LAYOUT ================= */
 
 .layout{
   display:grid;
-  grid-template-columns:420px 1fr;
-  gap:18px;
-  padding:18px;
+  grid-template-columns:400px 1fr;
+  gap:20px;
+  padding:24px;
 }
 
-@media(max-width:1000px){
+@media(max-width:1100px){
+
   .layout{
     grid-template-columns:1fr;
   }
+
 }
 
 /* ================= CARD ================= */
 
 .card{
-  background:var(--card);
-  border-radius:var(--radius);
+  background:#fff;
+  border-radius:28px;
+  padding:22px;
   box-shadow:var(--shadow);
-  overflow:hidden;
+}
+
+/* ================= LISTA ================= */
+
+.search{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
   border:1px solid var(--border);
+  margin-bottom:18px;
+  outline:none;
 }
-
-.card-header{
-  padding:16px 18px;
-  border-bottom:1px solid var(--border);
-  font-size:15px;
-  font-weight:800;
-}
-
-.card-body{
-  padding:16px;
-}
-
-/* ================= COTAÇÕES ================= */
 
 .cotacao{
-  padding:14px;
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:18px;
+  padding:16px;
   margin-bottom:12px;
   cursor:pointer;
   transition:.2s;
-  background:#fff;
 }
 
 .cotacao:hover{
   transform:translateY(-2px);
-  border-color:#cbd5e1;
+}
+
+.cotacao.active{
+  border-color:#111827;
+  background:#f9fafb;
 }
 
 .cotacao h3{
-  font-size:15px;
-  margin-bottom:4px;
+  font-size:16px;
+  margin-bottom:6px;
 }
 
 .cotacao small{
@@ -141,110 +163,167 @@ body{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .badge{
-  padding:5px 10px;
+  padding:6px 12px;
   border-radius:999px;
   font-size:11px;
-  font-weight:700;
+  font-weight:800;
 }
 
-.ativa{
+.badge-ativa{
   background:#dcfce7;
   color:#166534;
 }
 
-.finalizada{
+.badge-finalizada{
   background:#fee2e2;
   color:#991b1b;
 }
 
-.total{
-  background:#eff6ff;
-  color:#1d4ed8;
+.badge-respondida{
+  background:#fef3c7;
+  color:#92400e;
 }
 
-/* ================= ITENS ================= */
-
-.itens{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
+/* ================= ITEM ================= */
 
 .item{
   border:1px solid var(--border);
-  border-radius:14px;
-  padding:14px;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:18px;
 }
 
 .item-top{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
+  margin-bottom:18px;
 }
 
-.item h4{
-  font-size:14px;
+.item-top h3{
+  font-size:18px;
+  margin-bottom:6px;
 }
 
-.item small{
+.item-top small{
   color:var(--muted);
 }
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:10px;
-  margin-top:12px;
+  grid-template-columns:
+  repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
 }
 
 .info{
   background:#f9fafb;
-  border-radius:10px;
-  padding:10px;
+  border-radius:16px;
+  padding:14px;
 }
 
 .info span{
   display:block;
   font-size:11px;
-  color:var(--muted);
+  color:#6b7280;
   margin-bottom:4px;
 }
 
 .info b{
-  font-size:14px;
+  font-size:15px;
 }
 
 /* ================= FORNECEDORES ================= */
 
-.fornecedores{
+.for-search{
+  width:100%;
+  padding:13px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  margin-top:18px;
+  margin-bottom:14px;
+}
+
+.for-wrap{
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
-  margin-top:14px;
+  gap:10px;
 }
 
 .for{
-  padding:8px 12px;
+  padding:10px 14px;
   border-radius:999px;
   border:1px solid var(--border);
   cursor:pointer;
+  font-size:13px;
+  font-weight:700;
   transition:.2s;
-  font-size:12px;
-  font-weight:600;
-}
-
-.for:hover{
-  background:#f3f4f6;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .for.active{
-  background:var(--primary);
+  background:#111827;
   color:#fff;
-  border-color:var(--primary);
+  border-color:#111827;
+}
+
+/* ================= RESPOSTAS ================= */
+
+.responses{
+  margin-top:22px;
+  border-top:1px solid #e5e7eb;
+  padding-top:18px;
+}
+
+.response{
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:12px;
+  background:#fafafa;
+}
+
+.response-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+.response-grid{
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+}
+
+.response-status{
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.done{
+  background:#dcfce7;
+  color:#166534;
+}
+
+/* ================= EMPTY ================= */
+
+.empty{
+  padding:60px 20px;
+  text-align:center;
+  color:#6b7280;
 }
 
 /* ================= OVERLAY ================= */
@@ -258,16 +337,8 @@ body{
   justify-content:center;
   align-items:center;
   z-index:9999;
-  font-size:18px;
-  font-weight:800;
-}
-
-/* ================= EMPTY ================= */
-
-.empty{
-  padding:30px;
-  text-align:center;
-  color:var(--muted);
+  font-size:22px;
+  font-weight:900;
 }
 
 </style>
@@ -279,15 +350,27 @@ body{
 
   <div class="top-flex">
 
-    <input
-      id="busca"
-      placeholder="🔍 Buscar cotação..."
-      oninput="filtrarCotacoes()"
-    >
+    <div>
 
-    <button onclick="recarregar()">
-      Atualizar
-    </button>
+      <h1>Cotações</h1>
+
+      <small>
+        Gestão inteligente de fornecedores
+      </small>
+
+    </div>
+
+    <div class="top-actions">
+
+      <button
+        class="btn btn-dark"
+        onclick="carregarCotacoes()">
+
+        Atualizar
+
+      </button>
+
+    </div>
 
   </div>
 
@@ -299,15 +382,14 @@ body{
 
   <div class="card">
 
-    <div class="card-header">
-      📦 Cotações Salvas
-    </div>
+    <input
+      class="search"
+      id="buscaCotacao"
+      placeholder="Pesquisar cotação..."
+      oninput="filtrarCotacoes()"
+    >
 
-    <div class="card-body">
-
-      <div id="listaCotacoes"></div>
-
-    </div>
+    <div id="listaCotacoes"></div>
 
   </div>
 
@@ -315,17 +397,11 @@ body{
 
   <div class="card">
 
-    <div class="card-header">
-      📋 Detalhes da Cotação
-    </div>
+    <div id="detalhes">
 
-    <div class="card-body">
+      <div class="empty">
 
-      <div id="detalhes">
-
-        <div class="empty">
-          Selecione uma cotação
-        </div>
+        Selecione uma cotação
 
       </div>
 
@@ -335,8 +411,12 @@ body{
 
 </div>
 
-<div class="overlay" id="overlay">
-  Carregando...
+<div
+  class="overlay"
+  id="overlay">
+
+  Processando...
+
 </div>
 
 <script>
@@ -358,12 +438,23 @@ init();
 
 async function init(){
 
-  overlay.style.display = "flex";
+  overlay(true);
 
   await carregarFornecedores();
   await carregarCotacoes();
 
-  overlay.style.display = "none";
+  overlay(false);
+}
+
+/* =========================
+   OVERLAY
+========================= */
+
+function overlay(show){
+
+  document.getElementById("overlay")
+    .style.display =
+      show ? "flex" : "none";
 }
 
 /* =========================
@@ -373,9 +464,13 @@ async function init(){
 async function carregarFornecedores(){
 
   const { data } = await sb
+
     .from("fornecedores_mercatto")
+
     .select("*")
+
     .eq("ativo", true)
+
     .order("nome");
 
   fornecedores = data || [];
@@ -387,45 +482,96 @@ async function carregarFornecedores(){
 
 async function carregarCotacoes(){
 
-  const { data } = await sb
+  const { data, error } = await sb
+
     .from("cotacoes")
+
     .select("*")
-    .order("data_cotacao", { ascending:false });
+
+    .order(
+      "data_cotacao",
+      { ascending:false }
+    );
+
+  if(error){
+
+    console.log(error);
+
+    return;
+  }
 
   cotacoes = data || [];
 
   renderCotacoes(cotacoes);
+
+  if(
+    cotacaoAtual
+  ){
+
+    const atualizada =
+      cotacoes.find(c =>
+
+        c.id === cotacaoAtual.id
+
+      );
+
+    if(atualizada){
+
+      cotacaoAtual = atualizada;
+
+      abrirCotacao(atualizada);
+    }
+  }
 }
 
 /* =========================
-   RENDER COTAÇÕES
+   RENDER LISTA
 ========================= */
 
 function renderCotacoes(arr){
 
-  const lista = document.getElementById("listaCotacoes");
-
-  if(!arr.length){
-    lista.innerHTML = `
-      <div class="empty">
-        Nenhuma cotação encontrada
-      </div>
-    `;
-    return;
-  }
+  const lista =
+    document.getElementById(
+      "listaCotacoes"
+    );
 
   lista.innerHTML = "";
 
-  arr.forEach(c => {
+  if(!arr.length){
 
-    const totalItens = c.itens?.length || 0;
+    lista.innerHTML = `
+
+      <div class="empty">
+
+        Nenhuma cotação encontrada
+
+      </div>
+
+    `;
+
+    return;
+  }
+
+  arr.forEach(c => {
 
     lista.innerHTML += `
 
-      <div class="cotacao"
-        onclick='abrirCotacao(${JSON.stringify(c)})'>
+      <div
+        class="cotacao
+        ${
+          cotacaoAtual &&
+          cotacaoAtual.id === c.id
+          ? "active"
+          : ""
+        }"
 
-        <h3>${c.nome || "Sem nome"}</h3>
+        onclick='abrirCotacao(
+          ${JSON.stringify(c)}
+        )'>
+
+        <h3>
+          ${c.nome || "Cotação"}
+        </h3>
 
         <small>
           ${formatarData(c.data_cotacao)}
@@ -433,15 +579,16 @@ function renderCotacoes(arr){
 
         <div class="badges">
 
-          <div class="badge total">
-            ${totalItens} itens
-          </div>
+          <div class="badge ${
+            c.status === "finalizada"
+            ? "badge-finalizada"
+            : c.status === "respondida"
+            ? "badge-respondida"
+            : "badge-ativa"
+          }">
 
-          <div class="badge ${c.status === "finalizada"
-            ? "finalizada"
-            : "ativa"}">
-
-            ${(c.status || "ativa").toUpperCase()}
+            ${(c.status || "ativa")
+              .toUpperCase()}
 
           </div>
 
@@ -461,83 +608,107 @@ function abrirCotacao(c){
 
   cotacaoAtual = c;
 
-  const box = document.getElementById("detalhes");
+  renderCotacoes(cotacoes);
+
+  const box =
+    document.getElementById(
+      "detalhes"
+    );
 
   const itens = c.itens || [];
-
-  const total = itens.reduce((acc,i)=>{
-    return acc + (
-      (Number(i.comprar)||0) *
-      (Number(i.preco)||0)
-    );
-  },0);
+  const itensCotacao =
+    c.itens_cotacao || [];
 
   box.innerHTML = `
 
-    <div style="margin-bottom:18px;">
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      flex-wrap:wrap;
+      margin-bottom:24px;
+    ">
 
-      <h2 style="font-size:22px;">
-        ${c.nome}
-      </h2>
+      <div>
 
-      <small style="color:#6b7280;">
-        ${formatarData(c.data_cotacao)}
-      </small>
+        <h2 style="
+          font-size:28px;
+          margin-bottom:6px;
+        ">
+          ${c.nome}
+        </h2>
 
-      <div class="badges" style="margin-top:12px;">
+        <small style="
+          color:#6b7280;
+        ">
+          ${formatarData(c.data_cotacao)}
+        </small>
 
-        <div class="badge total">
-          Total R$ ${total.toFixed(2)}
-        </div>
+      </div>
 
-        <div class="badge ${c.status === "finalizada"
-          ? "finalizada"
-          : "ativa"}">
+      <div style="
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+      ">
 
-          ${(c.status || "ativa").toUpperCase()}
+        <button
+          class="btn btn-dark"
+          onclick="finalizarCotacao()">
 
-        </div>
+          Finalizar
+
+        </button>
+
+        <button
+          class="btn btn-blue"
+          onclick="reabrirCotacao()">
+
+          Reabrir
+
+        </button>
 
       </div>
 
     </div>
 
-    <div class="fornecedores">
+    ${itens.map((i,index)=>{
 
-      ${fornecedores.map(f=>`
+      const itemCotado =
+        itensCotacao.find(x =>
 
-        <div
-          class="for"
-          onclick="toggleFornecedor(this,'${f.id}')">
+          x.produto === i.produto
 
-          ${f.nome}
+        ) || {
 
-        </div>
+          produto:i.produto,
+          qtd_solicitada:
+            i.comprar || 0,
+          fornecedores:[]
 
-      `).join("")}
+        };
 
-    </div>
-
-    <br>
-
-    <div class="itens">
-
-      ${itens.map(i=>`
+      return `
 
         <div class="item">
 
           <div class="item-top">
 
-            <div>
+            <h3>
+              ${i.produto}
+            </h3>
 
-              <h4>${i.produto}</h4>
+            <small>
 
-              <small>
-                Resultado Final:
-                ${i.resultado}
-              </small>
+              Comprar:
+              ${i.comprar || 0}
 
-            </div>
+              •
+
+              Resultado:
+              ${i.resultado || 0}
+
+            </small>
 
           </div>
 
@@ -545,100 +716,412 @@ function abrirCotacao(c){
 
             <div class="info">
               <span>Atual</span>
-              <b>${i.atual}</b>
+              <b>${i.atual || 0}</b>
             </div>
 
             <div class="info">
               <span>Mínimo</span>
-              <b>${i.minimo}</b>
+              <b>${i.minimo || 0}</b>
             </div>
 
             <div class="info">
               <span>Ideal</span>
-              <b>${i.ideal}</b>
+              <b>${i.ideal || 0}</b>
             </div>
 
             <div class="info">
               <span>Comprar</span>
-              <b>${i.comprar}</b>
+              <b>${i.comprar || 0}</b>
             </div>
 
-            <div class="info">
-              <span>Preço</span>
-              <b>
-                ${
-                  i.preco
-                  ? `R$ ${Number(i.preco).toFixed(2)}`
-                  : "Sem preço"
-                }
-              </b>
-            </div>
+          </div>
 
-            <div class="info">
-              <span>Subtotal</span>
-              <b>
-                R$
-                ${(
-                  (Number(i.comprar)||0) *
-                  (Number(i.preco)||0)
-                ).toFixed(2)}
-              </b>
-            </div>
+          <!-- ================= PESQUISA ================= -->
+
+          <input
+            class="for-search"
+            placeholder="Pesquisar fornecedor..."
+            oninput="
+              filtrarFornecedor(
+                this,
+                'for_${index}'
+              )
+            "
+          >
+
+          <!-- ================= FORNECEDORES ================= -->
+
+          <div
+            class="for-wrap"
+            id="for_${index}">
+
+            ${fornecedores.map(f=>{
+
+              const selecionado =
+                itemCotado.fornecedores
+                .some(x =>
+
+                  x.fornecedor_id === f.id
+
+                );
+
+              return `
+
+                <div
+
+                  class="for
+                  ${
+                    selecionado
+                    ? "active"
+                    : ""
+                  }"
+
+                  data-nome="${f.nome}"
+
+                  onclick="
+                    toggleFornecedor(
+                      this,
+                      '${c.id}',
+                      '${i.produto}',
+                      '${f.id}',
+                      '${f.nome}',
+                      ${i.comprar || 0}
+                    )
+                  ">
+
+                  ${f.nome}
+
+                </div>
+
+              `;
+
+            }).join("")}
+
+          </div>
+
+          <!-- ================= RESPOSTAS ================= -->
+
+          <div class="responses">
+
+            <h3 style="
+              margin-bottom:14px;
+              font-size:15px;
+            ">
+              Respostas dos fornecedores
+            </h3>
+
+            ${
+              itemCotado.fornecedores.length
+              ? itemCotado.fornecedores.map(f=>`
+
+                <div class="response">
+
+                  <div class="response-top">
+
+                    <div>
+
+                      <b>
+                        ${f.fornecedor_nome}
+                      </b>
+
+                      <div style="
+                        font-size:12px;
+                        color:#6b7280;
+                        margin-top:4px;
+                      ">
+
+                        ${
+                          f.respondido_em
+                          ? "Respondido em " +
+                            formatarData(
+                              f.respondido_em
+                            )
+                          : "Aguardando resposta"
+                        }
+
+                      </div>
+
+                    </div>
+
+                    <div class="
+                      response-status
+                      ${
+                        f.preco_unitario
+                        ? "done"
+                        : "pending"
+                      }
+                    ">
+
+                      ${
+                        f.preco_unitario
+                        ? "RESPONDIDO"
+                        : "PENDENTE"
+                      }
+
+                    </div>
+
+                  </div>
+
+                  <div class="response-grid">
+
+                    <div class="info">
+                      <span>Marca</span>
+                      <b>${f.marca || "-"}</b>
+                    </div>
+
+                    <div class="info">
+                      <span>Preço Unitário</span>
+                      <b>
+                        ${
+                          f.preco_unitario
+                          ? "R$ " +
+                            Number(
+                              f.preco_unitario
+                            ).toFixed(2)
+                          : "-"
+                        }
+                      </b>
+                    </div>
+
+                    <div class="info">
+                      <span>Preço Total</span>
+                      <b>
+                        ${
+                          f.preco_total
+                          ? "R$ " +
+                            Number(
+                              f.preco_total
+                            ).toFixed(2)
+                          : "-"
+                        }
+                      </b>
+                    </div>
+
+                    <div class="info">
+                      <span>Prazo</span>
+                      <b>${f.prazo || "-"}</b>
+                    </div>
+
+                    <div class="info">
+                      <span>Unidade</span>
+                      <b>${f.unidade || "-"}</b>
+                    </div>
+
+                    <div class="info">
+                      <span>Embalagem</span>
+                      <b>
+                        ${
+                          f.quantidade_embalagem
+                          || "-"
+                        }
+                      </b>
+                    </div>
+
+                  </div>
+
+                  ${
+                    f.observacao
+                    ? `
+
+                      <div style="
+                        margin-top:12px;
+                        padding:12px;
+                        border-radius:14px;
+                        background:#fff;
+                        border:1px solid #e5e7eb;
+                      ">
+
+                        <span style="
+                          display:block;
+                          font-size:11px;
+                          color:#6b7280;
+                          margin-bottom:4px;
+                        ">
+
+                          Observação
+
+                        </span>
+
+                        <div style="
+                          font-size:14px;
+                        ">
+
+                          ${f.observacao}
+
+                        </div>
+
+                      </div>
+
+                    `
+                    : ""
+                  }
+
+                </div>
+
+              `).join("")
+              : `
+                <div style="
+                  color:#6b7280;
+                  font-size:14px;
+                ">
+                  Nenhum fornecedor selecionado.
+                </div>
+              `
+            }
 
           </div>
 
         </div>
 
-      `).join("")}
+      `;
 
-    </div>
-
-    <br>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-
-      <button onclick="finalizarCotacao()"
-        style="
-          background:#111827;
-          color:#fff;
-          border:none;
-          padding:14px 18px;
-          border-radius:12px;
-          font-weight:700;
-          cursor:pointer;
-        ">
-
-        Finalizar Cotação
-
-      </button>
-
-      <button onclick="reabrirCotacao()"
-        style="
-          background:#2563eb;
-          color:#fff;
-          border:none;
-          padding:14px 18px;
-          border-radius:12px;
-          font-weight:700;
-          cursor:pointer;
-        ">
-
-        Reabrir
-
-      </button>
-
-    </div>
+    }).join("")}
 
   `;
 }
 
 /* =========================
-   FORNECEDOR
+   FILTRAR FORNECEDOR
 ========================= */
 
-function toggleFornecedor(el,id){
+function filtrarFornecedor(
+  input,
+  listaId
+){
+
+  const termo =
+    input.value.toLowerCase();
+
+  const lista =
+    document.getElementById(listaId);
+
+  const itens =
+    lista.querySelectorAll(".for");
+
+  itens.forEach(el => {
+
+    const nome =
+      el.dataset.nome.toLowerCase();
+
+    el.style.display =
+      nome.includes(termo)
+      ? "flex"
+      : "none";
+
+  });
+
+}
+
+/* =========================
+   TOGGLE
+========================= */
+
+async function toggleFornecedor(
+  el,
+  cotacaoId,
+  produto,
+  fornecedorId,
+  fornecedorNome,
+  qtd
+){
 
   el.classList.toggle("active");
+
+  const ativo =
+    el.classList.contains("active");
+
+  const { data } = await sb
+
+    .from("cotacoes")
+
+    .select("*")
+
+    .eq("id", cotacaoId)
+
+    .single();
+
+  let itensCotacao =
+    data.itens_cotacao || [];
+
+  let item =
+    itensCotacao.find(i =>
+
+      i.produto === produto
+
+    );
+
+  if(!item){
+
+    item = {
+
+      produto,
+      qtd_solicitada:qtd,
+      fornecedores:[]
+
+    };
+
+    itensCotacao.push(item);
+  }
+
+  if(ativo){
+
+    const existe =
+      item.fornecedores.find(f =>
+
+        f.fornecedor_id === fornecedorId
+
+      );
+
+    if(!existe){
+
+      item.fornecedores.push({
+
+        fornecedor_id:
+          fornecedorId,
+
+        fornecedor_nome:
+          fornecedorNome,
+
+        preco_unitario:null,
+        preco_total:null,
+        quantidade_embalagem:1,
+        unidade:"UN",
+        prazo:"",
+        marca:"",
+        observacao:""
+
+      });
+
+    }
+
+  }else{
+
+    item.fornecedores =
+      item.fornecedores.filter(f =>
+
+        f.fornecedor_id !== fornecedorId
+
+      );
+
+  }
+
+  await sb
+
+    .from("cotacoes")
+
+    .update({
+
+      itens_cotacao:itensCotacao,
+      atualizado_em:new Date()
+
+    })
+
+    .eq("id", cotacaoId);
+
+  cotacaoAtual.itens_cotacao =
+    itensCotacao;
+
+  abrirCotacao(cotacaoAtual);
 }
 
 /* =========================
@@ -649,40 +1132,34 @@ async function finalizarCotacao(){
 
   if(!cotacaoAtual) return;
 
-  overlay.style.display = "flex";
-
   await sb
+
     .from("cotacoes")
+
     .update({
       status:"finalizada"
     })
+
     .eq("id", cotacaoAtual.id);
 
-  await carregarCotacoes();
-
-  overlay.style.display = "none";
-
-  alert("Cotação finalizada");
+  carregarCotacoes();
 }
 
 async function reabrirCotacao(){
 
   if(!cotacaoAtual) return;
 
-  overlay.style.display = "flex";
-
   await sb
+
     .from("cotacoes")
+
     .update({
       status:"ativa"
     })
+
     .eq("id", cotacaoAtual.id);
 
-  await carregarCotacoes();
-
-  overlay.style.display = "none";
-
-  alert("Cotação reaberta");
+  carregarCotacoes();
 }
 
 /* =========================
@@ -692,28 +1169,63 @@ async function reabrirCotacao(){
 function filtrarCotacoes(){
 
   const termo =
-    document.getElementById("busca")
+    document.getElementById(
+      "buscaCotacao"
+    )
     .value
     .toLowerCase();
 
-  const filtradas = cotacoes.filter(c =>
+  const filtradas =
+    cotacoes.filter(c =>
 
-    (c.nome || "")
-    .toLowerCase()
-    .includes(termo)
+      (c.nome || "")
+      .toLowerCase()
+      .includes(termo)
 
-  );
+    );
 
   renderCotacoes(filtradas);
 }
 
 /* =========================
-   HELPERS
+   REALTIME
 ========================= */
 
-function recarregar(){
-  init();
-}
+sb.channel("cotacoes_realtime")
+
+.on(
+  "postgres_changes",
+  {
+    event:"UPDATE",
+    schema:"public",
+    table:"cotacoes"
+  },
+  payload => {
+
+    carregarCotacoes();
+
+    if(
+      cotacaoAtual &&
+      payload.new.id === cotacaoAtual.id
+    ){
+
+      cotacaoAtual =
+        payload.new;
+
+      abrirCotacao(
+        cotacaoAtual
+      );
+
+    }
+
+  }
+)
+
+.subscribe();
+
+/* =========================
+   HELPERS
+========================= */
 
 function formatarData(data){
 
