@@ -589,9 +589,49 @@ function abrirCotacao(c){
 
       <div>
 
-        <h2>
-          ${c.nome}
-        </h2>
+<div style="
+  display:flex;
+  align-items:center;
+  gap:10px;
+">
+
+  <h2
+    id="tituloCotacao"
+    style="
+      margin:0;
+    ">
+
+    ${c.nome}
+
+  </h2>
+
+  <button
+
+    onclick="
+      editarNomeCotacao(
+        '${c.id}',
+        \`${c.nome}\`
+      )
+    "
+
+    style="
+      border:none;
+      background:#f3f4f6;
+      width:34px;
+      height:34px;
+      border-radius:8px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+    ">
+
+    ✏️
+
+  </button>
+
+</div>
 
         <small>
           ${formatarData(c.data_cotacao)}
@@ -1158,6 +1198,73 @@ sb.channel("cotacoes_realtime")
 
 .subscribe();
 
+
+
+
+
+async function editarNomeCotacao(
+  id,
+  nomeAtual
+){
+
+  const novoNome = prompt(
+    "Editar nome da cotação:",
+    nomeAtual
+  );
+
+  if(
+    !novoNome ||
+    !novoNome.trim()
+  ){
+    return;
+  }
+
+  overlay(true);
+
+  const { error } = await sb
+
+    .from("cotacoes")
+
+    .update({
+
+      nome:novoNome.trim(),
+      atualizado_em:new Date()
+
+    })
+
+    .eq("id", id);
+
+  overlay(false);
+
+  if(error){
+
+    console.log(error);
+
+    alert(
+      "Erro ao atualizar"
+    );
+
+    return;
+  }
+
+  cotacaoAtual.nome =
+    novoNome.trim();
+
+  carregarCotacoes();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+  
 </script>
 
 </body>
