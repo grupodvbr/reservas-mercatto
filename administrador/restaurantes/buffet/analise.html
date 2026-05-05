@@ -2026,8 +2026,8 @@ async function gerarPDFGeralEmpresas(){
 
     pdf.text(`Vendido: ${vendido.toFixed(3)} KG`, 12, y);
     pdf.text(`Valor vendido: ${moeda(valorVendido)}`, 75, y);
-    pdf.text(`Perdas: ${moeda(valorRetirado + valorDesperdicio)}`, 135, y);
-
+pdf.text(`Perdas: ${moeda(valorDesperdicio)}`, 135, y);
+    
     y += 12;
 
     // ================= RESUMO POR PRATO =================
