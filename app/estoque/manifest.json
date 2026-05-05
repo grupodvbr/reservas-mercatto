@@ -1,21 +1,50 @@
 {
-  "name": "Contagem de Estoque",
+  "name": "Contagem de Estoque Mercatto",
   "short_name": "Estoque",
-  "start_url": "./contagem_do_estoque.html",
+  "description": "Sistema PWA para contagem de estoque do Mercatto Delícia",
+  "start_url": "./contagem_de_estoque.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f3f4f6",
   "theme_color": "#ff6a00",
-  "orientation": "portrait",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "icons": [
     {
-      "src": "icon-192-2.png",
+      "src": "./icon-192-2.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-512-2.png",
+      "src": "./icon-512-2.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Abrir Estoque",
+      "short_name": "Estoque",
+      "description": "Abrir sistema de contagem",
+      "url": "./contagem_de_estoque.html",
+      "icons": [
+        {
+          "src": "./icon-192-2.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
