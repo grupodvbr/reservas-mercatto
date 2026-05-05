@@ -137,13 +137,14 @@ th,td{
 
 @media(max-width: 899px){
 
-  th:nth-child(1), td:nth-child(1){ width:30% }
-  th:nth-child(2), td:nth-child(2){ width:10% }
-  th:nth-child(3), td:nth-child(3){ width:10% }
-  th:nth-child(4), td:nth-child(4){ width:12% }
-  th:nth-child(5), td:nth-child(5){ width:10% }
-  th:nth-child(6), td:nth-child(6){ width:8% }
-  th:nth-child(7), td:nth-child(7){ width:10% }
+th:nth-child(1), td:nth-child(1){ width:28% }
+th:nth-child(2), td:nth-child(2){ width:9% }
+th:nth-child(3), td:nth-child(3){ width:9% }   /* EMPÓRIO */
+th:nth-child(4), td:nth-child(4){ width:9% }
+th:nth-child(5), td:nth-child(5){ width:11% }
+th:nth-child(6), td:nth-child(6){ width:9% }
+th:nth-child(7), td:nth-child(7){ width:7% }
+th:nth-child(8), td:nth-child(8){ width:8% }
 
   .title{font-size:18px}
   .sub{font-size:12px}
@@ -390,7 +391,9 @@ html, body {
         <tr>
           <th>Prato</th>
           <th>Montado</th>
+          <th>Empório</th> <!-- 🔥 NOVO -->
           <th>Reposto</th>
+          
           <th>Total</th>
 <th>Retirado</th>
 <th>% Ret.</th>
@@ -613,12 +616,15 @@ const total = v.MONTAGEM + v.EMPORIO + v.REPOSICAO;
             : `<b>${nome}</b>`
         }
       </td>
+<td>${v.MONTAGEM.toFixed(2)} ${v.UNIDADE}</td>
 
-      <td>${v.MONTAGEM.toFixed(2)} ${v.UNIDADE}</td>
+<td style="color:#2563eb;font-weight:800">
+  ${v.EMPORIO.toFixed(2)} ${v.UNIDADE}
+</td>
 
-      <td>${v.REPOSICAO.toFixed(2)} ${v.UNIDADE}</td>
+<td>${v.REPOSICAO.toFixed(2)} ${v.UNIDADE}</td>
 
-      <td><b>${total.toFixed(2)} ${v.UNIDADE}</b></td>
+<td><b>${total.toFixed(2)} ${v.UNIDADE}</b></td>
 
       <td>
         ${
@@ -889,8 +895,9 @@ const total = v.MONTAGEM + v.EMPORIO + v.REPOSICAO;
         "Data Inicial": rangeSelecionado[0],
         "Data Final": rangeSelecionado[1],
         Prato: nome,
-        Montado: v.MONTAGEM,
-        Reposto: v.REPOSICAO,
+Montado: v.MONTAGEM,
+Emporio: v.EMPORIO, // 🔥 NOVO
+Reposto: v.REPOSICAO,
         Total: total,
         Retirado: v.RETIRADA,
         "% Retirada": Number(percentualRetirada.toFixed(1)),
