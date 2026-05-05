@@ -418,7 +418,7 @@ const empresaSelect = document.getElementById("empresaSelect");
 const searchPrato = document.getElementById("searchPrato");
 const hoje = new Date();
 const seteDiasAtras = new Date(hoje.getTime() - 6*24*60*60*1000);
-
+const PRECO_KG = 104.90;
 function toBR(date){
   return date.toLocaleDateString('en-CA', {
     timeZone: 'America/Bahia'
@@ -1273,8 +1273,18 @@ async function abrirResumoTotalRetirada(){
           margin-bottom:6px
         ">
           <span>📍 ${destino}</span>
-          <span>${info.total.toFixed(3)} KG</span>
-        </div>
+<span>
+  ${info.total.toFixed(3)} KG
+  <br>
+  <b style="color:#16a34a">
+    ${(info.total * PRECO_KG).toLocaleString("pt-BR", {
+      style:"currency",
+      currency:"BRL"
+    })}
+  </b>
+</span>
+
+</div>
 
         ${
           Object.entries(info.itens)
@@ -1288,8 +1298,18 @@ async function abrirResumoTotalRetirada(){
                 border-bottom:1px dashed #f1f5f9
               ">
                 <span>${prato}</span>
-                <span>${kg.toFixed(3)} KG</span>
-              </div>
+<span>
+  ${kg.toFixed(3)} KG
+  <br>
+  <small style="color:#64748b">
+    ${(kg * PRECO_KG).toLocaleString("pt-BR", {
+      style:"currency",
+      currency:"BRL"
+    })}
+  </small>
+</span>
+
+</div>
             `).join("")
         }
       </div>
