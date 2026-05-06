@@ -333,21 +333,29 @@ TABELA
 
 <script>
 
-/* =========================
+/* =====================================================
 SUPABASE
-========================= */
+===================================================== */
 
-const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
-const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+const SUPABASE_URL =
+"https://dxkszikemntfusfyrzos.supabase.co";
 
-const supabase = window.supabase.createClient(
+const SUPABASE_KEY =
+"sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+
+/* =====================================================
+NUNCA USE "const supabase"
+PORQUE O CDN JÁ USA ESSE NOME
+===================================================== */
+
+const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-/* =========================
+/* =====================================================
 CONFIG
-========================= */
+===================================================== */
 
 const PAGE_SIZE = 50;
 
@@ -355,74 +363,125 @@ let pagina = 0;
 let carregando = false;
 let acabou = false;
 
-let saldoAtual = 0;
+/* =====================================================
+ELEMENTOS
+===================================================== */
 
-/* =========================
-FORMATOS
-========================= */
+const tbody =
+document.getElementById('tbody');
 
-function moeda(v){
+const loading =
+document.getElementById('loading');
 
-  return Number(v || 0).toLocaleString('pt-BR',{
+const scrollContainer =
+document.getElementById('scrollContainer');
+
+/* =====================================================
+DATA AUTOMÁTICA
+===================================================== */
+
+document.getElementById('data_movimento').value =
+new Date().toISOString().split('T')[0];
+
+/* =====================================================
+FORMATA MOEDA
+===================================================== */
+
+function moeda(valor){
+
+  return Number(valor || 0)
+  .toLocaleString('pt-BR',{
+
     style:'currency',
     currency:'BRL'
+
   });
 
 }
+
+/* =====================================================
+FORMATA DATA
+===================================================== */
 
 function formatarData(data){
 
   if(!data) return '-';
 
-  return new Date(data).toLocaleDateString('pt-BR',{
+  return new Date(data)
+  .toLocaleDateString('pt-BR',{
+
     timeZone:'America/Bahia'
+
   });
 
 }
 
-/* =========================
-DATA PADRÃO
-========================= */
-
-document.getElementById('data_movimento').value =
-new Date().toISOString().split('T')[0];
-
-/* =========================
+/* =====================================================
 CARREGAR RESUMO
-========================= */
+===================================================== */
 
 async function carregarResumo(){
 
-  const { data } = await supabase
-  .from('livros_caixa')
-  .select('tipo,valor');
+  try{
 
-  let entradas = 0;
-  let saidas = 0;
+    const { data, error } =
+    await supabaseClient
+    .from('livros_caixa')
+    .select('tipo,valor');
 
-  data?.forEach(item=>{
+    if(error){
 
-    if(item.tipo === 'entrada'){
-      entradas += Number(item.valor || 0);
-    }else{
-      saidas += Number(item.valor || 0);
+      console.error(error);
+      return;
+
     }
 
-  });
+    let entradas = 0;
+    let saidas = 0;
 
-  const saldo = entradas - saidas;
+    data.forEach(item=>{
 
-  document.getElementById('totalEntradas').innerHTML = moeda(entradas);
-  document.getElementById('totalSaidas').innerHTML = moeda(saidas);
-  document.getElementById('saldoLoja').innerHTML = moeda(saldo);
-  document.getElementById('totalMovimentado').innerHTML =
-  moeda(entradas + saidas);
+      if(item.tipo === 'entrada'){
+
+        entradas += Number(item.valor || 0);
+
+      }else{
+
+        saidas += Number(item.valor || 0);
+
+      }
+
+    });
+
+    const saldo = entradas - saidas;
+
+    document.getElementById('saldoImplantacao')
+    .innerHTML = moeda(1038.06);
+
+    document.getElementById('totalEntradas')
+    .innerHTML = moeda(entradas);
+
+    document.getElementById('totalSaidas')
+    .innerHTML = moeda(saidas);
+
+    document.getElementById('saldoLoja')
+    .innerHTML = moeda(saldo);
+
+    document.getElementById('totalMovimentado')
+    .innerHTML =
+    `${moeda(entradas)} / ${moeda(saidas)}`;
+
+  }catch(err){
+
+    console.error(err);
+
+  }
 
 }
 
-/* =========================
+/* =====================================================
 CARREGAR REGISTROS
-========================= */
+===================================================== */
 
 async function carregarRegistros(){
 
@@ -430,56 +489,80 @@ async function carregarRegistros(){
 
   carregando = true;
 
-  document.getElementById('loading').style.display = 'block';
+  loading.style.display = 'block';
 
-  const inicio = pagina * PAGE_SIZE;
-  const fim = inicio + PAGE_SIZE - 1;
+  try{
 
-  const { data, error } = await supabase
-  .from('livros_caixa')
-  .select('*')
-  .order('created_at',{ ascending:false })
-  .range(inicio,fim);
+    const inicio = pagina * PAGE_SIZE;
 
-  if(error){
-    console.error(error);
+    const fim =
+    inicio + PAGE_SIZE - 1;
+
+    const { data, error } =
+    await supabaseClient
+    .from('livros_caixa')
+    .select('*')
+    .order('created_at',{
+
+      ascending:false
+
+    })
+    .range(inicio,fim);
+
+    if(error){
+
+      console.error(error);
+
+      carregando = false;
+
+      return;
+
+    }
+
+    if(!data.length){
+
+      acabou = true;
+
+      loading.innerHTML =
+      'Fim dos registros';
+
+      return;
+
+    }
+
+    renderizar(data);
+
+    pagina++;
+
     carregando = false;
-    return;
+
+    loading.style.display = 'none';
+
+  }catch(err){
+
+    console.error(err);
+
+    carregando = false;
+
   }
-
-  if(!data.length){
-    acabou = true;
-    document.getElementById('loading').innerHTML =
-    'Fim dos registros';
-    return;
-  }
-
-  renderizar(data);
-
-  pagina++;
-
-  carregando = false;
-
-  document.getElementById('loading').style.display = 'none';
 
 }
 
-/* =========================
-RENDER
-========================= */
+/* =====================================================
+RENDERIZAR
+===================================================== */
 
 function renderizar(lista){
 
-  const tbody = document.getElementById('tbody');
-
   lista.forEach(item=>{
 
-    const tr = document.createElement('tr');
+    const tr =
+    document.createElement('tr');
 
     tr.innerHTML = `
 
       <td class="center">
-        ${formatarData(item.created_at)}
+        ${formatarData(item.data_registro)}
       </td>
 
       <td class="center">
@@ -534,146 +617,260 @@ function renderizar(lista){
 
 }
 
-/* =========================
-SALVAR
-========================= */
+/* =====================================================
+SALVAR REGISTRO
+===================================================== */
 
 async function salvarRegistro(){
 
-  const data_movimento =
-  document.getElementById('data_movimento').value;
+  try{
 
-  const historico =
-  document.getElementById('historico').value;
+    const data_movimento =
+    document.getElementById(
+      'data_movimento'
+    ).value;
 
-  const complemento =
-  document.getElementById('complemento').value;
+    const historico =
+    document.getElementById(
+      'historico'
+    ).value.trim();
 
-  const tipo =
-  document.getElementById('tipo').value;
+    const complemento =
+    document.getElementById(
+      'complemento'
+    ).value.trim();
 
-  const valor =
-  Number(document.getElementById('valor').value || 0);
+    const tipo =
+    document.getElementById(
+      'tipo'
+    ).value;
 
-  const empresa =
-  document.getElementById('empresa').value;
+    const valor =
+    Number(
+      document.getElementById(
+        'valor'
+      ).value || 0
+    );
 
-  if(!historico || !valor){
+    const empresa =
+    document.getElementById(
+      'empresa'
+    ).value;
 
-    alert('Preencha os campos.');
+    /* =========================
+    VALIDAÇÃO
+    ========================= */
 
-    return;
+    if(!historico){
+
+      alert('Informe o histórico');
+      return;
+
+    }
+
+    if(valor <= 0){
+
+      alert('Informe um valor válido');
+      return;
+
+    }
+
+    /* =========================
+    PEGA ÚLTIMO SALDO
+    ========================= */
+
+    const { data: ultimo } =
+    await supabaseClient
+    .from('livros_caixa')
+    .select('saldo')
+    .order('created_at',{
+
+      ascending:false
+
+    })
+    .limit(1)
+    .maybeSingle();
+
+    const saldoAnterior =
+    Number(ultimo?.saldo || 0);
+
+    /* =========================
+    CALCULA
+    ========================= */
+
+    let novoSaldo = 0;
+
+    if(tipo === 'entrada'){
+
+      novoSaldo =
+      saldoAnterior + valor;
+
+    }else{
+
+      novoSaldo =
+      saldoAnterior - valor;
+
+    }
+
+    /* =========================
+    INSERT
+    ========================= */
+
+    const { error } =
+    await supabaseClient
+    .from('livros_caixa')
+    .insert({
+
+      empresa,
+      historico,
+      complemento,
+      tipo,
+      valor,
+
+      saldo:novoSaldo,
+
+      data_movimento,
+
+      data_registro:
+      new Date(),
+
+      created_at:
+      new Date()
+
+    });
+
+    if(error){
+
+      console.error(error);
+
+      alert(
+        'Erro ao salvar registro'
+      );
+
+      return;
+
+    }
+
+    /* =========================
+    LIMPAR
+    ========================= */
+
+    document.getElementById(
+      'historico'
+    ).value = '';
+
+    document.getElementById(
+      'complemento'
+    ).value = '';
+
+    document.getElementById(
+      'valor'
+    ).value = '';
+
+    /* =========================
+    RESET
+    ========================= */
+
+    tbody.innerHTML = '';
+
+    pagina = 0;
+
+    acabou = false;
+
+    /* =========================
+    RELOAD
+    ========================= */
+
+    await carregarResumo();
+
+    await carregarRegistros();
+
+  }catch(err){
+
+    console.error(err);
+
+    alert('Erro inesperado');
+
   }
-
-  /* =========================
-  PEGA ÚLTIMO SALDO
-  ========================= */
-
-  const { data: ultimo } = await supabase
-  .from('livros_caixa')
-  .select('saldo')
-  .order('created_at',{ ascending:false })
-  .limit(1)
-  .single();
-
-  let saldoAnterior = Number(ultimo?.saldo || 0);
-
-  let novoSaldo = 0;
-
-  if(tipo === 'entrada'){
-    novoSaldo = saldoAnterior + valor;
-  }else{
-    novoSaldo = saldoAnterior - valor;
-  }
-
-  /* =========================
-  INSERT
-  ========================= */
-
-  const { error } = await supabase
-  .from('livros_caixa')
-  .insert({
-
-    empresa,
-    historico,
-    complemento,
-    tipo,
-    valor,
-
-    saldo:novoSaldo,
-
-    data_movimento,
-
-    data_registro:new Date(),
-
-    created_at:new Date()
-
-  });
-
-  if(error){
-
-    console.error(error);
-
-    alert('Erro ao salvar');
-
-    return;
-  }
-
-  /* =========================
-  LIMPA
-  ========================= */
-
-  document.getElementById('historico').value = '';
-  document.getElementById('complemento').value = '';
-  document.getElementById('valor').value = '';
-
-  /* =========================
-  RELOAD
-  ========================= */
-
-  document.getElementById('tbody').innerHTML = '';
-
-  pagina = 0;
-  acabou = false;
-
-  await carregarResumo();
-  await carregarRegistros();
 
 }
 
-/* =========================
+/* =====================================================
 SCROLL INFINITO
-========================= */
+===================================================== */
 
-document
-.getElementById('scrollContainer')
-.addEventListener('scroll',async function(){
+scrollContainer
+.addEventListener(
+'scroll',
+
+async function(){
 
   const el = this;
 
   if(
-    el.scrollTop + el.clientHeight >=
+
+    el.scrollTop +
+    el.clientHeight >=
+
     el.scrollHeight - 300
+
   ){
 
-    carregarRegistros();
+    await carregarRegistros();
 
   }
 
 });
 
-/* =========================
+/* =====================================================
+REALTIME
+===================================================== */
+
+supabaseClient
+.channel('livro_caixa_realtime')
+
+.on(
+
+  'postgres_changes',
+
+  {
+
+    event:'INSERT',
+    schema:'public',
+    table:'livros_caixa'
+
+  },
+
+  async ()=>{
+
+    tbody.innerHTML = '';
+
+    pagina = 0;
+
+    acabou = false;
+
+    await carregarResumo();
+
+    await carregarRegistros();
+
+  }
+
+)
+
+.subscribe();
+
+/* =====================================================
 INIT
-========================= */
+===================================================== */
 
 (async()=>{
 
   await carregarResumo();
+
   await carregarRegistros();
 
 })();
 
 </script>
-
 </body>
 </html>
