@@ -327,6 +327,18 @@ tr:hover td{
   background:#fff;
 }
 
+/* ================= MENOR PREÇO ================= */
+
+.input.melhor-preco{
+  background:#dcfce7;
+  border:2px solid #22c55e;
+  color:#166534;
+  font-weight:800;
+}
+
+
+
+  
 textarea.input{
   min-height:38px;
   resize:vertical;
@@ -581,6 +593,60 @@ function renderCotacoes(arr){
 
 }
 
+function calcularMelhoresPrecos(itensCotacao){
+
+  const melhores = {};
+
+  itensCotacao.forEach(item => {
+
+    let menor = null;
+
+    (item.fornecedores || []).forEach(f => {
+
+      const preco =
+        Number(f.preco_unitario || 0);
+
+      const emb =
+        Number(
+          f.quantidade_embalagem || 1
+        );
+
+      if(!preco) return;
+
+      const precoConvertido =
+        preco / emb;
+
+      if(
+        menor === null ||
+        precoConvertido < menor
+      ){
+        menor = precoConvertido;
+      }
+
+    });
+
+    melhores[item.produto] = menor;
+
+  });
+
+  return melhores;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
 /* ================= ABRIR ================= */
 
 function abrirCotacao(c){
@@ -598,6 +664,83 @@ function abrirCotacao(c){
   const itensCotacao =
     c.itens_cotacao || [];
 
+
+
+
+
+const melhoresPrecos =
+  calcularMelhoresPrecos(
+    itensCotacao
+  );
+
+const totaisFornecedor = {};
+
+itensCotacao.forEach(item => {
+
+  (item.fornecedores || [])
+  .forEach(f => {
+
+    const preco =
+      Number(f.preco_unitario || 0);
+
+    const emb =
+      Number(
+        f.quantidade_embalagem || 1
+      );
+
+    if(!preco) return;
+
+    const precoConvertido =
+      preco / emb;
+
+    if(
+      precoConvertido ===
+      melhoresPrecos[item.produto]
+    ){
+
+      const qtd =
+        Number(
+          item.qtd_solicitada || 0
+        );
+
+      const total =
+        precoConvertido * qtd;
+
+      if(
+        !totaisFornecedor[
+          f.fornecedor_id
+        ]
+      ){
+
+        totaisFornecedor[
+          f.fornecedor_id
+        ] = {
+
+          nome:
+            f.fornecedor_nome,
+
+          total:0
+
+        };
+
+      }
+
+      totaisFornecedor[
+        f.fornecedor_id
+      ].total += total;
+
+    }
+
+  });
+
+});
+
+
+
+
+
+
+  
   /* ================= FORNECEDORES GERAIS ================= */
 
   let fornecedoresSelecionados = [];
@@ -835,6 +978,97 @@ function abrirCotacao(c){
 
     
     </div>
+
+
+
+
+
+<!-- CARDS -->
+
+<div style="
+  display:flex;
+  gap:12px;
+  padding:14px;
+  overflow:auto;
+  border-top:1px solid #e5e7eb;
+  border-bottom:1px solid #e5e7eb;
+  background:#fff;
+">
+
+${Object.values(
+  totaisFornecedor
+).map(f=>`
+
+  <div style="
+    min-width:220px;
+    background:#f8fafc;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:14px;
+    box-shadow:
+      0 4px 12px rgba(0,0,0,.04);
+  ">
+
+    <div style="
+      font-size:11px;
+      color:#64748b;
+      margin-bottom:6px;
+      font-weight:700;
+      text-transform:uppercase;
+    ">
+
+      Melhor fornecedor
+
+    </div>
+
+    <div style="
+      font-size:15px;
+      font-weight:800;
+      margin-bottom:10px;
+    ">
+
+      ${f.nome}
+
+    </div>
+
+    <div style="
+      font-size:24px;
+      font-weight:900;
+      color:#16a34a;
+    ">
+
+      R$
+      ${f.total.toLocaleString(
+        'pt-BR',
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      )}
+
+    </div>
+
+  </div>
+
+`).join("")}
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- TABELA -->
 
@@ -1083,7 +1317,23 @@ ${
 <!-- VALOR -->
 
 <input
-  class="input"
+  class="input ${
+    (
+      Number(
+        resposta.preco_unitario || 0
+      ) /
+      Number(
+        resposta.quantidade_embalagem || 1
+      )
+    ) ===
+    melhoresPrecos[item.produto]
+
+    ? 'melhor-preco'
+
+    : ''
+  }"
+
+  
 
   value="${
     resposta.preco_unitario
