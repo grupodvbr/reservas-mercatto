@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+
+<title>Livro Caixa • Mercatto Delícia</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+  --blue:#082b63;
+  --header:#d9d9d9;
+  --line:#000;
+  --green:#4CAF50;
+  --green2:#19a819;
+  --red:#ff2a2a;
+  --bg:#f4f4f4;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter',sans-serif;
+}
+
+body{
+  background:var(--bg);
+  overflow:hidden;
+}
+
+/* =========================
+HEADER FIXO
+========================= */
+
+.topo{
+  position:sticky;
+  top:0;
+  z-index:999;
+  background:white;
+  box-shadow:0 4px 20px rgba(0,0,0,.08);
+}
+
+.titulo{
+  background:var(--blue);
+  color:#fff;
+  text-align:center;
+  font-size:28px;
+  font-weight:800;
+  padding:14px;
+  letter-spacing:.5px;
+}
+
+.resumo{
+  display:grid;
+  grid-template-columns: 170px 220px 1fr 1fr 180px;
+  border-bottom:2px solid #000;
+}
+
+.resumo div{
+  border-right:1px solid #000;
+  border-bottom:1px solid #000;
+  padding:10px;
+  min-height:55px;
+  display:flex;
+  align-items:center;
+  font-size:16px;
+}
+
+.resumo .head{
+  background:#d9d9d9;
+  font-weight:800;
+  justify-content:center;
+}
+
+.resumo .empresa{
+  background:#ece0cf;
+  font-size:17px;
+}
+
+.resumo .saldo{
+  font-size:18px;
+}
+
+.resumo .saldo-loja{
+  background:#56b13f;
+  color:white;
+  justify-content:flex-end;
+  font-size:28px;
+  font-weight:800;
+}
+
+/* =========================
+TABELA
+========================= */
+
+.container{
+  height:calc(100vh - 165px);
+  overflow:auto;
+  background:white;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+thead{
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+
+thead th{
+  background:#d9d9d9;
+  border:1px solid #000;
+  padding:10px;
+  font-size:15px;
+  font-weight:800;
+  color:white;
+}
+
+tbody td{
+  border:1px solid #000;
+  padding:6px 8px;
+  font-size:15px;
+  background:#f7f7f7;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+tbody tr:nth-child(even) td{
+  background:#efefef;
+}
+
+.valor-entrada{
+  color:var(--green2);
+  font-weight:700;
+  text-align:right;
+}
+
+.valor-saida{
+  color:var(--red);
+  font-weight:700;
+  text-align:right;
+}
+
+.valor-saldo{
+  font-weight:800;
+  text-align:right;
+}
+
+td.center{
+  text-align:center;
+}
+
+/* =========================
+FORM
+========================= */
+
+.form-area{
+  background:#fff;
+  padding:14px;
+  display:grid;
+  grid-template-columns:
+  140px
+  140px
+  220px
+  220px
+  140px
+  140px
+  180px;
+  gap:10px;
+  border-bottom:2px solid #000;
+}
+
+.form-area input,
+.form-area select{
+  width:100%;
+  height:42px;
+  border:1px solid #ccc;
+  padding:0 12px;
+  font-size:14px;
+  outline:none;
+}
+
+.form-area button{
+  border:none;
+  background:var(--blue);
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+.loading{
+  text-align:center;
+  padding:20px;
+  font-weight:700;
+  color:#666;
+}
+
+@media(max-width:1200px){
+
+  .form-area{
+    grid-template-columns:1fr 1fr;
+  }
+
+}
+
+</style>
+</head>
+<body>
+
+<!-- =========================
+TOPO
+========================= -->
+
+<div class="topo">
+
+  <div class="titulo">
+    REGISTRO DE DINHEIRO MERCATTO DELÍCIA
+  </div>
+
+  <div class="resumo">
+
+    <div class="head">
+      EMPRESA
+    </div>
+
+    <div class="head">
+      Saldo na implantação
+    </div>
+
+    <div class="saldo" id="saldoImplantacao">
+      R$ 0,00
+    </div>
+
+    <div class="saldo" id="totalMovimentado">
+      R$ 0,00
+    </div>
+
+    <div class="saldo-loja" id="saldoLoja">
+      R$ 0,00
+    </div>
+
+    <div class="empresa">
+      Mercatto Delícia
+    </div>
+
+    <div class="head">
+      Totais (Entradas / Saídas)
+    </div>
+
+    <div class="saldo" id="totalEntradas">
+      R$ 0,00
+    </div>
+
+    <div class="saldo" id="totalSaidas">
+      R$ 0,00
+    </div>
+
+    <div class="head">
+      SALDO NA LOJA
+    </div>
+
+  </div>
+
+  <!-- =========================
+  FORM
+  ========================= -->
+
+  <div class="form-area">
+
+    <input type="date" id="data_movimento">
+
+    <select id="tipo">
+      <option value="entrada">ENTRADA</option>
+      <option value="saida">SAÍDA</option>
+    </select>
+
+    <input type="text" id="historico" placeholder="Histórico">
+
+    <input type="text" id="complemento" placeholder="Complemento">
+
+    <input type="number" id="valor" placeholder="Valor">
+
+    <input type="text" id="empresa" value="Mercatto Delícia">
+
+    <button onclick="salvarRegistro()">
+      SALVAR
+    </button>
+
+  </div>
+
+</div>
+
+<!-- =========================
+TABELA
+========================= -->
+
+<div class="container" id="scrollContainer">
+
+<table>
+
+<thead>
+<tr>
+  <th style="width:120px">Data Registro</th>
+  <th style="width:120px">Data Movimento</th>
+  <th>Histórico</th>
+  <th>Complemento</th>
+  <th style="width:180px">Entrada</th>
+  <th style="width:180px">Saída</th>
+  <th style="width:180px">Saldo</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+<div class="loading" id="loading">
+  Carregando registros...
+</div>
+
+</div>
+
+<script>
+
+/* =========================
+SUPABASE
+========================= */
+
+const SUPABASE_URL = "https://dxkszikemntfusfyrzos.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
+
+const supabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* =========================
+CONFIG
+========================= */
+
+const PAGE_SIZE = 50;
+
+let pagina = 0;
+let carregando = false;
+let acabou = false;
+
+let saldoAtual = 0;
+
+/* =========================
+FORMATOS
+========================= */
+
+function moeda(v){
+
+  return Number(v || 0).toLocaleString('pt-BR',{
+    style:'currency',
+    currency:'BRL'
+  });
+
+}
+
+function formatarData(data){
+
+  if(!data) return '-';
+
+  return new Date(data).toLocaleDateString('pt-BR',{
+    timeZone:'America/Bahia'
+  });
+
+}
+
+/* =========================
+DATA PADRÃO
+========================= */
+
+document.getElementById('data_movimento').value =
+new Date().toISOString().split('T')[0];
+
+/* =========================
+CARREGAR RESUMO
+========================= */
+
+async function carregarResumo(){
+
+  const { data } = await supabase
+  .from('livros_caixa')
+  .select('tipo,valor');
+
+  let entradas = 0;
+  let saidas = 0;
+
+  data?.forEach(item=>{
+
+    if(item.tipo === 'entrada'){
+      entradas += Number(item.valor || 0);
+    }else{
+      saidas += Number(item.valor || 0);
+    }
+
+  });
+
+  const saldo = entradas - saidas;
+
+  document.getElementById('totalEntradas').innerHTML = moeda(entradas);
+  document.getElementById('totalSaidas').innerHTML = moeda(saidas);
+  document.getElementById('saldoLoja').innerHTML = moeda(saldo);
+  document.getElementById('totalMovimentado').innerHTML =
+  moeda(entradas + saidas);
+
+}
+
+/* =========================
+CARREGAR REGISTROS
+========================= */
+
+async function carregarRegistros(){
+
+  if(carregando || acabou) return;
+
+  carregando = true;
+
+  document.getElementById('loading').style.display = 'block';
+
+  const inicio = pagina * PAGE_SIZE;
+  const fim = inicio + PAGE_SIZE - 1;
+
+  const { data, error } = await supabase
+  .from('livros_caixa')
+  .select('*')
+  .order('created_at',{ ascending:false })
+  .range(inicio,fim);
+
+  if(error){
+    console.error(error);
+    carregando = false;
+    return;
+  }
+
+  if(!data.length){
+    acabou = true;
+    document.getElementById('loading').innerHTML =
+    'Fim dos registros';
+    return;
+  }
+
+  renderizar(data);
+
+  pagina++;
+
+  carregando = false;
+
+  document.getElementById('loading').style.display = 'none';
+
+}
+
+/* =========================
+RENDER
+========================= */
+
+function renderizar(lista){
+
+  const tbody = document.getElementById('tbody');
+
+  lista.forEach(item=>{
+
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+
+      <td class="center">
+        ${formatarData(item.created_at)}
+      </td>
+
+      <td class="center">
+        ${formatarData(item.data_movimento)}
+      </td>
+
+      <td>
+        ${item.historico || ''}
+      </td>
+
+      <td>
+        ${item.complemento || ''}
+      </td>
+
+      <td class="${
+        item.tipo === 'entrada'
+        ? 'valor-entrada'
+        : ''
+      }">
+
+        ${
+          item.tipo === 'entrada'
+          ? moeda(item.valor)
+          : ''
+        }
+
+      </td>
+
+      <td class="${
+        item.tipo === 'saida'
+        ? 'valor-saida'
+        : ''
+      }">
+
+        ${
+          item.tipo === 'saida'
+          ? moeda(item.valor)
+          : ''
+        }
+
+      </td>
+
+      <td class="valor-saldo">
+        ${moeda(item.saldo)}
+      </td>
+
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+
+}
+
+/* =========================
+SALVAR
+========================= */
+
+async function salvarRegistro(){
+
+  const data_movimento =
+  document.getElementById('data_movimento').value;
+
+  const historico =
+  document.getElementById('historico').value;
+
+  const complemento =
+  document.getElementById('complemento').value;
+
+  const tipo =
+  document.getElementById('tipo').value;
+
+  const valor =
+  Number(document.getElementById('valor').value || 0);
+
+  const empresa =
+  document.getElementById('empresa').value;
+
+  if(!historico || !valor){
+
+    alert('Preencha os campos.');
+
+    return;
+  }
+
+  /* =========================
+  PEGA ÚLTIMO SALDO
+  ========================= */
+
+  const { data: ultimo } = await supabase
+  .from('livros_caixa')
+  .select('saldo')
+  .order('created_at',{ ascending:false })
+  .limit(1)
+  .single();
+
+  let saldoAnterior = Number(ultimo?.saldo || 0);
+
+  let novoSaldo = 0;
+
+  if(tipo === 'entrada'){
+    novoSaldo = saldoAnterior + valor;
+  }else{
+    novoSaldo = saldoAnterior - valor;
+  }
+
+  /* =========================
+  INSERT
+  ========================= */
+
+  const { error } = await supabase
+  .from('livros_caixa')
+  .insert({
+
+    empresa,
+    historico,
+    complemento,
+    tipo,
+    valor,
+
+    saldo:novoSaldo,
+
+    data_movimento,
+
+    data_registro:new Date(),
+
+    created_at:new Date()
+
+  });
+
+  if(error){
+
+    console.error(error);
+
+    alert('Erro ao salvar');
+
+    return;
+  }
+
+  /* =========================
+  LIMPA
+  ========================= */
+
+  document.getElementById('historico').value = '';
+  document.getElementById('complemento').value = '';
+  document.getElementById('valor').value = '';
+
+  /* =========================
+  RELOAD
+  ========================= */
+
+  document.getElementById('tbody').innerHTML = '';
+
+  pagina = 0;
+  acabou = false;
+
+  await carregarResumo();
+  await carregarRegistros();
+
+}
+
+/* =========================
+SCROLL INFINITO
+========================= */
+
+document
+.getElementById('scrollContainer')
+.addEventListener('scroll',async function(){
+
+  const el = this;
+
+  if(
+    el.scrollTop + el.clientHeight >=
+    el.scrollHeight - 300
+  ){
+
+    carregarRegistros();
+
+  }
+
+});
+
+/* =========================
+INIT
+========================= */
+
+(async()=>{
+
+  await carregarResumo();
+  await carregarRegistros();
+
+})();
+
+</script>
+
+</body>
+</html>
