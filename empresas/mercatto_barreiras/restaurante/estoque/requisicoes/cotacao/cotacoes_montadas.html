@@ -2048,7 +2048,16 @@ if(error){
 
 
 async function gerarResultadoCotacaoPDF(){
-const itensCotacao =
+
+if(cotacaoAtual.status !== 'FINALIZADA'){
+
+  alert(
+    'Só é possível gerar o resultado após finalizar a cotação.'
+  );
+
+  return;
+}
+  const itensCotacao =
   cotacaoAtual.itens_cotacao || [];
 
 const melhoresPrecos =
