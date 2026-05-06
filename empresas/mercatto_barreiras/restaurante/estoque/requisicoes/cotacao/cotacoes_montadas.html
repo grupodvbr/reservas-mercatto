@@ -677,6 +677,12 @@ const totaisFornecedor = {};
 
 itensCotacao.forEach(item => {
 
+  const melhorPrecoItem =
+    melhoresPrecos[item.produto];
+
+  if(!melhorPrecoItem)
+    return;
+
   (item.fornecedores || [])
   .forEach(f => {
 
@@ -690,12 +696,16 @@ itensCotacao.forEach(item => {
 
     if(!preco) return;
 
+    /* PREÇO REAL UNITÁRIO */
+
     const precoConvertido =
       preco / emb;
 
+    /* APENAS QUEM TEM O MELHOR PREÇO */
+
     if(
       precoConvertido ===
-      melhoresPrecos[item.produto]
+      melhorPrecoItem
     ){
 
       const qtd =
@@ -703,7 +713,9 @@ itensCotacao.forEach(item => {
           item.qtd_solicitada || 0
         );
 
-      const total =
+      /* TOTAL REAL DO ITEM */
+
+      const totalItem =
         precoConvertido * qtd;
 
       if(
@@ -719,23 +731,40 @@ itensCotacao.forEach(item => {
           nome:
             f.fornecedor_nome,
 
-          total:0
+          total:0,
 
+          itens:0,
+
+          produtos:[]
         };
 
       }
 
       totaisFornecedor[
         f.fornecedor_id
-      ].total += total;
+      ].total += totalItem;
+
+      totaisFornecedor[
+        f.fornecedor_id
+      ].itens += 1;
+
+      totaisFornecedor[
+        f.fornecedor_id
+      ].produtos.push({
+
+        produto:item.produto,
+
+        qtd,
+
+        valor:totalItem
+
+      });
 
     }
 
   });
 
 });
-
-
 
 
 
@@ -1009,7 +1038,7 @@ ${Object.values(
       0 4px 12px rgba(0,0,0,.04);
   ">
 
-    <div style="
+<div style="
       font-size:11px;
       color:#64748b;
       margin-bottom:6px;
@@ -1017,7 +1046,7 @@ ${Object.values(
       text-transform:uppercase;
     ">
 
-      Melhor fornecedor
+      Total com melhores preços
 
     </div>
 
@@ -1031,22 +1060,48 @@ ${Object.values(
 
     </div>
 
-    <div style="
-      font-size:24px;
-      font-weight:900;
-      color:#16a34a;
-    ">
 
-      R$
-      ${f.total.toLocaleString(
-        'pt-BR',
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      )}
 
-    </div>
+
+
+
+
+
+
+<div style="
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+">
+
+  <div style="
+    font-size:24px;
+    font-weight:900;
+    color:#16a34a;
+  ">
+
+    R$
+    ${f.total.toLocaleString(
+      'pt-BR',
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    )}
+
+  </div>
+
+  <div style="
+    font-size:12px;
+    color:#64748b;
+    font-weight:700;
+  ">
+
+    ${f.itens} itens vencedores
+
+  </div>
+
+</div>
 
   </div>
 
