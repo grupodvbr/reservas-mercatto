@@ -607,31 +607,85 @@ function abrirCotacao(c){
 
   </h2>
 
-  <button
 
-    onclick="
-      editarNomeCotacao(
-        '${c.id}',
-        \`${c.nome}\`
-      )
-    "
 
-    style="
-      border:none;
-      background:#f3f4f6;
-      width:34px;
-      height:34px;
-      border-radius:8px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:14px;
-    ">
 
-    ✏️
 
-  </button>
+
+
+  
+<button
+
+  onclick="
+    editarNomeCotacao(
+      '${c.id}',
+      \`${c.nome}\`
+    )
+  "
+
+  style="
+    border:none;
+    background:#f3f4f6;
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+  ">
+
+  ✏️
+
+</button>
+
+<button
+
+  onclick="
+    alterarStatusCotacao(
+      '${c.id}',
+      '${
+        c.status === 'FINALIZADA'
+          ? 'ABERTA'
+          : 'FINALIZADA'
+      }'
+    )
+  "
+
+  style="
+    border:none;
+    background:${
+      c.status === 'FINALIZADA'
+        ? '#dcfce7'
+        : '#111827'
+    };
+    color:${
+      c.status === 'FINALIZADA'
+        ? '#166534'
+        : '#fff'
+    };
+    padding:0 14px;
+    height:34px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:800;
+  ">
+
+  ${
+    c.status === 'FINALIZADA'
+      ? 'REABRIR'
+      : 'FINALIZAR'
+  }
+
+</button>
+
+
+
 
 </div>
 
@@ -1424,7 +1478,50 @@ async function editarNomeCotacao(
 
 }
 
+async function alterarStatusCotacao(
+  id,
+  status
+){
 
+  const confirmar = confirm(
+
+    status === 'FINALIZADA'
+
+      ? 'Deseja finalizar esta cotação?'
+
+      : 'Deseja reabrir esta cotação?'
+  );
+
+  if(!confirmar) return;
+
+  overlay(true);
+
+  const { error } = await sb
+
+    .from('cotacoes')
+
+    .update({
+
+      status,
+      atualizado_em:new Date()
+
+    })
+
+    .eq('id', id);
+
+  overlay(false);
+
+  if(error){
+
+    console.log(error);
+
+    alert('Erro ao alterar status');
+
+    return;
+  }
+
+  carregarCotacoes();
+}
 
 
 
