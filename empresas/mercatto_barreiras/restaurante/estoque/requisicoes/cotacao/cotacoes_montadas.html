@@ -812,11 +812,23 @@ fornecedores:[]
 
                 </td>
 
-                <!-- QTD -->
 
 
 
-<td>
+
+
+
+
+
+
+
+
+
+
+
+                
+
+<!-- QTD -->
 
 <td>
 
@@ -857,7 +869,11 @@ fornecedores:[]
     <!-- CONVERSÃO -->
 
     ${
-      Number(item.qtd_unidades || 1) > 1
+      Number(
+        item.qtd_unidades ||
+        item.quantidade_embalagem ||
+        1
+      ) > 1
 
       ? `
 
@@ -868,7 +884,12 @@ fornecedores:[]
       ">
 
         Caixa com
-        <b>${item.qtd_unidades}</b>
+        <b>
+          ${
+            item.qtd_unidades ||
+            item.quantidade_embalagem
+          }
+        </b>
         unidades
 
       </small>
@@ -892,6 +913,22 @@ fornecedores:[]
   </div>
 
 </td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 <!-- ULTIMO -->
 
                 <td>
@@ -1123,10 +1160,12 @@ itemCotado = {
     item.unidade_uso ||
     "UN",
 
-  qtd_unidades:
-    Number(
-      item.qtd_unidades || 1
-    ),
+qtd_unidades:
+  Number(
+    item.qtd_unidades ||
+    item.quantidade_embalagem ||
+    1
+  ),
 
   fornecedores:[]
 
