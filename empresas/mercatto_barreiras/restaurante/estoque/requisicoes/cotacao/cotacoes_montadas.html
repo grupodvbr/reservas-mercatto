@@ -1966,14 +1966,37 @@ async function excluirCotacao(id){
 
   overlay(false);
 
-  if(error){
 
-    console.log(error);
 
-    alert('Erro ao excluir cotação');
 
-    return;
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+if(error){
+
+  console.log(error);
+
+  alert(
+    JSON.stringify(error)
+  );
+
+  return;
+}
+
+
+
+  
 
   cotacaoAtual = null;
 
