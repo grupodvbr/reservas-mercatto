@@ -119,11 +119,11 @@ RESUMO
   display:grid;
 
   grid-template-columns:
-  220px
+  280px
   1fr
   1fr
   1fr
-  260px;
+  300px;
 
   border-bottom:1px solid var(--border);
 
@@ -131,7 +131,7 @@ RESUMO
 
 .resumo div{
 
-  min-height:78px;
+  min-height:96px;
 
   border-right:1px solid var(--border);
   border-bottom:1px solid var(--border);
@@ -168,11 +168,23 @@ RESUMO
 
   background:#faf7f2 !important;
 
-  font-size:24px;
+  font-size:34px;
 
   font-weight:800;
 
   color:var(--text);
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  align-items:flex-start !important;
+
+  justify-content:center;
+
+  line-height:1;
 
 }
 
