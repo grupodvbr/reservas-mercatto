@@ -172,7 +172,7 @@ th:first-child{
 }
 
 .search-bar input[type="number"]{
-  width:90px;
+  width:110px;
 }
 
 .search-bar select{
@@ -198,7 +198,20 @@ th:first-child{
 <div class="search-bar">
 
 <input id="busca" placeholder="🔍 Buscar produto...">
-<input id="qtdAdd" type="number" value="1">
+<input
+  id="qtdAdd"
+  type="number"
+  value="1"
+>
+
+<input
+  id="qtdUnidades"
+  type="number"
+  value="1"
+  min="1"
+  placeholder="Qtd Emb."
+  title="Quantidade por embalagem"
+>
 
 <select id="unidadeSelect">
   <option value="UN">UN</option>
@@ -365,7 +378,12 @@ const novo = {
   ...produtoSelecionado,
   comprar: qtd,
   unidade_uso: document.getElementById("unidadeSelect").value,
-  qtd_unidades: produtoSelecionado.qtd_unidades || 1,
+qtd_unidades: Number(
+  document.getElementById(
+    "qtdUnidades"
+  ).value || 1
+),
+  
   preco: produtoSelecionado.preco || null
 };
 
@@ -388,7 +406,9 @@ qtd_unidades: novo.qtd_unidades
 produtoSelecionado = null;
 busca.value = "";
 qtdAdd.value = "";
-
+document.getElementById(
+  "qtdUnidades"
+).value = 1;
 render();
 }
 
@@ -476,14 +496,34 @@ async function salvar(){
   const nome = prompt("Nome da cotação:");
   if(!nome) return;
 
-  const itens = selecionados.map(d=>({
-    produto: d.produto,
-    comprar: d.comprar,
-    atual: d.saldo,
-    minimo: d.estoque_minimo,
-    ideal: d.estoque_ideal,
-    resultado: d.saldo + d.comprar
-  }));
+
+
+const itens = selecionados.map(d=>({
+
+  produto: d.produto,
+
+  comprar: Number(d.comprar || 0),
+
+  atual: Number(d.saldo || 0),
+
+  minimo: Number(d.estoque_minimo || 0),
+
+  ideal: Number(d.estoque_ideal || 0),
+
+  resultado:
+    Number(d.saldo || 0) +
+    Number(d.comprar || 0),
+
+  unidade:
+    d.unidade_uso || "UN",
+
+  qtd_unidades:
+    Number(d.qtd_unidades || 1),
+
+  preco:
+    d.preco || null
+
+}));
 
   await sb.from("cotacoes").insert([{
     nome,
