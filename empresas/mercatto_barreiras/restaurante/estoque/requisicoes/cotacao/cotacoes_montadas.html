@@ -899,10 +899,41 @@ itensCotacao.forEach(item => {
       : 'FINALIZAR'
   }
 
+
+
+
+
+
+
+
 </button>
 
+<button
 
+  onclick="
+    excluirCotacao(
+      '${c.id}'
+    )
+  "
 
+  style="
+    border:none;
+    background:#fee2e2;
+    color:#b91c1c;
+    padding:0 14px;
+    height:34px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:800;
+  ">
+
+  EXCLUIR
+
+</button>
 
 </div>
 
@@ -911,6 +942,33 @@ itensCotacao.forEach(item => {
         </small>
 
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     </div>
 
@@ -1888,7 +1946,49 @@ async function alterarStatusCotacao(
 }
 
 
+async function excluirCotacao(id){
 
+  const confirmar = confirm(
+    'Deseja realmente excluir esta cotação?'
+  );
+
+  if(!confirmar) return;
+
+  overlay(true);
+
+  const { error } = await sb
+
+    .from('cotacoes')
+
+    .delete()
+
+    .eq('id', id);
+
+  overlay(false);
+
+  if(error){
+
+    console.log(error);
+
+    alert('Erro ao excluir cotação');
+
+    return;
+  }
+
+  cotacaoAtual = null;
+
+  document.getElementById(
+    'detalhes'
+  ).innerHTML = `
+
+    <div class="empty">
+      Selecione uma cotação
+    </div>
+
+  `;
+
+  carregarCotacoes();
+}
 
 
 
