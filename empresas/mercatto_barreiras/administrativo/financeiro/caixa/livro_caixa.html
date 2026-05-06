@@ -2,12 +2,33 @@
 <html lang="pt-BR">
 <head>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta charset="UTF-8"/>
 
-<title>Livro Caixa • Mercatto Delícia</title>
+<meta
+name="viewport"
+content="
+width=device-width,
+initial-scale=1.0,
+viewport-fit=cover
+"/>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<title>
+Livro Caixa • Mercatto Delícia
+</title>
+
+<!-- =====================================================
+FONT
+===================================================== -->
+
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+rel="stylesheet"
+/>
+
+<!-- =====================================================
+SUPABASE
+===================================================== -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -19,22 +40,22 @@ ROOT
 :root{
 
   --primary:#082b63;
-  --primary2:#0f3c88;
+  --primary2:#123f89;
 
-  --green:#1fa34a;
-  --green2:#2cbf59;
+  --green:#16a34a;
+  --green2:#22c55e;
 
-  --red:#ff3b30;
+  --red:#ef4444;
 
-  --bg:#f3f5f9;
+  --bg:#eef2f7;
 
   --card:#ffffff;
 
-  --line:#dfe3eb;
+  --line:#dfe5ee;
 
-  --text:#111827;
+  --text:#0f172a;
 
-  --muted:#6b7280;
+  --muted:#64748b;
 
   --shadow:
   0 10px 30px rgba(0,0,0,.06);
@@ -56,15 +77,21 @@ BASE
 
 html,
 body{
+
   width:100%;
   height:100%;
+
   overflow:hidden;
+
   background:var(--bg);
+
 }
 
 body{
+
   display:flex;
   flex-direction:column;
+
 }
 
 /* =====================================================
@@ -75,6 +102,7 @@ TOPO
 
   position:sticky;
   top:0;
+
   z-index:999;
 
   background:white;
@@ -84,7 +112,7 @@ TOPO
 }
 
 /* =====================================================
-TITULO
+HEADER
 ===================================================== */
 
 .titulo{
@@ -98,15 +126,15 @@ TITULO
 
   color:white;
 
+  padding:22px;
+
+  text-align:center;
+
   font-size:28px;
 
   font-weight:900;
 
   letter-spacing:.5px;
-
-  text-align:center;
-
-  padding:20px;
 
 }
 
@@ -119,65 +147,67 @@ RESUMO
   display:grid;
 
   grid-template-columns:
-  180px
-  220px
+  200px
   1fr
   1fr
-  220px;
-
-  border-bottom:1px solid var(--line);
+  1fr
+  260px;
 
 }
 
-.resumo div{
+.resumo-box{
 
-  min-height:68px;
+  border-right:
+  1px solid var(--line);
 
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
+  border-bottom:
+  1px solid var(--line);
+
+  padding:16px;
+
+  background:white;
+
+  min-height:82px;
 
   display:flex;
-  align-items:center;
-
-  padding:14px;
-
-  font-size:15px;
-
-}
-
-.resumo .head{
-
-  background:#eef2f7;
-
-  font-weight:800;
-
+  flex-direction:column;
   justify-content:center;
 
-  color:#374151;
-
 }
 
-.resumo .empresa{
+.resumo-label{
 
-  background:#f9f3ea;
+  color:var(--muted);
 
-  font-size:17px;
+  font-size:13px;
 
   font-weight:700;
 
-}
+  margin-bottom:8px;
 
-.resumo .saldo{
+  text-transform:uppercase;
 
-  font-size:22px;
-
-  font-weight:800;
-
-  color:#111827;
+  letter-spacing:.4px;
 
 }
 
-.resumo .saldo-loja{
+.resumo-valor{
+
+  font-size:28px;
+
+  font-weight:900;
+
+  color:var(--text);
+
+}
+
+.resumo-empresa{
+
+  background:#f9f4ec;
+
+}
+
+.resumo-saldo{
 
   background:
   linear-gradient(
@@ -186,13 +216,12 @@ RESUMO
     var(--green2)
   );
 
+}
+
+.resumo-saldo .resumo-label,
+.resumo-saldo .resumo-valor{
+
   color:white;
-
-  justify-content:flex-end;
-
-  font-size:30px;
-
-  font-weight:900;
 
 }
 
@@ -214,20 +243,14 @@ FORM
   150px
   2fr
   1.5fr
-  170px
+  180px
   220px
-  180px;
+  190px;
 
   gap:12px;
 
-  border-bottom:1px solid var(--line);
+  border-top:1px solid var(--line);
 
-  align-items:center;
-
-}
-
-.form-group{
-  position:relative;
 }
 
 .form-area input,
@@ -235,23 +258,23 @@ FORM
 
   width:100%;
 
-  height:52px;
+  height:54px;
 
-  border:1px solid #d1d5db;
+  border:1px solid #d7dde7;
 
   border-radius:14px;
 
+  background:#f8fafc;
+
   padding:0 16px;
 
-  background:#f9fafb;
+  outline:none;
 
   font-size:15px;
 
-  font-weight:500;
+  font-weight:600;
 
-  color:#111827;
-
-  outline:none;
+  color:var(--text);
 
   transition:.2s;
 
@@ -260,18 +283,26 @@ FORM
 .form-area input:focus,
 .form-area select:focus{
 
-  border-color:var(--primary);
-
   background:white;
+
+  border-color:var(--primary);
 
   box-shadow:
   0 0 0 4px rgba(8,43,99,.08);
 
 }
 
-.form-area button{
+.empresa-fixa{
 
-  height:52px;
+  background:#edf2f7 !important;
+
+  font-weight:800 !important;
+
+  cursor:not-allowed;
+
+}
+
+.btn-salvar{
 
   border:none;
 
@@ -288,7 +319,7 @@ FORM
 
   font-size:15px;
 
-  font-weight:800;
+  font-weight:900;
 
   cursor:pointer;
 
@@ -296,7 +327,7 @@ FORM
 
 }
 
-.form-area button:hover{
+.btn-salvar:hover{
 
   transform:translateY(-2px);
 
@@ -305,20 +336,8 @@ FORM
 
 }
 
-.empresa-fixa{
-
-  background:#eef2f7 !important;
-
-  font-weight:800 !important;
-
-  color:#374151 !important;
-
-  cursor:not-allowed;
-
-}
-
 /* =====================================================
-TABELA
+CONTAINER
 ===================================================== */
 
 .container{
@@ -331,6 +350,10 @@ TABELA
 
 }
 
+/* =====================================================
+TABELA
+===================================================== */
+
 table{
 
   width:100%;
@@ -342,7 +365,7 @@ table{
 }
 
 /* =====================================================
-THEAD
+HEAD
 ===================================================== */
 
 thead{
@@ -351,7 +374,7 @@ thead{
 
   top:0;
 
-  z-index:20;
+  z-index:50;
 
 }
 
@@ -368,41 +391,92 @@ thead th{
 
   padding:14px;
 
+  font-size:13px;
+
+  font-weight:900;
+
+  text-transform:uppercase;
+
+  letter-spacing:.4px;
+
+  color:#475569;
+
   text-align:left;
-
-  font-size:14px;
-
-  font-weight:800;
-
-  color:#374151;
 
 }
 
 /* =====================================================
-TBODY
+LINHA DIA
 ===================================================== */
 
-tbody tr{
+.linha-dia{
+
+  background:
+  linear-gradient(
+    90deg,
+    var(--primary),
+    var(--primary2)
+  );
+
+}
+
+.linha-dia td{
+
+  background:transparent !important;
+
+  color:white !important;
+
+  padding:18px 16px;
+
+  border-bottom:1px solid rgba(255,255,255,.08);
+
+  font-weight:900;
+
+}
+
+.titulo-dia{
+
+  font-size:15px;
+
+  letter-spacing:.4px;
+
+}
+
+.saldo-dia{
+
+  color:#9dffb7 !important;
+
+  font-size:18px;
+
+  text-align:right;
+
+}
+
+/* =====================================================
+LINHAS
+===================================================== */
+
+.linha-normal{
 
   transition:.15s;
 
 }
 
-tbody tr:hover{
+.linha-normal:hover{
 
   background:#f8fbff;
 
 }
 
-tbody td{
+.linha-normal td{
 
-  border-bottom:1px solid #edf1f5;
+  border-bottom:1px solid #edf2f7;
 
-  padding:12px 14px;
+  padding:14px;
 
   font-size:14px;
 
-  color:#111827;
+  color:var(--text);
 
   white-space:nowrap;
 
@@ -420,7 +494,7 @@ tbody td{
 
   color:var(--green);
 
-  font-weight:800;
+  font-weight:900;
 
   text-align:right;
 
@@ -430,7 +504,7 @@ tbody td{
 
   color:var(--red);
 
-  font-weight:800;
+  font-weight:900;
 
   text-align:right;
 
@@ -438,27 +512,11 @@ tbody td{
 
 .valor-saldo{
 
-  text-align:right;
-
   font-weight:900;
 
-  color:#111827;
+  text-align:right;
 
-}
-
-/* =====================================================
-LOADING
-===================================================== */
-
-.loading{
-
-  padding:30px;
-
-  text-align:center;
-
-  color:var(--muted);
-
-  font-weight:700;
+  color:#0f172a;
 
 }
 
@@ -477,10 +535,26 @@ SCROLL
 }
 
 /* =====================================================
+LOADING
+===================================================== */
+
+.loading{
+
+  padding:30px;
+
+  text-align:center;
+
+  font-weight:800;
+
+  color:var(--muted);
+
+}
+
+/* =====================================================
 RESPONSIVO
 ===================================================== */
 
-@media(max-width:1400px){
+@media(max-width:1500px){
 
   .form-area{
 
@@ -493,6 +567,7 @@ RESPONSIVO
 
 </style>
 </head>
+
 <body>
 
 <!-- =====================================================
@@ -500,6 +575,10 @@ TOPO
 ===================================================== -->
 
 <div class="topo">
+
+  <!-- =====================================================
+  TITULO
+  ===================================================== -->
 
   <div class="titulo">
     REGISTRO DE DINHEIRO • MERCATTO DELÍCIA
@@ -511,44 +590,80 @@ TOPO
 
   <div class="resumo">
 
-    <div class="head">
-      EMPRESA
+    <div class="resumo-box resumo-empresa">
+
+      <div class="resumo-label">
+        Empresa
+      </div>
+
+      <div class="resumo-valor">
+        Mercatto Delícia
+      </div>
+
     </div>
 
-    <div class="head">
-      Saldo Implantação
+    <div class="resumo-box">
+
+      <div class="resumo-label">
+        Saldo Implantação
+      </div>
+
+      <div
+      class="resumo-valor"
+      id="saldoImplantacao">
+
+        R$ 0,00
+
+      </div>
+
     </div>
 
-    <div class="head">
-      Total Entradas
+    <div class="resumo-box">
+
+      <div class="resumo-label">
+        Total Entradas
+      </div>
+
+      <div
+      class="resumo-valor"
+      id="totalEntradas">
+
+        R$ 0,00
+
+      </div>
+
     </div>
 
-    <div class="head">
-      Total Saídas
+    <div class="resumo-box">
+
+      <div class="resumo-label">
+        Total Saídas
+      </div>
+
+      <div
+      class="resumo-valor"
+      id="totalSaidas">
+
+        R$ 0,00
+
+      </div>
+
     </div>
 
-    <div class="head">
-      SALDO NA LOJA
-    </div>
+    <div class="resumo-box resumo-saldo">
 
-    <div class="empresa">
-      Mercatto Delícia
-    </div>
+      <div class="resumo-label">
+        SALDO NA LOJA
+      </div>
 
-    <div class="saldo" id="saldoImplantacao">
-      R$ 0,00
-    </div>
+      <div
+      class="resumo-valor"
+      id="saldoLoja">
 
-    <div class="saldo" id="totalEntradas">
-      R$ 0,00
-    </div>
+        R$ 0,00
 
-    <div class="saldo" id="totalSaidas">
-      R$ 0,00
-    </div>
+      </div>
 
-    <div class="saldo-loja" id="saldoLoja">
-      R$ 0,00
     </div>
 
   </div>
@@ -559,60 +674,52 @@ TOPO
 
   <div class="form-area">
 
-    <div class="form-group">
-      <input
-      type="date"
-      id="data_movimento">
-    </div>
+    <input
+    type="date"
+    id="data_movimento">
 
-    <div class="form-group">
-      <select id="tipo">
+    <select id="tipo">
 
-        <option value="entrada">
-          ENTRADA
-        </option>
+      <option value="entrada">
+        ENTRADA
+      </option>
 
-        <option value="saida">
-          SAÍDA
-        </option>
+      <option value="saida">
+        SAÍDA
+      </option>
 
-      </select>
-    </div>
+    </select>
 
-    <div class="form-group">
-      <input
-      type="text"
-      id="historico"
-      placeholder="Histórico da movimentação">
-    </div>
+    <input
+    type="text"
+    id="historico"
+    placeholder="Histórico da movimentação">
 
-    <div class="form-group">
-      <input
-      type="text"
-      id="complemento"
-      placeholder="Complemento">
-    </div>
+    <input
+    type="text"
+    id="complemento"
+    placeholder="Complemento">
 
-    <div class="form-group">
-      <input
-      type="text"
-      id="valor"
-      placeholder="R$ 0,00"
-      inputmode="numeric"
-      oninput="mascaraDinheiro(this)">
-    </div>
+    <input
+    type="text"
+    id="valor"
+    placeholder="R$ 0,00"
+    inputmode="numeric"
+    oninput="mascaraDinheiro(this)">
 
-    <div class="form-group">
-      <input
-      type="text"
-      id="empresa"
-      value="Mercatto Delícia"
-      readonly
-      class="empresa-fixa">
-    </div>
+    <input
+    type="text"
+    id="empresa"
+    value="Mercatto Delícia"
+    readonly
+    class="empresa-fixa">
 
-    <button onclick="salvarRegistro()">
+    <button
+    class="btn-salvar"
+    onclick="salvarRegistro()">
+
       SALVAR
+
     </button>
 
   </div>
@@ -623,7 +730,9 @@ TOPO
 TABELA
 ===================================================== -->
 
-<div class="container" id="scrollContainer">
+<div
+class="container"
+id="scrollContainer">
 
 <table>
 
@@ -639,11 +748,11 @@ TABELA
     Data Movimento
   </th>
 
-  <th>
+  <th style="min-width:320px">
     Histórico
   </th>
 
-  <th>
+  <th style="min-width:320px">
     Complemento
   </th>
 
@@ -655,8 +764,8 @@ TABELA
     Saída
   </th>
 
-  <th style="width:180px">
-    Saldo
+  <th style="width:200px">
+    Saldo Movimento
   </th>
 
 </tr>
@@ -700,7 +809,9 @@ CONFIG
 const PAGE_SIZE = 50;
 
 let pagina = 0;
+
 let carregando = false;
+
 let acabou = false;
 
 /* =====================================================
@@ -717,7 +828,7 @@ const scrollContainer =
 document.getElementById('scrollContainer');
 
 /* =====================================================
-DATA PADRÃO
+INIT CAMPOS
 ===================================================== */
 
 document.getElementById(
@@ -738,12 +849,20 @@ FORMATA MOEDA
 function moeda(valor){
 
   return Number(valor || 0)
-  .toLocaleString('pt-BR',{
 
-    style:'currency',
-    currency:'BRL'
+  .toLocaleString(
 
-  });
+    'pt-BR',
+
+    {
+
+      style:'currency',
+
+      currency:'BRL'
+
+    }
+
+  );
 
 }
 
@@ -756,25 +875,33 @@ function formatarData(data){
   if(!data) return '-';
 
   return new Date(data)
-  .toLocaleDateString('pt-BR',{
 
-    timeZone:'America/Bahia'
+  .toLocaleDateString(
 
-  });
+    'pt-BR',
+
+    {
+
+      timeZone:'America/Bahia'
+
+    }
+
+  );
 
 }
 
 /* =====================================================
-MASCARA DINHEIRO
+MÁSCARA DINHEIRO
 ===================================================== */
 
 function mascaraDinheiro(campo){
 
   let valor =
-  campo.value.replace(/\D/g,'');
+  campo.value
+  .replace(/\D/g,'');
 
   valor =
-  (Number(valor) / 100)
+  (Number(valor)/100)
   .toFixed(2) + '';
 
   valor =
@@ -786,12 +913,13 @@ function mascaraDinheiro(campo){
     '$1.'
   );
 
-  campo.value = 'R$ ' + valor;
+  campo.value =
+  'R$ ' + valor;
 
 }
 
 /* =====================================================
-CONVERTER VALOR
+CONVERTE DINHEIRO
 ===================================================== */
 
 function converterValor(valor){
@@ -799,9 +927,13 @@ function converterValor(valor){
   return Number(
 
     valor
+
     .replace('R$','')
+
     .replace(/\./g,'')
+
     .replace(',','.')
+
     .trim()
 
   ) || 0;
@@ -815,18 +947,23 @@ CARREGAR RESUMO
 async function carregarResumo(){
 
   const { data, error } =
+
   await supabaseClient
+
   .from('livros_caixa')
+
   .select('tipo,valor');
 
   if(error){
 
     console.error(error);
+
     return;
 
   }
 
   let entradas = 0;
+
   let saidas = 0;
 
   data.forEach(item=>{
@@ -891,11 +1028,18 @@ async function carregarRegistros(){
   inicio + PAGE_SIZE - 1;
 
   const { data, error } =
+
   await supabaseClient
 
   .from('livros_caixa')
 
   .select('*')
+
+  .order('data_movimento',{
+
+    ascending:false
+
+  })
 
   .order('created_at',{
 
@@ -943,19 +1087,72 @@ RENDER
 
 function renderizar(lista){
 
+  let ultimoDia = '';
+
   lista.forEach(item=>{
+
+    const diaAtual =
+    item.data_movimento;
+
+    /* ============================================
+    NOVO BLOCO DIA
+    ============================================ */
+
+    if(diaAtual !== ultimoDia){
+
+      const trDia =
+      document.createElement('tr');
+
+      trDia.className =
+      'linha-dia';
+
+      trDia.innerHTML = `
+
+        <td colspan="5"
+        class="titulo-dia">
+
+          SALDO DO DIA •
+          ${formatarData(diaAtual)}
+
+        </td>
+
+        <td colspan="2"
+        class="saldo-dia">
+
+          ${moeda(item.saldo)}
+
+        </td>
+
+      `;
+
+      tbody.appendChild(trDia);
+
+      ultimoDia = diaAtual;
+
+    }
+
+    /* ============================================
+    LINHA NORMAL
+    ============================================ */
 
     const tr =
     document.createElement('tr');
 
+    tr.className =
+    'linha-normal';
+
     tr.innerHTML = `
 
       <td class="center">
-        ${formatarData(item.data_registro)}
+        ${formatarData(
+          item.data_registro
+        )}
       </td>
 
       <td class="center">
-        ${formatarData(item.data_movimento)}
+        ${formatarData(
+          item.data_movimento
+        )}
       </td>
 
       <td>
@@ -975,7 +1172,7 @@ function renderizar(lista){
         ${
           item.tipo === 'entrada'
           ? moeda(item.valor)
-          : ''
+          : '-'
         }
 
       </td>
@@ -989,13 +1186,15 @@ function renderizar(lista){
         ${
           item.tipo === 'saida'
           ? moeda(item.valor)
-          : ''
+          : '-'
         }
 
       </td>
 
       <td class="valor-saldo">
+
         ${moeda(item.saldo)}
+
       </td>
 
     `;
@@ -1013,21 +1212,25 @@ SALVAR
 async function salvarRegistro(){
 
   const data_movimento =
+
   document.getElementById(
     'data_movimento'
   ).value;
 
   const historico =
+
   document.getElementById(
     'historico'
   ).value.trim();
 
   const complemento =
+
   document.getElementById(
     'complemento'
   ).value.trim();
 
   const tipo =
+
   document.getElementById(
     'tipo'
   ).value;
@@ -1042,29 +1245,41 @@ async function salvarRegistro(){
   );
 
   const empresa =
+
   document.getElementById(
     'empresa'
   ).value;
 
+  /* =====================================================
+  VALIDAR
+  ===================================================== */
+
   if(!historico){
 
-    alert('Informe o histórico');
+    alert(
+      'Informe o histórico'
+    );
+
     return;
 
   }
 
   if(valor <= 0){
 
-    alert('Informe um valor válido');
+    alert(
+      'Informe um valor válido'
+    );
+
     return;
 
   }
 
   /* =====================================================
-  PEGA ÚLTIMO SALDO
+  ÚLTIMO SALDO
   ===================================================== */
 
   const { data: ultimo } =
+
   await supabaseClient
 
   .from('livros_caixa')
@@ -1085,7 +1300,7 @@ async function salvarRegistro(){
   Number(ultimo?.saldo || 0);
 
   /* =====================================================
-  CALCULA
+  CALCULO
   ===================================================== */
 
   let novoSaldo = 0;
@@ -1107,6 +1322,7 @@ async function salvarRegistro(){
   ===================================================== */
 
   const { error } =
+
   await supabaseClient
 
   .from('livros_caixa')
