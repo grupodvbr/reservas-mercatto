@@ -1,25 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 
 <title>Livro Caixa • Mercatto Delícia</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
+/* =====================================================
+ROOT
+===================================================== */
+
 :root{
-  --blue:#082b63;
-  --header:#d9d9d9;
-  --line:#000;
-  --green:#4CAF50;
-  --green2:#19a819;
-  --red:#ff2a2a;
-  --bg:#f4f4f4;
+
+  --primary:#082b63;
+  --primary2:#0f3c88;
+
+  --green:#1fa34a;
+  --green2:#2cbf59;
+
+  --red:#ff3b30;
+
+  --bg:#f3f5f9;
+
+  --card:#ffffff;
+
+  --line:#dfe3eb;
+
+  --text:#111827;
+
+  --muted:#6b7280;
+
+  --shadow:
+  0 10px 30px rgba(0,0,0,.06);
+
+  --radius:18px;
+
 }
+
+/* =====================================================
+BASE
+===================================================== */
 
 *{
   margin:0;
@@ -28,188 +54,439 @@
   font-family:'Inter',sans-serif;
 }
 
+html,
 body{
-  background:var(--bg);
+  width:100%;
+  height:100%;
   overflow:hidden;
+  background:var(--bg);
 }
 
-/* =========================
-HEADER FIXO
-========================= */
+body{
+  display:flex;
+  flex-direction:column;
+}
+
+/* =====================================================
+TOPO
+===================================================== */
 
 .topo{
+
   position:sticky;
   top:0;
   z-index:999;
+
   background:white;
-  box-shadow:0 4px 20px rgba(0,0,0,.08);
+
+  box-shadow:var(--shadow);
+
 }
+
+/* =====================================================
+TITULO
+===================================================== */
 
 .titulo{
-  background:var(--blue);
-  color:#fff;
-  text-align:center;
+
+  background:
+  linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary2)
+  );
+
+  color:white;
+
   font-size:28px;
-  font-weight:800;
-  padding:14px;
+
+  font-weight:900;
+
   letter-spacing:.5px;
+
+  text-align:center;
+
+  padding:20px;
+
 }
 
+/* =====================================================
+RESUMO
+===================================================== */
+
 .resumo{
+
   display:grid;
-  grid-template-columns: 170px 220px 1fr 1fr 180px;
-  border-bottom:2px solid #000;
+
+  grid-template-columns:
+  180px
+  220px
+  1fr
+  1fr
+  220px;
+
+  border-bottom:1px solid var(--line);
+
 }
 
 .resumo div{
-  border-right:1px solid #000;
-  border-bottom:1px solid #000;
-  padding:10px;
-  min-height:55px;
+
+  min-height:68px;
+
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+
   display:flex;
   align-items:center;
-  font-size:16px;
+
+  padding:14px;
+
+  font-size:15px;
+
 }
 
 .resumo .head{
-  background:#d9d9d9;
+
+  background:#eef2f7;
+
   font-weight:800;
+
   justify-content:center;
+
+  color:#374151;
+
 }
 
 .resumo .empresa{
-  background:#ece0cf;
+
+  background:#f9f3ea;
+
   font-size:17px;
+
+  font-weight:700;
+
 }
 
 .resumo .saldo{
-  font-size:18px;
+
+  font-size:22px;
+
+  font-weight:800;
+
+  color:#111827;
+
 }
 
 .resumo .saldo-loja{
-  background:#56b13f;
+
+  background:
+  linear-gradient(
+    135deg,
+    var(--green),
+    var(--green2)
+  );
+
   color:white;
+
   justify-content:flex-end;
-  font-size:28px;
-  font-weight:800;
+
+  font-size:30px;
+
+  font-weight:900;
+
 }
 
-/* =========================
-TABELA
-========================= */
-
-.container{
-  height:calc(100vh - 165px);
-  overflow:auto;
-  background:white;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:fixed;
-}
-
-thead{
-  position:sticky;
-  top:0;
-  z-index:50;
-}
-
-thead th{
-  background:#d9d9d9;
-  border:1px solid #000;
-  padding:10px;
-  font-size:15px;
-  font-weight:800;
-  color:white;
-}
-
-tbody td{
-  border:1px solid #000;
-  padding:6px 8px;
-  font-size:15px;
-  background:#f7f7f7;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-tbody tr:nth-child(even) td{
-  background:#efefef;
-}
-
-.valor-entrada{
-  color:var(--green2);
-  font-weight:700;
-  text-align:right;
-}
-
-.valor-saida{
-  color:var(--red);
-  font-weight:700;
-  text-align:right;
-}
-
-.valor-saldo{
-  font-weight:800;
-  text-align:right;
-}
-
-td.center{
-  text-align:center;
-}
-
-/* =========================
+/* =====================================================
 FORM
-========================= */
+===================================================== */
 
 .form-area{
-  background:#fff;
+
+  background:white;
+
   padding:14px;
+
   display:grid;
+
   grid-template-columns:
-  140px
-  140px
+
+  160px
+  150px
+  2fr
+  1.5fr
+  170px
   220px
-  220px
-  140px
-  140px
   180px;
-  gap:10px;
-  border-bottom:2px solid #000;
+
+  gap:12px;
+
+  border-bottom:1px solid var(--line);
+
+  align-items:center;
+
+}
+
+.form-group{
+  position:relative;
 }
 
 .form-area input,
 .form-area select{
+
   width:100%;
-  height:42px;
-  border:1px solid #ccc;
-  padding:0 12px;
-  font-size:14px;
+
+  height:52px;
+
+  border:1px solid #d1d5db;
+
+  border-radius:14px;
+
+  padding:0 16px;
+
+  background:#f9fafb;
+
+  font-size:15px;
+
+  font-weight:500;
+
+  color:#111827;
+
   outline:none;
+
+  transition:.2s;
+
+}
+
+.form-area input:focus,
+.form-area select:focus{
+
+  border-color:var(--primary);
+
+  background:white;
+
+  box-shadow:
+  0 0 0 4px rgba(8,43,99,.08);
+
 }
 
 .form-area button{
+
+  height:52px;
+
   border:none;
-  background:var(--blue);
+
+  border-radius:14px;
+
+  background:
+  linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary2)
+  );
+
   color:white;
+
+  font-size:15px;
+
   font-weight:800;
+
   cursor:pointer;
-  border-radius:4px;
+
+  transition:.2s;
+
 }
+
+.form-area button:hover{
+
+  transform:translateY(-2px);
+
+  box-shadow:
+  0 10px 20px rgba(8,43,99,.18);
+
+}
+
+.empresa-fixa{
+
+  background:#eef2f7 !important;
+
+  font-weight:800 !important;
+
+  color:#374151 !important;
+
+  cursor:not-allowed;
+
+}
+
+/* =====================================================
+TABELA
+===================================================== */
+
+.container{
+
+  flex:1;
+
+  overflow:auto;
+
+  background:white;
+
+}
+
+table{
+
+  width:100%;
+
+  border-collapse:collapse;
+
+  table-layout:fixed;
+
+}
+
+/* =====================================================
+THEAD
+===================================================== */
+
+thead{
+
+  position:sticky;
+
+  top:0;
+
+  z-index:20;
+
+}
+
+thead th{
+
+  background:
+  linear-gradient(
+    180deg,
+    #f8fafc,
+    #edf2f7
+  );
+
+  border-bottom:1px solid var(--line);
+
+  padding:14px;
+
+  text-align:left;
+
+  font-size:14px;
+
+  font-weight:800;
+
+  color:#374151;
+
+}
+
+/* =====================================================
+TBODY
+===================================================== */
+
+tbody tr{
+
+  transition:.15s;
+
+}
+
+tbody tr:hover{
+
+  background:#f8fbff;
+
+}
+
+tbody td{
+
+  border-bottom:1px solid #edf1f5;
+
+  padding:12px 14px;
+
+  font-size:14px;
+
+  color:#111827;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+}
+
+.center{
+  text-align:center;
+}
+
+.valor-entrada{
+
+  color:var(--green);
+
+  font-weight:800;
+
+  text-align:right;
+
+}
+
+.valor-saida{
+
+  color:var(--red);
+
+  font-weight:800;
+
+  text-align:right;
+
+}
+
+.valor-saldo{
+
+  text-align:right;
+
+  font-weight:900;
+
+  color:#111827;
+
+}
+
+/* =====================================================
+LOADING
+===================================================== */
 
 .loading{
+
+  padding:30px;
+
   text-align:center;
-  padding:20px;
+
+  color:var(--muted);
+
   font-weight:700;
-  color:#666;
+
 }
 
-@media(max-width:1200px){
+/* =====================================================
+SCROLL
+===================================================== */
+
+.container::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+.container::-webkit-scrollbar-thumb{
+  background:#cbd5e1;
+  border-radius:20px;
+}
+
+/* =====================================================
+RESPONSIVO
+===================================================== */
+
+@media(max-width:1400px){
 
   .form-area{
-    grid-template-columns:1fr 1fr;
+
+    grid-template-columns:
+    1fr 1fr;
+
   }
 
 }
@@ -218,15 +495,19 @@ FORM
 </head>
 <body>
 
-<!-- =========================
+<!-- =====================================================
 TOPO
-========================= -->
+===================================================== -->
 
 <div class="topo">
 
   <div class="titulo">
-    REGISTRO DE DINHEIRO MERCATTO DELÍCIA
+    REGISTRO DE DINHEIRO • MERCATTO DELÍCIA
   </div>
+
+  <!-- =====================================================
+  RESUMO
+  ===================================================== -->
 
   <div class="resumo">
 
@@ -235,27 +516,27 @@ TOPO
     </div>
 
     <div class="head">
-      Saldo na implantação
+      Saldo Implantação
     </div>
 
-    <div class="saldo" id="saldoImplantacao">
-      R$ 0,00
+    <div class="head">
+      Total Entradas
     </div>
 
-    <div class="saldo" id="totalMovimentado">
-      R$ 0,00
+    <div class="head">
+      Total Saídas
     </div>
 
-    <div class="saldo-loja" id="saldoLoja">
-      R$ 0,00
+    <div class="head">
+      SALDO NA LOJA
     </div>
 
     <div class="empresa">
       Mercatto Delícia
     </div>
 
-    <div class="head">
-      Totais (Entradas / Saídas)
+    <div class="saldo" id="saldoImplantacao">
+      R$ 0,00
     </div>
 
     <div class="saldo" id="totalEntradas">
@@ -266,32 +547,69 @@ TOPO
       R$ 0,00
     </div>
 
-    <div class="head">
-      SALDO NA LOJA
+    <div class="saldo-loja" id="saldoLoja">
+      R$ 0,00
     </div>
 
   </div>
 
-  <!-- =========================
+  <!-- =====================================================
   FORM
-  ========================= -->
+  ===================================================== -->
 
   <div class="form-area">
 
-    <input type="date" id="data_movimento">
+    <div class="form-group">
+      <input
+      type="date"
+      id="data_movimento">
+    </div>
 
-    <select id="tipo">
-      <option value="entrada">ENTRADA</option>
-      <option value="saida">SAÍDA</option>
-    </select>
+    <div class="form-group">
+      <select id="tipo">
 
-    <input type="text" id="historico" placeholder="Histórico">
+        <option value="entrada">
+          ENTRADA
+        </option>
 
-    <input type="text" id="complemento" placeholder="Complemento">
+        <option value="saida">
+          SAÍDA
+        </option>
 
-    <input type="number" id="valor" placeholder="Valor">
+      </select>
+    </div>
 
-    <input type="text" id="empresa" value="Mercatto Delícia">
+    <div class="form-group">
+      <input
+      type="text"
+      id="historico"
+      placeholder="Histórico da movimentação">
+    </div>
+
+    <div class="form-group">
+      <input
+      type="text"
+      id="complemento"
+      placeholder="Complemento">
+    </div>
+
+    <div class="form-group">
+      <input
+      type="text"
+      id="valor"
+      placeholder="R$ 0,00"
+      inputmode="numeric"
+      oninput="mascaraDinheiro(this)">
+    </div>
+
+    <div class="form-group">
+      <input
+      type="text"
+      id="empresa"
+      value="Mercatto Delícia"
+      readonly
+      class="empresa-fixa">
+    </div>
 
     <button onclick="salvarRegistro()">
       SALVAR
@@ -301,24 +619,48 @@ TOPO
 
 </div>
 
-<!-- =========================
+<!-- =====================================================
 TABELA
-========================= -->
+===================================================== -->
 
 <div class="container" id="scrollContainer">
 
 <table>
 
 <thead>
+
 <tr>
-  <th style="width:120px">Data Registro</th>
-  <th style="width:120px">Data Movimento</th>
-  <th>Histórico</th>
-  <th>Complemento</th>
-  <th style="width:180px">Entrada</th>
-  <th style="width:180px">Saída</th>
-  <th style="width:180px">Saldo</th>
+
+  <th style="width:140px">
+    Data Registro
+  </th>
+
+  <th style="width:140px">
+    Data Movimento
+  </th>
+
+  <th>
+    Histórico
+  </th>
+
+  <th>
+    Complemento
+  </th>
+
+  <th style="width:180px">
+    Entrada
+  </th>
+
+  <th style="width:180px">
+    Saída
+  </th>
+
+  <th style="width:180px">
+    Saldo
+  </th>
+
 </tr>
+
 </thead>
 
 <tbody id="tbody"></tbody>
@@ -343,14 +685,12 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 "sb_publishable_NNFvdfSXgOdGGVcSbphbjQ_brC3_9ed";
 
-/* =====================================================
-NUNCA USE "const supabase"
-PORQUE O CDN JÁ USA ESSE NOME
-===================================================== */
+const supabaseClient =
+window.supabase.createClient(
 
-const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
+
 );
 
 /* =====================================================
@@ -377,11 +717,19 @@ const scrollContainer =
 document.getElementById('scrollContainer');
 
 /* =====================================================
-DATA AUTOMÁTICA
+DATA PADRÃO
 ===================================================== */
 
-document.getElementById('data_movimento').value =
-new Date().toISOString().split('T')[0];
+document.getElementById(
+'data_movimento'
+).value =
+new Date()
+.toISOString()
+.split('T')[0];
+
+document.getElementById(
+'valor'
+).value = 'R$ 0,00';
 
 /* =====================================================
 FORMATA MOEDA
@@ -417,65 +765,108 @@ function formatarData(data){
 }
 
 /* =====================================================
+MASCARA DINHEIRO
+===================================================== */
+
+function mascaraDinheiro(campo){
+
+  let valor =
+  campo.value.replace(/\D/g,'');
+
+  valor =
+  (Number(valor) / 100)
+  .toFixed(2) + '';
+
+  valor =
+  valor.replace('.',',');
+
+  valor =
+  valor.replace(
+    /(\d)(?=(\d{3})+(?!\d))/g,
+    '$1.'
+  );
+
+  campo.value = 'R$ ' + valor;
+
+}
+
+/* =====================================================
+CONVERTER VALOR
+===================================================== */
+
+function converterValor(valor){
+
+  return Number(
+
+    valor
+    .replace('R$','')
+    .replace(/\./g,'')
+    .replace(',','.')
+    .trim()
+
+  ) || 0;
+
+}
+
+/* =====================================================
 CARREGAR RESUMO
 ===================================================== */
 
 async function carregarResumo(){
 
-  try{
+  const { data, error } =
+  await supabaseClient
+  .from('livros_caixa')
+  .select('tipo,valor');
 
-    const { data, error } =
-    await supabaseClient
-    .from('livros_caixa')
-    .select('tipo,valor');
+  if(error){
 
-    if(error){
+    console.error(error);
+    return;
 
-      console.error(error);
-      return;
+  }
+
+  let entradas = 0;
+  let saidas = 0;
+
+  data.forEach(item=>{
+
+    if(item.tipo === 'entrada'){
+
+      entradas +=
+      Number(item.valor || 0);
+
+    }else{
+
+      saidas +=
+      Number(item.valor || 0);
 
     }
 
-    let entradas = 0;
-    let saidas = 0;
+  });
 
-    data.forEach(item=>{
+  const saldo =
+  entradas - saidas;
 
-      if(item.tipo === 'entrada'){
+  document.getElementById(
+    'saldoImplantacao'
+  ).innerHTML =
+  moeda(1038.06);
 
-        entradas += Number(item.valor || 0);
+  document.getElementById(
+    'totalEntradas'
+  ).innerHTML =
+  moeda(entradas);
 
-      }else{
+  document.getElementById(
+    'totalSaidas'
+  ).innerHTML =
+  moeda(saidas);
 
-        saidas += Number(item.valor || 0);
-
-      }
-
-    });
-
-    const saldo = entradas - saidas;
-
-    document.getElementById('saldoImplantacao')
-    .innerHTML = moeda(1038.06);
-
-    document.getElementById('totalEntradas')
-    .innerHTML = moeda(entradas);
-
-    document.getElementById('totalSaidas')
-    .innerHTML = moeda(saidas);
-
-    document.getElementById('saldoLoja')
-    .innerHTML = moeda(saldo);
-
-    document.getElementById('totalMovimentado')
-    .innerHTML =
-    `${moeda(entradas)} / ${moeda(saidas)}`;
-
-  }catch(err){
-
-    console.error(err);
-
-  }
+  document.getElementById(
+    'saldoLoja'
+  ).innerHTML =
+  moeda(saldo);
 
 }
 
@@ -485,71 +876,69 @@ CARREGAR REGISTROS
 
 async function carregarRegistros(){
 
-  if(carregando || acabou) return;
+  if(carregando || acabou)
+  return;
 
   carregando = true;
 
-  loading.style.display = 'block';
+  loading.style.display =
+  'block';
 
-  try{
+  const inicio =
+  pagina * PAGE_SIZE;
 
-    const inicio = pagina * PAGE_SIZE;
+  const fim =
+  inicio + PAGE_SIZE - 1;
 
-    const fim =
-    inicio + PAGE_SIZE - 1;
+  const { data, error } =
+  await supabaseClient
 
-    const { data, error } =
-    await supabaseClient
-    .from('livros_caixa')
-    .select('*')
-    .order('created_at',{
+  .from('livros_caixa')
 
-      ascending:false
+  .select('*')
 
-    })
-    .range(inicio,fim);
+  .order('created_at',{
 
-    if(error){
+    ascending:false
 
-      console.error(error);
+  })
 
-      carregando = false;
+  .range(inicio,fim);
 
-      return;
+  if(error){
 
-    }
-
-    if(!data.length){
-
-      acabou = true;
-
-      loading.innerHTML =
-      'Fim dos registros';
-
-      return;
-
-    }
-
-    renderizar(data);
-
-    pagina++;
+    console.error(error);
 
     carregando = false;
 
-    loading.style.display = 'none';
-
-  }catch(err){
-
-    console.error(err);
-
-    carregando = false;
+    return;
 
   }
+
+  if(!data.length){
+
+    acabou = true;
+
+    loading.innerHTML =
+    'Fim dos registros';
+
+    return;
+
+  }
+
+  renderizar(data);
+
+  pagina++;
+
+  carregando = false;
+
+  loading.style.display =
+  'none';
 
 }
 
 /* =====================================================
-RENDERIZAR
+RENDER
 ===================================================== */
 
 function renderizar(lista){
@@ -618,180 +1007,171 @@ function renderizar(lista){
 }
 
 /* =====================================================
-SALVAR REGISTRO
+SALVAR
 ===================================================== */
 
 async function salvarRegistro(){
 
-  try{
+  const data_movimento =
+  document.getElementById(
+    'data_movimento'
+  ).value;
 
-    const data_movimento =
-    document.getElementById(
-      'data_movimento'
-    ).value;
+  const historico =
+  document.getElementById(
+    'historico'
+  ).value.trim();
 
-    const historico =
-    document.getElementById(
-      'historico'
-    ).value.trim();
+  const complemento =
+  document.getElementById(
+    'complemento'
+  ).value.trim();
 
-    const complemento =
-    document.getElementById(
-      'complemento'
-    ).value.trim();
+  const tipo =
+  document.getElementById(
+    'tipo'
+  ).value;
 
-    const tipo =
-    document.getElementById(
-      'tipo'
-    ).value;
+  const valor =
+  converterValor(
 
-    const valor =
-    Number(
-      document.getElementById(
-        'valor'
-      ).value || 0
-    );
+    document
+    .getElementById('valor')
+    .value
 
-    const empresa =
-    document.getElementById(
-      'empresa'
-    ).value;
+  );
 
-    /* =========================
-    VALIDAÇÃO
-    ========================= */
+  const empresa =
+  document.getElementById(
+    'empresa'
+  ).value;
 
-    if(!historico){
+  if(!historico){
 
-      alert('Informe o histórico');
-      return;
-
-    }
-
-    if(valor <= 0){
-
-      alert('Informe um valor válido');
-      return;
-
-    }
-
-    /* =========================
-    PEGA ÚLTIMO SALDO
-    ========================= */
-
-    const { data: ultimo } =
-    await supabaseClient
-    .from('livros_caixa')
-    .select('saldo')
-    .order('created_at',{
-
-      ascending:false
-
-    })
-    .limit(1)
-    .maybeSingle();
-
-    const saldoAnterior =
-    Number(ultimo?.saldo || 0);
-
-    /* =========================
-    CALCULA
-    ========================= */
-
-    let novoSaldo = 0;
-
-    if(tipo === 'entrada'){
-
-      novoSaldo =
-      saldoAnterior + valor;
-
-    }else{
-
-      novoSaldo =
-      saldoAnterior - valor;
-
-    }
-
-    /* =========================
-    INSERT
-    ========================= */
-
-    const { error } =
-    await supabaseClient
-    .from('livros_caixa')
-    .insert({
-
-      empresa,
-      historico,
-      complemento,
-      tipo,
-      valor,
-
-      saldo:novoSaldo,
-
-      data_movimento,
-
-      data_registro:
-      new Date(),
-
-      created_at:
-      new Date()
-
-    });
-
-    if(error){
-
-      console.error(error);
-
-      alert(
-        'Erro ao salvar registro'
-      );
-
-      return;
-
-    }
-
-    /* =========================
-    LIMPAR
-    ========================= */
-
-    document.getElementById(
-      'historico'
-    ).value = '';
-
-    document.getElementById(
-      'complemento'
-    ).value = '';
-
-    document.getElementById(
-      'valor'
-    ).value = '';
-
-    /* =========================
-    RESET
-    ========================= */
-
-    tbody.innerHTML = '';
-
-    pagina = 0;
-
-    acabou = false;
-
-    /* =========================
-    RELOAD
-    ========================= */
-
-    await carregarResumo();
-
-    await carregarRegistros();
-
-  }catch(err){
-
-    console.error(err);
-
-    alert('Erro inesperado');
+    alert('Informe o histórico');
+    return;
 
   }
+
+  if(valor <= 0){
+
+    alert('Informe um valor válido');
+    return;
+
+  }
+
+  /* =====================================================
+  PEGA ÚLTIMO SALDO
+  ===================================================== */
+
+  const { data: ultimo } =
+  await supabaseClient
+
+  .from('livros_caixa')
+
+  .select('saldo')
+
+  .order('created_at',{
+
+    ascending:false
+
+  })
+
+  .limit(1)
+
+  .maybeSingle();
+
+  const saldoAnterior =
+  Number(ultimo?.saldo || 0);
+
+  /* =====================================================
+  CALCULA
+  ===================================================== */
+
+  let novoSaldo = 0;
+
+  if(tipo === 'entrada'){
+
+    novoSaldo =
+    saldoAnterior + valor;
+
+  }else{
+
+    novoSaldo =
+    saldoAnterior - valor;
+
+  }
+
+  /* =====================================================
+  INSERT
+  ===================================================== */
+
+  const { error } =
+  await supabaseClient
+
+  .from('livros_caixa')
+
+  .insert({
+
+    empresa,
+    historico,
+    complemento,
+    tipo,
+    valor,
+
+    saldo:novoSaldo,
+
+    data_movimento,
+
+    data_registro:
+    new Date(),
+
+    created_at:
+    new Date()
+
+  });
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      'Erro ao salvar'
+    );
+
+    return;
+
+  }
+
+  /* =====================================================
+  LIMPAR
+  ===================================================== */
+
+  document.getElementById(
+    'historico'
+  ).value = '';
+
+  document.getElementById(
+    'complemento'
+  ).value = '';
+
+  document.getElementById(
+    'valor'
+  ).value = 'R$ 0,00';
+
+  /* =====================================================
+  RELOAD
+  ===================================================== */
+
+  tbody.innerHTML = '';
+
+  pagina = 0;
+
+  acabou = false;
+
+  await carregarResumo();
+
+  await carregarRegistros();
 
 }
 
@@ -801,33 +1181,39 @@ SCROLL INFINITO
 
 scrollContainer
 .addEventListener(
-'scroll',
 
-async function(){
+  'scroll',
 
-  const el = this;
+  async function(){
 
-  if(
+    const el = this;
 
-    el.scrollTop +
-    el.clientHeight >=
+    if(
 
-    el.scrollHeight - 300
+      el.scrollTop +
+      el.clientHeight >=
 
-  ){
+      el.scrollHeight - 300
 
-    await carregarRegistros();
+    ){
+
+      await carregarRegistros();
+
+    }
 
   }
 
-});
+);
 
 /* =====================================================
 REALTIME
 ===================================================== */
 
 supabaseClient
-.channel('livro_caixa_realtime')
+
+.channel(
+  'livro_caixa_realtime'
+)
 
 .on(
 
@@ -836,7 +1222,9 @@ supabaseClient
   {
 
     event:'INSERT',
+
     schema:'public',
+
     table:'livros_caixa'
 
   },
@@ -872,5 +1260,6 @@ INIT
 })();
 
 </script>
+
 </body>
 </html>
