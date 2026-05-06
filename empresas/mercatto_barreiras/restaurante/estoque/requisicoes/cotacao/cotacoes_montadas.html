@@ -2148,107 +2148,383 @@ itensCotacao.forEach(item => {
 
 
   
-  const win = window.open('', '_blank');
+ const win = window.open('', '_blank');
 
-  let html = `
+const totalGeral = Object.values(
+  totaisFornecedor
+).reduce((s,f)=>s+f.total,0);
 
-  <html>
+let html = `
 
-  <head>
+<html>
 
-    <title>
-      Resultado da Cotação
-    </title>
+<head>
 
-    <style>
+<title>
+Resultado da Cotação
+</title>
 
-      body{
-        font-family:Arial;
-        padding:30px;
-        color:#111;
-      }
+<style>
 
-      h1{
-        margin-bottom:4px;
-      }
+*{
+  box-sizing:border-box;
+  font-family:Inter,Arial;
+}
 
-      h2{
-        margin-top:40px;
-        margin-bottom:10px;
-      }
+body{
+  background:#f3f4f6;
+  margin:0;
+  padding:30px;
+  color:#111827;
+}
 
-      table{
-        width:100%;
-        border-collapse:collapse;
-        margin-top:10px;
-      }
+.header{
+  background:#111827;
+  color:#fff;
+  padding:30px;
+  border-radius:20px;
+  margin-bottom:24px;
+}
 
-      th,td{
-        border:1px solid #d1d5db;
-        padding:10px;
-        font-size:12px;
-        text-align:left;
-      }
+.header h1{
+  margin:0;
+  font-size:34px;
+  font-weight:900;
+}
 
-      th{
-        background:#f3f4f6;
-      }
+.header small{
+  opacity:.8;
+  font-size:13px;
+}
 
-      .green{
-        background:#dcfce7;
-        color:#166534;
-        font-weight:700;
-      }
+.kpis{
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+  margin-bottom:24px;
+}
 
-      .card{
-        border:1px solid #d1d5db;
-        border-radius:12px;
-        padding:16px;
-        margin-bottom:14px;
-      }
+.kpi{
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  border:1px solid #e5e7eb;
+}
 
-    </style>
+.kpi span{
+  font-size:12px;
+  color:#6b7280;
+  text-transform:uppercase;
+  font-weight:700;
+}
 
-  </head>
+.kpi h2{
+  margin-top:10px;
+  font-size:30px;
+}
 
-  <body>
+.section{
+  background:#fff;
+  border-radius:20px;
+  padding:24px;
+  margin-bottom:22px;
+  border:1px solid #e5e7eb;
+}
 
-    <h1>
-      ${cotacaoAtual.nome}
-    </h1>
+.section h2{
+  margin:0 0 18px;
+  font-size:22px;
+}
 
-    <small>
-      ${formatarData(
-        cotacaoAtual.data_cotacao
-      )}
-    </small>
+.cards{
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(280px,1fr));
+  gap:14px;
+}
+
+.card{
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:18px;
+  background:#fafafa;
+}
+
+.card h3{
+  margin:0 0 10px;
+  font-size:18px;
+}
+
+.total{
+  font-size:34px;
+  font-weight:900;
+  color:#16a34a;
+  margin-bottom:8px;
+}
+
+.itens{
+  color:#6b7280;
+  font-size:13px;
+  font-weight:700;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th{
+  background:#111827;
+  color:#fff;
+  padding:14px;
+  font-size:12px;
+  text-transform:uppercase;
+  text-align:left;
+}
+
+td{
+  padding:14px;
+  border-bottom:1px solid #e5e7eb;
+  font-size:13px;
+}
+
+tr:nth-child(even){
+  background:#f9fafb;
+}
+
+.green{
+  color:#15803d;
+  font-weight:800;
+}
+
+.badge{
+  background:#dcfce7;
+  color:#166534;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  display:inline-block;
+}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  color:#6b7280;
+  font-size:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+  <h1>
+    ${cotacaoAtual.nome}
+  </h1>
+
+  <small>
+    Resultado oficial da cotação •
+    ${formatarData(
+      cotacaoAtual.data_cotacao
+    )}
+  </small>
+
+</div>
+
+<div class="kpis">
+
+  <div class="kpi">
+
+    <span>
+      Fornecedores vencedores
+    </span>
 
     <h2>
-      Resultado Geral
+      ${
+        Object.keys(
+          totaisFornecedor
+        ).length
+      }
     </h2>
 
+  </div>
+
+  <div class="kpi">
+
+    <span>
+      Itens cotados
+    </span>
+
+    <h2>
+      ${itensCotacao.length}
+    </h2>
+
+  </div>
+
+  <div class="kpi">
+
+    <span>
+      Valor total estimado
+    </span>
+
+    <h2>
+
+      R$
+      ${totalGeral.toLocaleString(
+        'pt-BR',
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      )}
+
+    </h2>
+
+  </div>
+
+</div>
+
+<div class="section">
+
+  <h2>
+    Ranking dos fornecedores
+  </h2>
+
+  <div class="cards">
+`;
+
+Object.values(
+  totaisFornecedor
+)
+
+.sort((a,b)=>a.total-b.total)
+
+.forEach((f,index)=>{
+
+  html += `
+
+  <div class="card">
+
+    <div class="badge">
+      ${
+        index === 0
+        ? 'MENOR CUSTO'
+        : `#${index+1}`
+      }
+    </div>
+
+    <h3>
+      ${f.nome}
+    </h3>
+
+    <div class="total">
+
+      R$
+      ${f.total.toLocaleString(
+        'pt-BR',
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      )}
+
+    </div>
+
+    <div class="itens">
+      ${f.itens} itens vencedores
+    </div>
+
+  </div>
+
   `;
+});
 
-  Object.values(
-    totaisFornecedor
-  ).forEach(f => {
+html += `
 
-    html += `
+  </div>
 
-      <div class="card">
+</div>
 
-        <h3>
-          ${f.nome}
-        </h3>
+<div class="section">
 
-        <p>
+<h2>
+Itens vencedores
+</h2>
 
+<table>
+
+<thead>
+
+<tr>
+
+<th>Produto</th>
+<th>Qtd</th>
+<th>Fornecedor</th>
+<th>Valor Unitário</th>
+<th>Total</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+`;
+
+itensCotacao.forEach(item => {
+
+  const melhor =
+    melhoresPrecos[item.produto];
+
+  (item.fornecedores || [])
+  .forEach(f => {
+
+    const preco =
+      Number(f.preco_unitario || 0);
+
+    const emb =
+      Number(
+        f.quantidade_embalagem || 1
+      );
+
+    const convertido =
+      preco / emb;
+
+    if(convertido === melhor){
+
+      const total =
+        convertido *
+        Number(
+          item.qtd_solicitada || 0
+        );
+
+      html += `
+
+      <tr>
+
+        <td>
           <b>
-            Total:
+            ${item.produto}
           </b>
+        </td>
+
+        <td>
+          ${item.qtd_solicitada}
+        </td>
+
+        <td class="green">
+          ${f.fornecedor_nome}
+        </td>
+
+        <td>
 
           R$
-          ${f.total.toLocaleString(
+          ${convertido.toLocaleString(
             'pt-BR',
             {
               minimumFractionDigits:2,
@@ -2256,134 +2532,52 @@ itensCotacao.forEach(item => {
             }
           )}
 
-        </p>
+        </td>
 
-        <p>
-          ${f.itens}
-          itens vencedores
-        </p>
+        <td>
 
-      </div>
+          <b>
 
-    `;
+          R$
+          ${total.toLocaleString(
+            'pt-BR',
+            {
+              minimumFractionDigits:2,
+              maximumFractionDigits:2
+            }
+          )}
 
-  });
+          </b>
 
-  html += `
+        </td>
 
-    <h2>
-      Itens da Cotação
-    </h2>
+      </tr>
 
-    <table>
-
-      <thead>
-
-        <tr>
-
-          <th>Produto</th>
-          <th>Quantidade</th>
-          <th>Fornecedor Vencedor</th>
-          <th>Valor Unitário</th>
-          <th>Total</th>
-
-        </tr>
-
-      </thead>
-
-      <tbody>
-
-  `;
-
-  itensCotacao.forEach(item => {
-
-    const melhor =
-      melhoresPrecos[item.produto];
-
-    (item.fornecedores || [])
-    .forEach(f => {
-
-      const preco =
-        Number(f.preco_unitario || 0);
-
-      const emb =
-        Number(
-          f.quantidade_embalagem || 1
-        );
-
-      const convertido =
-        preco / emb;
-
-      if(convertido === melhor){
-
-        const total =
-          convertido *
-          Number(
-            item.qtd_solicitada || 0
-          );
-
-        html += `
-
-          <tr>
-
-            <td>
-              ${item.produto}
-            </td>
-
-            <td>
-              ${item.qtd_solicitada}
-            </td>
-
-            <td class="green">
-              ${f.fornecedor_nome}
-            </td>
-
-            <td>
-
-              R$
-              ${convertido.toLocaleString(
-                'pt-BR',
-                {
-                  minimumFractionDigits:2,
-                  maximumFractionDigits:2
-                }
-              )}
-
-            </td>
-
-            <td>
-
-              R$
-              ${total.toLocaleString(
-                'pt-BR',
-                {
-                  minimumFractionDigits:2,
-                  maximumFractionDigits:2
-                }
-              )}
-
-            </td>
-
-          </tr>
-
-        `;
-      }
-
-    });
+      `;
+    }
 
   });
 
-  html += `
+});
 
-      </tbody>
+html += `
 
-    </table>
+</tbody>
 
-  </body>
+</table>
 
-  </html>
+</div>
 
-  `;
+<div class="footer">
+
+Relatório gerado automaticamente pelo sistema Mercatto
+
+</div>
+
+</body>
+
+</html>
+`;
 
 win.document.open();
 
@@ -2397,7 +2591,7 @@ setTimeout(()=>{
 
   win.print();
 
-},500);
+},700);
 }
 
 
