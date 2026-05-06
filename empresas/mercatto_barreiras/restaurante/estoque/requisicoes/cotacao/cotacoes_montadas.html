@@ -122,6 +122,36 @@ body{
   background:#eef2ff;
 }
 
+/* ================= STATUS ================= */
+
+.cotacao.aberta{
+  border-left:4px solid #f97316;
+  background:#fff7ed;
+}
+
+.cotacao.finalizada{
+  border-left:4px solid #22c55e;
+  background:#f0fdf4;
+}
+
+.cotacao.aberta h3{
+  color:#ea580c;
+}
+
+.cotacao.finalizada h3{
+  color:#166534;
+}
+
+
+
+
+
+
+
+
+
+
+  
 .cotacao h3{
   font-size:13px;
   margin-bottom:4px;
@@ -508,13 +538,28 @@ function renderCotacoes(arr){
 
     lista.innerHTML += `
 
-      <div
-        class="cotacao ${
-          cotacaoAtual &&
-          cotacaoAtual.id === c.id
-          ? "active"
-          : ""
-        }"
+<div
+  class="cotacao
+
+  ${
+
+    c.status === 'FINALIZADA'
+
+      ? 'finalizada'
+
+      : 'aberta'
+
+  }
+
+  ${
+    cotacaoAtual &&
+    cotacaoAtual.id === c.id
+    ? "active"
+    : ""
+  }"
+
+
+  
 
         onclick='abrirCotacao(
           ${JSON.stringify(c)}
