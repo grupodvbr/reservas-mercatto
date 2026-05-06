@@ -18,28 +18,26 @@ ROOT
 
 :root{
 
-  --primary:#082b63;
-  --primary2:#0f3c88;
+  --primary:#0f2d5c;
+  --primary-light:#1c4b92;
 
-  --green:#1fa34a;
-  --green2:#2cbf59;
+  --green:#16a34a;
+  --red:#dc2626;
 
-  --red:#ff3b30;
-
-  --bg:#f3f5f9;
+  --bg:#f4f6f9;
 
   --card:#ffffff;
 
-  --line:#dfe3eb;
+  --border:#dbe2ea;
 
-  --text:#111827;
+  --text:#0f172a;
 
-  --muted:#6b7280;
+  --muted:#64748b;
 
   --shadow:
-  0 10px 30px rgba(0,0,0,.06);
+  0 4px 18px rgba(15,23,42,.06);
 
-  --radius:18px;
+  --radius:14px;
 
 }
 
@@ -56,30 +54,34 @@ BASE
 
 html,
 body{
+
   width:100%;
   height:100%;
+
   overflow:hidden;
+
   background:var(--bg);
+
 }
 
 body{
+
   display:flex;
   flex-direction:column;
+
 }
 
 /* =====================================================
-TOPO
+HEADER
 ===================================================== */
 
 .topo{
 
-  position:sticky;
-  top:0;
-  z-index:999;
-
   background:white;
 
   box-shadow:var(--shadow);
+
+  z-index:999;
 
 }
 
@@ -91,22 +93,22 @@ TITULO
 
   background:
   linear-gradient(
-    135deg,
+    90deg,
     var(--primary),
-    var(--primary2)
+    var(--primary-light)
   );
 
   color:white;
 
-  font-size:28px;
-
-  font-weight:900;
-
-  letter-spacing:.5px;
-
   text-align:center;
 
-  padding:20px;
+  padding:18px;
+
+  font-size:24px;
+
+  font-weight:800;
+
+  letter-spacing:.3px;
 
 }
 
@@ -119,80 +121,83 @@ RESUMO
   display:grid;
 
   grid-template-columns:
-  180px
   220px
   1fr
   1fr
-  220px;
+  1fr
+  260px;
 
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid var(--border);
 
 }
 
-.resumo div{
+.resumo-box{
 
-  min-height:68px;
+  padding:16px 18px;
 
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
+  border-right:1px solid var(--border);
+
+  min-height:84px;
 
   display:flex;
-  align-items:center;
-
-  padding:14px;
-
-  font-size:15px;
-
-}
-
-.resumo .head{
-
-  background:#eef2f7;
-
-  font-weight:800;
-
+  flex-direction:column;
   justify-content:center;
 
-  color:#374151;
+  background:white;
 
 }
 
-.resumo .empresa{
+.resumo-box:last-child{
+  border-right:none;
+}
 
-  background:#f9f3ea;
+.resumo-label{
 
-  font-size:17px;
+  font-size:12px;
 
   font-weight:700;
 
+  text-transform:uppercase;
+
+  letter-spacing:.4px;
+
+  color:var(--muted);
+
+  margin-bottom:8px;
+
 }
 
-.resumo .saldo{
+.resumo-valor{
 
-  font-size:22px;
+  font-size:26px;
 
   font-weight:800;
 
-  color:#111827;
+  color:var(--text);
 
 }
 
-.resumo .saldo-loja{
+.resumo-empresa{
+
+  background:#f8f4ee;
+
+}
+
+.resumo-saldo{
 
   background:
   linear-gradient(
-    135deg,
-    var(--green),
-    var(--green2)
+    90deg,
+    #169c46,
+    #1bb653
   );
 
+}
+
+.resumo-saldo .resumo-label,
+.resumo-saldo .resumo-valor{
+
   color:white;
-
-  justify-content:flex-end;
-
-  font-size:30px;
-
-  font-weight:900;
 
 }
 
@@ -202,32 +207,26 @@ FORM
 
 .form-area{
 
-  background:white;
-
-  padding:14px;
-
   display:grid;
 
   grid-template-columns:
 
-  160px
+  150px
   150px
   2fr
-  1.5fr
+  1.4fr
   170px
-  220px
+  210px
   180px;
 
   gap:12px;
 
-  border-bottom:1px solid var(--line);
+  padding:14px;
 
-  align-items:center;
+  border-top:1px solid var(--border);
 
-}
+  background:white;
 
-.form-group{
-  position:relative;
 }
 
 .form-area input,
@@ -235,73 +234,37 @@ FORM
 
   width:100%;
 
-  height:52px;
+  height:50px;
 
-  border:1px solid #d1d5db;
+  border:1px solid var(--border);
 
-  border-radius:14px;
+  border-radius:12px;
 
-  padding:0 16px;
+  background:#f8fafc;
 
-  background:#f9fafb;
-
-  font-size:15px;
-
-  font-weight:500;
-
-  color:#111827;
+  padding:0 14px;
 
   outline:none;
 
-  transition:.2s;
+  font-size:14px;
+
+  font-weight:600;
+
+  color:var(--text);
+
+  transition:.18s;
 
 }
 
 .form-area input:focus,
 .form-area select:focus{
 
-  border-color:var(--primary);
-
   background:white;
 
-  box-shadow:
-  0 0 0 4px rgba(8,43,99,.08);
-
-}
-
-.form-area button{
-
-  height:52px;
-
-  border:none;
-
-  border-radius:14px;
-
-  background:
-  linear-gradient(
-    135deg,
-    var(--primary),
-    var(--primary2)
-  );
-
-  color:white;
-
-  font-size:15px;
-
-  font-weight:800;
-
-  cursor:pointer;
-
-  transition:.2s;
-
-}
-
-.form-area button:hover{
-
-  transform:translateY(-2px);
+  border-color:#2563eb;
 
   box-shadow:
-  0 10px 20px rgba(8,43,99,.18);
+  0 0 0 4px rgba(37,99,235,.08);
 
 }
 
@@ -309,16 +272,47 @@ FORM
 
   background:#eef2f7 !important;
 
+  color:#475569 !important;
+
   font-weight:800 !important;
 
-  color:#374151 !important;
+}
 
-  cursor:not-allowed;
+.btn-salvar{
+
+  border:none;
+
+  border-radius:12px;
+
+  background:
+  linear-gradient(
+    90deg,
+    var(--primary),
+    var(--primary-light)
+  );
+
+  color:white;
+
+  font-size:14px;
+
+  font-weight:800;
+
+  cursor:pointer;
+
+  transition:.18s;
+
+}
+
+.btn-salvar:hover{
+
+  opacity:.94;
+
+  transform:translateY(-1px);
 
 }
 
 /* =====================================================
-TABELA
+CONTAINER
 ===================================================== */
 
 .container{
@@ -331,6 +325,10 @@ TABELA
 
 }
 
+/* =====================================================
+TABELA
+===================================================== */
+
 table{
 
   width:100%;
@@ -342,7 +340,7 @@ table{
 }
 
 /* =====================================================
-THEAD
+HEAD
 ===================================================== */
 
 thead{
@@ -351,58 +349,155 @@ thead{
 
   top:0;
 
-  z-index:20;
+  z-index:50;
 
 }
 
 thead th{
 
-  background:
-  linear-gradient(
-    180deg,
-    #f8fafc,
-    #edf2f7
-  );
+  background:#f8fafc;
 
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
 
-  padding:14px;
+  padding:14px 12px;
 
   text-align:left;
 
-  font-size:14px;
+  font-size:12px;
 
   font-weight:800;
 
-  color:#374151;
+  color:#475569;
+
+  text-transform:uppercase;
+
+  letter-spacing:.4px;
+
+  white-space:nowrap;
+
+}
+
+thead th:last-child{
+  border-right:none;
+}
+
+/* =====================================================
+COLUNAS FIXAS
+===================================================== */
+
+th:nth-child(1),
+td:nth-child(1){
+
+  width:130px;
+  min-width:130px;
+  max-width:130px;
+
+}
+
+th:nth-child(2),
+td:nth-child(2){
+
+  width:130px;
+  min-width:130px;
+  max-width:130px;
+
+}
+
+th:nth-child(5),
+td:nth-child(5){
+
+  width:170px;
+  min-width:170px;
+  max-width:170px;
+
+}
+
+th:nth-child(6),
+td:nth-child(6){
+
+  width:170px;
+  min-width:170px;
+  max-width:170px;
+
+}
+
+th:nth-child(7),
+td:nth-child(7){
+
+  width:190px;
+  min-width:190px;
+  max-width:190px;
 
 }
 
 /* =====================================================
-TBODY
+LINHA SALDO DIA
 ===================================================== */
 
-tbody tr{
+.linha-dia{
 
-  transition:.15s;
+  background:
+  linear-gradient(
+    90deg,
+    var(--primary),
+    var(--primary-light)
+  );
 
 }
 
-tbody tr:hover{
+.linha-dia td{
+
+  background:transparent !important;
+
+  color:white !important;
+
+  padding:12px 14px;
+
+  border-bottom:1px solid rgba(255,255,255,.08);
+
+  font-size:13px;
+
+  font-weight:800;
+
+}
+
+.saldo-dia{
+
+  text-align:right;
+
+  color:#b8ffcb !important;
+
+  font-size:15px !important;
+
+}
+
+/* =====================================================
+LINHAS NORMAIS
+===================================================== */
+
+.linha-normal{
+
+  transition:.12s;
+
+}
+
+.linha-normal:hover{
 
   background:#f8fbff;
 
 }
 
-tbody td{
+.linha-normal td{
 
-  border-bottom:1px solid #edf1f5;
+  padding:12px 12px;
 
-  padding:12px 14px;
+  border-bottom:1px solid #edf2f7;
+  border-right:1px solid #edf2f7;
 
-  font-size:14px;
+  font-size:13px;
 
-  color:#111827;
+  color:var(--text);
 
   white-space:nowrap;
 
@@ -410,7 +505,19 @@ tbody td{
 
   text-overflow:ellipsis;
 
+  background:white;
+
+  vertical-align:middle;
+
 }
+
+.linha-normal td:last-child{
+  border-right:none;
+}
+
+/* =====================================================
+ALINHAMENTOS
+===================================================== */
 
 .center{
   text-align:center;
@@ -440,9 +547,19 @@ tbody td{
 
   text-align:right;
 
-  font-weight:900;
+  font-weight:800;
 
-  color:#111827;
+  color:#0f172a;
+
+}
+
+/* =====================================================
+ZEBRADO
+===================================================== */
+
+.linha-normal:nth-child(even) td{
+
+  background:#fcfdff;
 
 }
 
@@ -452,13 +569,15 @@ LOADING
 
 .loading{
 
-  padding:30px;
+  padding:26px;
 
   text-align:center;
 
-  color:var(--muted);
+  font-size:14px;
 
   font-weight:700;
+
+  color:var(--muted);
 
 }
 
@@ -480,7 +599,7 @@ SCROLL
 RESPONSIVO
 ===================================================== */
 
-@media(max-width:1400px){
+@media(max-width:1450px){
 
   .form-area{
 
