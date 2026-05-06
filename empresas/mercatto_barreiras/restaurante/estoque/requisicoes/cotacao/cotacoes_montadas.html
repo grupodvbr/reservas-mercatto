@@ -935,6 +935,42 @@ itensCotacao.forEach(item => {
 
 </button>
 
+
+<button
+
+  onclick="
+    gerarResultadoCotacaoPDF()
+  "
+
+  style="
+    border:none;
+    background:#2563eb;
+    color:#fff;
+    padding:0 16px;
+    height:34px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:800;
+  ">
+
+  GERAR RESULTADO
+
+</button>
+
+
+
+
+
+
+
+
+
+
+
 </div>
 
         <small>
@@ -972,62 +1008,59 @@ itensCotacao.forEach(item => {
 
     </div>
 
+   ${
+  c.status === 'FINALIZADA'
+
+  ? ''
+
+  : `
+
     <!-- TOOLBAR -->
 
     <div class="toolbar">
 
-    <div class="toolbar-top">
+      <div class="toolbar-top">
 
-  <!-- FORNECEDORES SELECIONADOS -->
+        <!-- FORNECEDORES SELECIONADOS -->
 
-  <div class="tags">
+        <div class="tags">
 
-    ${fornecedoresSelecionados.map(f=>`
+          ${fornecedoresSelecionados.map(f=>`
 
-      <div class="tag">
+            <div class="tag">
 
-        ${f.fornecedor_nome}
+              ${f.fornecedor_nome}
 
-        <button
-          onclick="
-            removerFornecedorGeral(
-              '${f.fornecedor_id}'
-            )
-          ">
+              <button
+                onclick="
+                  removerFornecedorGeral(
+                    '${f.fornecedor_id}'
+                  )
+                ">
 
-          ✕
+                ✕
 
-        </button>
+              </button>
 
-      </div>
+            </div>
 
-    `).join("")}
+          `).join("")}
 
-  </div>
+        </div>
 
-  <!-- PESQUISA -->
+        <!-- PESQUISA -->
 
-  <div class="dropdown">
+        <div class="dropdown">
 
-    <input
-      class="for-search"
+          <input
+            class="for-search"
 
-
-      
-
-
-
-
-
-
-
-
-
-            
             placeholder="Pesquisar fornecedor..."
+
             onfocus="
               abrirDropdown()
             "
+
             oninput="
               pesquisarFornecedor(this)
             "
@@ -1063,11 +1096,10 @@ itensCotacao.forEach(item => {
 
       </div>
 
-    
     </div>
 
-
-
+  `
+}
 
 
 <!-- CARDS -->
@@ -2015,7 +2047,251 @@ if(error){
 
 
 
+async function gerarResultadoCotacaoPDF(){
 
+  const win = window.open('', '_blank');
+
+  let html = `
+
+  <html>
+
+  <head>
+
+    <title>
+      Resultado da Cotação
+    </title>
+
+    <style>
+
+      body{
+        font-family:Arial;
+        padding:30px;
+        color:#111;
+      }
+
+      h1{
+        margin-bottom:4px;
+      }
+
+      h2{
+        margin-top:40px;
+        margin-bottom:10px;
+      }
+
+      table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+      }
+
+      th,td{
+        border:1px solid #d1d5db;
+        padding:10px;
+        font-size:12px;
+        text-align:left;
+      }
+
+      th{
+        background:#f3f4f6;
+      }
+
+      .green{
+        background:#dcfce7;
+        color:#166534;
+        font-weight:700;
+      }
+
+      .card{
+        border:1px solid #d1d5db;
+        border-radius:12px;
+        padding:16px;
+        margin-bottom:14px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <h1>
+      ${cotacaoAtual.nome}
+    </h1>
+
+    <small>
+      ${formatarData(
+        cotacaoAtual.data_cotacao
+      )}
+    </small>
+
+    <h2>
+      Resultado Geral
+    </h2>
+
+  `;
+
+  Object.values(
+    totaisFornecedor
+  ).forEach(f => {
+
+    html += `
+
+      <div class="card">
+
+        <h3>
+          ${f.nome}
+        </h3>
+
+        <p>
+
+          <b>
+            Total:
+          </b>
+
+          R$
+          ${f.total.toLocaleString(
+            'pt-BR',
+            {
+              minimumFractionDigits:2,
+              maximumFractionDigits:2
+            }
+          )}
+
+        </p>
+
+        <p>
+          ${f.itens}
+          itens vencedores
+        </p>
+
+      </div>
+
+    `;
+
+  });
+
+  html += `
+
+    <h2>
+      Itens da Cotação
+    </h2>
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Produto</th>
+          <th>Quantidade</th>
+          <th>Fornecedor Vencedor</th>
+          <th>Valor Unitário</th>
+          <th>Total</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+  `;
+
+  itensCotacao.forEach(item => {
+
+    const melhor =
+      melhoresPrecos[item.produto];
+
+    (item.fornecedores || [])
+    .forEach(f => {
+
+      const preco =
+        Number(f.preco_unitario || 0);
+
+      const emb =
+        Number(
+          f.quantidade_embalagem || 1
+        );
+
+      const convertido =
+        preco / emb;
+
+      if(convertido === melhor){
+
+        const total =
+          convertido *
+          Number(
+            item.qtd_solicitada || 0
+          );
+
+        html += `
+
+          <tr>
+
+            <td>
+              ${item.produto}
+            </td>
+
+            <td>
+              ${item.qtd_solicitada}
+            </td>
+
+            <td class="green">
+              ${f.fornecedor_nome}
+            </td>
+
+            <td>
+
+              R$
+              ${convertido.toLocaleString(
+                'pt-BR',
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )}
+
+            </td>
+
+            <td>
+
+              R$
+              ${total.toLocaleString(
+                'pt-BR',
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )}
+
+            </td>
+
+          </tr>
+
+        `;
+      }
+
+    });
+
+  });
+
+  html += `
+
+      </tbody>
+
+    </table>
+
+  </body>
+
+  </html>
+
+  `;
+
+  win.document.write(html);
+
+  win.document.close();
+
+  win.print();
+}
 
 
   
