@@ -605,7 +605,49 @@ RESPONSIVO
   }
 
 }
+/* =====================================================
+EXCLUIR
+===================================================== */
 
+.btn-excluir{
+
+  border:none;
+
+  background:#dc2626;
+
+  color:white;
+
+  font-size:11px;
+
+  font-weight:800;
+
+  padding:8px 10px;
+
+  border-radius:8px;
+
+  cursor:pointer;
+
+  transition:.15s;
+
+}
+
+.btn-excluir:hover{
+
+  opacity:.9;
+
+  transform:scale(1.03);
+
+}
+
+.bloqueado{
+
+  font-size:11px;
+
+  font-weight:800;
+
+  color:#94a3b8;
+
+}
 </style>
 </head>
 <body>
@@ -770,9 +812,13 @@ TABELA
     Saída
   </th>
 
-  <th style="width:180px">
-    Saldo
-  </th>
+<th style="width:180px">
+  Saldo
+</th>
+
+<th style="width:90px">
+  Ações
+</th>
 
 </tr>
 
@@ -1063,58 +1109,116 @@ function renderizar(lista){
     const tr =
     document.createElement('tr');
 
-    tr.innerHTML = `
+   /* ============================================
+VERIFICA SE PODE EXCLUIR
+SOMENTE 3 DIAS
+============================================ */
 
-      <td class="center">
-        ${formatarData(item.data_registro)}
-      </td>
+const dataRegistro =
+new Date(item.created_at);
 
-      <td class="center">
-        ${formatarData(item.data_movimento)}
-      </td>
+const agora =
+new Date();
 
-      <td>
-        ${item.historico || ''}
-      </td>
+const diferencaDias =
 
-      <td>
-        ${item.complemento || ''}
-      </td>
+Math.floor(
 
-      <td class="${
-        item.tipo === 'entrada'
-        ? 'valor-entrada'
-        : ''
-      }">
+  (agora - dataRegistro)
 
-        ${
-          item.tipo === 'entrada'
-          ? moeda(item.valor)
-          : ''
-        }
+  / (1000 * 60 * 60 * 24)
 
-      </td>
+);
 
-      <td class="${
-        item.tipo === 'saida'
-        ? 'valor-saida'
-        : ''
-      }">
+const podeExcluir =
+diferencaDias <= 3;
 
-        ${
-          item.tipo === 'saida'
-          ? moeda(item.valor)
-          : ''
-        }
+tr.innerHTML = `
 
-      </td>
+  <td class="center">
+    ${formatarData(item.data_registro)}
+  </td>
 
-      <td class="valor-saldo">
-        ${moeda(item.saldo)}
-      </td>
+  <td class="center">
+    ${formatarData(item.data_movimento)}
+  </td>
 
-    `;
+  <td>
+    ${item.historico || ''}
+  </td>
 
+  <td>
+    ${item.complemento || ''}
+  </td>
+
+  <td class="${
+    item.tipo === 'entrada'
+    ? 'valor-entrada'
+    : ''
+  }">
+
+    ${
+      item.tipo === 'entrada'
+      ? moeda(item.valor)
+      : ''
+    }
+
+  </td>
+
+  <td class="${
+    item.tipo === 'saida'
+    ? 'valor-saida'
+    : ''
+  }">
+
+    ${
+      item.tipo === 'saida'
+      ? moeda(item.valor)
+      : ''
+    }
+
+  </td>
+
+  <td class="valor-saldo">
+    ${moeda(item.saldo)}
+  </td>
+
+  <td class="center">
+
+    ${
+      podeExcluir
+
+      ?
+
+      `
+
+      <button
+      class="btn-excluir"
+      onclick="excluirRegistro('${item.id}')">
+
+        EXCLUIR
+
+      </button>
+
+      `
+
+      :
+
+      `
+
+      <span class="bloqueado">
+
+        BLOQUEADO
+
+      </span>
+
+      `
+
+    }
+
+  </td>
+
+`;
     tbody.appendChild(tr);
 
   });
@@ -1374,6 +1478,66 @@ INIT
 
 })();
 
+
+
+
+
+/* =====================================================
+EXCLUIR
+===================================================== */
+
+async function excluirRegistro(id){
+
+  const confirmar =
+  confirm(
+
+    'Deseja realmente excluir este lançamento?'
+
+  );
+
+  if(!confirmar) return;
+
+  const { error } =
+
+  await supabaseClient
+
+  .from('livros_caixa')
+
+  .delete()
+
+  .eq('id',id);
+
+  if(error){
+
+    console.error(error);
+
+    alert('Erro ao excluir');
+
+    return;
+
+  }
+
+  tbody.innerHTML = '';
+
+  pagina = 0;
+
+  acabou = false;
+
+  await carregarResumo();
+
+  await carregarRegistros();
+
+}
+
+
+
+
+
+
+
+
+
+  
 </script>
 
 </body>
