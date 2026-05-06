@@ -550,7 +550,24 @@ const itens = selecionados.map(d=>({
 await sb.from("pre_cotacao_mercatto").delete().neq("id", "");
 
 // limpa tela
+// limpa tabela local
 selecionados = [];
+
+// limpa seleção atual
+produtoSelecionado = null;
+
+// limpa campos
+busca.value = "";
+qtdAdd.value = 1;
+
+document.getElementById("qtdUnidades").value = 1;
+
+document.getElementById("unidadeSelect").value = "UN";
+
+// limpa resultados da busca
+resultados.innerHTML = "";
+
+// renderiza vazio
 render();
 }
 document.getElementById("busca").addEventListener("input", buscar);
