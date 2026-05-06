@@ -2046,368 +2046,25 @@ if(error){
 }
 
 
-```javascript
+
 async function gerarResultadoCotacaoPDF(){
-
-  const itensCotacao =
-    cotacaoAtual.itens_cotacao || [];
-
-  const melhoresPrecos =
-    calcularMelhoresPrecos(
-      itensCotacao
-    );
-
-  const totaisFornecedor = {};
-
-  itensCotacao.forEach(item => {
-
-    const melhorPrecoItem =
-      melhoresPrecos[item.produto];
-
-    if(!melhorPrecoItem) return;
-
-    (item.fornecedores || [])
-    .forEach(f => {
-
-      const preco =
-        Number(f.preco_unitario || 0);
-
-      const emb =
-        Number(
-          f.quantidade_embalagem || 1
-        );
-
-      if(!preco) return;
-
-      const precoConvertido =
-        preco / emb;
-
-      if(
-        precoConvertido ===
-        melhorPrecoItem
-      ){
-
-        const qtd =
-          Number(
-            item.qtd_solicitada || 0
-          );
-
-        const totalItem =
-          precoConvertido * qtd;
-
-        if(
-          !totaisFornecedor[
-            f.fornecedor_id
-          ]
-        ){
-
-          totaisFornecedor[
-            f.fornecedor_id
-          ] = {
-
-            nome:
-              f.fornecedor_nome,
-
-            total:0,
-
-            itens:0
-          };
-
-        }
-
-        totaisFornecedor[
-          f.fornecedor_id
-        ].total += totalItem;
-
-        totaisFornecedor[
-          f.fornecedor_id
-        ].itens += 1;
-
-      }
-
-    });
-
-  });
-
-  const totalGeral =
-    Object.values(
-      totaisFornecedor
-    )
-    .reduce(
-      (acc,f)=>acc+f.total,
-      0
-    );
-
-  const win =
-    window.open('', '_blank');
-
-  let html = `
-
-<html>
-
-<head>
-
-<title>
-Resultado da Cotação
-</title>
-
-<style>
-
-*{
-  box-sizing:border-box;
-  font-family:Inter,Arial;
-}
-
-body{
-  margin:0;
-  background:#f1f5f9;
-  color:#111827;
-}
-
-.header{
-  background:#111827;
-  color:#fff;
-  padding:40px;
-}
-
-.header h1{
-  margin:0;
-  font-size:34px;
-  font-weight:900;
-}
-
-.header small{
-  opacity:.8;
-  font-size:13px;
-}
-
-.container{
-  padding:30px;
-}
-
-.cards{
-  display:grid;
-  grid-template-columns:
-  repeat(auto-fit,minmax(260px,1fr));
-  gap:18px;
-  margin-bottom:30px;
-}
-
-.card{
-  background:#fff;
-  border-radius:18px;
-  padding:22px;
-  box-shadow:
-    0 8px 24px rgba(0,0,0,.08);
-  border:1px solid #e5e7eb;
-}
-
-.card-top{
-  font-size:11px;
-  color:#64748b;
-  text-transform:uppercase;
-  font-weight:800;
-  margin-bottom:8px;
-}
-
-.card h3{
-  margin:0;
-  font-size:18px;
-  margin-bottom:16px;
-}
-
-.valor{
-  font-size:34px;
-  font-weight:900;
-  color:#16a34a;
-  margin-bottom:10px;
-}
-
-.itens{
-  font-size:13px;
-  color:#64748b;
-  font-weight:700;
-}
-
-.total-geral{
-  background:#111827;
-  color:#fff;
-  padding:24px;
-  border-radius:20px;
-  margin-bottom:30px;
-}
-
-.total-geral h2{
-  margin:0;
-  font-size:14px;
-  opacity:.8;
-  margin-bottom:8px;
-}
-
-.total-geral .numero{
-  font-size:42px;
-  font-weight:900;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:
-    0 8px 24px rgba(0,0,0,.08);
-}
-
-th{
-  background:#111827;
-  color:#fff;
-  padding:16px;
-  text-align:left;
-  font-size:12px;
-  text-transform:uppercase;
-}
-
-td{
-  padding:14px 16px;
-  border-bottom:1px solid #f1f5f9;
-  font-size:13px;
-}
-
-tr:nth-child(even){
-  background:#f8fafc;
-}
-
-.green{
-  background:#dcfce7;
-  color:#166534;
-  font-weight:800;
-  border-radius:8px;
-  padding:6px 10px;
-  display:inline-block;
-}
-
-.footer{
-  margin-top:30px;
-  text-align:center;
-  color:#94a3b8;
-  font-size:12px;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-
-  <h1>
-    ${cotacaoAtual.nome}
-  </h1>
-
-  <small>
-    ${formatarData(
-      cotacaoAtual.data_cotacao
-    )}
-  </small>
-
-</div>
-
-<div class="container">
-
-  <div class="total-geral">
-
-    <h2>
-      Total Geral Cotado
-    </h2>
-
-    <div class="numero">
-
-      R$
-      ${totalGeral.toLocaleString(
-        'pt-BR',
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      )}
-
-    </div>
-
-  </div>
-
-  <div class="cards">
-
-`;
-
-Object.values(
-  totaisFornecedor
-).forEach(f => {
-
-  html += `
-
-  <div class="card">
-
-    <div class="card-top">
-      Melhor fornecedor
-    </div>
-
-    <h3>
-      ${f.nome}
-    </h3>
-
-    <div class="valor">
-
-      R$
-      ${f.total.toLocaleString(
-        'pt-BR',
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      )}
-
-    </div>
-
-    <div class="itens">
-      ${f.itens} itens vencedores
-    </div>
-
-  </div>
-
-  `;
-
-});
-
-html += `
-
-  </div>
-
-  <table>
-
-    <thead>
-
-      <tr>
-
-        <th>Produto</th>
-        <th>Quantidade</th>
-        <th>Fornecedor</th>
-        <th>Valor Unitário</th>
-        <th>Total</th>
-
-      </tr>
-
-    </thead>
-
-    <tbody>
-
-`;
+const itensCotacao =
+  cotacaoAtual.itens_cotacao || [];
+
+const melhoresPrecos =
+  calcularMelhoresPrecos(
+    itensCotacao
+  );
+
+const totaisFornecedor = {};
 
 itensCotacao.forEach(item => {
 
-  const melhor =
+  const melhorPrecoItem =
     melhoresPrecos[item.produto];
+
+  if(!melhorPrecoItem)
+    return;
 
   (item.fornecedores || [])
   .forEach(f => {
@@ -2420,66 +2077,52 @@ itensCotacao.forEach(item => {
         f.quantidade_embalagem || 1
       );
 
-    const convertido =
+    if(!preco) return;
+
+    const precoConvertido =
       preco / emb;
 
-    if(convertido === melhor){
+    if(
+      precoConvertido ===
+      melhorPrecoItem
+    ){
 
-      const total =
-        convertido *
+      const qtd =
         Number(
           item.qtd_solicitada || 0
         );
 
-      html += `
+      const totalItem =
+        precoConvertido * qtd;
 
-<tr>
+      if(
+        !totaisFornecedor[
+          f.fornecedor_id
+        ]
+      ){
 
-  <td>
-    ${item.produto}
-  </td>
+        totaisFornecedor[
+          f.fornecedor_id
+        ] = {
 
-  <td>
-    ${item.qtd_solicitada}
-  </td>
+          nome:
+            f.fornecedor_nome,
 
-  <td>
+          total:0,
 
-    <span class="green">
-      ${f.fornecedor_nome}
-    </span>
+          itens:0
 
-  </td>
+        };
 
-  <td>
-
-    R$
-    ${convertido.toLocaleString(
-      'pt-BR',
-      {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
       }
-    )}
 
-  </td>
+      totaisFornecedor[
+        f.fornecedor_id
+      ].total += totalItem;
 
-  <td>
-
-    R$
-    ${total.toLocaleString(
-      'pt-BR',
-      {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-      }
-    )}
-
-  </td>
-
-</tr>
-
-`;
+      totaisFornecedor[
+        f.fornecedor_id
+      ].itens += 1;
 
     }
 
@@ -2487,42 +2130,267 @@ itensCotacao.forEach(item => {
 
 });
 
-html += `
 
-    </tbody>
 
-  </table>
 
-  <div class="footer">
+  
 
-    Relatório gerado automaticamente
-    • Mercatto Delícia
 
-  </div>
 
-</div>
 
-</body>
+  
+  const win = window.open('', '_blank');
 
-</html>
+  let html = `
 
-`;
+  <html>
 
-  win.document.open();
+  <head>
 
-  win.document.write(html);
+    <title>
+      Resultado da Cotação
+    </title>
 
-  win.document.close();
+    <style>
 
-  setTimeout(()=>{
+      body{
+        font-family:Arial;
+        padding:30px;
+        color:#111;
+      }
 
-    win.focus();
+      h1{
+        margin-bottom:4px;
+      }
 
-    win.print();
+      h2{
+        margin-top:40px;
+        margin-bottom:10px;
+      }
 
-  },500);
+      table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+      }
 
+      th,td{
+        border:1px solid #d1d5db;
+        padding:10px;
+        font-size:12px;
+        text-align:left;
+      }
+
+      th{
+        background:#f3f4f6;
+      }
+
+      .green{
+        background:#dcfce7;
+        color:#166534;
+        font-weight:700;
+      }
+
+      .card{
+        border:1px solid #d1d5db;
+        border-radius:12px;
+        padding:16px;
+        margin-bottom:14px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <h1>
+      ${cotacaoAtual.nome}
+    </h1>
+
+    <small>
+      ${formatarData(
+        cotacaoAtual.data_cotacao
+      )}
+    </small>
+
+    <h2>
+      Resultado Geral
+    </h2>
+
+  `;
+
+  Object.values(
+    totaisFornecedor
+  ).forEach(f => {
+
+    html += `
+
+      <div class="card">
+
+        <h3>
+          ${f.nome}
+        </h3>
+
+        <p>
+
+          <b>
+            Total:
+          </b>
+
+          R$
+          ${f.total.toLocaleString(
+            'pt-BR',
+            {
+              minimumFractionDigits:2,
+              maximumFractionDigits:2
+            }
+          )}
+
+        </p>
+
+        <p>
+          ${f.itens}
+          itens vencedores
+        </p>
+
+      </div>
+
+    `;
+
+  });
+
+  html += `
+
+    <h2>
+      Itens da Cotação
+    </h2>
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Produto</th>
+          <th>Quantidade</th>
+          <th>Fornecedor Vencedor</th>
+          <th>Valor Unitário</th>
+          <th>Total</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+  `;
+
+  itensCotacao.forEach(item => {
+
+    const melhor =
+      melhoresPrecos[item.produto];
+
+    (item.fornecedores || [])
+    .forEach(f => {
+
+      const preco =
+        Number(f.preco_unitario || 0);
+
+      const emb =
+        Number(
+          f.quantidade_embalagem || 1
+        );
+
+      const convertido =
+        preco / emb;
+
+      if(convertido === melhor){
+
+        const total =
+          convertido *
+          Number(
+            item.qtd_solicitada || 0
+          );
+
+        html += `
+
+          <tr>
+
+            <td>
+              ${item.produto}
+            </td>
+
+            <td>
+              ${item.qtd_solicitada}
+            </td>
+
+            <td class="green">
+              ${f.fornecedor_nome}
+            </td>
+
+            <td>
+
+              R$
+              ${convertido.toLocaleString(
+                'pt-BR',
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )}
+
+            </td>
+
+            <td>
+
+              R$
+              ${total.toLocaleString(
+                'pt-BR',
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )}
+
+            </td>
+
+          </tr>
+
+        `;
+      }
+
+    });
+
+  });
+
+  html += `
+
+      </tbody>
+
+    </table>
+
+  </body>
+
+  </html>
+
+  `;
+
+win.document.open();
+
+win.document.write(html);
+
+win.document.close();
+
+setTimeout(()=>{
+
+  win.focus();
+
+  win.print();
+
+},500);
 }
+
 
   
 </script>
