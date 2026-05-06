@@ -2376,11 +2376,19 @@ itensCotacao.forEach(item => {
 
   `;
 
-  win.document.write(html);
+win.document.open();
 
-  win.document.close();
+win.document.write(html);
+
+win.document.close();
+
+setTimeout(()=>{
+
+  win.focus();
 
   win.print();
+
+},500);
 }
 
 
